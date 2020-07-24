@@ -44,6 +44,5 @@ public interface PenRequestBatchFileMapper {
   @Mapping(source = "file.batchFileHeader.minCode", target = "minCode")
   @Mapping(source = "file.batchFileHeader.schoolName", target = "schoolName")
   @Mapping(source = "file.batchFileHeader.emailID", target = "email")
-  @Mapping(source = "file.batchFileHeader.emailID", target = "email")
   PenRequestBatchEntity toPenReqBatchEntity(BatchFile file);
 }
