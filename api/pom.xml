@@ -170,8 +170,12 @@
         <groupId>org.springframework.retry</groupId>
         <artifactId>spring-retry</artifactId>
       </dependency>
+      <dependency>
+        <groupId>net.sf.flatpack</groupId>
+        <artifactId>flatpack</artifactId>
+        <version>4.0.4</version>
+      </dependency>
     </dependencies>
-
 
     <build>
         <plugins>
