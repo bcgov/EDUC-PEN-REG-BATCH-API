@@ -8,16 +8,32 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotNull;
 
+/**
+ * The type Search criteria.
+ *  @author OM
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Data
 public class SearchCriteria {
+  /**
+   * The Key.
+   */
   @NotNull
   String key;
+  /**
+   * The Operation.
+   */
   @NotNull
   FilterOperation operation;
+  /**
+   * The Value.
+   */
   String value;
+  /**
+   * The Value type.
+   */
   @NotNull
   ValueType valueType;
 }

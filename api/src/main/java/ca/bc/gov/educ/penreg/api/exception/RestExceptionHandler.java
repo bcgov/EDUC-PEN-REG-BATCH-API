@@ -18,21 +18,15 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
+/**
+ * The type Rest exception handler.
+ */
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
   private static final Logger log = LoggerFactory.getLogger(RestExceptionHandler.class);
 
-  /**
-   * Handles HttpMessageNotReadableException
-   *
-   * @param ex
-   * @param headers
-   * @param status
-   * @param request
-   * @return
-   */
   @Override
   protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
     String error = "Malformed JSON request";
@@ -52,7 +46,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
    */
   @ExceptionHandler(EntityNotFoundException.class)
   protected ResponseEntity<Object> handleEntityNotFound(
-          EntityNotFoundException ex) {
+      EntityNotFoundException ex) {
     ApiError apiError = new ApiError(NOT_FOUND);
     apiError.setMessage(ex.getMessage());
     log.error("{} ", apiError.getMessage(), ex);
@@ -69,7 +63,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
   protected ResponseEntity<Object> handleInvalidParameter(IllegalArgumentException ex) {
     ApiError apiError = new ApiError(BAD_REQUEST);
     apiError.setMessage(ex.getMessage());
-    log.error("{} ",apiError.getMessage(), ex);
+    log.error("{} ", apiError.getMessage(), ex);
     return buildResponseEntity(apiError);
   }
 
@@ -98,10 +92,10 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
    */
   @Override
   protected ResponseEntity<Object> handleMethodArgumentNotValid(
-          MethodArgumentNotValidException ex,
-          HttpHeaders headers,
-          HttpStatus status,
-          WebRequest request) {
+      MethodArgumentNotValidException ex,
+      HttpHeaders headers,
+      HttpStatus status,
+      WebRequest request) {
     ApiError apiError = new ApiError(BAD_REQUEST);
     apiError.setMessage("Validation error");
     apiError.addValidationErrors(ex.getBindingResult().getFieldErrors());
@@ -118,7 +112,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
    */
   @ExceptionHandler(InvalidPayloadException.class)
   protected ResponseEntity<Object> handleInvalidPayload(
-          InvalidPayloadException ex) {
+      InvalidPayloadException ex) {
     log.error("", ex);
     return buildResponseEntity(ex.getError());
   }

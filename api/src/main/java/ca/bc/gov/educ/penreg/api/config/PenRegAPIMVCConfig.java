@@ -7,19 +7,29 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * The type Pen reg api mvc config.
+ *
+ * @author Om
+ */
 @Configuration
 public class PenRegAPIMVCConfig implements WebMvcConfigurer {
 
-    @Getter(AccessLevel.PRIVATE)
-    private final PenRegAPIInterceptor penRegAPIInterceptor;
+  @Getter(AccessLevel.PRIVATE)
+  private final PenRegAPIInterceptor penRegAPIInterceptor;
 
-    @Autowired
-    public PenRegAPIMVCConfig(final PenRegAPIInterceptor penRegAPIInterceptor){
-        this.penRegAPIInterceptor = penRegAPIInterceptor;
-    }
+  /**
+   * Instantiates a new Pen reg api mvc config.
+   *
+   * @param penRegAPIInterceptor the pen reg api interceptor
+   */
+  @Autowired
+  public PenRegAPIMVCConfig(final PenRegAPIInterceptor penRegAPIInterceptor) {
+    this.penRegAPIInterceptor = penRegAPIInterceptor;
+  }
 
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(penRegAPIInterceptor).addPathPatterns("/**/**/");
-    }
+  @Override
+  public void addInterceptors(InterceptorRegistry registry) {
+    registry.addInterceptor(penRegAPIInterceptor).addPathPatterns("/**/**/");
+  }
 }
