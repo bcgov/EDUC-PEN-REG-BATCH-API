@@ -35,14 +35,14 @@ public class PenRequestBatchStudentEntity {
    * The Pen request batch entity.
    */
   @ManyToOne(cascade = CascadeType.ALL, optional = false, targetEntity = PenRequestBatchEntity.class)
-  @JoinColumn(name = "PEN_REQUEST_BATCH_ID", referencedColumnName = "PEN_REQUEST_BATCH_ID", updatable = false, insertable = false)
+  @JoinColumn(name = "PEN_REQUEST_BATCH_ID", referencedColumnName = "PEN_REQUEST_BATCH_ID", updatable = false)
   PenRequestBatchEntity penRequestBatchEntity;
 
   /**
    * The Pen request student status code.
    */
-  @Column(name="PEN_REQUEST_STUDENT_STATUS_CODE", length = 10)
-  String penRequestStudentStatusCode;
+  @Column(name="PEN_REQUEST_BATCH_STUDENT_STATUS_CODE", length = 10)
+  String penRequestBatchStudentStatusCode;
 
   /**
    * The Local id.

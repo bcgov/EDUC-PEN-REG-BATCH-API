@@ -12,7 +12,8 @@ import java.time.LocalDateTime;
 
 /**
  * The type Pen request batch student status code entity.
- *  @author OM
+ *
+ * @author OM
  */
 @Entity
 @Table(name = "PEN_REQUEST_BATCH_STUDENT_STATUS_CODE")

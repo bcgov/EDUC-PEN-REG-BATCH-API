@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * The type Pen reg api interceptor.
+ *
  * @author Om
  */
 @Component
