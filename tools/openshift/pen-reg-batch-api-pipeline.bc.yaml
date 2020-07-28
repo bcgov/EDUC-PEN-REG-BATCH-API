@@ -16,7 +16,7 @@ objects:
       source:
         git:
           ref: master
-          uri: 'https://github.com/bcgov/EDUC-STUDENT-API'
+          uri: 'https://github.com/bcgov/EDUC-PEN-REG-BATCH-API'
         type: Git
       strategy:
         jenkinsPipelineStrategy:
