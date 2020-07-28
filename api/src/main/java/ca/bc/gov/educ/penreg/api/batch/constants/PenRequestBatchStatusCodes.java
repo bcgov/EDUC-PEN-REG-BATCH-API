@@ -2,8 +2,22 @@ package ca.bc.gov.educ.penreg.api.batch.constants;
 
 import lombok.Getter;
 
+/**
+ * The enum Pen request batch status codes.
+ */
 public enum PenRequestBatchStatusCodes {
-  NEW("NEW"), LOAD_FAIL("LOADFAIL"), LOADED("LOADED");
+  /**
+   * New pen request batch status codes.
+   */
+  NEW("NEW"),
+  /**
+   * Load fail pen request batch status codes.
+   */
+  LOAD_FAIL("LOADFAIL"),
+  /**
+   * Loaded pen request batch status codes.
+   */
+  LOADED("LOADED");
 
   @Getter
   private final String code;
