@@ -16,17 +16,17 @@ import java.time.LocalDateTime;
  * @author OM
  */
 @Entity
-@Table(name = "PEN_REQUEST_BATCH_SOURCE_CODE")
+@Table(name = "MINISTRY_PRB_SOURCE_CODE")
 @Data
 @DynamicUpdate
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PenRequestBatchSourceCodeEntity {
+public class MinistryPRBSourceCodeEntity {
   /**
    * The Status code.
    */
   @Id
-  @Column(name = "PEN_REQUEST_BATCH_SOURCE_CODE", unique = true, length = 10)
-  String statusCode;
+  @Column(name = "MINISTRY_PRB_SOURCE_CODE", unique = true, length = 10)
+  String ministryPRBSourceCode;
 
   /**
    * The Label.

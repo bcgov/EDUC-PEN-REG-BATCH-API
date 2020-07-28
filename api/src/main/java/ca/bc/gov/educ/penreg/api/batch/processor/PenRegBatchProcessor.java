@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import javax.validation.constraints.NotNull;
 import java.io.*;
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -77,7 +78,7 @@ public class PenRegBatchProcessor {
    * @param traxStudentWeb the pojo containing the table row from tsw
    */
   @Async
-  public void processPenRegBatchFileFromTSW(final TraxStudentWeb traxStudentWeb) {
+  public void processPenRegBatchFileFromTSW(@NotNull final TraxStudentWeb traxStudentWeb) {
     var guid = UUID.randomUUID().toString(); // this guid will be used throughout the logs for easy tracking.
     log.info("Started processing file from TSW with submission Number :: {} and guid :: {}", traxStudentWeb.getSubmissionNumber(), guid);
     BatchFile batchFile = new BatchFile();

@@ -52,8 +52,8 @@ public interface PenRequestBatchFileMapper {
   @Mapping(source = "file.batchFileTrailer.studentCount", target = "sourceStudentCount")
   PenRequestBatchEntity toPenReqBatchEntity(TraxStudentWeb traxStudentWeb, BatchFile file);
 
+  @Mapping(target = "penRequestBatchStudentStatusCode", ignore = true)
   @Mapping(target = "studentID", ignore = true)
-  @Mapping(target = "penRequestStudentStatusCode", ignore = true)
   @Mapping(target = "penRequestBatchStudentID", ignore = true)
   @Mapping(target = "penRequestBatchEntity", ignore = true)
   @Mapping(target = "assignedPEN", ignore = true)

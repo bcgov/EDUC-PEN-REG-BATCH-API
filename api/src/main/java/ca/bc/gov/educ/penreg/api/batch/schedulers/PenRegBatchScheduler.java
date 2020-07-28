@@ -41,9 +41,9 @@ public class PenRegBatchScheduler {
    * Extract un processed files.
    * this method will only extract the file or blob, processing will be done in processor.
    */
-  @Scheduled(fixedDelay = 600000, initialDelay = 600000) // every 10 minutes
+ /* @Scheduled(fixedDelay = 600000, initialDelay = 600000) // every 10 minutes
   @SchedulerLock(name = "BatchFileExtractor",
-      lockAtLeastFor = "590s", lockAtMostFor = "595s")
+      lockAtLeastFor = "590s", lockAtMostFor = "595s")*/
   public void extractUnProcessedFilesFromTSW() {
     log.info("extraction of batch file from TSW started.");
     try {

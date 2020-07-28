@@ -41,8 +41,8 @@ public class PenRequestBatchStudentEntity {
   /**
    * The Pen request student status code.
    */
-  @Column(name="PEN_REQUEST_STUDENT_STATUS_CODE", length = 10)
-  String penRequestStudentStatusCode;
+  @Column(name="PEN_REQUEST_BATCH_STUDENT_STATUS_CODE", length = 10)
+  String penRequestBatchStudentStatusCode;
 
   /**
    * The Local id.
