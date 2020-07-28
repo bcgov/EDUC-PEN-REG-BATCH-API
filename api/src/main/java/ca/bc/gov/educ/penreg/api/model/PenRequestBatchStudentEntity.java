@@ -35,7 +35,7 @@ public class PenRequestBatchStudentEntity {
    * The Pen request batch entity.
    */
   @ManyToOne(cascade = CascadeType.ALL, optional = false, targetEntity = PenRequestBatchEntity.class)
-  @JoinColumn(name = "PEN_REQUEST_BATCH_ID", referencedColumnName = "PEN_REQUEST_BATCH_ID", updatable = false, insertable = false)
+  @JoinColumn(name = "PEN_REQUEST_BATCH_ID", referencedColumnName = "PEN_REQUEST_BATCH_ID", updatable = false)
   PenRequestBatchEntity penRequestBatchEntity;
 
   /**

@@ -6,9 +6,12 @@ import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchFilterSpecs;
 import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchMapper;
+import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.service.PenRegBatchService;
+import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
+import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatch;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.SearchCriteria;
 import ca.bc.gov.educ.penreg.api.struct.ValueType;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -32,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -49,12 +53,24 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   @Getter(PRIVATE)
   private final PenRegBatchFilterSpecs penRegBatchFilterSpecs;
   @Getter(PRIVATE)
-  private final PenRegBatchService service;
+  private final PenRequestBatchService service;
+  @Getter(PRIVATE)
+  private final PenRequestBatchStudentService studentService;
   private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
+  private static final PenRequestBatchStudentMapper studentMapper = PenRequestBatchStudentMapper.mapper;
+
+  /**
+   * Instantiates a new Pen request batch api controller.
+   *
+   * @param penRegBatchFilterSpecs the pen reg batch filter specs
+   * @param service                the service
+   * @param studentService         the student service
+   */
   @Autowired
-  public PenRequestBatchAPIController(final PenRegBatchFilterSpecs penRegBatchFilterSpecs, final PenRegBatchService service) {
+  public PenRequestBatchAPIController(final PenRegBatchFilterSpecs penRegBatchFilterSpecs, final PenRequestBatchService service, PenRequestBatchStudentService studentService) {
     this.penRegBatchFilterSpecs = penRegBatchFilterSpecs;
     this.service = service;
+    this.studentService = studentService;
   }
 
   @Override
@@ -89,6 +105,54 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
       throw new PenRegAPIRuntimeException(e.getMessage());
     }
     return getService().findAll(penRegBatchSpecs, pageNumber, pageSize, sorts).thenApplyAsync(penRegBatchEntities -> penRegBatchEntities.map(mapper::toStructure));
+  }
+
+  /**
+   * Create pen request batch pen request batch.
+   *
+   * @param penRequestBatchStudent the pen request batch student
+   * @param penRequestBatchID      the pen request batch id
+   * @return the pen request batch
+   */
+  @Override
+  public PenRequestBatchStudent createPenRequestBatchStudent(PenRequestBatchStudent penRequestBatchStudent, UUID penRequestBatchID) {
+    return studentMapper.toStructure(getStudentService().createStudent(studentMapper.toModel(penRequestBatchStudent), penRequestBatchID));
+  }
+
+  /**
+   * Create pen request batch pen request batch.
+   *
+   * @param penRequestBatchStudent   the pen request batch student
+   * @param penRequestBatchID        the pen request batch id
+   * @param penRequestBatchStudentID the pen request batch student id
+   * @return the pen request batch
+   */
+  @Override
+  public PenRequestBatchStudent updatePenRequestBatchStudent(PenRequestBatchStudent penRequestBatchStudent, UUID penRequestBatchID, UUID penRequestBatchStudentID) {
+    return studentMapper.toStructure(getStudentService().updateStudent(studentMapper.toModel(penRequestBatchStudent), penRequestBatchID, penRequestBatchStudentID));
+  }
+
+  /**
+   * Create pen request batch pen request batch.
+   *
+   * @param penRequestBatchID        the pen request batch id
+   * @param penRequestBatchStudentID the pen request batch student id
+   * @return the pen request batch
+   */
+  @Override
+  public PenRequestBatchStudent getPenRequestBatchStudentByID(UUID penRequestBatchID, UUID penRequestBatchStudentID) {
+    return studentMapper.toStructure(getStudentService().getStudentById(penRequestBatchID, penRequestBatchStudentID));
+  }
+
+  /**
+   * Create pen request batch pen request batch.
+   *
+   * @param penRequestBatchID the pen request batch id
+   * @return the pen request batch
+   */
+  @Override
+  public List<PenRequestBatchStudent> getAllPenRequestBatchStudentByPenRequestBatchID(UUID penRequestBatchID) {
+    return getStudentService().findAllStudentByPenRequestBatchID(penRequestBatchID).stream().map(studentMapper::toStructure).collect(Collectors.toList());
   }
 
 
@@ -154,5 +218,5 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     }
     return penRequestBatchEntitySpecification;
   }
-  
+
 }

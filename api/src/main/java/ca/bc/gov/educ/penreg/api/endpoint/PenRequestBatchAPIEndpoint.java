@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.endpoint;
 
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatch;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudent;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -81,4 +83,57 @@ public interface PenRequestBatchAPIEndpoint {
                                            @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
                                            @RequestParam(name = "sort", defaultValue = "") String sortCriteriaJson,
                                            @RequestParam(name = "searchCriteriaList", required = false) String searchCriteriaListJson);
+
+  /**
+   * Create pen request batch pen request batch.
+   *
+   * @param penRequestBatchStudent the pen request batch student
+   * @param penRequestBatchID      the pen request batch id
+   * @return the pen request batch
+   */
+  @PostMapping("/{penRequestBatchID}/student")
+  @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "CREATED"), @ApiResponse(responseCode = "400", description = "BAD REQUEST")})
+  @ResponseStatus(CREATED)
+  @Transactional
+  PenRequestBatchStudent createPenRequestBatchStudent(@Validated @RequestBody PenRequestBatchStudent penRequestBatchStudent, @PathVariable UUID penRequestBatchID);
+
+  /**
+   * Create pen request batch pen request batch.
+   *
+   * @param penRequestBatchStudent   the pen request batch student
+   * @param penRequestBatchID        the pen request batch id
+   * @param penRequestBatchStudentID the pen request batch student id
+   * @return the pen request batch
+   */
+  @PutMapping("/{penRequestBatchID}/student/{penRequestBatchStudentID}")
+  @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "400", description = "BAD REQUEST")})
+  @Transactional
+  PenRequestBatchStudent updatePenRequestBatchStudent(@Validated @RequestBody PenRequestBatchStudent penRequestBatchStudent, @PathVariable UUID penRequestBatchID, @PathVariable UUID penRequestBatchStudentID);
+
+  /**
+   * Create pen request batch pen request batch.
+   *
+   * @param penRequestBatchID        the pen request batch id
+   * @param penRequestBatchStudentID the pen request batch student id
+   * @return the pen request batch
+   */
+  @GetMapping("/{penRequestBatchID}/student/{penRequestBatchStudentID}")
+  @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "400", description = "BAD REQUEST")})
+  @Transactional
+  PenRequestBatchStudent getPenRequestBatchStudentByID(@PathVariable UUID penRequestBatchID, @PathVariable UUID penRequestBatchStudentID);
+
+  /**
+   * Create pen request batch pen request batch.
+   *
+   * @param penRequestBatchID the pen request batch id
+   * @return the pen request batch
+   */
+  @GetMapping("/{penRequestBatchID}/student")
+  @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "400", description = "BAD REQUEST")})
+  @Transactional
+  List<PenRequestBatchStudent> getAllPenRequestBatchStudentByPenRequestBatchID(@PathVariable UUID penRequestBatchID);
 }

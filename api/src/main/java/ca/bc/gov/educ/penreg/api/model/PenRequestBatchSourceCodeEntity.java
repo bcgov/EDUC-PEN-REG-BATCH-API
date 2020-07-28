@@ -12,7 +12,8 @@ import java.time.LocalDateTime;
 
 /**
  * The type Pen request batch source code entity.
- *  @author OM
+ *
+ * @author OM
  */
 @Entity
 @Table(name = "PEN_REQUEST_BATCH_SOURCE_CODE")

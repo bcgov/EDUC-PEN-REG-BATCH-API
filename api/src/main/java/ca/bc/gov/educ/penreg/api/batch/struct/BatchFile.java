@@ -2,8 +2,8 @@ package ca.bc.gov.educ.penreg.api.batch.struct;
 
 import lombok.Data;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *  @author OM
@@ -12,13 +12,13 @@ import java.util.Set;
 @Data
 public class BatchFile {
   private BatchFileHeader batchFileHeader;
-  private Set<StudentDetails> studentDetails;
+  private List<StudentDetails> studentDetails;
   private BatchFileTrailer batchFileTrailer;
 
 
-  public Set<StudentDetails> getStudentDetails() {
+  public List<StudentDetails> getStudentDetails() {
     if(this.studentDetails == null){
-      this.studentDetails = new HashSet<>();
+      this.studentDetails = new ArrayList<>();
     }
     return this.studentDetails;
   }

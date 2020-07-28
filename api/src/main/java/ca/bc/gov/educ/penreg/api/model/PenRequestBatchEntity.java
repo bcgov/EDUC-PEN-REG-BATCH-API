@@ -1,7 +1,7 @@
 package ca.bc.gov.educ.penreg.api.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
+import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
@@ -36,14 +36,15 @@ public class PenRequestBatchEntity {
 
   /**
    * The Submission number.
+   *  this data comes from TSW table
    */
-  @Column(name = "SUBMISSION_NO", unique = true, length = 8)
+  @Column(name = "SUBMISSION_NO", unique = true, length = 8, nullable = false)
   String submissionNumber;
 
   /**
    * The Pen request batch status code.
    */
-  @Column(name = "PENR_EQUEST_BATCH_STATUS_CODE", length = 10)
+  @Column(name = "PENR_EQUEST_BATCH_STATUS_CODE", length = 10, nullable = false)
   String penRequestBatchStatusCode;
 
   /**
@@ -55,43 +56,43 @@ public class PenRequestBatchEntity {
   /**
    * The Pen request batch type code.
    */
-  @Column(name = "PEN_REQUEST_BATCH_TYPE_CODE")
+  @Column(name = "PEN_REQUEST_BATCH_TYPE_CODE", nullable = false)
   String penRequestBatchTypeCode;
 
   /**
    * The Unarchived flag.
    */
-  @Column(name = "UNARCHIVED_FLAG", length = 1)
+  @Column(name = "UNARCHIVED_FLAG", length = 1, nullable = false)
   String unarchivedFlag;
 
   /**
    * The Unarchived batch changed flag.
    */
-  @Column(name = "UNARCHIVED_BATCH_CHANGED_FLAG", length = 1)
+  @Column(name = "UNARCHIVED_BATCH_CHANGED_FLAG", length = 1, nullable = false)
   String unarchivedBatchChangedFlag;
 
   /**
    * The File name.
    */
-  @Column(name = "FILE_NAME")
+  @Column(name = "FILE_NAME", nullable = false)
   String fileName;
 
   /**
    * The File type.
    */
-  @Column(name = "FILE_TYPE", length = 4)
+  @Column(name = "FILE_TYPE", length = 4, nullable = false)
   String fileType;
 
   /**
    * The Insert date.
    */
-  @Column(name = "INSERT_DATE")
+  @Column(name = "INSERT_DATE", nullable = false)
   LocalDateTime insertDate;
 
   /**
    * The Extract date.
    */
-  @Column(name = "EXTRACT_DATE")
+  @Column(name = "EXTRACT_DATE", nullable = false)
   LocalDateTime extractDate;
 
   /**
@@ -103,19 +104,19 @@ public class PenRequestBatchEntity {
   /**
    * The Source application.
    */
-  @Column(name = "SOURCE_APPLICATION", length = 6)
+  @Column(name = "SOURCE_APPLICATION", length = 6, nullable = false)
   String sourceApplication;
 
   /**
    * The Pen request batch source code.
    */
-  @Column(name = "PEN_REQUEST_BATCH_SOURCE_CODE", length = 10)
-  String penRequestBatchSourceCode;
+  @Column(name = "MINISTRY_PRB_SOURCE_CODE", length = 10, nullable = false)
+  String ministryPRBSourceCode;
 
   /**
    * The Tsw account.
    */
-  @Column(name = "TSW_ACCOUNT", length = 8)
+  @Column(name = "TSW_ACCOUNT", length = 8, nullable = false)
   String tswAccount;
 
   /**
@@ -203,9 +204,16 @@ public class PenRequestBatchEntity {
   /**
    * The Pen request batch student entities.
    */
+  @EqualsAndHashCode.Exclude
+  @ToString.Exclude
   @OneToMany(mappedBy = "penRequestBatchEntity", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, targetEntity = PenRequestBatchStudentEntity.class)
   Set<PenRequestBatchStudentEntity> penRequestBatchStudentEntities;
 
+  /**
+   * Gets pen request batch student entities.
+   *
+   * @return the pen request batch student entities
+   */
   public Set<PenRequestBatchStudentEntity> getPenRequestBatchStudentEntities() {
     if (this.penRequestBatchStudentEntities == null) {
       this.penRequestBatchStudentEntities = new HashSet<>();
