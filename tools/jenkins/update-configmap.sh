@@ -18,7 +18,7 @@ DB_PWD=$(oc -o json get configmaps ${APP_NAME}-${envValue}-setup-config | sed -n
 DB_USER=$(oc -o json get configmaps "${APP_NAME}"-"${envValue}"-setup-config | sed -n "s/.*\"DB_USER_${APP_NAME_UPPER}\": \"\(.*\)\",/\1/p")
 SPLUNK_TOKEN=$(oc -o json get configmaps "${APP_NAME}"-"${envValue}"-setup-config | sed -n "s/.*\"SPLUNK_TOKEN_${APP_NAME_UPPER}\": \"\(.*\)\"/\1/p")
 
-
+oc project $PEN_NAMESPACE-tools
 ###########################################################
 #Fetch the public key
 ###########################################################
