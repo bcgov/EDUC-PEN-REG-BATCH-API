@@ -112,7 +112,7 @@ public class PenRegBatchProcessor {
   }
 
   private void persistDataWithException(String guid, BatchFile batchFile, TraxStudentWeb traxStudentWeb, FileUnProcessableException fileUnProcessableException) {
-    log.info("going to persist data for batch :: {}", guid);
+    log.info("going to persist data with exception for batch :: {}", guid);
     PenRequestBatchEntity entity = mapper.toPenReqBatchEntity(traxStudentWeb, batchFile); // batch file can be processed further and persisted.
     entity.setPenRequestBatchStatusCode(LOAD_FAIL.getCode());
     entity.setPenRequestBatchStatusReason(fileUnProcessableException.getReason());

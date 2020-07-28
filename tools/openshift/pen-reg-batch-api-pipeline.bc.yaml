@@ -2,16 +2,16 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: 'student-api-template'
+  template: 'pen-reg-batch-api-template'
 metadata:
-  name: 'student-api-template'
+  name: 'pen-reg-batch-api-template'
 objects:
   - apiVersion: v1
     kind: BuildConfig
     metadata:
       labels:
-        build: student-api-pipeline
-      name: student-api-pipeline
+        build: pen-reg-batch-api-pipeline
+      name: pen-reg-batch-api-pipeline
     spec:
       source:
         git:
