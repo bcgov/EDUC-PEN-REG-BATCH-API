@@ -177,6 +177,7 @@ public class PenRegBatchProcessor {
     for (var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.
       PenRequestBatchStudentEntity studentEntity = mapper.toPenRequestBatchStudentEntity(student);
       studentEntity.setPenRequestBatchEntity(entity); // add thePK/FK relationship
+      studentEntity.setPenRequestBatchStudentStatusCode(LOADED.getCode());
       entity.getPenRequestBatchStudentEntities().add(studentEntity);
     }
     getPenRequestBatchFileService().savePenRequestBatchEntity(entity);
