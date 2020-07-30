@@ -1,19 +1,19 @@
-package ca.bc.gov.educ.penreg.api.controller;
+package ca.bc.gov.educ.penreg.api.controller.v1;
 
-import ca.bc.gov.educ.penreg.api.endpoint.PenRequestBatchAPIEndpoint;
+import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchAPIEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchFilterSpecs;
-import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchMapper;
-import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchStudentMapper;
+import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
+import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatch;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudent;
-import ca.bc.gov.educ.penreg.api.struct.SearchCriteria;
-import ca.bc.gov.educ.penreg.api.struct.ValueType;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.SearchCriteria;
+import ca.bc.gov.educ.penreg.api.struct.v1.ValueType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,7 +1,9 @@
-package ca.bc.gov.educ.penreg.api.mappers;
+package ca.bc.gov.educ.penreg.api.mappers.v1;
 
+import ca.bc.gov.educ.penreg.api.mappers.LocalDateTimeMapper;
+import ca.bc.gov.educ.penreg.api.mappers.UUIDMapper;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

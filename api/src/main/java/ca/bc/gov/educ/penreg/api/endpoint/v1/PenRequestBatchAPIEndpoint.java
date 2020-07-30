@@ -1,7 +1,7 @@
-package ca.bc.gov.educ.penreg.api.endpoint;
+package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatch;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,7 +23,7 @@ import static org.springframework.http.HttpStatus.CREATED;
 /**
  * The interface Pen reg api endpoint.
  */
-@RequestMapping("/pen-request-batch")
+@RequestMapping("/api/v1/pen-request-batch")
 @OpenAPIDefinition(info = @Info(title = "API for Pen Registry.", description = "This CRU API is related to batch processing of student data.", version = "1"), security = {@SecurityRequirement(name = "OAUTH2", scopes = {"READ_STUDENT", "WRITE_STUDENT"})})
 public interface PenRequestBatchAPIEndpoint {
 

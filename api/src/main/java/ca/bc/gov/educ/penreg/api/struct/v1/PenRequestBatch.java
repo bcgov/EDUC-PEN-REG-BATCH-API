@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.struct;
+package ca.bc.gov.educ.penreg.api.struct.v1;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -70,7 +70,7 @@ public class PenRequestBatch {
   /**
    * The Pen request batch source code.
    */
-  String penRequestBatchSourceCode;
+  String ministryPRBSourceCode;
   /**
    * The Tsw account.
    */

@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.struct;
+package ca.bc.gov.educ.penreg.api.struct.v1;
 
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import lombok.AllArgsConstructor;
