@@ -17,7 +17,23 @@ public enum PenRequestBatchStatusCodes {
   /**
    * Loaded pen request batch status codes.
    */
-  LOADED("LOADED");
+  LOADED("LOADED"),
+  /**
+   * Validated pen request batch status codes.
+   */
+  VALIDATED("VALIDATED"),
+  /**
+   * Active pen request batch status codes.
+   */
+  ACTIVE("ACTIVE"),
+  /**
+   * Unarchived pen request batch status codes.
+   */
+  UNARCHIVED("UNARCHIVED"),
+  /**
+   * Archived pen request batch status codes.
+   */
+  ARCHIVED("ARCHIVED");
 
   @Getter
   private final String code;

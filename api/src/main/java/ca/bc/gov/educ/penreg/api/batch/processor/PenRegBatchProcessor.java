@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.batch.processor;
 
+import ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.batch.exception.FileError;
 import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
 import ca.bc.gov.educ.penreg.api.batch.input.TraxStudentWeb;
@@ -177,7 +178,7 @@ public class PenRegBatchProcessor {
     for (var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.
       PenRequestBatchStudentEntity studentEntity = mapper.toPenRequestBatchStudentEntity(student);
       studentEntity.setPenRequestBatchEntity(entity); // add thePK/FK relationship
-      studentEntity.setPenRequestBatchStudentStatusCode(LOADED.getCode());
+      studentEntity.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.LOADED.getCode());
       entity.getPenRequestBatchStudentEntities().add(studentEntity);
     }
     getPenRequestBatchFileService().savePenRequestBatchEntity(entity);
