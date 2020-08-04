@@ -10,7 +10,8 @@ import javax.validation.constraints.NotNull;
 
 /**
  * The type Search criteria.
- *  @author OM
+ *
+ * @author OM
  */
 @AllArgsConstructor
 @NoArgsConstructor

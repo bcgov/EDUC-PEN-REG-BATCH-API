@@ -10,6 +10,9 @@ import java.time.chrono.ChronoLocalDateTime;
 import java.util.UUID;
 import java.util.function.Function;
 
+/**
+ * The type Pen reg batch filter specs.
+ */
 @Service
 @Slf4j
 public class PenRegBatchFilterSpecs {
@@ -22,6 +25,17 @@ public class PenRegBatchFilterSpecs {
   private final FilterSpecifications<PenRequestBatchEntity, UUID> uuidFilterSpecifications;
   private final Converters converters;
 
+  /**
+   * Instantiates a new Pen reg batch filter specs.
+   *
+   * @param dateFilterSpecifications     the date filter specifications
+   * @param dateTimeFilterSpecifications the date time filter specifications
+   * @param integerFilterSpecifications  the integer filter specifications
+   * @param stringFilterSpecifications   the string filter specifications
+   * @param longFilterSpecifications     the long filter specifications
+   * @param uuidFilterSpecifications     the uuid filter specifications
+   * @param converters                   the converters
+   */
   public PenRegBatchFilterSpecs(FilterSpecifications<PenRequestBatchEntity, ChronoLocalDate> dateFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, ChronoLocalDateTime<?>> dateTimeFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, Integer> integerFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, String> stringFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, Long> longFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, UUID> uuidFilterSpecifications, Converters converters) {
     this.dateFilterSpecifications = dateFilterSpecifications;
     this.dateTimeFilterSpecifications = dateTimeFilterSpecifications;
@@ -32,25 +46,74 @@ public class PenRegBatchFilterSpecs {
     this.converters = converters;
   }
 
+  /**
+   * Gets date type specification.
+   *
+   * @param fieldName       the field name
+   * @param filterValue     the filter value
+   * @param filterOperation the filter operation
+   * @return the date type specification
+   */
   public Specification<PenRequestBatchEntity> getDateTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation) {
     return getSpecification(fieldName, filterValue, filterOperation, converters.getFunction(ChronoLocalDate.class), dateFilterSpecifications);
   }
 
+  /**
+   * Gets date time type specification.
+   *
+   * @param fieldName       the field name
+   * @param filterValue     the filter value
+   * @param filterOperation the filter operation
+   * @return the date time type specification
+   */
   public Specification<PenRequestBatchEntity> getDateTimeTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation) {
     return getSpecification(fieldName, filterValue, filterOperation, converters.getFunction(ChronoLocalDateTime.class), dateTimeFilterSpecifications);
   }
 
+  /**
+   * Gets integer type specification.
+   *
+   * @param fieldName       the field name
+   * @param filterValue     the filter value
+   * @param filterOperation the filter operation
+   * @return the integer type specification
+   */
   public Specification<PenRequestBatchEntity> getIntegerTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation) {
     return getSpecification(fieldName, filterValue, filterOperation, converters.getFunction(Integer.class), integerFilterSpecifications);
   }
 
+  /**
+   * Gets long type specification.
+   *
+   * @param fieldName       the field name
+   * @param filterValue     the filter value
+   * @param filterOperation the filter operation
+   * @return the long type specification
+   */
   public Specification<PenRequestBatchEntity> getLongTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation) {
     return getSpecification(fieldName, filterValue, filterOperation, converters.getFunction(Long.class), longFilterSpecifications);
   }
 
+  /**
+   * Gets string type specification.
+   *
+   * @param fieldName       the field name
+   * @param filterValue     the filter value
+   * @param filterOperation the filter operation
+   * @return the string type specification
+   */
   public Specification<PenRequestBatchEntity> getStringTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation) {
     return getSpecification(fieldName, filterValue, filterOperation, converters.getFunction(String.class), stringFilterSpecifications);
   }
+
+  /**
+   * Gets uuid type specification.
+   *
+   * @param fieldName       the field name
+   * @param filterValue     the filter value
+   * @param filterOperation the filter operation
+   * @return the uuid type specification
+   */
   public Specification<PenRequestBatchEntity> getUUIDTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation) {
     return getSpecification(fieldName, filterValue, filterOperation, converters.getFunction(UUID.class), uuidFilterSpecifications);
   }

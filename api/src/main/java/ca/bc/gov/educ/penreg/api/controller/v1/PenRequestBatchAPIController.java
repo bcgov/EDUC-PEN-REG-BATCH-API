@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchAPIEndpoint;
+import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
@@ -25,17 +26,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -89,7 +86,6 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   }
 
   @Override
-  @Transactional(propagation = Propagation.SUPPORTS)
   public CompletableFuture<Page<PenRequestBatch>> findAll(Integer pageNumber, Integer pageSize, String sortCriteriaJson, String searchCriteriaListJson) {
     final ObjectMapper objectMapper = new ObjectMapper();
     final List<Sort.Order> sorts = new ArrayList<>();
@@ -107,53 +103,21 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     return getService().findAll(penRegBatchSpecs, pageNumber, pageSize, sorts).thenApplyAsync(penRegBatchEntities -> penRegBatchEntities.map(mapper::toStructure));
   }
 
-  /**
-   * Create pen request batch pen request batch.
-   *
-   * @param penRequestBatchStudent the pen request batch student
-   * @param penRequestBatchID      the pen request batch id
-   * @return the pen request batch
-   */
   @Override
   public PenRequestBatchStudent createPenRequestBatchStudent(PenRequestBatchStudent penRequestBatchStudent, UUID penRequestBatchID) {
     return studentMapper.toStructure(getStudentService().createStudent(studentMapper.toModel(penRequestBatchStudent), penRequestBatchID));
   }
 
-  /**
-   * Create pen request batch pen request batch.
-   *
-   * @param penRequestBatchStudent   the pen request batch student
-   * @param penRequestBatchID        the pen request batch id
-   * @param penRequestBatchStudentID the pen request batch student id
-   * @return the pen request batch
-   */
   @Override
   public PenRequestBatchStudent updatePenRequestBatchStudent(PenRequestBatchStudent penRequestBatchStudent, UUID penRequestBatchID, UUID penRequestBatchStudentID) {
     return studentMapper.toStructure(getStudentService().updateStudent(studentMapper.toModel(penRequestBatchStudent), penRequestBatchID, penRequestBatchStudentID));
   }
 
-  /**
-   * Create pen request batch pen request batch.
-   *
-   * @param penRequestBatchID        the pen request batch id
-   * @param penRequestBatchStudentID the pen request batch student id
-   * @return the pen request batch
-   */
   @Override
   public PenRequestBatchStudent getPenRequestBatchStudentByID(UUID penRequestBatchID, UUID penRequestBatchStudentID) {
     return studentMapper.toStructure(getStudentService().getStudentById(penRequestBatchID, penRequestBatchStudentID));
   }
 
-  /**
-   * Create pen request batch pen request batch.
-   *
-   * @param penRequestBatchID the pen request batch id
-   * @return the pen request batch
-   */
-  @Override
-  public List<PenRequestBatchStudent> getAllPenRequestBatchStudentByPenRequestBatchID(UUID penRequestBatchID) {
-    return getStudentService().findAllStudentByPenRequestBatchID(penRequestBatchID).stream().map(studentMapper::toStructure).collect(Collectors.toList());
-  }
 
 
   private void getSortCriteria(String sortCriteriaJson, ObjectMapper objectMapper, List<Sort.Order> sorts) throws JsonProcessingException {

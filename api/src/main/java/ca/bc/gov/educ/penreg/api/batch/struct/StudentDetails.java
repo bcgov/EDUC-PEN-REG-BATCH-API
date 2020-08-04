@@ -6,8 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * @author OM
  * The type Student details.
+ *
+ * @author OM  The type Student details.
  */
 @Data
 @Builder

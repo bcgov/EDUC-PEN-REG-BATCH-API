@@ -4,6 +4,7 @@ import lombok.Getter;
 
 /**
  * The enum Batch file constants.
+ *
  * @author OM
  */
 public enum BatchFileConstants {

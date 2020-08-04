@@ -1,18 +1,17 @@
 package ca.bc.gov.educ.penreg.api.batch.processor;
 
-import ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.batch.exception.FileError;
 import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
-import ca.bc.gov.educ.penreg.api.batch.input.TraxStudentWeb;
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper;
 import ca.bc.gov.educ.penreg.api.batch.service.PenRequestBatchFileService;
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFileHeader;
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFileTrailer;
 import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
+import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.flatpack.DataError;
 import net.sf.flatpack.DataSet;
@@ -20,19 +19,13 @@ import net.sf.flatpack.DefaultParserFactory;
 import net.sf.flatpack.Parser;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import javax.validation.constraints.NotNull;
 import java.io.*;
-import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.UUID;
 
 import static ca.bc.gov.educ.penreg.api.batch.constants.BatchFileConstants.*;
-import static ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchStatusCodes.LOADED;
-import static ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchStatusCodes.LOAD_FAIL;
-import static ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchTypeCode.SCHOOL;
 import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.*;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -76,18 +69,18 @@ public class PenRegBatchProcessor {
    * 1. <p>The data comes from TSW table so if the the data from the TSW table cant be read error is logged and email is sent.</p>
    * 2. <p>If The data is successfully retrieved from TSW table and file header cant be parsed, system will create only the header record and persist it.
    *
-   * @param traxStudentWeb the pojo containing the table row from tsw
+   * @param penWebBlobEntity the pen web blob entity
+   * @return the string
    */
-  @Async
-  public void processPenRegBatchFileFromTSW(@NotNull final TraxStudentWeb traxStudentWeb) {
+  public String processPenRegBatchFileFromTSW(@NonNull PENWebBlobEntity penWebBlobEntity) {
     var guid = UUID.randomUUID().toString(); // this guid will be used throughout the logs for easy tracking.
-    log.info("Started processing file from TSW with submission Number :: {} and guid :: {}", traxStudentWeb.getSubmissionNumber(), guid);
+    log.info("Started processing row from Pen Web Blobs with submission Number :: {} and guid :: {}", penWebBlobEntity.getSubmissionNumber(), guid);
     BatchFile batchFile = new BatchFile();
     Reader batchFileReader = null;
     try (Reader mapperReader = new FileReader(new File(
         Objects.requireNonNull(getClass().getClassLoader().getResource("mapper.xml")).getFile()))) {
 
-      batchFileReader = new InputStreamReader(new ByteArrayInputStream(traxStudentWeb.getFileContents()));
+      batchFileReader = new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents()));
       final Parser pzParser = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReader);
       final DataSet ds = pzParser.setNullEmptyStrings(true).parse();
       processDataSetForRowLengthErrors(guid, ds);
@@ -96,11 +89,11 @@ public class PenRegBatchProcessor {
       if (!StringUtils.isNumeric(studentCount) || Integer.parseInt(studentCount) != batchFile.getStudentDetails().size()) {
         throw new FileUnProcessableException(STUDENT_COUNT_MISMATCH, guid, studentCount, String.valueOf(batchFile.getStudentDetails().size()));
       }
-      persistData(guid, batchFile, traxStudentWeb);
+      persistData(guid, batchFile, penWebBlobEntity);
     } catch (FileUnProcessableException fileUnProcessableException) { // system needs to persist the data in this case.
-      persistDataWithException(guid, batchFile, traxStudentWeb, fileUnProcessableException);
+      persistDataWithException(guid, penWebBlobEntity, fileUnProcessableException);
     } catch (Exception e) { // need to check what to do in case of general exception.
-      log.error("Exception while processing the file :: " + guid, e);
+      log.error("Exception while processing the file with guid :: {} :: Exception :: {}", guid, e);
     } finally {
       if (batchFileReader != null) {
         try {
@@ -110,18 +103,16 @@ public class PenRegBatchProcessor {
         }
       }
     }
+    return "SUCCESS";
   }
 
-  private void persistDataWithException(String guid, BatchFile batchFile, TraxStudentWeb traxStudentWeb, FileUnProcessableException fileUnProcessableException) {
+  private void persistDataWithException(@NonNull String guid, @NonNull PENWebBlobEntity penWebBlobEntity, @NonNull FileUnProcessableException fileUnProcessableException) {
     log.info("going to persist data with exception for batch :: {}", guid);
-    PenRequestBatchEntity entity = mapper.toPenReqBatchEntity(traxStudentWeb, batchFile); // batch file can be processed further and persisted.
-    entity.setPenRequestBatchStatusCode(LOAD_FAIL.getCode());
-    entity.setPenRequestBatchStatusReason(fileUnProcessableException.getReason());
-    entity.setPenRequestBatchTypeCode(SCHOOL.getCode()); // it will be always school for this process.
-    getPenRequestBatchFileService().savePenRequestBatchEntity(entity);
+    PenRequestBatchEntity entity = mapper.toPenReqBatchEntityLoadFail(penWebBlobEntity, fileUnProcessableException.getReason()); // batch file can be processed further and persisted.
+    getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
   }
 
-  private void processDataSetForRowLengthErrors(String guid, DataSet ds) throws FileUnProcessableException {
+  private void processDataSetForRowLengthErrors(@NonNull String guid, @NonNull DataSet ds) throws FileUnProcessableException {
     if (ds.getErrors() != null && !ds.getErrors().isEmpty()) {
       var message = "";
       for (DataError error : ds.getErrors()) {
@@ -142,9 +133,9 @@ public class PenRegBatchProcessor {
 
   private String getDetailRowLengthIncorrectMessage(String message, DataError error) {
     if (error.getErrorDesc().contains(TOO_LONG)) {
-      message = message.concat("Detail record "+ error.getLineNo()+" has extraneous characters, ");
+      message = message.concat("Detail record " + error.getLineNo() + " has extraneous characters, ");
     } else {
-      message = message.concat("Detail record "+error.getLineNo()+" is missing characters, ");
+      message = message.concat("Detail record " + error.getLineNo() + " is missing characters, ");
     }
     return message;
   }
@@ -168,21 +159,15 @@ public class PenRegBatchProcessor {
   }
 
   // System was able to process the file successfully, now the data is persisted.
-  private void persistData(String guid, BatchFile batchFile, TraxStudentWeb traxStudentWeb) {
+  private void persistData(@NonNull String guid,@NonNull BatchFile batchFile, @NonNull PENWebBlobEntity penWebBlobEntity) {
     log.info("going to persist data for batch :: {}", guid);
-    PenRequestBatchEntity entity = mapper.toPenReqBatchEntity(traxStudentWeb, batchFile); // batch file can be processed further and persisted.
-    entity.setPenRequestBatchStatusCode(LOADED.getCode());
-    entity.setPenRequestBatchTypeCode(SCHOOL.getCode()); // it will be always school for this process.
-    entity.setStudentCount(new BigDecimal(batchFile.getStudentDetails().size()));
-    entity.setSourceStudentCount(new BigDecimal(batchFile.getBatchFileTrailer().getStudentCount()));
+    PenRequestBatchEntity entity = mapper.toPenReqBatchEntityLoaded(penWebBlobEntity, batchFile); // batch file can be processed further and persisted.
     for (var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.
-      PenRequestBatchStudentEntity studentEntity = mapper.toPenRequestBatchStudentEntity(student);
-      studentEntity.setPenRequestBatchEntity(entity); // add thePK/FK relationship
-      studentEntity.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.LOADED.getCode());
-      entity.getPenRequestBatchStudentEntities().add(studentEntity);
+      entity.getPenRequestBatchStudentEntities().add(mapper.toPenRequestBatchStudentEntity(student,entity));
     }
-    getPenRequestBatchFileService().savePenRequestBatchEntity(entity);
+    getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
   }
+
 
 
   private void populateBatchFile(String guid, DataSet ds, BatchFile batchFile) throws FileUnProcessableException {

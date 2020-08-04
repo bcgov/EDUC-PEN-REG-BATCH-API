@@ -57,6 +57,14 @@ public class FilterCriteria<T extends Comparable<T>> {
    */
   private final Collection<T> convertedValues;
 
+  /**
+   * Instantiates a new Filter criteria.
+   *
+   * @param fieldName         the field name
+   * @param fieldValue        the field value
+   * @param filterOperation   the filter operation
+   * @param converterFunction the converter function
+   */
   public FilterCriteria(@NotNull String fieldName, @NotNull String fieldValue, @NotNull FilterOperation filterOperation, Function<String, T> converterFunction) {
 
     this.fieldName = fieldName;
@@ -109,34 +117,74 @@ public class FilterCriteria<T extends Comparable<T>> {
 
   }
 
+  /**
+   * Gets converted single value.
+   *
+   * @return the converted single value
+   */
   public T getConvertedSingleValue() {
     return convertedSingleValue;
   }
 
+  /**
+   * Gets min value.
+   *
+   * @return the min value
+   */
   public T getMinValue() {
     return minValue;
   }
 
+  /**
+   * Gets max value.
+   *
+   * @return the max value
+   */
   public T getMaxValue() {
     return maxValue;
   }
 
+  /**
+   * Gets operation.
+   *
+   * @return the operation
+   */
   public FilterOperation getOperation() {
     return operation;
   }
 
+  /**
+   * Gets field name.
+   *
+   * @return the field name
+   */
   public String getFieldName() {
     return fieldName;
   }
 
+  /**
+   * Gets converter function.
+   *
+   * @return the converter function
+   */
   public Function<String, T> getConverterFunction() {
     return converterFunction;
   }
 
+  /**
+   * Gets original values.
+   *
+   * @return the original values
+   */
   public Collection<String> getOriginalValues() {
     return originalValues;
   }
 
+  /**
+   * Gets converted values.
+   *
+   * @return the converted values
+   */
   public Collection<T> getConvertedValues() {
     return convertedValues;
   }

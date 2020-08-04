@@ -2,6 +2,8 @@ package ca.bc.gov.educ.penreg.api.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
@@ -11,7 +13,8 @@ import java.util.UUID;
 
 /**
  * The type Pen request batch student entity.
- *  @author OM
+ *
+ * @author OM
  */
 @Entity
 @Table(name = "PEN_REQUEST_BATCH_STUDENT")
@@ -34,6 +37,8 @@ public class PenRequestBatchStudentEntity {
   /**
    * The Pen request batch entity.
    */
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
   @ManyToOne(cascade = CascadeType.ALL, optional = false, targetEntity = PenRequestBatchEntity.class)
   @JoinColumn(name = "PEN_REQUEST_BATCH_ID", referencedColumnName = "PEN_REQUEST_BATCH_ID", updatable = false)
   PenRequestBatchEntity penRequestBatchEntity;
@@ -41,8 +46,8 @@ public class PenRequestBatchStudentEntity {
   /**
    * The Pen request student status code.
    */
-  @Column(name="PEN_REQUEST_BATCH_STUDENT_STATUS_CODE", length = 10, nullable = false)
-  String penRequestBatchStudentStatusCode;
+  @Column(name = "PEN_REQUEST_BATCH_STUDENT_STATUS_CODE", nullable = false, length = 10)
+  private String penRequestBatchStudentStatusCode;
 
   /**
    * The Local id.

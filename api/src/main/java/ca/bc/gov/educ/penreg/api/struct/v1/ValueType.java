@@ -2,7 +2,8 @@ package ca.bc.gov.educ.penreg.api.struct.v1;
 
 /**
  * The enum Value type.
- *  @author OM
+ *
+ * @author OM
  */
 public enum ValueType {
   /**

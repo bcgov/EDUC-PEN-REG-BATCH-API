@@ -5,11 +5,15 @@ package ca.bc.gov.educ.penreg.api.exception;
  *
  * @author John Cox
  */
-
 public class InvalidParameterException extends RuntimeException {
 
   private static final long serialVersionUID = -2325104800954988680L;
 
+  /**
+   * Instantiates a new Invalid parameter exception.
+   *
+   * @param searchParamsMap the search params map
+   */
   public InvalidParameterException(String... searchParamsMap) {
     super(InvalidParameterException.generateMessage(searchParamsMap));
   }

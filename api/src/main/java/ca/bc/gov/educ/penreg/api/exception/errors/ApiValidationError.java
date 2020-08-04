@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+/**
+ * The type Api validation error.
+ */
 @AllArgsConstructor
 @Data
 @Builder
@@ -14,6 +17,12 @@ public class ApiValidationError implements ApiSubError {
   private Object rejectedValue;
   private String message;
 
+  /**
+   * Instantiates a new Api validation error.
+   *
+   * @param object  the object
+   * @param message the message
+   */
   ApiValidationError(String object, String message) {
     this.object = object;
     this.message = message;
