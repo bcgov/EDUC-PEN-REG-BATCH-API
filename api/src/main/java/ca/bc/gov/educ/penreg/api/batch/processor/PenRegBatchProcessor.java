@@ -72,7 +72,7 @@ public class PenRegBatchProcessor {
    * @param penWebBlobEntity the pen web blob entity
    * @return the string
    */
-  public String processPenRegBatchFileFromTSW(@NonNull PENWebBlobEntity penWebBlobEntity) {
+  public String processPenRegBatchFileFromPenWebBlob(@NonNull PENWebBlobEntity penWebBlobEntity) {
     var guid = UUID.randomUUID().toString(); // this guid will be used throughout the logs for easy tracking.
     log.info("Started processing row from Pen Web Blobs with submission Number :: {} and guid :: {}", penWebBlobEntity.getSubmissionNumber(), guid);
     BatchFile batchFile = new BatchFile();

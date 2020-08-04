@@ -88,7 +88,7 @@ public class PenRegBatchProcessorTest {
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
     var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_8_records_Header_Short_Length").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
@@ -110,7 +110,7 @@ public class PenRegBatchProcessorTest {
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
     var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_10_records_Header_Longer_length.txt").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
@@ -132,7 +132,7 @@ public class PenRegBatchProcessorTest {
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
     var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_10_records_Trailer_Longer_length").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
@@ -154,7 +154,7 @@ public class PenRegBatchProcessorTest {
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
     var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_10_records_Trailer_Shorter_length").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
@@ -176,7 +176,7 @@ public class PenRegBatchProcessorTest {
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
     var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_30_records_OK").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
@@ -200,7 +200,7 @@ public class PenRegBatchProcessorTest {
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
     var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_1000_records_OK").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
@@ -218,7 +218,7 @@ public class PenRegBatchProcessorTest {
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
     var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_10_records_student_count_mismatch").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
@@ -235,7 +235,7 @@ public class PenRegBatchProcessorTest {
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
     var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_10_records_student_does_not_start_with_SRM_mismatch").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
@@ -252,7 +252,7 @@ public class PenRegBatchProcessorTest {
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
     var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_PSI_OK").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
@@ -268,7 +268,7 @@ public class PenRegBatchProcessorTest {
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
     var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_OK").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);

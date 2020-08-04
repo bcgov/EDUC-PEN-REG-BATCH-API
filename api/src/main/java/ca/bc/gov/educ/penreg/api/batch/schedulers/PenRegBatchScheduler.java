@@ -57,7 +57,7 @@ public class PenRegBatchScheduler implements Closeable {
       log.info("{} :: records found where extract date is null", unExtractedRecords.size());
       List<Future<String>> futureResults = new ArrayList<>(unExtractedRecords.size());
       for (var penWebBlob : unExtractedRecords) {
-        final Callable<String> callable = () -> getPenRegBatchProcessor().processPenRegBatchFileFromTSW(penWebBlob);
+        final Callable<String> callable = () -> getPenRegBatchProcessor().processPenRegBatchFileFromPenWebBlob(penWebBlob);
         futureResults.add(executorService.submit(callable));
       }
       // this will make sure that this thread waits for all the processing threads to complete.
