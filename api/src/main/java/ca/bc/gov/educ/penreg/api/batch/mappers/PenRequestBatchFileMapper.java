@@ -1,30 +1,45 @@
 package ca.bc.gov.educ.penreg.api.batch.mappers;
 
-import ca.bc.gov.educ.penreg.api.batch.input.TraxStudentWeb;
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
 import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
-import ca.bc.gov.educ.penreg.api.mappers.LocalDateTimeMapper;
-import ca.bc.gov.educ.penreg.api.mappers.UUIDMapper;
+import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.NullValueCheckStrategy;
 import org.mapstruct.factory.Mappers;
 
-@Mapper(uses = {UUIDMapper.class, LocalDateTimeMapper.class})
+/**
+ * The interface Pen request batch file mapper.
+ */
+@Mapper
 @DecoratedWith(PenRequestBatchFileDecorator.class)
 @SuppressWarnings("squid:S1214")
 public interface PenRequestBatchFileMapper {
+  /**
+   * The constant mapper.
+   */
   PenRequestBatchFileMapper mapper = Mappers.getMapper(PenRequestBatchFileMapper.class);
 
 
-  @Mapping(target = "unarchivedFlag", ignore = true)
+  /**
+   * To pen req batch entity loaded pen request batch entity.
+   *
+   * @param penWebBlobEntity the pen web blob entity
+   * @param file             the file
+   * @return the pen request batch entity
+   */
+  @Mapping(target = "ministryPRBSourceCode", ignore = true)
+  @Mapping(target = "extractDate", ignore = true)
+  @Mapping(target = "unarchivedUser", ignore = true)
+  @Mapping(target = "unarchivedBatchStatusCode", ignore = true)
   @Mapping(target = "unarchivedBatchChangedFlag", ignore = true)
   @Mapping(target = "studentCount", ignore = true)
+  @Mapping(target = "schoolGroupCode", ignore = true)
   @Mapping(target = "repeatCount", ignore = true)
   @Mapping(target = "processDate", ignore = true)
-  @Mapping(target = "errorCount", ignore = true)
   @Mapping(target = "penRequestBatchTypeCode", ignore = true)
   @Mapping(target = "penRequestBatchStudentEntities", ignore = true)
   @Mapping(target = "penRequestBatchStatusReason", ignore = true)
@@ -33,52 +48,69 @@ public interface PenRequestBatchFileMapper {
   @Mapping(target = "matchedCount", ignore = true)
   @Mapping(target = "issuedPenCount", ignore = true)
   @Mapping(target = "fixableCount", ignore = true)
-  @Mapping(source = "traxStudentWeb.tswAccount", target = "tswAccount")
-  @Mapping(source = "traxStudentWeb.submissionNumber", target = "submissionNumber")
-  @Mapping(source = "traxStudentWeb.sourceApplication", target = "sourceApplication")
-  @Mapping(source = "traxStudentWeb.ministryPRBSourceCode", target = "ministryPRBSourceCode")
-  @Mapping(source = "traxStudentWeb.insertDate", target = "insertDate")
-  @Mapping(source = "traxStudentWeb.fileType", target = "fileType")
-  @Mapping(source = "traxStudentWeb.fileName", target = "fileName")
-  @Mapping(source = "traxStudentWeb.extractDate", target = "extractDate")
-  @Mapping(source = "file.batchFileHeader.minCode", target = "minCode")
-  @Mapping(source = "file.batchFileHeader.schoolName", target = "schoolName")
-  @Mapping(source = "file.batchFileHeader.emailID", target = "email")
-  @Mapping(source = "file.batchFileHeader.contactName", target = "contactName")
+  @Mapping(target = "errorCount", ignore = true)
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getTswAccount() ))", target = "tswAccount")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getSubmissionNumber() ))", target = "submissionNumber")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getSourceApplication() ))", target = "sourceApplication")
+  @Mapping(source = "penWebBlobEntity.insertDateTime", target = "insertDate")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getFileType() ))", target = "fileType")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getFileName() ))", target = "fileName")
+  @Mapping(source = "penWebBlobEntity.studentCount", target = "sourceStudentCount")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileHeader().getMinCode() ))", target = "minCode")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileHeader().getSchoolName() ))", target = "schoolName")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileHeader().getEmailID() ))", target = "email")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileHeader().getContactName() ))", target = "contactName")
   @Mapping(source = "file.batchFileHeader.officeNumber", target = "officeNumber")
-  @Mapping(source = "file.batchFileTrailer.productID", target = "sisProductID")
-  @Mapping(source = "file.batchFileTrailer.productName", target = "sisProductName")
-  @Mapping(source = "file.batchFileTrailer.vendorName", target = "sisVendorName")
-  @Mapping(source = "file.batchFileTrailer.studentCount", target = "sourceStudentCount")
-  PenRequestBatchEntity toPenReqBatchEntity(TraxStudentWeb traxStudentWeb, BatchFile file);
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileTrailer().getProductID() ))", target = "sisProductID")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileTrailer().getProductName() ))", target = "sisProductName")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileTrailer().getVendorName() ))", target = "sisVendorName", nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
+  PenRequestBatchEntity toPenReqBatchEntityLoaded(PENWebBlobEntity penWebBlobEntity, BatchFile file);
 
-  @Mapping(target = "penRequestBatchStudentStatusCode", ignore = true)
+
+  /**
+   * To pen request batch student entity pen request batch student entity.
+   *
+   * @param studentDetails        the student details
+   * @param penRequestBatchEntity the pen request batch entity
+   * @return the pen request batch student entity
+   */
   @Mapping(target = "studentID", ignore = true)
+  @Mapping(target = "penRequestBatchStudentStatusCode", ignore = true)
   @Mapping(target = "penRequestBatchStudentID", ignore = true)
   @Mapping(target = "penRequestBatchEntity", ignore = true)
   @Mapping(target = "assignedPEN", ignore = true)
-  @Mapping(source = "gender", target = "genderCode")
-  @Mapping(source = "birthDate", target = "dob")
-  @Mapping(source = "enrolledGradeCode", target = "gradeCode")
-  @Mapping(source = "legalGivenName", target = "legalFirstName")
-  @Mapping(source = "legalMiddleName", target = "legalMiddleNames")
-  @Mapping(source = "legalSurname", target = "legalLastName")
-  @Mapping(source = "usualGivenName", target = "usualFirstName")
-  @Mapping(source = "usualMiddleName", target = "usualMiddleNames")
-  @Mapping(source = "usualSurname", target = "usualLastName")
-  @Mapping(source = "localStudentID", target = "localID")
-  @Mapping(source = "pen", target = "submittedPen")
-  PenRequestBatchStudentEntity toPenRequestBatchStudentEntity(StudentDetails studentDetails);
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getPostalCode()))", target = "postalCode")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getGender()))", target = "genderCode")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getBirthDate()))", target = "dob")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getEnrolledGradeCode()))", target = "gradeCode")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getLegalGivenName()))", target = "legalFirstName")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getLegalMiddleName()))", target = "legalMiddleNames")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getLegalSurname()))", target = "legalLastName")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getUsualGivenName()))", target = "usualFirstName")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getUsualMiddleName()))", target = "usualMiddleNames")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getUsualSurname()))", target = "usualLastName")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getLocalStudentID()))", target = "localID")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getPen()))", target = "submittedPen")
+  PenRequestBatchStudentEntity toPenRequestBatchStudentEntity(StudentDetails studentDetails, PenRequestBatchEntity penRequestBatchEntity);
 
 
-  @Mapping(target = "unarchivedFlag", ignore = true)
-  @Mapping(target = "unarchivedBatchChangedFlag", ignore = true)
+  /**
+   * To pen req batch entity load fail pen request batch entity.
+   *
+   * @param penWebBlobEntity the pen web blob entity
+   * @param reason           the reason
+   * @return the pen request batch entity
+   */
   @Mapping(target = "studentCount", ignore = true)
-  @Mapping(target = "sourceStudentCount", ignore = true)
+  @Mapping(target = "minCode", ignore = true)
+  @Mapping(target = "unarchivedUser", ignore = true)
+  @Mapping(target = "unarchivedBatchStatusCode", ignore = true)
+  @Mapping(target = "unarchivedBatchChangedFlag", ignore = true)
   @Mapping(target = "sisVendorName", ignore = true)
   @Mapping(target = "sisProductName", ignore = true)
   @Mapping(target = "sisProductID", ignore = true)
   @Mapping(target = "schoolName", ignore = true)
+  @Mapping(target = "schoolGroupCode", ignore = true)
   @Mapping(target = "repeatCount", ignore = true)
   @Mapping(target = "processDate", ignore = true)
   @Mapping(target = "penRequestBatchTypeCode", ignore = true)
@@ -87,12 +119,20 @@ public interface PenRequestBatchFileMapper {
   @Mapping(target = "penRequestBatchStatusCode", ignore = true)
   @Mapping(target = "penRequestBatchID", ignore = true)
   @Mapping(target = "officeNumber", ignore = true)
-  @Mapping(target = "minCode", ignore = true)
+  @Mapping(target = "ministryPRBSourceCode", ignore = true)
   @Mapping(target = "matchedCount", ignore = true)
   @Mapping(target = "issuedPenCount", ignore = true)
   @Mapping(target = "fixableCount", ignore = true)
+  @Mapping(target = "extractDate", ignore = true)
   @Mapping(target = "errorCount", ignore = true)
   @Mapping(target = "email", ignore = true)
   @Mapping(target = "contactName", ignore = true)
-  PenRequestBatchEntity toPenReqBatchEntity(TraxStudentWeb traxStudentWeb);
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getTswAccount() ))", target = "tswAccount")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getSubmissionNumber() ))", target = "submissionNumber")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getSourceApplication() ))", target = "sourceApplication")
+  @Mapping(source = "penWebBlobEntity.insertDateTime", target = "insertDate")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getFileType() ))", target = "fileType")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getFileName() ))", target = "fileName")
+  @Mapping(source = "penWebBlobEntity.studentCount", target = "sourceStudentCount")
+  PenRequestBatchEntity toPenReqBatchEntityLoadFail(PENWebBlobEntity penWebBlobEntity, String reason);
 }

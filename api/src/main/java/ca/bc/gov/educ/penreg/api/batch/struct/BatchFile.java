@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *  @author OM
  * The type Batch file.
+ *
+ * @author OM  The type Batch file.
  */
 @Data
 public class BatchFile {
@@ -16,6 +17,11 @@ public class BatchFile {
   private BatchFileTrailer batchFileTrailer;
 
 
+  /**
+   * Gets student details.
+   *
+   * @return the student details
+   */
   public List<StudentDetails> getStudentDetails() {
     if(this.studentDetails == null){
       this.studentDetails = new ArrayList<>();

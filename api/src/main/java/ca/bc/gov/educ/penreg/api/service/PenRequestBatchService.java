@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.service;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,5 +105,16 @@ public class PenRequestBatchService {
       penRequestBatchEntityDB.setPenRequestBatchID(penRequestBatchID);
       return getRepository().save(penRequestBatchEntityDB);
     }).orElseThrow(EntityNotFoundException::new);
+  }
+
+  /**
+   * Find pen request batch by submission number optional.
+   *
+   * @param submissionNumber the submission number
+   * @return the optional
+   */
+  @Transactional(propagation = Propagation.SUPPORTS)
+  public Optional<PenRequestBatchEntity> findPenRequestBatchBySubmissionNumber(@NonNull final String submissionNumber) {
+    return getRepository().findBySubmissionNumber(submissionNumber);
   }
 }

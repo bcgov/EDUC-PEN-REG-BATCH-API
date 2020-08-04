@@ -26,7 +26,7 @@ public class PenRequestBatchStudentStatusCodeEntity {
    */
   @Id
   @Column(name = "PEN_REQUEST_BATCH_STUDENT_STATUS_CODE", unique = true, length = 10)
-  String statusCode;
+  String penRequestBatchStudentStatusCode;
 
   /**
    * The Label.

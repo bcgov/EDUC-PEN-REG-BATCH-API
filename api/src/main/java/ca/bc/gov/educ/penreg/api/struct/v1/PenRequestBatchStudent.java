@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.struct;
+package ca.bc.gov.educ.penreg.api.struct.v1;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 
 /**
  * The type Pen request batch student.
- *  @author OM
+ *
+ * @author OM
  */
 @Builder
 @Data
@@ -24,9 +25,9 @@ public class PenRequestBatchStudent {
    */
   String penRequestBatchID;
   /**
-   * The Pen request student status code.
+   * The Pen request batch student status code.
    */
-  String penRequestStudentStatusCode;
+  String penRequestBatchStudentStatusCode;
   /**
    * The Local id.
    */

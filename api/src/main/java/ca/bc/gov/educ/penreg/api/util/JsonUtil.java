@@ -5,7 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * The type Json util.
- *  @author OM
+ *
+ * @author OM
  */
 public class JsonUtil {
   private JsonUtil(){

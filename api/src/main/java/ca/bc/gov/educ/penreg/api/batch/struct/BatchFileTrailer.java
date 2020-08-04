@@ -6,8 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- *  @author OM
  * The type Batch file trailer.
+ *
+ * @author OM  The type Batch file trailer.
  */
 @Data
 @Builder

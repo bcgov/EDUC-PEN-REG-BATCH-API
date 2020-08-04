@@ -1,8 +1,9 @@
 package ca.bc.gov.educ.penreg.api.batch.processor;
 
-import ca.bc.gov.educ.penreg.api.batch.input.TraxStudentWeb;
+import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
+import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import com.github.javafaker.Faker;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -22,9 +23,10 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Random;
 
-import static ca.bc.gov.educ.penreg.api.batch.constants.MinistryPRBSourceCodes.TSW_PEN_WEB;
 import static ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchStatusCodes.LOADED;
 import static ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchStatusCodes.LOAD_FAIL;
+import static ca.bc.gov.educ.penreg.api.batch.constants.SchoolGroupCodes.K12;
+import static ca.bc.gov.educ.penreg.api.batch.constants.SchoolGroupCodes.PSI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -59,6 +61,8 @@ public class PenRegBatchProcessorTest {
   @Autowired
   private PenRequestBatchStudentRepository studentRepository;
 
+  @Autowired
+  private PenWebBlobRepository penWebBlobRepository;
   /**
    * The Faker.
    */
@@ -72,6 +76,7 @@ public class PenRegBatchProcessorTest {
     faker = new Faker(new Random(0));
   }
 
+
   /**
    * Test process pen reg batch file from tsw given 30 row valid file should create records in db.
    *
@@ -82,10 +87,10 @@ public class PenRegBatchProcessorTest {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_8_records_Header_Short_Length.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-    var tsw = TraxStudentWeb.builder().ministryPRBSourceCode(TSW_PEN_WEB.getCode()).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).extractDate(LocalDateTime.now()).fileName("sample_8_records_Header_Short_Length").fileType("txt").fileContents(bFile).insertDate(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_8_records_Header_Short_Length").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
-    assert (result.size() == 1);
+    assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
@@ -104,10 +109,10 @@ public class PenRegBatchProcessorTest {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_10_records_Header_Longer_length.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-    var tsw = TraxStudentWeb.builder().ministryPRBSourceCode(TSW_PEN_WEB.getCode()).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).extractDate(LocalDateTime.now()).fileName("sample_10_records_Header_Longer_length.txt").fileType("txt").fileContents(bFile).insertDate(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_10_records_Header_Longer_length.txt").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
-    assert (result.size() == 1);
+    assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
@@ -126,10 +131,10 @@ public class PenRegBatchProcessorTest {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_10_records_Trailer_Longer_length.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-    var tsw = TraxStudentWeb.builder().ministryPRBSourceCode(TSW_PEN_WEB.getCode()).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).extractDate(LocalDateTime.now()).fileName("sample_10_records_Trailer_Longer_length").fileType("txt").fileContents(bFile).insertDate(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_10_records_Trailer_Longer_length").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
-    assert (result.size() == 1);
+    assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
@@ -148,10 +153,10 @@ public class PenRegBatchProcessorTest {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_10_records_Trailer_Shorter_length.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-    var tsw = TraxStudentWeb.builder().ministryPRBSourceCode(TSW_PEN_WEB.getCode()).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).extractDate(LocalDateTime.now()).fileName("sample_10_records_Trailer_Shorter_length").fileType("txt").fileContents(bFile).insertDate(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_10_records_Trailer_Shorter_length").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
-    assert (result.size() == 1);
+    assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
@@ -170,13 +175,14 @@ public class PenRegBatchProcessorTest {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_30_records_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-    var tsw = TraxStudentWeb.builder().ministryPRBSourceCode(TSW_PEN_WEB.getCode()).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).extractDate(LocalDateTime.now()).fileName("sample_30_records_OK").fileType("txt").fileContents(bFile).insertDate(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_30_records_OK").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
-    assert (result.size() == 1);
+    assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).isNull();
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isEqualTo(30);
@@ -193,13 +199,14 @@ public class PenRegBatchProcessorTest {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_1000_records_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-    var tsw = TraxStudentWeb.builder().ministryPRBSourceCode(TSW_PEN_WEB.getCode()).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).extractDate(LocalDateTime.now()).fileName("sample_1000_records_OK").fileType("txt").fileContents(bFile).insertDate(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_1000_records_OK").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).isNull();
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isEqualTo(1000);
@@ -210,8 +217,8 @@ public class PenRegBatchProcessorTest {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_10_records_student_count_mismatch.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-    var tsw = TraxStudentWeb.builder().ministryPRBSourceCode(TSW_PEN_WEB.getCode()).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).extractDate(LocalDateTime.now()).fileName("sample_10_records_student_count_mismatch").fileType("txt").fileContents(bFile).insertDate(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_10_records_student_count_mismatch").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
@@ -227,8 +234,8 @@ public class PenRegBatchProcessorTest {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_10_records_student_does_not_start_with_SRM_mismatch.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-    var tsw = TraxStudentWeb.builder().ministryPRBSourceCode(TSW_PEN_WEB.getCode()).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).extractDate(LocalDateTime.now()).fileName("sample_10_records_student_does_not_start_with_SRM_mismatch").fileType("txt").fileContents(bFile).insertDate(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
-    penRegBatchProcessor.processPenRegBatchFileFromTSW(tsw);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_10_records_student_does_not_start_with_SRM_mismatch").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
@@ -239,12 +246,46 @@ public class PenRegBatchProcessorTest {
     assertThat(students.size()).isZero();
   }
 
+  @Test
+  public void testProcessPenRegBatchFileFromTSW_GivenMinCodeStartsWith102_ShouldCreateRecordLOADEDInDB() throws IOException {
+    File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_PSI_OK.txt")).getFile());
+    byte[] bFile = Files.readAllBytes(file.toPath());
+    var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_PSI_OK").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
+    var result = repository.findAll();
+    assertThat(result.size()).isEqualTo(1);
+    var entity = result.get(0);
+    assertThat(entity.getPenRequestBatchID()).isNotNull();
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(PSI.getCode());
+    var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
+    assertThat(students.size()).isEqualTo(5);
+  }
+  @Test
+  public void testProcessPenRegBatchFileFromTSW_GivenMinCodeDoesNotStartsWith102_ShouldCreateRecordLOADEDInDB() throws IOException {
+    File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
+    byte[] bFile = Files.readAllBytes(file.toPath());
+    var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_OK").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
+    var result = repository.findAll();
+    assertThat(result.size()).isEqualTo(1);
+    var entity = result.get(0);
+    assertThat(entity.getPenRequestBatchID()).isNotNull();
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
+    var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
+    assertThat(students.size()).isEqualTo(5);
+  }
+
   /**
    * After.
    */
   @After
   public void after() {
     repository.deleteAll();
+    penWebBlobRepository.deleteAll();
   }
 
   private String generateHeaderRecord() {

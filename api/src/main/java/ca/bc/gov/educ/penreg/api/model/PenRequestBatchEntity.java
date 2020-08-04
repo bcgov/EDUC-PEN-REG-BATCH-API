@@ -1,13 +1,14 @@
 package ca.bc.gov.educ.penreg.api.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 
 import javax.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,7 +37,7 @@ public class PenRequestBatchEntity {
 
   /**
    * The Submission number.
-   *  this data comes from TSW table
+   * this data comes from TSW table
    */
   @Column(name = "SUBMISSION_NO", unique = true, length = 8, nullable = false)
   String submissionNumber;
@@ -56,14 +57,35 @@ public class PenRequestBatchEntity {
   /**
    * The Pen request batch type code.
    */
-  @Column(name = "PEN_REQUEST_BATCH_TYPE_CODE", nullable = false)
+  @Column(name = "PEN_REQUEST_BATCH_TYPE_CODE", nullable = false, length = 10)
   String penRequestBatchTypeCode;
 
+
   /**
-   * The Unarchived flag.
+   * The Unarchived batch status code.
    */
-  @Column(name = "UNARCHIVED_FLAG", length = 1, nullable = false)
-  String unarchivedFlag;
+  @Column(name = "UNARCHIVED_BATCH_STATUS_CODE", nullable = false, length = 10)
+  String unarchivedBatchStatusCode;
+
+  /**
+   * The Ministry prb source code.
+   */
+  @Column(name = "MINISTRY_PRB_SOURCE_CODE", nullable = false, length = 10)
+  String ministryPRBSourceCode;
+
+  /**
+   * The School group code.
+   */
+  @Column(name = "SCHOOL_GROUP_CODE", length = 10)
+  String schoolGroupCode;
+
+
+  /**
+   * The Unarchived user.
+   */
+  @Column(name = "UNARCHIVED_USER")
+  String unarchivedUser;
+
 
   /**
    * The Unarchived batch changed flag.
@@ -108,12 +130,6 @@ public class PenRequestBatchEntity {
   String sourceApplication;
 
   /**
-   * The Pen request batch source code.
-   */
-  @Column(name = "MINISTRY_PRB_SOURCE_CODE", length = 10, nullable = false)
-  String ministryPRBSourceCode;
-
-  /**
    * The Tsw account.
    */
   @Column(name = "TSW_ACCOUNT", length = 8, nullable = false)
@@ -147,45 +163,45 @@ public class PenRequestBatchEntity {
    * The Office number.
    */
   @Column(name = "OFFICE_NUMBER")
-  BigDecimal officeNumber;
+  Long officeNumber;
 
   /**
    * The Source student count.
    */
   @Column(name = "SOURCE_STUDENT_COUNT")
-  BigDecimal sourceStudentCount;
+  Long sourceStudentCount;
 
   /**
    * The Student count.
    */
   @Column(name = "STUDENT_COUNT")
-  BigDecimal studentCount;
+  Long studentCount;
 
   /**
    * The Issued pen count.
    */
   @Column(name = "ISSUED_PEN_COUNT")
-  BigDecimal issuedPenCount;
+  Long issuedPenCount;
   /**
    * The Error count.
    */
   @Column(name = "ERROR_COUNT")
-  BigDecimal errorCount;
+  Long errorCount;
   /**
    * The Matched count.
    */
   @Column(name = "MATCHED_COUNT")
-  BigDecimal matchedCount;
+  Long matchedCount;
   /**
    * The Repeat count.
    */
   @Column(name = "REPEAT_COUNT")
-  BigDecimal repeatCount;
+  Long repeatCount;
   /**
    * The Fixable count.
    */
   @Column(name = "FIXABLE_COUNT")
-  BigDecimal fixableCount;
+  Long fixableCount;
   /**
    * The Sis vendor name.
    */

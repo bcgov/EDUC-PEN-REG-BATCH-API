@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.struct;
+package ca.bc.gov.educ.penreg.api.struct.v1;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 
 /**
  * The type Pen request batch.
- *  @author OM
+ *
+ * @author OM
  */
 @Builder
 @Data
@@ -35,10 +36,6 @@ public class PenRequestBatch {
    * The Pen request batch type code.
    */
   String penRequestBatchTypeCode;
-  /**
-   * The Unarchived flag.
-   */
-  String unarchivedFlag;
   /**
    * The Unarchived batch changed flag.
    */
@@ -70,7 +67,7 @@ public class PenRequestBatch {
   /**
    * The Pen request batch source code.
    */
-  String penRequestBatchSourceCode;
+  String ministryPRBSourceCode;
   /**
    * The Tsw account.
    */
@@ -104,6 +101,9 @@ public class PenRequestBatch {
    */
   String studentCount;
 
+  /**
+   * The Issued pen count.
+   */
   String issuedPenCount;
   /**
    * The Error count.
@@ -133,4 +133,19 @@ public class PenRequestBatch {
    * The Sis product id.
    */
   String sisProductID;
+
+  /**
+   * The School group code.
+   */
+  String schoolGroupCode;
+
+  /**
+   * The Unarchived user.
+   */
+  String unarchivedUser;
+
+  /**
+   * The Unarchived batch status code.
+   */
+  String unarchivedBatchStatusCode;
 }

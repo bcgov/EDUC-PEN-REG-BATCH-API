@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.exception;
 
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
@@ -9,9 +10,15 @@ import java.util.stream.IntStream;
 /**
  * EntityNotFoundException to provide more details in error description
  */
-
+@NoArgsConstructor
 public class EntityNotFoundException extends RuntimeException {
 
+  /**
+   * Instantiates a new Entity not found exception.
+   *
+   * @param clazz           the clazz
+   * @param searchParamsMap the search params map
+   */
   public EntityNotFoundException(Class clazz, String... searchParamsMap) {
     super(EntityNotFoundException.generateMessage(clazz.getSimpleName(), toMap(String.class, String.class, searchParamsMap)));
   }

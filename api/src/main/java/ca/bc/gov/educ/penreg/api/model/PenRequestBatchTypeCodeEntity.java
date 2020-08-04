@@ -26,7 +26,7 @@ public class PenRequestBatchTypeCodeEntity {
    */
   @Id
   @Column(name = "PEN_REQUEST_BATCH_TYPE_CODE", unique = true, length = 10)
-  String statusCode;
+  String penRequestBatchTypeCode;
 
   /**
    * The Label.
