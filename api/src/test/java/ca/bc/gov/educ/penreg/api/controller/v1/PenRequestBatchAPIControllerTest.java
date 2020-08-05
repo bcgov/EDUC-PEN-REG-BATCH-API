@@ -19,13 +19,13 @@ import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,7 +33,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -44,6 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class PenRequestBatchAPIControllerTest {
+  public static final String PEN_REQUEST_BATCH_API = "PEN_REQUEST_BATCH_API";
   private MockMvc mockMvc;
   private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
   @Autowired
@@ -52,14 +52,14 @@ public class PenRequestBatchAPIControllerTest {
   PenRequestBatchRepository penRequestBatchRepository;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     MockitoAnnotations.initMocks(this);
     mockMvc = MockMvcBuilders.standaloneSetup(penRequestBatchAPIController)
         .setControllerAdvice(new RestExceptionHandler()).build();
   }
 
   @After
-  public void tearDown() throws Exception {
+  public void tearDown() {
     penRequestBatchRepository.deleteAll();
   }
 
@@ -81,7 +81,8 @@ public class PenRequestBatchAPIControllerTest {
     );
     List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    penRequestBatchRepository.saveAll(entities.stream().map(mapper::toModel).collect(Collectors.toList()));
+    var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(this::populateAuditColumns).collect(Collectors.toList());
+    penRequestBatchRepository.saveAll(models);
     SearchCriteria criteria = SearchCriteria.builder().key("fixableCount").operation(FilterOperation.GREATER_THAN).value("10").valueType(ValueType.LONG).build();
     List<SearchCriteria> criteriaList = new ArrayList<>();
     criteriaList.add(criteria);
@@ -102,7 +103,8 @@ public class PenRequestBatchAPIControllerTest {
     );
     List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    penRequestBatchRepository.saveAll(entities.stream().map(mapper::toModel).collect(Collectors.toList()));
+    var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(this::populateAuditColumns).collect(Collectors.toList());
+    penRequestBatchRepository.saveAll(models);
     SearchCriteria criteria = SearchCriteria.builder().key("schoolGroupCode").operation(FilterOperation.EQUAL).value(SchoolGroupCodes.K12.getCode()).valueType(ValueType.STRING).build();
     List<SearchCriteria> criteriaList = new ArrayList<>();
     criteriaList.add(criteria);
@@ -129,7 +131,20 @@ public class PenRequestBatchAPIControllerTest {
     );
     List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    var results = penRequestBatchRepository.saveAll(entities.stream().map(mapper::toModel).collect(Collectors.toList()));
+    var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(this::populateAuditColumns).collect(Collectors.toList());
+    var results = penRequestBatchRepository.saveAll(models);
     this.mockMvc.perform(get("/api/v1/pen-request-batch/" + results.iterator().next().getPenRequestBatchID())).andDo(print()).andExpect(status().isOk());
+  }
+
+  private PenRequestBatchEntity populateAuditColumns(PenRequestBatchEntity model) {
+    if (model.getCreateUser() == null) {
+      model.setCreateUser(PEN_REQUEST_BATCH_API);
+    }
+    if (model.getUpdateUser() == null) {
+      model.setUpdateUser(PEN_REQUEST_BATCH_API);
+    }
+    model.setCreateDate(LocalDateTime.now());
+    model.setUpdateDate(LocalDateTime.now());
+    return model;
   }
 }

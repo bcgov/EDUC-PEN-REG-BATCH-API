@@ -9,6 +9,7 @@ import ca.bc.gov.educ.penreg.api.filter.PenRegBatchFilterSpecs;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
@@ -28,6 +29,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +49,7 @@ import static lombok.AccessLevel.PRIVATE;
 @Slf4j
 public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint {
 
+  public static final String PEN_REQUEST_BATCH_API = "PEN_REQUEST_BATCH_API";
   @Getter(PRIVATE)
   private final PenRegBatchFilterSpecs penRegBatchFilterSpecs;
   @Getter(PRIVATE)
@@ -77,12 +80,17 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
 
   @Override
   public PenRequestBatch createPenRequestBatch(final PenRequestBatch penRequestBatch) {
-    return mapper.toStructure(getService().createPenRequestBatch(mapper.toModel(penRequestBatch)));
+    var model = mapper.toModel(penRequestBatch);
+    populateAuditColumns(model);
+    return mapper.toStructure(getService().createPenRequestBatch(model));
   }
+
 
   @Override
   public PenRequestBatch updatePenRequestBatch(final PenRequestBatch penRequestBatch, final UUID penRequestBatchID) {
-    return mapper.toStructure(getService().createPenRequestBatch(mapper.toModel(penRequestBatch)));
+    var model = mapper.toModel(penRequestBatch);
+    populateAuditColumns(model);
+    return mapper.toStructure(getService().createPenRequestBatch(model));
   }
 
   @Override
@@ -105,19 +113,23 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
 
   @Override
   public PenRequestBatchStudent createPenRequestBatchStudent(PenRequestBatchStudent penRequestBatchStudent, UUID penRequestBatchID) {
-    return studentMapper.toStructure(getStudentService().createStudent(studentMapper.toModel(penRequestBatchStudent), penRequestBatchID));
+    var model = studentMapper.toModel(penRequestBatchStudent);
+    populateAuditColumnsForStudent(model);
+    return studentMapper.toStructure(getStudentService().createStudent(model, penRequestBatchID));
   }
+
 
   @Override
   public PenRequestBatchStudent updatePenRequestBatchStudent(PenRequestBatchStudent penRequestBatchStudent, UUID penRequestBatchID, UUID penRequestBatchStudentID) {
-    return studentMapper.toStructure(getStudentService().updateStudent(studentMapper.toModel(penRequestBatchStudent), penRequestBatchID, penRequestBatchStudentID));
+    var model = studentMapper.toModel(penRequestBatchStudent);
+    populateAuditColumnsForStudent(model);
+    return studentMapper.toStructure(getStudentService().updateStudent(model, penRequestBatchID, penRequestBatchStudentID));
   }
 
   @Override
   public PenRequestBatchStudent getPenRequestBatchStudentByID(UUID penRequestBatchID, UUID penRequestBatchStudentID) {
     return studentMapper.toStructure(getStudentService().getStudentById(penRequestBatchID, penRequestBatchStudentID));
   }
-
 
 
   private void getSortCriteria(String sortCriteriaJson, ObjectMapper objectMapper, List<Sort.Order> sorts) throws JsonProcessingException {
@@ -183,4 +195,25 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     return penRequestBatchEntitySpecification;
   }
 
+  private void populateAuditColumns(PenRequestBatchEntity model) {
+    if (model.getCreateUser() == null) {
+      model.setCreateUser(PEN_REQUEST_BATCH_API);
+    }
+    if (model.getUpdateUser() == null) {
+      model.setUpdateUser(PEN_REQUEST_BATCH_API);
+    }
+    model.setCreateDate(LocalDateTime.now());
+    model.setUpdateDate(LocalDateTime.now());
+  }
+
+  private void populateAuditColumnsForStudent(PenRequestBatchStudentEntity model) {
+    if (model.getCreateUser() == null) {
+      model.setCreateUser(PEN_REQUEST_BATCH_API);
+    }
+    if (model.getUpdateUser() == null) {
+      model.setUpdateUser(PEN_REQUEST_BATCH_API);
+    }
+    model.setCreateDate(LocalDateTime.now());
+    model.setUpdateDate(LocalDateTime.now());
+  }
 }

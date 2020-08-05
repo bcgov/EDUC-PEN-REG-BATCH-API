@@ -9,6 +9,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -133,5 +134,32 @@ public class PenRequestBatchStudentEntity {
    */
   @Column(name = "STUDENT_ID", columnDefinition = "BINARY(16)")
   String studentID;
+  /**
+   * The Create user.
+   */
+  @Basic
+  @Column(name = "CREATE_USER",updatable = false, nullable = false, length = 32)
+  String createUser;
 
+
+  /**
+   * The Create date.
+   */
+  @Basic
+  @Column(name = "CREATE_DATE",updatable = false, nullable = false)
+  LocalDateTime createDate;
+
+  /**
+   * The Update user.
+   */
+  @Basic
+  @Column(name = "UPDATE_USER", nullable = false, length = 32)
+  String updateUser;
+
+  /**
+   * The Update date.
+   */
+  @Basic
+  @Column(name = "UPDATE_DATE", nullable = false)
+  LocalDateTime updateDate;
 }
