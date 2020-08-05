@@ -68,6 +68,8 @@ public class PenRegBatchScheduler implements Closeable {
           log.warn("Error waiting for result", e);
         }
       }
+    }else {
+      log.info("No Records found to be processed.");
     }
   }
 
