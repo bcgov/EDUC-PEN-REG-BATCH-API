@@ -16,5 +16,5 @@ public interface PenWebBlobRepository extends CrudRepository<PENWebBlobEntity, L
    *
    * @return the list
    */
-  List<PENWebBlobEntity> findAllByExtractDateTimeIsNull();
+  List<PENWebBlobEntity> findAllByExtractDateTimeIsNullAndFileType(String fileType);
 }

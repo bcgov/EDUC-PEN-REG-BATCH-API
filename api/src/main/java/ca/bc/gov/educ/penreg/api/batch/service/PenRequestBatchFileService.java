@@ -75,7 +75,7 @@ public class PenRequestBatchFileService {
    * @return the all not extracted records
    */
   @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-  public List<PENWebBlobEntity> getAllNotExtractedRecords() {
-    return getPenWebBlobRepository().findAllByExtractDateTimeIsNull();
+  public List<PENWebBlobEntity> getAllNotExtractedRecords(@NonNull String fileType) {
+    return getPenWebBlobRepository().findAllByExtractDateTimeIsNullAndFileType(fileType);
   }
 }

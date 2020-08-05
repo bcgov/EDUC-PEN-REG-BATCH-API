@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * The type Pen web blob entity.
  */
 @Entity
-@Table(name = "PEN_WEB_BLOBS")
+@Table(name = "TSW_PENWEB_BLOBS")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

@@ -66,12 +66,12 @@ public class PenRegBatchSchedulerTest {
       var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
       File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
       byte[] bFile = Files.readAllBytes(file.toPath());
-      return PENWebBlobEntity.builder().penWebBlobId(1L).studentCount(5L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_OK").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+      return PENWebBlobEntity.builder().penWebBlobId(1L).studentCount(5L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
     } else {
       var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
       File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_PSI_OK.txt")).getFile());
       byte[] bFile = Files.readAllBytes(file.toPath());
-      return PENWebBlobEntity.builder().penWebBlobId(2L).minCode("10210518").studentCount(5L).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_PSI_OK").fileType("txt").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+      return PENWebBlobEntity.builder().penWebBlobId(2L).minCode("10210518").studentCount(5L).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_PSI_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
     }
   }
 
