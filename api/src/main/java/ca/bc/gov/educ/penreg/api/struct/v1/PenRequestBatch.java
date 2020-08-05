@@ -69,10 +69,6 @@ public class PenRequestBatch {
    */
   String ministryPRBSourceCode;
   /**
-   * The Tsw account.
-   */
-  String tswAccount;
-  /**
    * The Min code.
    */
   String minCode;
@@ -148,4 +144,8 @@ public class PenRequestBatch {
    * The Unarchived batch status code.
    */
   String unarchivedBatchStatusCode;
+
+  String createUser;
+
+  String updateUser;
 }

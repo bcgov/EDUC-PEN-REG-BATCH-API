@@ -130,12 +130,6 @@ public class PenRequestBatchEntity {
   String sourceApplication;
 
   /**
-   * The Tsw account.
-   */
-  @Column(name = "TSW_ACCOUNT", length = 8, nullable = false)
-  String tswAccount;
-
-  /**
    * The Min code.
    */
   @Column(name = "MINCODE", length = 8)
@@ -217,6 +211,36 @@ public class PenRequestBatchEntity {
    */
   @Column(name = "SIS_PRODUCT_ID", length = 15)
   String sisProductID;
+
+  /**
+   * The Create user.
+   */
+  @Basic
+  @Column(name = "CREATE_USER",updatable = false, nullable = false, length = 32)
+  String createUser;
+
+
+  /**
+   * The Create date.
+   */
+  @Basic
+  @Column(name = "CREATE_DATE",updatable = false, nullable = false)
+  LocalDateTime createDate;
+
+  /**
+   * The Update user.
+   */
+  @Basic
+  @Column(name = "UPDATE_USER", nullable = false, length = 32)
+  String updateUser;
+
+  /**
+   * The Update date.
+   */
+  @Basic
+  @Column(name = "UPDATE_DATE", nullable = false)
+  LocalDateTime updateDate;
+
   /**
    * The Pen request batch student entities.
    */
