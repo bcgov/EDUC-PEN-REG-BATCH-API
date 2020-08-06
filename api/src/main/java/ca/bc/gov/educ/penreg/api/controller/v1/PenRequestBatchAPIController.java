@@ -8,14 +8,12 @@ import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchFilterSpecs;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
+import ca.bc.gov.educ.penreg.api.mappers.v1.PenWebBlobMapper;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
-import ca.bc.gov.educ.penreg.api.struct.v1.SearchCriteria;
-import ca.bc.gov.educ.penreg.api.struct.v1.ValueType;
+import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -58,6 +57,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   private final PenRequestBatchStudentService studentService;
   private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
   private static final PenRequestBatchStudentMapper studentMapper = PenRequestBatchStudentMapper.mapper;
+  private static final PenWebBlobMapper penWebBlobMapper = PenWebBlobMapper.mapper;
 
   /**
    * Instantiates a new Pen request batch api controller.
@@ -131,6 +131,26 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     return studentMapper.toStructure(getStudentService().getStudentById(penRequestBatchID, penRequestBatchStudentID));
   }
 
+  @Override
+  public PenRequestBatch getPenRequestBatchBySubmissionNumber(String submissionNumber) {
+    return getService().findPenRequestBatchBySubmissionNumber(submissionNumber).map(mapper::toStructure).orElseThrow(EntityNotFoundException::new);
+  }
+
+  @Override
+  public ResponseEntity<Void> deletePenRequestBatch(UUID penRequestBatchID) {
+    getService().deletePenRequestBatch(penRequestBatchID);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Override
+  public PENWebBlob getPenWebBlobBySubmissionNumber(String submissionNumber) {
+    return getService().findPenWebBlobBySubmissionNumber(submissionNumber).map(penWebBlobMapper::toStructure).orElseThrow(EntityNotFoundException::new);
+  }
+
+  @Override
+  public PENWebBlob updatePenWebBlob(PENWebBlob penWebBlob, Long penWebBlobId) {
+    return penWebBlobMapper.toStructure(getService().updatePenWebBlob(penWebBlobMapper.toModel(penWebBlob), penWebBlobId));
+  }
 
   private void getSortCriteria(String sortCriteriaJson, ObjectMapper objectMapper, List<Sort.Order> sorts) throws JsonProcessingException {
     if (StringUtils.isNotBlank(sortCriteriaJson)) {

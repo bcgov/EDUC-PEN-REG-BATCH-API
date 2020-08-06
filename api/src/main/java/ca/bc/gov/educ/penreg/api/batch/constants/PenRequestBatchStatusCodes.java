@@ -7,10 +7,6 @@ import lombok.Getter;
  */
 public enum PenRequestBatchStatusCodes {
   /**
-   * New pen request batch status codes.
-   */
-  NEW("NEW"),
-  /**
    * Load fail pen request batch status codes.
    */
   LOAD_FAIL("LOADFAIL"),
