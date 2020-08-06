@@ -1,7 +1,9 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
+import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -36,15 +38,19 @@ public class PenRequestBatchService {
 
   @Getter(PRIVATE)
   private final PenRequestBatchRepository repository;
+  @Getter(PRIVATE)
+  private final PenWebBlobRepository penWebBlobRepository;
 
   /**
    * Instantiates a new Pen reg batch service.
    *
-   * @param repository the repository
+   * @param repository           the repository
+   * @param penWebBlobRepository the pen web blob repository
    */
   @Autowired
-  public PenRequestBatchService(PenRequestBatchRepository repository) {
+  public PenRequestBatchService(PenRequestBatchRepository repository, PenWebBlobRepository penWebBlobRepository) {
     this.repository = repository;
+    this.penWebBlobRepository = penWebBlobRepository;
   }
 
   /**
@@ -113,8 +119,47 @@ public class PenRequestBatchService {
    * @param submissionNumber the submission number
    * @return the optional
    */
-  @Transactional(propagation = Propagation.SUPPORTS)
+  @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
   public Optional<PenRequestBatchEntity> findPenRequestBatchBySubmissionNumber(@NonNull final String submissionNumber) {
     return getRepository().findBySubmissionNumber(submissionNumber);
   }
+
+  /**
+   * Find pen web blob by submission number optional.
+   *
+   * @param submissionNumber the submission number
+   * @return the optional
+   */
+  @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+  public Optional<PENWebBlobEntity> findPenWebBlobBySubmissionNumber(@NonNull final String submissionNumber) {
+    return getPenWebBlobRepository().findBySubmissionNumber(submissionNumber);
+  }
+
+  /**
+   * Update pen web blob pen web blob entity.
+   *
+   * @param entity       the entity
+   * @param penwebBlobID the penweb blob id
+   * @return the pen web blob entity
+   */
+  @Transactional(propagation = Propagation.MANDATORY)
+  public PENWebBlobEntity updatePenWebBlob(@NonNull final PENWebBlobEntity entity, final Long penwebBlobID) {
+    var penWebBlobEntity = getPenWebBlobRepository().findById(penwebBlobID).map(dbEntity -> {
+      dbEntity.setExtractDateTime(entity.getExtractDateTime());
+      return dbEntity;
+    }).orElseThrow(EntityNotFoundException::new);
+    return getPenWebBlobRepository().save(penWebBlobEntity);
+  }
+
+  /**
+   * Delete pen request batch.
+   *
+   * @param penRequestBatchID the pen request batch id
+   */
+  @Transactional(propagation = Propagation.MANDATORY)
+  public void deletePenRequestBatch(final UUID penRequestBatchID) {
+    var penRequestBatchEntity = getRepository().findById(penRequestBatchID).orElseThrow(EntityNotFoundException::new);
+    getRepository().delete(penRequestBatchEntity);
+  }
+
 }

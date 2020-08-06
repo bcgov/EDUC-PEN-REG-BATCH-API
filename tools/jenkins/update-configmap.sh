@@ -36,6 +36,16 @@ $KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body
 #WRITE_PEN_REQUEST_BATCH
 $KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body "{\"description\": \"Write Pen Request Batch Data\",\"id\": \"WRITE_PEN_REQUEST_BATCH\",\"name\": \"WRITE_PEN_REQUEST_BATCH\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
 
+#DELETE_PEN_REQUEST_BATCH
+$KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body "{\"description\": \"Delete Pen Request Batch Data\",\"id\": \"DELETE_PEN_REQUEST_BATCH\",\"name\": \"DELETE_PEN_REQUEST_BATCH\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
+
+
+#READ_PEN_REQUEST_BATCH_BLOB
+$KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body "{\"description\": \"Read Pen Request Batch Source data\",\"id\": \"READ_PEN_REQUEST_BATCH_BLOB\",\"name\": \"READ_PEN_REQUEST_BATCH_BLOB\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
+
+#WRITE_PEN_REQUEST_BATCH_BLOB
+$KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body "{\"description\": \"Update Pen Request Batch Source data\",\"id\": \"WRITE_PEN_REQUEST_BATCH_BLOB\",\"name\": \"WRITE_PEN_REQUEST_BATCH_BLOB\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
+
 ###########################################################
 #Setup for config-map
 ###########################################################

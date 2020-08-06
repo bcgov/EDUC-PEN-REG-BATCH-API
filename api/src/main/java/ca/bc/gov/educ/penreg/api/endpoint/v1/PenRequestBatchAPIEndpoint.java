@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
+import ca.bc.gov.educ.penreg.api.struct.v1.PENWebBlob;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -83,9 +85,9 @@ public interface PenRequestBatchAPIEndpoint {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR.")})
   @Transactional(readOnly = true)
   CompletableFuture<Page<PenRequestBatch>> findAll(@RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
-                                           @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
-                                           @RequestParam(name = "sort", defaultValue = "") String sortCriteriaJson,
-                                           @RequestParam(name = "searchCriteriaList", required = false) String searchCriteriaListJson);
+                                                   @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
+                                                   @RequestParam(name = "sort", defaultValue = "") String sortCriteriaJson,
+                                                   @RequestParam(name = "searchCriteriaList", required = false) String searchCriteriaListJson);
 
 
   /**
@@ -130,5 +132,29 @@ public interface PenRequestBatchAPIEndpoint {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "400", description = "BAD REQUEST")})
   @Transactional(readOnly = true)
   PenRequestBatchStudent getPenRequestBatchStudentByID(@PathVariable UUID penRequestBatchID, @PathVariable UUID penRequestBatchStudentID);
+
+  @GetMapping
+  @PreAuthorize("#oauth2.hasAnyScope('READ_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
+  @Transactional(readOnly = true)
+  PenRequestBatch getPenRequestBatchBySubmissionNumber(@RequestParam("submissionNumber") String submissionNumber);
+
+  @DeleteMapping("/{penRequestBatchID}")
+  @PreAuthorize("#oauth2.hasAnyScope('DELETE_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "NO CONTENT."), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
+  @Transactional
+  ResponseEntity<Void> deletePenRequestBatch(@PathVariable UUID penRequestBatchID);
+
+  @GetMapping("/source")
+  @PreAuthorize("#oauth2.hasAnyScope('READ_PEN_REQUEST_BATCH_BLOB')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
+  @Transactional(readOnly = true)
+  PENWebBlob getPenWebBlobBySubmissionNumber(@RequestParam("submissionNumber") String submissionNumber);
+
+  @PutMapping("/source/{sourceID}")
+  @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQUEST_BATCH_BLOB')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "400", description = "BAD REQUEST"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
+  @Transactional
+  PENWebBlob updatePenWebBlob(@Validated @RequestBody PENWebBlob penWebBlob, @PathVariable Long sourceID);
 
 }
