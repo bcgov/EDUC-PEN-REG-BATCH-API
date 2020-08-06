@@ -146,13 +146,13 @@ public interface PenRequestBatchAPIEndpoint {
   ResponseEntity<Void> deletePenRequestBatch(@PathVariable UUID penRequestBatchID);
 
   @GetMapping("/tsw-penweb-blobs")
-  @PreAuthorize("#oauth2.hasAnyScope('READ_PEN_WEB_BLOB')")
+  @PreAuthorize("#oauth2.hasAnyScope('READ_PEN_REQUEST_BATCH_BLOB')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
   @Transactional(readOnly = true)
   PENWebBlob getPenWebBlobBySubmissionNumber(@RequestParam("submissionNumber") String submissionNumber);
 
   @PutMapping("/tsw-penweb-blobs/{penWebBlobId}")
-  @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_WEB_BLOB')")
+  @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQUEST_BATCH_BLOB')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "400", description = "BAD REQUEST"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
   @Transactional
   PENWebBlob updatePenWebBlob(@Validated @RequestBody PENWebBlob penWebBlob, @PathVariable Long penWebBlobId);
