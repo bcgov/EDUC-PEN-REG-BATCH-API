@@ -35,7 +35,6 @@ public class PENWebBlobEntity {
   @Column(name = "FILE_TYPE", length = 4, nullable = false, updatable = false)
   private String fileType;
 
-  @Lob
   @Column(name = "FILE_BLOB", nullable = false, updatable = false)
   private byte[] fileContents;
 
