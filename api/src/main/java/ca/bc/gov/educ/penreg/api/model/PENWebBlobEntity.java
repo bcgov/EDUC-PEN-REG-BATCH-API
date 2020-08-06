@@ -35,8 +35,8 @@ public class PENWebBlobEntity {
   @Column(name = "FILE_TYPE", length = 4, nullable = false, updatable = false)
   private String fileType;
 
-  @Lob
-  @Column(name = "FILE_BLOB", nullable = false, updatable = false)
+  // here length is provided to make sure uni tests with H2 work.
+  @Column(name = "FILE_BLOB", nullable = false, updatable = false, length = 4000000)
   private byte[] fileContents;
 
   @Column(name = "INSERT_DATE_TIME")
