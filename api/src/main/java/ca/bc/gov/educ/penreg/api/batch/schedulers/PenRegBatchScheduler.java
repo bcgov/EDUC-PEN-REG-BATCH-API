@@ -24,7 +24,7 @@ import static lombok.AccessLevel.PRIVATE;
 @Slf4j
 @SuppressWarnings("java:S2142")
 public class PenRegBatchScheduler implements Closeable {
-  private final ExecutorService executorService = Executors.newFixedThreadPool(5);
+  private final ExecutorService executorService = Executors.newFixedThreadPool(10);
   @Getter(PRIVATE)
   private final PenRegBatchProcessor penRegBatchProcessor;
   @Getter(PRIVATE)
