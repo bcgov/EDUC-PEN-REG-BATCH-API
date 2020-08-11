@@ -172,7 +172,7 @@ public class PenRequestBatchEntity {
   Long studentCount;
 
   /**
-   * The Issued pen count.
+   * The new pen count.
    */
   @Column(name = "NEW_PEN_COUNT")
   Long newPenCount;
