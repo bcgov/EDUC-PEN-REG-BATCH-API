@@ -98,7 +98,7 @@ public class PenRequestBatch {
   String studentCount;
 
   /**
-   * The Issued pen count.
+   * The new pen count.
    */
   String newPenCount;
   /**
