@@ -174,8 +174,8 @@ public class PenRequestBatchEntity {
   /**
    * The Issued pen count.
    */
-  @Column(name = "ISSUED_PEN_COUNT")
-  Long issuedPenCount;
+  @Column(name = "NEW_PEN_COUNT")
+  Long newPenCount;
   /**
    * The Error count.
    */

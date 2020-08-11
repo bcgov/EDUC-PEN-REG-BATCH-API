@@ -100,7 +100,7 @@ public class PenRequestBatch {
   /**
    * The Issued pen count.
    */
-  String issuedPenCount;
+  String newPenCount;
   /**
    * The Error count.
    */
