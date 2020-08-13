@@ -94,21 +94,39 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   }
 
   @Override
-  public CompletableFuture<Page<PenRequestBatch>> findAll(Integer pageNumber, Integer pageSize, String sortCriteriaJson, String searchCriteriaListJson) {
+  public CompletableFuture<Page<PenRequestBatch>> findAll(Integer pageNumber, Integer pageSize, String sortCriteriaJson, String searchList) {
     final ObjectMapper objectMapper = new ObjectMapper();
     final List<Sort.Order> sorts = new ArrayList<>();
     Specification<PenRequestBatchEntity> penRegBatchSpecs = null;
     try {
       getSortCriteria(sortCriteriaJson, objectMapper, sorts);
-      if (StringUtils.isNotBlank(searchCriteriaListJson)) {
-        List<SearchCriteria> criteriaList = objectMapper.readValue(searchCriteriaListJson, new TypeReference<>() {
+      if (StringUtils.isNotBlank(searchList)) {
+        List<Search> searches =  objectMapper.readValue(searchList, new TypeReference<>() {
         });
-        penRegBatchSpecs = getStudentEntitySpecification(criteriaList);
+        int i =0;
+        for(var search: searches){
+          penRegBatchSpecs = getSpecifications(penRegBatchSpecs, i, search);
+          i++;
+        }
+
       }
     } catch (JsonProcessingException e) {
       throw new PenRegAPIRuntimeException(e.getMessage());
     }
     return getService().findAll(penRegBatchSpecs, pageNumber, pageSize, sorts).thenApplyAsync(penRegBatchEntities -> penRegBatchEntities.map(mapper::toStructure));
+  }
+
+  private Specification<PenRequestBatchEntity> getSpecifications(Specification<PenRequestBatchEntity> penRegBatchSpecs, int i, Search search) {
+    if(i==0){
+      penRegBatchSpecs = getPenRequestBatchEntitySpecification(search.getSearchCriteriaList());
+    }else {
+      if(search.getCondition() == Condition.AND){
+        penRegBatchSpecs = penRegBatchSpecs.and(getPenRequestBatchEntitySpecification(search.getSearchCriteriaList()));
+      }else {
+        penRegBatchSpecs = penRegBatchSpecs.or(getPenRequestBatchEntitySpecification(search.getSearchCriteriaList()));
+      }
+    }
+    return penRegBatchSpecs;
   }
 
   @Override
@@ -166,26 +184,34 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     }
   }
 
-  private Specification<PenRequestBatchEntity> getStudentEntitySpecification(List<SearchCriteria> criteriaList) {
-    Specification<PenRequestBatchEntity> studentSpecs = null;
+  private Specification<PenRequestBatchEntity> getPenRequestBatchEntitySpecification(List<SearchCriteria> criteriaList) {
+    Specification<PenRequestBatchEntity> penRequestBatchEntitySpecification = null;
     if (!criteriaList.isEmpty()) {
       int i = 0;
       for (SearchCriteria criteria : criteriaList) {
         if (criteria.getKey() != null && criteria.getOperation() != null && criteria.getValueType() != null) {
           Specification<PenRequestBatchEntity> typeSpecification = getTypeSpecification(criteria.getKey(), criteria.getOperation(), criteria.getValue(), criteria.getValueType());
-          if (i == 0) {
-            studentSpecs = Specification.where(typeSpecification);
-          } else {
-            assert studentSpecs != null;
-            studentSpecs = studentSpecs.and(typeSpecification);
-          }
+          penRequestBatchEntitySpecification = getSpecificationPerGroup(penRequestBatchEntitySpecification, i, criteria, typeSpecification);
           i++;
         } else {
           throw new InvalidParameterException("Search Criteria can not contain null values for", criteria.getKey(), criteria.getOperation().toString(), criteria.getValueType().toString());
         }
       }
     }
-    return studentSpecs;
+    return penRequestBatchEntitySpecification;
+  }
+
+  private Specification<PenRequestBatchEntity> getSpecificationPerGroup(Specification<PenRequestBatchEntity> penRequestBatchEntitySpecification, int i, SearchCriteria criteria, Specification<PenRequestBatchEntity> typeSpecification) {
+    if (i == 0) {
+      penRequestBatchEntitySpecification = Specification.where(typeSpecification);
+    } else {
+      if(criteria.getCondition() == Condition.AND){
+        penRequestBatchEntitySpecification = penRequestBatchEntitySpecification.and(typeSpecification);
+      }else {
+        penRequestBatchEntitySpecification = penRequestBatchEntitySpecification.or(typeSpecification);
+      }
+    }
+    return penRequestBatchEntitySpecification;
   }
 
   private Specification<PenRequestBatchEntity> getTypeSpecification(String key, FilterOperation filterOperation, String value, ValueType valueType) {

@@ -37,4 +37,9 @@ public class SearchCriteria {
    */
   @NotNull
   ValueType valueType;
+
+  /**
+   * The Condition. ENUM to hold and AND OR
+   */
+  Condition condition;
 }
