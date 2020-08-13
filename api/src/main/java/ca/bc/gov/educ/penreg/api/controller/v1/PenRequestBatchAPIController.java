@@ -103,7 +103,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
       if (StringUtils.isNotBlank(searchList)) {
         List<Search> searches =  objectMapper.readValue(searchList, new TypeReference<>() {
         });
-        var i =0;
+        int i =0;
         for(var search: searches){
           penRegBatchSpecs = getSpecifications(penRegBatchSpecs, i, search);
           i++;
@@ -118,12 +118,12 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
 
   private Specification<PenRequestBatchEntity> getSpecifications(Specification<PenRequestBatchEntity> penRegBatchSpecs, int i, Search search) {
     if(i==0){
-      penRegBatchSpecs = getStudentEntitySpecification(search.getSearchCriteriaList());
+      penRegBatchSpecs = getPenRequestBatchEntitySpecification(search.getSearchCriteriaList());
     }else {
       if(search.getCondition() == Condition.AND){
-        penRegBatchSpecs = penRegBatchSpecs.and(getStudentEntitySpecification(search.getSearchCriteriaList()));
+        penRegBatchSpecs = penRegBatchSpecs.and(getPenRequestBatchEntitySpecification(search.getSearchCriteriaList()));
       }else {
-        penRegBatchSpecs = penRegBatchSpecs.or(getStudentEntitySpecification(search.getSearchCriteriaList()));
+        penRegBatchSpecs = penRegBatchSpecs.or(getPenRequestBatchEntitySpecification(search.getSearchCriteriaList()));
       }
     }
     return penRegBatchSpecs;
@@ -184,7 +184,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     }
   }
 
-  private Specification<PenRequestBatchEntity> getStudentEntitySpecification(List<SearchCriteria> criteriaList) {
+  private Specification<PenRequestBatchEntity> getPenRequestBatchEntitySpecification(List<SearchCriteria> criteriaList) {
     Specification<PenRequestBatchEntity> studentSpecs = null;
     if (!criteriaList.isEmpty()) {
       int i = 0;
