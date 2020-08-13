@@ -185,33 +185,33 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   }
 
   private Specification<PenRequestBatchEntity> getPenRequestBatchEntitySpecification(List<SearchCriteria> criteriaList) {
-    Specification<PenRequestBatchEntity> studentSpecs = null;
+    Specification<PenRequestBatchEntity> penRequestBatchEntitySpecification = null;
     if (!criteriaList.isEmpty()) {
       int i = 0;
       for (SearchCriteria criteria : criteriaList) {
         if (criteria.getKey() != null && criteria.getOperation() != null && criteria.getValueType() != null) {
           Specification<PenRequestBatchEntity> typeSpecification = getTypeSpecification(criteria.getKey(), criteria.getOperation(), criteria.getValue(), criteria.getValueType());
-          studentSpecs = getSpecificationPerGroup(studentSpecs, i, criteria, typeSpecification);
+          penRequestBatchEntitySpecification = getSpecificationPerGroup(penRequestBatchEntitySpecification, i, criteria, typeSpecification);
           i++;
         } else {
           throw new InvalidParameterException("Search Criteria can not contain null values for", criteria.getKey(), criteria.getOperation().toString(), criteria.getValueType().toString());
         }
       }
     }
-    return studentSpecs;
+    return penRequestBatchEntitySpecification;
   }
 
-  private Specification<PenRequestBatchEntity> getSpecificationPerGroup(Specification<PenRequestBatchEntity> studentSpecs, int i, SearchCriteria criteria, Specification<PenRequestBatchEntity> typeSpecification) {
+  private Specification<PenRequestBatchEntity> getSpecificationPerGroup(Specification<PenRequestBatchEntity> penRequestBatchEntitySpecification, int i, SearchCriteria criteria, Specification<PenRequestBatchEntity> typeSpecification) {
     if (i == 0) {
-      studentSpecs = Specification.where(typeSpecification);
+      penRequestBatchEntitySpecification = Specification.where(typeSpecification);
     } else {
       if(criteria.getCondition() == Condition.AND){
-        studentSpecs = studentSpecs.and(typeSpecification);
+        penRequestBatchEntitySpecification = penRequestBatchEntitySpecification.and(typeSpecification);
       }else {
-        studentSpecs = studentSpecs.or(typeSpecification);
+        penRequestBatchEntitySpecification = penRequestBatchEntitySpecification.or(typeSpecification);
       }
     }
-    return studentSpecs;
+    return penRequestBatchEntitySpecification;
   }
 
   private Specification<PenRequestBatchEntity> getTypeSpecification(String key, FilterOperation filterOperation, String value, ValueType valueType) {
