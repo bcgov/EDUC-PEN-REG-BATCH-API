@@ -3,7 +3,6 @@ package ca.bc.gov.educ.penreg.api.controller.v1;
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchAPIEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
-import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchFilterSpecs;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
@@ -111,7 +110,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
 
       }
     } catch (JsonProcessingException e) {
-      throw new PenRegAPIRuntimeException(e.getMessage());
+      throw new InvalidParameterException(e.getMessage());
     }
     return getService().findAll(penRegBatchSpecs, pageNumber, pageSize, sorts).thenApplyAsync(penRegBatchEntities -> penRegBatchEntities.map(mapper::toStructure));
   }
