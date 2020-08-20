@@ -250,6 +250,14 @@ public class PenRequestBatchEntity {
   Set<PenRequestBatchStudentEntity> penRequestBatchStudentEntities;
 
   /**
+   * The Pen request batch history entities.
+   */
+  @EqualsAndHashCode.Exclude
+  @ToString.Exclude
+  @OneToMany(mappedBy = "penRequestBatchEntity", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, targetEntity = PenRequestBatchHistoryEntity.class)
+  Set<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntities;
+
+  /**
    * Gets pen request batch student entities.
    *
    * @return the pen request batch student entities
@@ -259,5 +267,17 @@ public class PenRequestBatchEntity {
       this.penRequestBatchStudentEntities = new HashSet<>();
     }
     return this.penRequestBatchStudentEntities;
+  }
+
+  /**
+   * Gets pen request batch history entities.
+   *
+   * @return the pen request batch history entities
+   */
+  public Set<PenRequestBatchHistoryEntity> getPenRequestBatchHistoryEntities() {
+    if (this.penRequestBatchHistoryEntities == null) {
+      this.penRequestBatchHistoryEntities = new HashSet<>();
+    }
+    return this.penRequestBatchHistoryEntities;
   }
 }

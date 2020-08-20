@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.batch.processor;
 
 import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
+import ca.bc.gov.educ.penreg.api.model.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
@@ -13,7 +14,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,8 +24,10 @@ import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 
+import static ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
 import static ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchStatusCodes.LOADED;
 import static ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchStatusCodes.LOAD_FAIL;
 import static ca.bc.gov.educ.penreg.api.batch.constants.SchoolGroupCodes.K12;
@@ -35,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @RunWith(SpringRunner.class)
 @Slf4j
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class PenRegBatchProcessorTest {
   /**
    * The Min.
@@ -83,6 +89,7 @@ public class PenRegBatchProcessorTest {
    * @throws IOException the io exception
    */
   @Test
+  @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given8RowInvalidFileWithHeaderLengthShort_ShouldCreateLOADFAILRecordsInDB() throws IOException {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_8_records_Header_Short_Length.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
@@ -95,6 +102,12 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Header record is missing characters");
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).containsIgnoringCase("Header record is missing characters");
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -105,6 +118,7 @@ public class PenRegBatchProcessorTest {
    * @throws IOException the io exception
    */
   @Test
+  @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given10RowInvalidFileWithHeaderLengthLong_ShouldCreateLOADFAILRecordsInDB() throws IOException {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_10_records_Header_Longer_length.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
@@ -117,6 +131,12 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Header record has extraneous characters");
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).containsIgnoringCase("Header record has extraneous characters");
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -127,6 +147,7 @@ public class PenRegBatchProcessorTest {
    * @throws IOException the io exception
    */
   @Test
+  @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given10RowInvalidFileWithTrailerLengthLong_ShouldCreateLOADFAILRecordsInDB() throws IOException {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_10_records_Trailer_Longer_length.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
@@ -139,6 +160,12 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Trailer record has extraneous characters");
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).containsIgnoringCase("Trailer record has extraneous characters");
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -149,6 +176,7 @@ public class PenRegBatchProcessorTest {
    * @throws IOException the io exception
    */
   @Test
+  @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given10RowInvalidFileWithTrailerLengthShort_ShouldCreateLOADFAILRecordsInDB() throws IOException {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_10_records_Trailer_Shorter_length.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
@@ -161,6 +189,12 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Trailer record is missing characters");
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).containsIgnoringCase("Trailer record is missing characters");
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -171,6 +205,7 @@ public class PenRegBatchProcessorTest {
    * @throws IOException the io exception
    */
   @Test
+  @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given30RowValidFile_ShouldCreateRecordsInDB() throws IOException {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_30_records_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
@@ -185,6 +220,12 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).isNull();
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
     assertThat(students.size()).isEqualTo(30);
     log.info("PenRequestBatch Entity is :: {}", entity);
   }
@@ -195,6 +236,7 @@ public class PenRegBatchProcessorTest {
    * @throws IOException the io exception
    */
   @Test
+  @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given1000RowFile_ShouldCreateRecordsInDB() throws IOException {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_1000_records_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
@@ -208,11 +250,18 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).isNull();
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isEqualTo(1000);
   }
 
   @Test
+  @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenRecordCountDoesNotMatchActualCount_ShouldCreateRecordLOADFAILInDB() throws IOException {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_10_records_student_count_mismatch.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
@@ -225,11 +274,18 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Invalid count in trailer record. Stated was 30, Actual was 10");
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).containsIgnoringCase("Invalid count in trailer record. Stated was 30, Actual was 10");
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
 
   @Test
+  @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenStudentRecordDoesNotStartWithSRM_ShouldCreateRecordLOADFAILInDB() throws IOException {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_10_records_student_does_not_start_with_SRM_mismatch.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
@@ -242,11 +298,18 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Invalid transaction code on Detail record");
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).containsIgnoringCase("Invalid transaction code on Detail record");
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
 
   @Test
+  @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenMinCodeStartsWith102_ShouldCreateRecordLOADEDInDB() throws IOException {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_PSI_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
@@ -260,9 +323,17 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(PSI.getCode());
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
     assertThat(students.size()).isEqualTo(5);
   }
+
   @Test
+  @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenMinCodeDoesNotStartsWith102_ShouldCreateRecordLOADEDInDB() throws IOException {
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
@@ -275,6 +346,12 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isEqualTo(5);
   }
@@ -283,6 +360,7 @@ public class PenRegBatchProcessorTest {
    * After.
    */
   @After
+  @Transactional
   public void after() {
     repository.deleteAll();
     penWebBlobRepository.deleteAll();
