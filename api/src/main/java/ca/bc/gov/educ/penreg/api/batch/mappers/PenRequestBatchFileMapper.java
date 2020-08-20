@@ -22,6 +22,7 @@ public interface PenRequestBatchFileMapper {
    * The constant mapper.
    */
   PenRequestBatchFileMapper mapper = Mappers.getMapper(PenRequestBatchFileMapper.class);
+  String PEN_REQUEST_BATCH_API = "PEN_REQUEST_BATCH_API";
 
 
   /**
@@ -32,6 +33,7 @@ public interface PenRequestBatchFileMapper {
    * @return the pen request batch entity
    */
 
+  @Mapping(target = "penRequestBatchHistoryEntities", ignore = true)
   @Mapping(target = "ministryPRBSourceCode", ignore = true)
   @Mapping(target = "extractDate", ignore = true)
   @Mapping(target = "unarchivedUser", ignore = true)
@@ -50,9 +52,9 @@ public interface PenRequestBatchFileMapper {
   @Mapping(target = "newPenCount", ignore = true)
   @Mapping(target = "fixableCount", ignore = true)
   @Mapping(target = "errorCount", ignore = true)
-  @Mapping(target = "updateUser", constant = "PEN_REQUEST_BATCH_API")
+  @Mapping(target = "updateUser", constant = PEN_REQUEST_BATCH_API)
   @Mapping(target = "updateDate", expression = "java(java.time.LocalDateTime.now() )")
-  @Mapping(target = "createUser", constant = "PEN_REQUEST_BATCH_API")
+  @Mapping(target = "createUser", constant = PEN_REQUEST_BATCH_API)
   @Mapping(target = "createDate",expression = "java(java.time.LocalDateTime.now() )")
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getSubmissionNumber() ))", target = "submissionNumber")
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getSourceApplication() ))", target = "sourceApplication")
@@ -95,9 +97,9 @@ public interface PenRequestBatchFileMapper {
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getUsualSurname()))", target = "usualLastName")
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getLocalStudentID()))", target = "localID")
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(studentDetails.getPen()))", target = "submittedPen")
-  @Mapping(target = "updateUser", constant = "PEN_REQUEST_BATCH_API")
+  @Mapping(target = "updateUser", constant = PEN_REQUEST_BATCH_API)
   @Mapping(target = "updateDate", expression = "java(java.time.LocalDateTime.now() )")
-  @Mapping(target = "createUser", constant = "PEN_REQUEST_BATCH_API")
+  @Mapping(target = "createUser", constant = PEN_REQUEST_BATCH_API)
   @Mapping(target = "createDate",expression = "java(java.time.LocalDateTime.now() )")
   PenRequestBatchStudentEntity toPenRequestBatchStudentEntity(StudentDetails studentDetails, PenRequestBatchEntity penRequestBatchEntity);
 
@@ -109,6 +111,7 @@ public interface PenRequestBatchFileMapper {
    * @param reason           the reason
    * @return the pen request batch entity
    */
+  @Mapping(target = "penRequestBatchHistoryEntities", ignore = true)
   @Mapping(target = "studentCount", ignore = true)
   @Mapping(target = "minCode", ignore = true)
   @Mapping(target = "unarchivedUser", ignore = true)
@@ -141,9 +144,9 @@ public interface PenRequestBatchFileMapper {
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getFileType() ))", target = "fileType")
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getFileName() ))", target = "fileName")
   @Mapping(source = "penWebBlobEntity.studentCount", target = "sourceStudentCount")
-  @Mapping(target = "updateUser", constant = "PEN_REQUEST_BATCH_API")
+  @Mapping(target = "updateUser", constant = PEN_REQUEST_BATCH_API)
   @Mapping(target = "updateDate", expression = "java(java.time.LocalDateTime.now() )")
-  @Mapping(target = "createUser", constant = "PEN_REQUEST_BATCH_API")
+  @Mapping(target = "createUser", constant = PEN_REQUEST_BATCH_API)
   @Mapping(target = "createDate",expression = "java(java.time.LocalDateTime.now() )")
   PenRequestBatchEntity toPenReqBatchEntityLoadFail(PENWebBlobEntity penWebBlobEntity, String reason);
 }

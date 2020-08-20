@@ -7,11 +7,14 @@ import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
 import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
 import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 
+import static ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
 import static ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchStatusCodes.LOADED;
 import static ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchStatusCodes.LOAD_FAIL;
 import static ca.bc.gov.educ.penreg.api.batch.constants.PenRequestBatchTypeCode.SCHOOL;
@@ -44,9 +47,24 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
     entity.setPenRequestBatchStatusCode(LOADED.getCode());
     entity.setStudentCount((long) file.getStudentDetails().size());
     entity.setSchoolGroupCode(computeSchoolGroupCode(file.getBatchFileHeader().getMinCode()));
+    PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(entity, LOADED.getCode(),STATUS_CHANGED.getCode(), null);
+    entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     return entity;
   }
 
+  private PenRequestBatchHistoryEntity createPenReqBatchHistory(@NonNull PenRequestBatchEntity entity, String statusCode, String eventCode, String reason) {
+    var penRequestBatchHistory = new PenRequestBatchHistoryEntity();
+    penRequestBatchHistory.setCreateDate(LocalDateTime.now());
+    penRequestBatchHistory.setUpdateDate(LocalDateTime.now());
+    penRequestBatchHistory.setPenRequestBatchEntity(entity);
+    penRequestBatchHistory.setPenRequestBatchStatusCode(statusCode);
+    penRequestBatchHistory.setPenRequestBatchEventCode(eventCode);
+    penRequestBatchHistory.setCreateUser(PEN_REQUEST_BATCH_API);
+    penRequestBatchHistory.setUpdateUser(PEN_REQUEST_BATCH_API);
+    penRequestBatchHistory.setEventDate(LocalDateTime.now());
+    penRequestBatchHistory.setEventReason(reason);
+    return penRequestBatchHistory;
+  }
 
 
   @Override
@@ -55,6 +73,8 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
     setDefaults(entity);
     entity.setPenRequestBatchStatusCode(LOAD_FAIL.getCode());
     entity.setPenRequestBatchStatusReason(reason);
+    PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(entity, LOAD_FAIL.getCode(),STATUS_CHANGED.getCode(), reason);
+    entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     return entity;
   }
 

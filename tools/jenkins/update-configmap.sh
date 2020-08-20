@@ -53,11 +53,7 @@ SPLUNK_URL=""
 if [ "$envValue" != "prod" ]
 then
   SPLUNK_URL="dev.splunk.educ.gov.bc.ca"
-else
-  SPLUNK_URL="gww.splunk.educ.gov.bc.ca"
-fi
-
-FLB_CONFIG="[SERVICE]
+  FLB_CONFIG="[SERVICE]
    Flush        1
    Daemon       Off
    Log_Level    debug
@@ -85,6 +81,29 @@ FLB_CONFIG="[SERVICE]
    Message_Key $APP_NAME
    Splunk_Token $SPLUNK_TOKEN
 "
+else
+  FLB_CONFIG="[SERVICE]
+   Flush        1
+   Daemon       Off
+   Log_Level    debug
+   HTTP_Server   On
+   HTTP_Listen   0.0.0.0
+   HTTP_Port     2020
+[INPUT]
+   Name   tail
+   Path   /mnt/log/*
+   Mem_Buf_Limit 20MB
+[FILTER]
+   Name record_modifier
+   Match *
+   Record hostname \${HOSTNAME}
+[OUTPUT]
+   Name   stdout
+   Match  *
+"
+fi
+
+
 echo Creating config map "$APP_NAME"-config-map
 oc create -n "$PEN_NAMESPACE"-"$envValue" configmap "$APP_NAME"-config-map --from-literal=TZ=$TZVALUE --from-literal=JDBC_URL=$DB_JDBC_CONNECT_STRING --from-literal=ORACLE_USERNAME="$DB_USER" --from-literal=ORACLE_PASSWORD="$DB_PWD" --from-literal=KEYCLOAK_PUBLIC_KEY="$soamFullPublicKey" --from-literal=SPRING_SECURITY_LOG_LEVEL=INFO --from-literal=SPRING_WEB_LOG_LEVEL=INFO --from-literal=APP_LOG_LEVEL=INFO --from-literal=SPRING_BOOT_AUTOCONFIG_LOG_LEVEL=INFO --from-literal=SPRING_SHOW_REQUEST_DETAILS=false --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON="0 0/10 * * * *" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON_LOCK_AT_LEAST_FOR="540s" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON_LOCK_AT_MOST_FOR="580s" --dry-run -o yaml | oc apply -f -
 
