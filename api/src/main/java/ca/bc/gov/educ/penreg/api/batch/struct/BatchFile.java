@@ -8,12 +8,21 @@ import java.util.List;
 /**
  * The type Batch file.
  *
- * @author OM  The type Batch file.
+ * @author OM The type Batch file.
  */
 @Data
 public class BatchFile {
+  /**
+   * The Batch file header.
+   */
   private BatchFileHeader batchFileHeader;
+  /**
+   * The Student details.
+   */
   private List<StudentDetails> studentDetails;
+  /**
+   * The Batch file trailer.
+   */
   private BatchFileTrailer batchFileTrailer;
 
 

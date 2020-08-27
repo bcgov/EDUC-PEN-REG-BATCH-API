@@ -85,6 +85,11 @@ public class FilterCriteria<T extends Comparable<T>> {
 
   }
 
+  /**
+   * Validate and assign.
+   *
+   * @param operationValues the operation values
+   */
   private void validateAndAssign(String[] operationValues) {
 
     //For operation 'btn'

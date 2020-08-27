@@ -16,9 +16,20 @@ import javax.servlet.http.HttpServletResponse;
 @Component
 public class PenRegAPIInterceptor extends HandlerInterceptorAdapter {
 
-    private static final Logger log = LoggerFactory.getLogger(PenRegAPIInterceptor.class);
+  /**
+   * The constant log.
+   */
+  private static final Logger log = LoggerFactory.getLogger(PenRegAPIInterceptor.class);
 
-    @Override
+  /**
+   * Pre handle boolean.
+   *
+   * @param request  the request
+   * @param response the response
+   * @param handler  the handler
+   * @return the boolean
+   */
+  @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         if (request.getMethod() != null && request.getRequestURL() != null)
             log.info("{} {}", request.getMethod(), request.getRequestURL());
@@ -27,7 +38,15 @@ public class PenRegAPIInterceptor extends HandlerInterceptorAdapter {
         return true;
     }
 
-    @Override
+  /**
+   * After completion.
+   *
+   * @param request  the request
+   * @param response the response
+   * @param handler  the handler
+   * @param ex       the ex
+   */
+  @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         int status = response.getStatus();
         if(status >= 200 && status < 300) {

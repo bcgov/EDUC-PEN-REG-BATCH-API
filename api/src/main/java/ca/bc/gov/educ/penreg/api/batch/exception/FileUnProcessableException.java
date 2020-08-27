@@ -13,8 +13,14 @@ public class FileUnProcessableException extends Exception {
    * The constant GUID_IS.
    */
   public static final String GUID_IS = " guid is :: ";
+  /**
+   * The File error.
+   */
   @Getter
   private final FileError fileError;
+  /**
+   * The Reason.
+   */
   @Getter
   private final String reason;
 
@@ -36,6 +42,13 @@ public class FileUnProcessableException extends Exception {
     reason = finalLogMessage;
   }
 
+  /**
+   * Gets formatted message.
+   *
+   * @param msg           the msg
+   * @param substitutions the substitutions
+   * @return the formatted message
+   */
   private static String getFormattedMessage(String msg, String... substitutions) {
     final String format = msg.replaceAll("\\Q$?\\E", "%s");
     return String.format(format, (Object[]) substitutions);

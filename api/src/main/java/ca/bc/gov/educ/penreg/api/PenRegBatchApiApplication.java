@@ -48,6 +48,11 @@ public class PenRegBatchApiApplication {
   static
   class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
+    /**
+     * Configure paths to be excluded from security.
+     *
+     * @param web the web
+     */
     @Override
     public void configure(WebSecurity web) {
       web.ignoring().antMatchers("/v3/api-docs/**",

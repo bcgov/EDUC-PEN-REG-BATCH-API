@@ -15,6 +15,11 @@ import java.util.UUID;
 @Repository
 public interface PenRequestBatchRepository extends CrudRepository<PenRequestBatchEntity, UUID>, JpaSpecificationExecutor<PenRequestBatchEntity> {
 
+  /**
+   * Find all list.
+   *
+   * @return the list
+   */
   List<PenRequestBatchEntity> findAll();
 
   /**
@@ -24,4 +29,12 @@ public interface PenRequestBatchRepository extends CrudRepository<PenRequestBatc
    * @return the optional
    */
   Optional<PenRequestBatchEntity> findBySubmissionNumber(String submissionNumber);
+
+  /**
+   * Find by pen request batch status code list.
+   *
+   * @param penRequestBatchStatusCode the pen request batch status code
+   * @return the list
+   */
+  List<PenRequestBatchEntity> findByPenRequestBatchStatusCode(String penRequestBatchStatusCode);
 }

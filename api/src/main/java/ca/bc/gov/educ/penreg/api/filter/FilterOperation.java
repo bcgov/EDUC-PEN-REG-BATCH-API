@@ -62,12 +62,25 @@ public enum FilterOperation {
    */
   STARTS_WITH_IGNORE_CASE("starts_with_ignore_case");
 
+  /**
+   * The Value.
+   */
   private final String value;
 
+  /**
+   * Instantiates a new Filter operation.
+   *
+   * @param value the value
+   */
   FilterOperation(String value) {
     this.value = value;
   }
 
+  /**
+   * To string string.
+   *
+   * @return the string
+   */
   @Override
   @JsonValue
   public String toString() {

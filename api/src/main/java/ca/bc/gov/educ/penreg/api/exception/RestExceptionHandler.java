@@ -25,8 +25,20 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
+  /**
+   * The constant log.
+   */
   private static final Logger log = LoggerFactory.getLogger(RestExceptionHandler.class);
 
+  /**
+   * Handle http message not readable response entity.
+   *
+   * @param ex      the ex
+   * @param headers the headers
+   * @param status  the status
+   * @param request the request
+   * @return the response entity
+   */
   @Override
   protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
     String error = "Malformed JSON request";
@@ -34,6 +46,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     return buildResponseEntity(new ApiError(BAD_REQUEST, error, ex));
   }
 
+  /**
+   * Build response entity response entity.
+   *
+   * @param apiError the api error
+   * @return the response entity
+   */
   private ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
     return new ResponseEntity<>(apiError, apiError.getStatus());
   }

@@ -17,12 +17,33 @@ import java.util.function.Function;
 @Slf4j
 public class PenRegBatchFilterSpecs {
 
+  /**
+   * The Date filter specifications.
+   */
   private final FilterSpecifications<PenRequestBatchEntity, ChronoLocalDate> dateFilterSpecifications;
+  /**
+   * The Date time filter specifications.
+   */
   private final FilterSpecifications<PenRequestBatchEntity, ChronoLocalDateTime<?>> dateTimeFilterSpecifications;
+  /**
+   * The Integer filter specifications.
+   */
   private final FilterSpecifications<PenRequestBatchEntity, Integer> integerFilterSpecifications;
+  /**
+   * The String filter specifications.
+   */
   private final FilterSpecifications<PenRequestBatchEntity, String> stringFilterSpecifications;
+  /**
+   * The Long filter specifications.
+   */
   private final FilterSpecifications<PenRequestBatchEntity, Long> longFilterSpecifications;
+  /**
+   * The Uuid filter specifications.
+   */
   private final FilterSpecifications<PenRequestBatchEntity, UUID> uuidFilterSpecifications;
+  /**
+   * The Converters.
+   */
   private final Converters converters;
 
   /**
@@ -118,6 +139,17 @@ public class PenRegBatchFilterSpecs {
     return getSpecification(fieldName, filterValue, filterOperation, converters.getFunction(UUID.class), uuidFilterSpecifications);
   }
 
+  /**
+   * Gets specification.
+   *
+   * @param <T>             the type parameter
+   * @param fieldName       the field name
+   * @param filterValue     the filter value
+   * @param filterOperation the filter operation
+   * @param converter       the converter
+   * @param specifications  the specifications
+   * @return the specification
+   */
   private <T extends Comparable<T>> Specification<PenRequestBatchEntity> getSpecification(String fieldName,
                                                                                           String filterValue,
                                                                                           FilterOperation filterOperation,

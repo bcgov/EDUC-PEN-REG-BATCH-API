@@ -5,7 +5,10 @@ package ca.bc.gov.educ.penreg.api.exception;
  */
 public class PenRegAPIRuntimeException extends RuntimeException {
 
-	private static final long serialVersionUID = 5241655513745148898L;
+  /**
+   * The constant serialVersionUID.
+   */
+  private static final long serialVersionUID = 5241655513745148898L;
 
   /**
    * Instantiates a new Pen reg api runtime exception.

@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.batch.constants;
+package ca.bc.gov.educ.penreg.api.constants;
 
 import lombok.Getter;
 
@@ -16,8 +16,16 @@ public enum SchoolGroupCodes {
    */
   PSI("PSI");
 
+  /**
+   * The Code.
+   */
   private final String code;
 
+  /**
+   * Instantiates a new School group codes.
+   *
+   * @param code the code
+   */
   SchoolGroupCodes(String code) {
     this.code = code;
   }

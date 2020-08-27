@@ -13,6 +13,11 @@ import java.util.UUID;
  */
 public interface PenRequestBatchStudentRepository extends CrudRepository<PenRequestBatchStudentEntity, UUID>, JpaSpecificationExecutor<PenRequestBatchStudentEntity> {
 
+  /**
+   * Find all list.
+   *
+   * @return the list
+   */
   List<PenRequestBatchStudentEntity> findAll();
 
   /**

@@ -24,8 +24,14 @@ import static lombok.AccessLevel.PRIVATE;
 @Service
 public class PenRequestBatchStudentService {
 
+  /**
+   * The Repository.
+   */
   @Getter(PRIVATE)
   private final PenRequestBatchStudentRepository repository;
+  /**
+   * The Pen request batch repository.
+   */
   @Getter(PRIVATE)
   private final PenRequestBatchRepository penRequestBatchRepository;
 
@@ -68,6 +74,17 @@ public class PenRequestBatchStudentService {
     } else {
       throw new EntityNotFoundException(PenRequestBatchEntity.class, penRequestBatchID.toString());
     }
+  }
+
+  /**
+   * save student pen request batch student entity. <b> MAKE sure that the parameter is an attached hibernate entity.</b>
+   *
+   * @param entity            the attached entity
+   * @return the pen request batch student entity
+   */
+  @Transactional(propagation = Propagation.MANDATORY)
+  public PenRequestBatchStudentEntity saveAttachedEntity(final PenRequestBatchStudentEntity entity) {
+      return repository.save(entity);
   }
 
   /**
