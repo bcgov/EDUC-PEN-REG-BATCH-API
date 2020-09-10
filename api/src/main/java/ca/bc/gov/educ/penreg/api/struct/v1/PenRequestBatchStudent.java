@@ -94,4 +94,9 @@ public class PenRequestBatchStudent {
    * The Update user.
    */
   String updateUser;
+
+  /**
+   * The Record number.
+   */
+  Integer recordNumber;
 }

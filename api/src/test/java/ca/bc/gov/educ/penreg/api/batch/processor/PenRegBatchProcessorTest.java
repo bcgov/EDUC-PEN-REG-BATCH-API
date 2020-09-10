@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.batch.processor;
 
 import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchHistoryEntity;
+import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
@@ -117,7 +119,7 @@ public class PenRegBatchProcessorTest {
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
     var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_8_records_Header_Short_Length").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
     System.out.println(JsonUtil.getJsonStringFromObject(tsw));
-    System.out.println(JsonUtil.getJsonObjectFromString(PENWebBlobEntity.class,JsonUtil.getJsonStringFromObject(tsw)));
+    System.out.println(JsonUtil.getJsonObjectFromString(PENWebBlobEntity.class, JsonUtil.getJsonStringFromObject(tsw)));
     penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(1);
@@ -250,7 +252,13 @@ public class PenRegBatchProcessorTest {
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
     assertThat(students.size()).isEqualTo(30);
-    log.info("PenRequestBatch Entity is :: {}", entity);
+
+    students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
+    log.error("students {}",students);
+    var counter = 1;
+    for (PenRequestBatchStudentEntity student : students) {
+      assertThat(counter++).isEqualTo(student.getRecordNumber());
+    }
   }
 
   /**
@@ -368,6 +376,12 @@ public class PenRegBatchProcessorTest {
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
     assertThat(students.size()).isEqualTo(5);
+    students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
+    log.error("students {}",students);
+    var counter = 1;
+    for (PenRequestBatchStudentEntity student : students) {
+      assertThat(counter++).isEqualTo(student.getRecordNumber());
+    }
   }
 
   /**
@@ -397,6 +411,12 @@ public class PenRegBatchProcessorTest {
     assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isEqualTo(5);
+    students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
+    log.error("students {}",students);
+    var counter = 1;
+    for (PenRequestBatchStudentEntity student : students) {
+      assertThat(counter++).isEqualTo(student.getRecordNumber());
+    }
   }
 
   /**

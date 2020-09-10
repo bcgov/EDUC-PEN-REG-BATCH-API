@@ -187,4 +187,8 @@ public class PenRequestBatchStudentEntity {
   @Basic
   @Column(name = "INFO_REQUEST", length = 4000)
   String infoRequest;
+
+  @Basic
+  @Column(name = "RECORD_NUMBER")
+  Integer recordNumber;
 }

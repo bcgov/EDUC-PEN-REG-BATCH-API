@@ -215,6 +215,7 @@ public class PenRegBatchProcessor {
   }
 
   /**
+   * System was able to process the file successfully, now the data is persisted and saga data is created for further processing.
    * Process loaded records in batch file set.
    * this method will convert from batch file to header and student record,
    * send them to service for persistence and then return the set for further processing.
@@ -224,13 +225,14 @@ public class PenRegBatchProcessor {
    * @param penWebBlobEntity the pen web blob entity
    * @return set {@link PenRequestBatchStudentSagaData}
    */
-// System was able to process the file successfully, now the data is persisted and saga data is created for further processing.
   private Set<PenRequestBatchStudentSagaData> processLoadedRecordsInBatchFile(@NonNull String guid, @NonNull BatchFile batchFile, @NonNull PENWebBlobEntity penWebBlobEntity) {
+    var counter = 1;
     log.info("going to persist data for batch :: {}", guid);
     Set<PenRequestBatchStudentSagaData> penRequestBatchStudentSagaDataSet = new HashSet<>(batchFile.getStudentDetails().size());
     PenRequestBatchEntity entity = mapper.toPenReqBatchEntityLoaded(penWebBlobEntity, batchFile); // batch file can be processed further and persisted.
     for (var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.
       var penRequestBatchStudentEntity = mapper.toPenRequestBatchStudentEntity(student,entity);
+      penRequestBatchStudentEntity.setRecordNumber(counter++);
       var penRequestBatchStudentSagaData = studentSagaDataMapper.toPenReqBatchStudentSagaData(penRequestBatchStudentEntity);
       penRequestBatchStudentSagaData.setMincode(entity.getMinCode());
       penRequestBatchStudentSagaDataSet.add(penRequestBatchStudentSagaData);
