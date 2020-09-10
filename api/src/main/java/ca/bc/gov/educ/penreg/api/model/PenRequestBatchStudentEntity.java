@@ -55,7 +55,7 @@ public class PenRequestBatchStudentEntity {
    * The Pen request student status code.
    */
   @Column(name = "PEN_REQUEST_BATCH_STUDENT_STATUS_CODE", nullable = false, length = 10)
-  private String penRequestBatchStudentStatusCode;
+  String penRequestBatchStudentStatusCode;
 
   /**
    * The Local id.
@@ -176,18 +176,30 @@ public class PenRequestBatchStudentEntity {
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime updateDate;
 
+  /**
+   * The Match algorithm status code.
+   */
   @Basic
   @Column(name = "MATCH_ALGORITHM_STATUS_CODE", length = 10)
   String matchAlgorithmStatusCode;
 
+  /**
+   * The Questionable match student id.
+   */
   @Basic
   @Column(name = "QUESTIONABLE_MATCH_STUDENT_ID", columnDefinition = "BINARY(16)")
   UUID questionableMatchStudentId;
 
+  /**
+   * The Info request.
+   */
   @Basic
   @Column(name = "INFO_REQUEST", length = 4000)
   String infoRequest;
 
+  /**
+   * The Record number.
+   */
   @Basic
   @Column(name = "RECORD_NUMBER")
   Integer recordNumber;

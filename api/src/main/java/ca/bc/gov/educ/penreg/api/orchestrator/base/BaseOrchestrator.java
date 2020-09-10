@@ -459,6 +459,13 @@ public abstract class BaseOrchestrator<T> {
    */
   public abstract void populateStepsToExecuteMap();
 
+  /**
+   * Delegate message posting for student.
+   *
+   * @param saga      the saga
+   * @param student   the student
+   * @param eventType the event type
+   */
   protected void delegateMessagePostingForStudent(Saga saga, Student student, EventType eventType) {
     var eventPayloadOptional = JsonUtil.getJsonString(student);
     if (eventPayloadOptional.isPresent()) {

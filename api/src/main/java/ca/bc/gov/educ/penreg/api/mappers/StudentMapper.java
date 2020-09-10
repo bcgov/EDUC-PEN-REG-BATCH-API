@@ -7,11 +7,24 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+/**
+ * The interface Student mapper.
+ */
 @Mapper(uses = {UUIDMapper.class, LocalDateTimeMapper.class})
 @SuppressWarnings("squid:S1214")
 public interface StudentMapper {
+  /**
+   * The constant mapper.
+   */
   StudentMapper mapper = Mappers.getMapper(StudentMapper.class);
 
+  /**
+   * To student student.
+   *
+   * @param penRequestBatchStudentSagaData the pen request batch student saga data
+   * @param penMatchResult                 the pen match result
+   * @return the student
+   */
   @Mapping(target = "usualMiddleNames", source="penRequestBatchStudentSagaData.usualMiddleNames")
   @Mapping(target = "usualLastName", source="penRequestBatchStudentSagaData.usualLastName")
   @Mapping(target = "usualFirstName", source="penRequestBatchStudentSagaData.usualFirstName")

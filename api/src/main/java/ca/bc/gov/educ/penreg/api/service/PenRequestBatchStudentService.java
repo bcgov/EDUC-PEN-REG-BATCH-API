@@ -9,12 +9,19 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import lombok.Getter;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -79,7 +86,7 @@ public class PenRequestBatchStudentService {
   /**
    * save student pen request batch student entity. <b> MAKE sure that the parameter is an attached hibernate entity.</b>
    *
-   * @param entity            the attached entity
+   * @param entity the attached entity
    * @return the pen request batch student entity
    */
   @Transactional(propagation = Propagation.MANDATORY)
@@ -152,5 +159,25 @@ public class PenRequestBatchStudentService {
       throw new EntityNotFoundException(PenRequestBatchStudentEntity.class, penRequestBatchID.toString());
     }
 
+  }
+
+  /**
+   * Find all completable future.
+   *
+   * @param studentEntitySpecification the student entity specification
+   * @param pageNumber                 the page number
+   * @param pageSize                   the page size
+   * @param sorts                      the sorts
+   * @return the completable future
+   */
+  @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+  public CompletableFuture<Page<PenRequestBatchStudentEntity>> findAll(Specification<PenRequestBatchStudentEntity> studentEntitySpecification, Integer pageNumber, Integer pageSize, List<Sort.Order> sorts) {
+    Pageable paging = PageRequest.of(pageNumber, pageSize, Sort.by(sorts));
+    try {
+      var result = getRepository().findAll(studentEntitySpecification, paging);
+      return CompletableFuture.completedFuture(result);
+    } catch (final Exception ex) {
+      throw new CompletionException(ex);
+    }
   }
 }

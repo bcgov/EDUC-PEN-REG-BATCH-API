@@ -24,7 +24,16 @@ public enum EventType {
    * Process pen match results event type.
    */
   PROCESS_PEN_MATCH_RESULTS,
+  /**
+   * Get student event type.
+   */
   GET_STUDENT,
+  /**
+   * Create student event type.
+   */
   CREATE_STUDENT,
+  /**
+   * Update student event type.
+   */
   UPDATE_STUDENT
 }

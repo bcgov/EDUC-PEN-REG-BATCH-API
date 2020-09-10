@@ -5,6 +5,7 @@ import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchFilterSpecs;
+import ca.bc.gov.educ.penreg.api.filter.PenRegBatchStudentFilterSpecs;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenWebBlobMapper;
@@ -56,6 +57,9 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    */
   @Getter(PRIVATE)
   private final PenRegBatchFilterSpecs penRegBatchFilterSpecs;
+
+  @Getter(PRIVATE)
+  private final PenRegBatchStudentFilterSpecs  penRegBatchStudentFilterSpecs;
   /**
    * The Service.
    */
@@ -82,13 +86,15 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   /**
    * Instantiates a new Pen request batch api controller.
    *
-   * @param penRegBatchFilterSpecs the pen reg batch filter specs
-   * @param service                the service
-   * @param studentService         the student service
+   * @param penRegBatchFilterSpecs        the pen reg batch filter specs
+   * @param penRegBatchStudentFilterSpecs the pen reg batch student filter specs
+   * @param service                       the service
+   * @param studentService                the student service
    */
   @Autowired
-  public PenRequestBatchAPIController(final PenRegBatchFilterSpecs penRegBatchFilterSpecs, final PenRequestBatchService service, PenRequestBatchStudentService studentService) {
+  public PenRequestBatchAPIController(final PenRegBatchFilterSpecs penRegBatchFilterSpecs, PenRegBatchStudentFilterSpecs penRegBatchStudentFilterSpecs, final PenRequestBatchService service, PenRequestBatchStudentService studentService) {
     this.penRegBatchFilterSpecs = penRegBatchFilterSpecs;
+    this.penRegBatchStudentFilterSpecs = penRegBatchStudentFilterSpecs;
     this.service = service;
     this.studentService = studentService;
   }
@@ -273,6 +279,29 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     return penWebBlobMapper.toStructure(getService().updatePenWebBlob(penWebBlobMapper.toModel(penWebBlob), penWebBlobId));
   }
 
+  @Override
+  public CompletableFuture<Page<PenRequestBatchStudent>> findAllStudents(Integer pageNumber, Integer pageSize, String sortCriteriaJson, String searchCriteriaListJson) {
+    final ObjectMapper objectMapper = new ObjectMapper();
+    final List<Sort.Order> sorts = new ArrayList<>();
+    Specification<PenRequestBatchStudentEntity> penRequestBatchStudentEntitySpecification = null;
+    try {
+      getSortCriteria(sortCriteriaJson, objectMapper, sorts);
+      if (StringUtils.isNotBlank(searchCriteriaListJson)) {
+        List<Search> searches =  objectMapper.readValue(searchCriteriaListJson, new TypeReference<>() {
+        });
+        int i =0;
+        for(var search: searches){
+          penRequestBatchStudentEntitySpecification = getStudentSpecifications(penRequestBatchStudentEntitySpecification, i, search);
+          i++;
+        }
+
+      }
+    } catch (JsonProcessingException e) {
+      throw new InvalidParameterException(e.getMessage());
+    }
+    return getStudentService().findAll(penRequestBatchStudentEntitySpecification, pageNumber, pageSize, sorts).thenApplyAsync(penRegBatchEntities -> penRegBatchEntities.map(studentMapper::toStructure));
+  }
+
   /**
    * Gets sort criteria.
    *
@@ -353,22 +382,22 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     Specification<PenRequestBatchEntity> penRequestBatchEntitySpecification = null;
     switch (valueType) {
       case STRING:
-        penRequestBatchEntitySpecification = penRegBatchFilterSpecs.getStringTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getStringTypeSpecification(key, value, filterOperation);
         break;
       case DATE_TIME:
-        penRequestBatchEntitySpecification = penRegBatchFilterSpecs.getDateTimeTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getDateTimeTypeSpecification(key, value, filterOperation);
         break;
       case LONG:
-        penRequestBatchEntitySpecification = penRegBatchFilterSpecs.getLongTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getLongTypeSpecification(key, value, filterOperation);
         break;
       case INTEGER:
-        penRequestBatchEntitySpecification = penRegBatchFilterSpecs.getIntegerTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getIntegerTypeSpecification(key, value, filterOperation);
         break;
       case DATE:
-        penRequestBatchEntitySpecification = penRegBatchFilterSpecs.getDateTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getDateTypeSpecification(key, value, filterOperation);
         break;
       case UUID:
-        penRequestBatchEntitySpecification = penRegBatchFilterSpecs.getUUIDTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getUUIDTypeSpecification(key, value, filterOperation);
         break;
       default:
         break;
@@ -376,6 +405,75 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     return penRequestBatchEntitySpecification;
   }
 
+  private Specification<PenRequestBatchStudentEntity> getStudentTypeSpecification(String key, FilterOperation filterOperation, String value, ValueType valueType) {
+    Specification<PenRequestBatchStudentEntity> penRequestBatchEntitySpecification = null;
+    switch (valueType) {
+      case STRING:
+        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getStringTypeSpecification(key, value, filterOperation);
+        break;
+      case DATE_TIME:
+        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getDateTimeTypeSpecification(key, value, filterOperation);
+        break;
+      case LONG:
+        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getLongTypeSpecification(key, value, filterOperation);
+        break;
+      case INTEGER:
+        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getIntegerTypeSpecification(key, value, filterOperation);
+        break;
+      case DATE:
+        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getDateTypeSpecification(key, value, filterOperation);
+        break;
+      case UUID:
+        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getUUIDTypeSpecification(key, value, filterOperation);
+        break;
+      default:
+        break;
+    }
+    return penRequestBatchEntitySpecification;
+  }
+
+
+  private Specification<PenRequestBatchStudentEntity> getStudentSpecifications(Specification<PenRequestBatchStudentEntity> studentEntitySpecification, int i, Search search) {
+    if(i==0){
+      studentEntitySpecification = getPenRequestBatchStudentEntitySpecification(search.getSearchCriteriaList());
+    }else {
+      if(search.getCondition() == Condition.AND){
+        studentEntitySpecification = studentEntitySpecification.and(getPenRequestBatchStudentEntitySpecification(search.getSearchCriteriaList()));
+      }else {
+        studentEntitySpecification = studentEntitySpecification.or(getPenRequestBatchStudentEntitySpecification(search.getSearchCriteriaList()));
+      }
+    }
+    return studentEntitySpecification;
+  }
+
+  private Specification<PenRequestBatchStudentEntity> getPenRequestBatchStudentEntitySpecification(List<SearchCriteria> criteriaList) {
+    Specification<PenRequestBatchStudentEntity> penRequestBatchStudentEntitySpecification = null;
+    if (!criteriaList.isEmpty()) {
+      int i = 0;
+      for (SearchCriteria criteria : criteriaList) {
+        if (criteria.getKey() != null && criteria.getOperation() != null && criteria.getValueType() != null) {
+          Specification<PenRequestBatchStudentEntity> typeSpecification = getStudentTypeSpecification(criteria.getKey(), criteria.getOperation(), criteria.getValue(), criteria.getValueType());
+          penRequestBatchStudentEntitySpecification = getSpecificationPerGroupOfStudentEntity(penRequestBatchStudentEntitySpecification, i, criteria, typeSpecification);
+          i++;
+        } else {
+          throw new InvalidParameterException("Search Criteria can not contain null values for", criteria.getKey(), criteria.getOperation().toString(), criteria.getValueType().toString());
+        }
+      }
+    }
+    return penRequestBatchStudentEntitySpecification;
+  }
+  private Specification<PenRequestBatchStudentEntity> getSpecificationPerGroupOfStudentEntity(Specification<PenRequestBatchStudentEntity> penRequestBatchStudentEntitySpecification, int i, SearchCriteria criteria, Specification<PenRequestBatchStudentEntity> typeSpecification) {
+    if (i == 0) {
+      penRequestBatchStudentEntitySpecification = Specification.where(typeSpecification);
+    } else {
+      if(criteria.getCondition() == Condition.AND){
+        penRequestBatchStudentEntitySpecification = penRequestBatchStudentEntitySpecification.and(typeSpecification);
+      }else {
+        penRequestBatchStudentEntitySpecification = penRequestBatchStudentEntitySpecification.or(typeSpecification);
+      }
+    }
+    return penRequestBatchStudentEntitySpecification;
+  }
   /**
    * Populate audit columns.
    *

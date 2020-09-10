@@ -17,16 +17,52 @@ package ca.bc.gov.educ.penreg.api.constants;
  * </pre>
  */
 public enum MatchAlgorithmStatusCode {
+  /**
+   * Aa match algorithm status code.
+   */
   AA,
+  /**
+   * B 0 match algorithm status code.
+   */
   B0,
+  /**
+   * B 1 match algorithm status code.
+   */
   B1,
+  /**
+   * Bm match algorithm status code.
+   */
   BM,
+  /**
+   * C 0 match algorithm status code.
+   */
   C0,
+  /**
+   * C 1 match algorithm status code.
+   */
   C1,
+  /**
+   * Cm match algorithm status code.
+   */
   CM,
+  /**
+   * D 0 match algorithm status code.
+   */
   D0,
+  /**
+   * D 1 match algorithm status code.
+   */
   D1,
+  /**
+   * Dm match algorithm status code.
+   */
   DM,
+  /**
+   * F 1 match algorithm status code.
+   */
   F1,
+  /**
+   * G 0 match algorithm status code.
+   */
   G0
 }
