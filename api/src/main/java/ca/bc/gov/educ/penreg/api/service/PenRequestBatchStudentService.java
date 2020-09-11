@@ -4,11 +4,15 @@ import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentStatusCodeEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentStatusCodeRepository;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -29,6 +34,7 @@ import static lombok.AccessLevel.PRIVATE;
  * The type Pen request batch student service.
  */
 @Service
+@Slf4j
 public class PenRequestBatchStudentService {
 
   /**
@@ -42,6 +48,9 @@ public class PenRequestBatchStudentService {
   @Getter(PRIVATE)
   private final PenRequestBatchRepository penRequestBatchRepository;
 
+  @Getter(PRIVATE)
+  private final PenRequestBatchStudentStatusCodeRepository studentStatusCodeRepository;
+
   /**
    * Instantiates a new Pen request batch student service.
    *
@@ -49,9 +58,10 @@ public class PenRequestBatchStudentService {
    * @param penRequestBatchRepository the pen request batch repository
    */
   @Autowired
-  public PenRequestBatchStudentService(PenRequestBatchStudentRepository repository, PenRequestBatchRepository penRequestBatchRepository) {
+  public PenRequestBatchStudentService(PenRequestBatchStudentRepository repository, PenRequestBatchRepository penRequestBatchRepository, PenRequestBatchStudentStatusCodeRepository studentStatusCodeRepository) {
     this.repository = repository;
     this.penRequestBatchRepository = penRequestBatchRepository;
+    this.studentStatusCodeRepository = studentStatusCodeRepository;
   }
 
   /**
@@ -91,7 +101,7 @@ public class PenRequestBatchStudentService {
    */
   @Transactional(propagation = Propagation.MANDATORY)
   public PenRequestBatchStudentEntity saveAttachedEntity(final PenRequestBatchStudentEntity entity) {
-      return repository.save(entity);
+    return repository.save(entity);
   }
 
   /**
@@ -133,14 +143,14 @@ public class PenRequestBatchStudentService {
    */
   public PenRequestBatchStudentEntity getStudentById(UUID penRequestBatchID, UUID penRequestBatchStudentID) {
     var penRequestBatchStudentOptional = getRepository().findById(penRequestBatchStudentID);
-    if(penRequestBatchStudentOptional.isPresent()){
+    if (penRequestBatchStudentOptional.isPresent()) {
       var penRequestBatchStudent = penRequestBatchStudentOptional.get();
-      if(penRequestBatchStudent.getPenRequestBatchEntity().getPenRequestBatchID().equals(penRequestBatchID)){
+      if (penRequestBatchStudent.getPenRequestBatchEntity().getPenRequestBatchID().equals(penRequestBatchID)) {
         return penRequestBatchStudent;
-      }else {
+      } else {
         throw new InvalidParameterException(penRequestBatchID.toString(), penRequestBatchStudentID.toString()); // this student does not belong to the specific batch ID.
       }
-    }else {
+    } else {
       throw new EntityNotFoundException(PenRequestBatchStudentEntity.class, penRequestBatchStudentID.toString());
     }
   }
@@ -155,7 +165,7 @@ public class PenRequestBatchStudentService {
     var penRequestBatchOptional = getPenRequestBatchRepository().findById(penRequestBatchID);
     if (penRequestBatchOptional.isPresent()) {
       return getRepository().findAllByPenRequestBatchEntity(penRequestBatchOptional.get());
-    }else {
+    } else {
       throw new EntityNotFoundException(PenRequestBatchStudentEntity.class, penRequestBatchID.toString());
     }
 
@@ -179,5 +189,19 @@ public class PenRequestBatchStudentService {
     } catch (final Exception ex) {
       throw new CompletionException(ex);
     }
+  }
+
+
+  @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+  @Cacheable("penRequestBatchStudentStatusCodes")
+  public List<PenRequestBatchStudentStatusCodeEntity> getAllStudentStatusCodes() {
+    return getStudentStatusCodeRepository().findAll();
+  }
+
+  @PostConstruct
+  public void init() {
+    log.info("init method started...");
+    var result = this.getAllStudentStatusCodes();
+    log.info("init method completed, loaded {} penRequestBatchStudentStatusCodes into cache...", result.size());
   }
 }

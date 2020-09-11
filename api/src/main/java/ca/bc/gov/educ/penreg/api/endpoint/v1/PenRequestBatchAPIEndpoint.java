@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.endpoint.v1;
 import ca.bc.gov.educ.penreg.api.struct.v1.PENWebBlob;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentStatusCode;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -231,4 +233,16 @@ public interface PenRequestBatchAPIEndpoint {
                                                                description = "searchCriteriaList if provided should be a JSON string of Search Array",
                                                                implementation = ca.bc.gov.educ.penreg.api.struct.v1.Search.class))
                                                            @RequestParam(name = "searchCriteriaList", required = false) String searchCriteriaListJson);
+
+  /**
+   * Gets all pen request batch student status codes.
+   *
+   * @return the all pen request batch student status codes
+   */
+  @GetMapping("/student/pen-request-batch-student-status-codes")
+  @PreAuthorize("#oauth2.hasAnyScope('READ_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
+  @Transactional(readOnly = true)
+  @Tag(name = "Endpoint to get all the PenRequestBatchStudentStatusCode.")
+  List<PenRequestBatchStudentStatusCode> getAllPenRequestBatchStudentStatusCodes();
 }
