@@ -9,6 +9,7 @@ import ca.bc.gov.educ.penreg.api.filter.PenRegBatchStudentFilterSpecs;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenWebBlobMapper;
+import ca.bc.gov.educ.penreg.api.mappers.v1.StudentStatusCodeMapper;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -58,8 +60,11 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   @Getter(PRIVATE)
   private final PenRegBatchFilterSpecs penRegBatchFilterSpecs;
 
+  /**
+   * The Pen reg batch student filter specs.
+   */
   @Getter(PRIVATE)
-  private final PenRegBatchStudentFilterSpecs  penRegBatchStudentFilterSpecs;
+  private final PenRegBatchStudentFilterSpecs penRegBatchStudentFilterSpecs;
   /**
    * The Service.
    */
@@ -82,6 +87,11 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * The constant penWebBlobMapper.
    */
   private static final PenWebBlobMapper penWebBlobMapper = PenWebBlobMapper.mapper;
+
+  /**
+   * The constant studentStatusCodeMapper.
+   */
+  private static final StudentStatusCodeMapper studentStatusCodeMapper = StudentStatusCodeMapper.mapper;
 
   /**
    * Instantiates a new Pen request batch api controller.
@@ -155,10 +165,10 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     try {
       getSortCriteria(sortCriteriaJson, objectMapper, sorts);
       if (StringUtils.isNotBlank(searchList)) {
-        List<Search> searches =  objectMapper.readValue(searchList, new TypeReference<>() {
+        List<Search> searches = objectMapper.readValue(searchList, new TypeReference<>() {
         });
-        int i =0;
-        for(var search: searches){
+        int i = 0;
+        for (var search : searches) {
           penRegBatchSpecs = getSpecifications(penRegBatchSpecs, i, search);
           i++;
         }
@@ -179,12 +189,12 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * @return the specifications
    */
   private Specification<PenRequestBatchEntity> getSpecifications(Specification<PenRequestBatchEntity> penRegBatchSpecs, int i, Search search) {
-    if(i==0){
+    if (i == 0) {
       penRegBatchSpecs = getPenRequestBatchEntitySpecification(search.getSearchCriteriaList());
-    }else {
-      if(search.getCondition() == Condition.AND){
+    } else {
+      if (search.getCondition() == Condition.AND) {
         penRegBatchSpecs = penRegBatchSpecs.and(getPenRequestBatchEntitySpecification(search.getSearchCriteriaList()));
-      }else {
+      } else {
         penRegBatchSpecs = penRegBatchSpecs.or(getPenRequestBatchEntitySpecification(search.getSearchCriteriaList()));
       }
     }
@@ -279,6 +289,15 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     return penWebBlobMapper.toStructure(getService().updatePenWebBlob(penWebBlobMapper.toModel(penWebBlob), penWebBlobId));
   }
 
+  /**
+   * Find all students completable future.
+   *
+   * @param pageNumber             the page number
+   * @param pageSize               the page size
+   * @param sortCriteriaJson       the sort criteria json
+   * @param searchCriteriaListJson the search criteria list json
+   * @return the completable future
+   */
   @Override
   public CompletableFuture<Page<PenRequestBatchStudent>> findAllStudents(Integer pageNumber, Integer pageSize, String sortCriteriaJson, String searchCriteriaListJson) {
     final ObjectMapper objectMapper = new ObjectMapper();
@@ -287,10 +306,10 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     try {
       getSortCriteria(sortCriteriaJson, objectMapper, sorts);
       if (StringUtils.isNotBlank(searchCriteriaListJson)) {
-        List<Search> searches =  objectMapper.readValue(searchCriteriaListJson, new TypeReference<>() {
+        List<Search> searches = objectMapper.readValue(searchCriteriaListJson, new TypeReference<>() {
         });
-        int i =0;
-        for(var search: searches){
+        int i = 0;
+        for (var search : searches) {
           penRequestBatchStudentEntitySpecification = getStudentSpecifications(penRequestBatchStudentEntitySpecification, i, search);
           i++;
         }
@@ -300,6 +319,16 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
       throw new InvalidParameterException(e.getMessage());
     }
     return getStudentService().findAll(penRequestBatchStudentEntitySpecification, pageNumber, pageSize, sorts).thenApplyAsync(penRegBatchEntities -> penRegBatchEntities.map(studentMapper::toStructure));
+  }
+
+  /**
+   * Gets all pen request batch student status codes.
+   *
+   * @return the all pen request batch student status codes
+   */
+  @Override
+  public List<PenRequestBatchStudentStatusCode> getAllPenRequestBatchStudentStatusCodes() {
+    return getStudentService().getAllStudentStatusCodes().stream().map(studentStatusCodeMapper::toStruct).collect(Collectors.toList());
   }
 
   /**
@@ -360,9 +389,9 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     if (i == 0) {
       penRequestBatchEntitySpecification = Specification.where(typeSpecification);
     } else {
-      if(criteria.getCondition() == Condition.AND){
+      if (criteria.getCondition() == Condition.AND) {
         penRequestBatchEntitySpecification = penRequestBatchEntitySpecification.and(typeSpecification);
-      }else {
+      } else {
         penRequestBatchEntitySpecification = penRequestBatchEntitySpecification.or(typeSpecification);
       }
     }
@@ -405,6 +434,15 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     return penRequestBatchEntitySpecification;
   }
 
+  /**
+   * Gets student type specification.
+   *
+   * @param key             the key
+   * @param filterOperation the filter operation
+   * @param value           the value
+   * @param valueType       the value type
+   * @return the student type specification
+   */
   private Specification<PenRequestBatchStudentEntity> getStudentTypeSpecification(String key, FilterOperation filterOperation, String value, ValueType valueType) {
     Specification<PenRequestBatchStudentEntity> penRequestBatchEntitySpecification = null;
     switch (valueType) {
@@ -433,19 +471,33 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   }
 
 
+  /**
+   * Gets student specifications.
+   *
+   * @param studentEntitySpecification the student entity specification
+   * @param i                          the
+   * @param search                     the search
+   * @return the student specifications
+   */
   private Specification<PenRequestBatchStudentEntity> getStudentSpecifications(Specification<PenRequestBatchStudentEntity> studentEntitySpecification, int i, Search search) {
-    if(i==0){
+    if (i == 0) {
       studentEntitySpecification = getPenRequestBatchStudentEntitySpecification(search.getSearchCriteriaList());
-    }else {
-      if(search.getCondition() == Condition.AND){
+    } else {
+      if (search.getCondition() == Condition.AND) {
         studentEntitySpecification = studentEntitySpecification.and(getPenRequestBatchStudentEntitySpecification(search.getSearchCriteriaList()));
-      }else {
+      } else {
         studentEntitySpecification = studentEntitySpecification.or(getPenRequestBatchStudentEntitySpecification(search.getSearchCriteriaList()));
       }
     }
     return studentEntitySpecification;
   }
 
+  /**
+   * Gets pen request batch student entity specification.
+   *
+   * @param criteriaList the criteria list
+   * @return the pen request batch student entity specification
+   */
   private Specification<PenRequestBatchStudentEntity> getPenRequestBatchStudentEntitySpecification(List<SearchCriteria> criteriaList) {
     Specification<PenRequestBatchStudentEntity> penRequestBatchStudentEntitySpecification = null;
     if (!criteriaList.isEmpty()) {
@@ -462,18 +514,29 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     }
     return penRequestBatchStudentEntitySpecification;
   }
+
+  /**
+   * Gets specification per group of student entity.
+   *
+   * @param penRequestBatchStudentEntitySpecification the pen request batch student entity specification
+   * @param i                                         the
+   * @param criteria                                  the criteria
+   * @param typeSpecification                         the type specification
+   * @return the specification per group of student entity
+   */
   private Specification<PenRequestBatchStudentEntity> getSpecificationPerGroupOfStudentEntity(Specification<PenRequestBatchStudentEntity> penRequestBatchStudentEntitySpecification, int i, SearchCriteria criteria, Specification<PenRequestBatchStudentEntity> typeSpecification) {
     if (i == 0) {
       penRequestBatchStudentEntitySpecification = Specification.where(typeSpecification);
     } else {
-      if(criteria.getCondition() == Condition.AND){
+      if (criteria.getCondition() == Condition.AND) {
         penRequestBatchStudentEntitySpecification = penRequestBatchStudentEntitySpecification.and(typeSpecification);
-      }else {
+      } else {
         penRequestBatchStudentEntitySpecification = penRequestBatchStudentEntitySpecification.or(typeSpecification);
       }
     }
     return penRequestBatchStudentEntitySpecification;
   }
+
   /**
    * Populate audit columns.
    *
