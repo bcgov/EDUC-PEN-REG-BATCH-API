@@ -22,6 +22,12 @@ import java.util.concurrent.TimeoutException;
 @SuppressWarnings("java:S2142")
 public class MessagePublisher extends MessagePubSub {
 
+
+  @Autowired
+  public MessagePublisher(final ApplicationProperties applicationProperties) throws IOException, InterruptedException {
+    this(applicationProperties, true);
+  }
+
   /**
    * Instantiates a new Message publisher.
    *
@@ -29,8 +35,7 @@ public class MessagePublisher extends MessagePubSub {
    * @throws IOException          the io exception
    * @throws InterruptedException the interrupted exception
    */
-  @Autowired
-  public MessagePublisher(final ApplicationProperties applicationProperties) throws IOException, InterruptedException {
+  public MessagePublisher(final ApplicationProperties applicationProperties, boolean isConnectionRequired) throws IOException, InterruptedException {
     Options.Builder builder = new Options.Builder();
     builder.natsUrl(applicationProperties.getNatsUrl());
     builder.clusterId(applicationProperties.getNatsClusterId());
@@ -38,7 +43,14 @@ public class MessagePublisher extends MessagePubSub {
     builder.connectionLostHandler(this::connectionLostHandler);
     Options options = builder.build();
     connectionFactory = new StreamingConnectionFactory(options);
-    connection = connectionFactory.createConnection();
+    if (isConnectionRequired) {
+      this.connect();
+    }
+
+  }
+
+  protected void connect() throws IOException, InterruptedException {
+    this.connection = connectionFactory.createConnection();
   }
 
 
@@ -48,11 +60,11 @@ public class MessagePublisher extends MessagePubSub {
    * @param subject the subject
    * @param message the message
    */
-  public void dispatchMessage(String subject, byte[] message)  {
+  public void dispatchMessage(String subject, byte[] message) {
     try {
       connection.publish(subject, message, getAckHandler());
     } catch (IOException | InterruptedException | TimeoutException e) {
-      executorService.execute(()-> retryPublish(subject, message));
+      executorService.execute(() -> retryPublish(subject, message));
     }
   }
 
@@ -76,7 +88,7 @@ public class MessagePublisher extends MessagePubSub {
    *
    * @return the ack handler
    */
-  private AckHandler getAckHandler() {
+  protected AckHandler getAckHandler() {
     return new AckHandler() {
       @Override
       public void onAck(String guid, Exception err) {
@@ -102,12 +114,12 @@ public class MessagePublisher extends MessagePubSub {
    */
   public void retryPublish(String subject, byte[] message) {
     log.trace("retrying...");
-    while(true){
+    while (true) {
       try {
         connection.publish(subject, message, getAckHandler());
         break;
       } catch (IOException | InterruptedException | TimeoutException e) {
-       log.error("Exception while trying to publish");
+        log.error("Exception while trying to publish");
       }
     }
 

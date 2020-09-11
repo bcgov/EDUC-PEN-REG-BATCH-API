@@ -102,9 +102,9 @@ public class EventTaskScheduler implements Closeable {
   /**
    * Run the job every minute to check how many records are in IN_PROGRESS or STARTED status and has not been updated in last 5 minutes.
    */
-  @Scheduled(cron = "1 * * * * *")
+  @Scheduled(cron = "${scheduled.jobs.extract.uncompleted.sagas.cron}") // 1 * * * * *
   @SchedulerLock(name = "EXTRACT_UNCOMPLETED_SAGAS",
-    lockAtLeastFor = "55s", lockAtMostFor = "57s")
+    lockAtLeastFor = "${scheduled.jobs.extract.uncompleted.sagas.cron.lockAtLeastFor}", lockAtMostFor = "${scheduled.jobs.extract.uncompleted.sagas.cron.lockAtMostFor}")
   public void findAndProcessPendingSagaEvents() {
     LockAssert.assertLocked();
     executorService.execute(() -> {
@@ -127,9 +127,9 @@ public class EventTaskScheduler implements Closeable {
   /**
    * Process loaded pen request batches.
    */
-  @Scheduled(cron = "5 * * * * *")
+  @Scheduled(cron = "${scheduled.jobs.extract.unprocessed.students.cron}")
   @SchedulerLock(name = "EXTRACT_UNPROCESSED_STUDENT_RECORDS",
-    lockAtLeastFor = "295s", lockAtMostFor = "295s")
+    lockAtLeastFor = "${scheduled.jobs.extract.unprocessed.students.cron.lockAtLeastFor}", lockAtMostFor = "${scheduled.jobs.extract.unprocessed.students.cron.lockAtMostFor}")
   @Transactional
   public void processLoadedPenRequestBatches() {
     LockAssert.assertLocked();

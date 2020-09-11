@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.messaging;
 
 import io.nats.streaming.StreamingConnection;
 import io.nats.streaming.StreamingConnectionFactory;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Closeable;
@@ -24,11 +25,13 @@ public abstract class MessagePubSub implements Closeable {
   /**
    * The Connection factory.
    */
+  @Setter
   protected StreamingConnectionFactory connectionFactory;
   /**
    * The Executor service.
    */
-  protected final ExecutorService executorService = Executors.newSingleThreadExecutor();
+  @Setter
+  protected ExecutorService executorService = Executors.newSingleThreadExecutor();
 
   /**
    * Close.

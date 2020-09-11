@@ -128,9 +128,7 @@ public class MessageSubscriber extends MessagePubSub {
     while (true) {
       try {
         log.trace("retrying subscription as connection was lost :: retrying ::" + numOfRetries++);
-        for (Map.Entry<String, SagaEventHandler> entry : handlers.entrySet()) {
-          this.subscribe(entry.getKey(), entry.getValue());
-        }
+        handlers.forEach(this::subscribe);
         log.info("successfully resubscribed after {} attempts", numOfRetries);
         break;
       } catch (PenRegAPIRuntimeException exception) {
