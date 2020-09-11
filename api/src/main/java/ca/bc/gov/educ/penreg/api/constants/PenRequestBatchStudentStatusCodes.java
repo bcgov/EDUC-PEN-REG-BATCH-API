@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.batch.constants;
+package ca.bc.gov.educ.penreg.api.constants;
 
 import lombok.Getter;
 
@@ -44,8 +44,16 @@ public enum PenRequestBatchStudentStatusCodes {
    */
   RETURNED("RETURNED");
 
+  /**
+   * The Code.
+   */
   private final String code;
 
+  /**
+   * Instantiates a new Pen request batch student status codes.
+   *
+   * @param code the code
+   */
   PenRequestBatchStudentStatusCodes(String code) {
     this.code = code;
   }

@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.batch.constants;
+package ca.bc.gov.educ.penreg.api.constants;
 
 import lombok.Getter;
 
@@ -12,8 +12,16 @@ public enum MinistryPRBSourceCodes {
    */
   TSW_PEN_WEB("TSWPENWEB");
 
+  /**
+   * The Code.
+   */
   private final String code;
 
+  /**
+   * Instantiates a new Ministry prb source codes.
+   *
+   * @param code the code
+   */
   MinistryPRBSourceCodes(String code) {
     this.code = code;
   }

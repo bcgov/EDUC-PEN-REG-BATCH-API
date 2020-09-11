@@ -15,6 +15,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class PenRegAPIMVCConfig implements WebMvcConfigurer {
 
+  /**
+   * The Pen reg api interceptor.
+   */
   @Getter(AccessLevel.PRIVATE)
   private final PenRegAPIInterceptor penRegAPIInterceptor;
 
@@ -28,6 +31,11 @@ public class PenRegAPIMVCConfig implements WebMvcConfigurer {
     this.penRegAPIInterceptor = penRegAPIInterceptor;
   }
 
+  /**
+   * Add interceptors.
+   *
+   * @param registry the registry
+   */
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
     registry.addInterceptor(penRegAPIInterceptor).addPathPatterns("/**/**/");

@@ -4,6 +4,7 @@ import ca.bc.gov.educ.penreg.api.batch.processor.PenRegBatchProcessor;
 import ca.bc.gov.educ.penreg.api.batch.service.PenRequestBatchFileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.core.LockAssert;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -24,9 +25,22 @@ import static lombok.AccessLevel.PRIVATE;
 @Slf4j
 @SuppressWarnings("java:S2142")
 public class PenRegBatchScheduler implements Closeable {
+  /**
+   * The constant FILE_TYPE_PEN.
+   */
+  public static final String FILE_TYPE_PEN = "PEN";
+  /**
+   * The Executor service.
+   */
   private final ExecutorService executorService = Executors.newFixedThreadPool(5);
+  /**
+   * The Pen reg batch processor.
+   */
   @Getter(PRIVATE)
   private final PenRegBatchProcessor penRegBatchProcessor;
+  /**
+   * The Pen request batch file service.
+   */
   @Getter(PRIVATE)
   private final PenRequestBatchFileService penRequestBatchFileService;
 
@@ -51,8 +65,9 @@ public class PenRegBatchScheduler implements Closeable {
       lockAtLeastFor = "${scheduled.jobs.extract.unprocessed.pen.web.blobs.cron.lockAtLeastFor}",
       lockAtMostFor = "${scheduled.jobs.extract.unprocessed.pen.web.blobs.cron.lockAtMostFor}")
   public void extractUnProcessedFilesFromPenWebBlobs() {
+    LockAssert.assertLocked();
     log.info("extraction of batch file from Pen Web Blobs started.");
-    var unExtractedRecords = getPenRequestBatchFileService().getAllNotExtractedRecords("PEN"); // PEN is the file type based on which records will be filtered.
+    var unExtractedRecords = getPenRequestBatchFileService().getAllNotExtractedRecords(FILE_TYPE_PEN); // PEN is the file type based on which records will be filtered.
     if (!unExtractedRecords.isEmpty()) {
       log.info("{} :: records found where extract date is null", unExtractedRecords.size());
       List<Future<String>> futureResults = new ArrayList<>(unExtractedRecords.size());
@@ -73,6 +88,9 @@ public class PenRegBatchScheduler implements Closeable {
     }
   }
 
+  /**
+   * Close.
+   */
   @Override
   public void close() {
     if (!executorService.isShutdown()) {

@@ -28,9 +28,15 @@ import static lombok.AccessLevel.PRIVATE;
 @Slf4j
 public class PenRequestBatchFileService {
 
+  /**
+   * The Pen request batch service.
+   */
   @Getter(PRIVATE)
   private final PenRequestBatchService penRequestBatchService;
 
+  /**
+   * The Pen web blob repository.
+   */
   @Getter(PRIVATE)
   private final PenWebBlobRepository penWebBlobRepository;
 
@@ -72,6 +78,7 @@ public class PenRequestBatchFileService {
   /**
    * Gets all not extracted records.
    *
+   * @param fileType the file type
    * @return the all not extracted records
    */
   @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)

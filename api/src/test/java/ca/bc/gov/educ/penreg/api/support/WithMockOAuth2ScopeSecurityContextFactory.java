@@ -14,10 +14,15 @@ import org.springframework.security.test.context.support.WithSecurityContextFact
  * How to test spring-security-oauth2 resource server security?
  * https://stackoverflow.com/a/40921028
  */
-
 public class WithMockOAuth2ScopeSecurityContextFactory implements WithSecurityContextFactory<WithMockOAuth2Scope> {
 
-    @Override
+  /**
+   * Create security context security context.
+   *
+   * @param mockOAuth2Scope the mock o auth 2 scope
+   * @return the security context
+   */
+  @Override
     public SecurityContext createSecurityContext(WithMockOAuth2Scope mockOAuth2Scope) {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
 

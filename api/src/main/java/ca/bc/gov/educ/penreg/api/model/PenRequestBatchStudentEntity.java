@@ -1,6 +1,13 @@
 package ca.bc.gov.educ.penreg.api.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -30,7 +37,7 @@ public class PenRequestBatchStudentEntity {
   @Id
   @GeneratedValue(generator = "UUID")
   @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator", parameters = {
-      @Parameter(name = "uuid_gen_strategy_class", value = "org.hibernate.id.uuid.CustomVersionOneStrategy")})
+    @Parameter(name = "uuid_gen_strategy_class", value = "org.hibernate.id.uuid.CustomVersionOneStrategy")})
   @Column(name = "PEN_REQUEST_BATCH_STUDENT_ID", unique = true, updatable = false, columnDefinition = "BINARY(16)")
   UUID penRequestBatchStudentID;
 
@@ -48,18 +55,18 @@ public class PenRequestBatchStudentEntity {
    * The Pen request student status code.
    */
   @Column(name = "PEN_REQUEST_BATCH_STUDENT_STATUS_CODE", nullable = false, length = 10)
-  private String penRequestBatchStudentStatusCode;
+  String penRequestBatchStudentStatusCode;
 
   /**
    * The Local id.
    */
-  @Column(name="LOCAL_ID", length = 12)
+  @Column(name = "LOCAL_ID", length = 12)
   String localID;
 
   /**
    * The Submitted pen.
    */
-  @Column(name="SUBMITTED_PEN", length = 9)
+  @Column(name = "SUBMITTED_PEN", length = 9)
   String submittedPen;
 
   /**
@@ -133,12 +140,12 @@ public class PenRequestBatchStudentEntity {
    * The Student id.
    */
   @Column(name = "STUDENT_ID", columnDefinition = "BINARY(16)")
-  String studentID;
+  UUID studentID;
   /**
    * The Create user.
    */
   @Basic
-  @Column(name = "CREATE_USER",updatable = false, nullable = false, length = 32)
+  @Column(name = "CREATE_USER", updatable = false, nullable = false, length = 32)
   String createUser;
 
 
@@ -146,7 +153,10 @@ public class PenRequestBatchStudentEntity {
    * The Create date.
    */
   @Basic
-  @Column(name = "CREATE_DATE",updatable = false, nullable = false)
+  @Column(name = "CREATE_DATE", updatable = false, nullable = false)
+  @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+  @JsonSerialize(using = LocalDateTimeSerializer.class)
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime createDate;
 
   /**
@@ -161,5 +171,36 @@ public class PenRequestBatchStudentEntity {
    */
   @Basic
   @Column(name = "UPDATE_DATE", nullable = false)
+  @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+  @JsonSerialize(using = LocalDateTimeSerializer.class)
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
   LocalDateTime updateDate;
+
+  /**
+   * The Match algorithm status code.
+   */
+  @Basic
+  @Column(name = "MATCH_ALGORITHM_STATUS_CODE", length = 10)
+  String matchAlgorithmStatusCode;
+
+  /**
+   * The Questionable match student id.
+   */
+  @Basic
+  @Column(name = "QUESTIONABLE_MATCH_STUDENT_ID", columnDefinition = "BINARY(16)")
+  UUID questionableMatchStudentId;
+
+  /**
+   * The Info request.
+   */
+  @Basic
+  @Column(name = "INFO_REQUEST", length = 4000)
+  String infoRequest;
+
+  /**
+   * The Record number.
+   */
+  @Basic
+  @Column(name = "RECORD_NUMBER")
+  Integer recordNumber;
 }

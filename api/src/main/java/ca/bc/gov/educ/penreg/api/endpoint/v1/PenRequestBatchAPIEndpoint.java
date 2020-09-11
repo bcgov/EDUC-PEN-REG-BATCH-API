@@ -97,7 +97,7 @@ public interface PenRequestBatchAPIEndpoint {
   CompletableFuture<Page<PenRequestBatch>> findAll(@RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
                                                    @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
                                                    @RequestParam(name = "sort", defaultValue = "") String sortCriteriaJson,
-                                                   @ArraySchema(schema = @Schema( name = "searchCriteriaList",
+                                                   @ArraySchema(schema = @Schema(name = "searchCriteriaList",
                                                        description = "searchCriteriaList if provided should be a JSON string of Search Array",
                                                        implementation = ca.bc.gov.educ.penreg.api.struct.v1.Search.class))
                                                    @RequestParam(name = "searchCriteriaList", required = false) String searchCriteriaListJson);
@@ -209,4 +209,26 @@ public interface PenRequestBatchAPIEndpoint {
   @Schema(name = "PENWebBlob", implementation = PENWebBlob.class)
   PENWebBlob updatePenWebBlob(@Validated @RequestBody PENWebBlob penWebBlob, @PathVariable Long sourceID);
 
+  /**
+   * Find all PenRequestBatchStudent for given search criteria.
+   *
+   * @param pageNumber             the page number
+   * @param pageSize               the page size
+   * @param sortCriteriaJson       the sort criteria json
+   * @param searchCriteriaListJson the search list , the JSON string ( of Array or List of {@link ca.bc.gov.educ.penreg.api.struct.v1.Search})
+   * @return the completable future Page {@link PenRequestBatchStudent}
+   */
+  @GetMapping("/student/paginated")
+  @Async
+  @PreAuthorize("#oauth2.hasScope('READ_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR.")})
+  @Transactional(readOnly = true)
+  @Tag(name = "Endpoint to support data table view in frontend, with sort, filter and pagination, for Student Requests.", description = "This API endpoint exposes flexible way to query the entity by leveraging JPA specifications.")
+  CompletableFuture<Page<PenRequestBatchStudent>> findAllStudents(@RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
+                                                           @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
+                                                           @RequestParam(name = "sort", defaultValue = "") String sortCriteriaJson,
+                                                           @ArraySchema(schema = @Schema(name = "searchCriteriaList",
+                                                               description = "searchCriteriaList if provided should be a JSON string of Search Array",
+                                                               implementation = ca.bc.gov.educ.penreg.api.struct.v1.Search.class))
+                                                           @RequestParam(name = "searchCriteriaList", required = false) String searchCriteriaListJson);
 }

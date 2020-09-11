@@ -145,7 +145,13 @@ public class PenRequestBatch {
    */
   String unarchivedBatchStatusCode;
 
+  /**
+   * The Create user.
+   */
   String createUser;
 
+  /**
+   * The Update user.
+   */
   String updateUser;
 }

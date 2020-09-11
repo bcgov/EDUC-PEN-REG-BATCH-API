@@ -36,8 +36,14 @@ import static lombok.AccessLevel.PRIVATE;
 @Slf4j
 public class PenRequestBatchService {
 
+  /**
+   * The Repository.
+   */
   @Getter(PRIVATE)
   private final PenRequestBatchRepository repository;
+  /**
+   * The Pen web blob repository.
+   */
   @Getter(PRIVATE)
   private final PenWebBlobRepository penWebBlobRepository;
 

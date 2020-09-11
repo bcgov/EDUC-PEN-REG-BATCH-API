@@ -9,6 +9,9 @@ import lombok.Getter;
 @SuppressWarnings("squid:S1948")
 public class InvalidPayloadException extends RuntimeException {
 
+  /**
+   * The Error.
+   */
   @Getter
   private final ApiError error;
 

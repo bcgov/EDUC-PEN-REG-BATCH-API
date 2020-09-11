@@ -12,9 +12,21 @@ import lombok.Data;
 @Builder
 @SuppressWarnings("squid:S1948")
 public class ApiValidationError implements ApiSubError {
+  /**
+   * The Object.
+   */
   private String object;
+  /**
+   * The Field.
+   */
   private String field;
+  /**
+   * The Rejected value.
+   */
   private Object rejectedValue;
+  /**
+   * The Message.
+   */
   private String message;
 
   /**

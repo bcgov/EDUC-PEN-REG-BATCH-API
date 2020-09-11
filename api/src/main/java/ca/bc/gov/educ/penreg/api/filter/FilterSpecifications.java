@@ -16,7 +16,10 @@ import java.util.function.Function;
 @Service
 public class FilterSpecifications<E, T extends Comparable<T>> {
 
-	private EnumMap<FilterOperation, Function<FilterCriteria<T>, Specification<E>>> map;
+  /**
+   * The Map.
+   */
+  private EnumMap<FilterOperation, Function<FilterCriteria<T>, Specification<E>>> map;
 
   /**
    * Instantiates a new Filter specifications.

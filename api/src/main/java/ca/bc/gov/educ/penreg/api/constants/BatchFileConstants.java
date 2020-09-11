@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.batch.constants;
+package ca.bc.gov.educ.penreg.api.constants;
 
 import lombok.Getter;
 
@@ -120,8 +120,17 @@ public enum BatchFileConstants {
    * Trailer batch file constants.
    */
   TRAILER("trailer");
+  /**
+   * The Name.
+   */
   @Getter
   private final String name;
+
+  /**
+   * Instantiates a new Batch file constants.
+   *
+   * @param name the name
+   */
   BatchFileConstants(String name) {
     this.name = name;
   }

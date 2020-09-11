@@ -20,7 +20,10 @@ import java.util.function.Function;
 @Service
 public class Converters {
 
-	private final Map<Class<?>, Function<String, ? extends Comparable<?>>> map = new HashMap<>();
+  /**
+   * The Map.
+   */
+  private final Map<Class<?>, Function<String, ? extends Comparable<?>>> map = new HashMap<>();
 
   /**
    * Init.

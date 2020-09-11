@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.batch.constants;
+package ca.bc.gov.educ.penreg.api.constants;
 
 import lombok.Getter;
 
@@ -24,8 +24,16 @@ public enum UnarchivedBatchStatusCodes {
    */
   REARCHIVED("REARCHIVED");
 
+  /**
+   * The Code.
+   */
   private final String code;
 
+  /**
+   * Instantiates a new Unarchived batch status codes.
+   *
+   * @param code the code
+   */
   UnarchivedBatchStatusCodes(String code) {
     this.code = code;
   }

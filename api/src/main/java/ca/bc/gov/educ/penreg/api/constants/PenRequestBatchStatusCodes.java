@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.batch.constants;
+package ca.bc.gov.educ.penreg.api.constants;
 
 import lombok.Getter;
 
@@ -31,9 +31,17 @@ public enum PenRequestBatchStatusCodes {
    */
   ARCHIVED("ARCHIVED");
 
+  /**
+   * The Code.
+   */
   @Getter
   private final String code;
 
+  /**
+   * Instantiates a new Pen request batch status codes.
+   *
+   * @param code the code
+   */
   PenRequestBatchStatusCodes(String code) {
     this.code = code;
   }

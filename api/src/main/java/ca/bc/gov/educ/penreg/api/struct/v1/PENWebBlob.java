@@ -15,14 +15,44 @@ import lombok.NoArgsConstructor;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PENWebBlob {
+  /**
+   * The Pen web blob id.
+   */
   private Long penWebBlobId;
+  /**
+   * The Min code.
+   */
   private String minCode;
+  /**
+   * The File name.
+   */
   private String fileName;
+  /**
+   * The File type.
+   */
   private String fileType;
+  /**
+   * The Insert date time.
+   */
   private String insertDateTime;
+  /**
+   * The Extract date time.
+   */
   private String extractDateTime;
+  /**
+   * The Submission number.
+   */
   private String submissionNumber;
+  /**
+   * The Source application.
+   */
   private String sourceApplication;
+  /**
+   * The Student count.
+   */
   private Long studentCount;
+  /**
+   * The Tsw account.
+   */
   private String tswAccount;
 }

@@ -27,13 +27,31 @@ import java.util.Set;
 @SuppressWarnings("squid:S1948")
 public class ApiError implements Serializable {
 
+  /**
+   * The Status.
+   */
   private HttpStatus status;
+  /**
+   * The Timestamp.
+   */
   @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy hh:mm:ss")
   private LocalDateTime timestamp;
+  /**
+   * The Message.
+   */
   private String message;
+  /**
+   * The Debug message.
+   */
   private String debugMessage;
+  /**
+   * The Sub errors.
+   */
   private List<ApiSubError> subErrors;
 
+  /**
+   * Instantiates a new Api error.
+   */
   private ApiError() {
     timestamp = LocalDateTime.now();
   }
@@ -75,6 +93,11 @@ public class ApiError implements Serializable {
     this.debugMessage = ex.getLocalizedMessage();
   }
 
+  /**
+   * Add sub error.
+   *
+   * @param subError the sub error
+   */
   private void addSubError(ApiSubError subError) {
     if (subErrors == null) {
       subErrors = new ArrayList<>();
@@ -82,14 +105,33 @@ public class ApiError implements Serializable {
     subErrors.add(subError);
   }
 
+  /**
+   * Add validation error.
+   *
+   * @param object        the object
+   * @param field         the field
+   * @param rejectedValue the rejected value
+   * @param message       the message
+   */
   private void addValidationError(String object, String field, Object rejectedValue, String message) {
     addSubError(new ApiValidationError(object, field, rejectedValue, message));
   }
 
+  /**
+   * Add validation error.
+   *
+   * @param object  the object
+   * @param message the message
+   */
   private void addValidationError(String object, String message) {
     addSubError(new ApiValidationError(object, message));
   }
 
+  /**
+   * Add validation error.
+   *
+   * @param fieldError the field error
+   */
   private void addValidationError(FieldError fieldError) {
     this.addValidationError(fieldError.getObjectName(), fieldError.getField(), fieldError.getRejectedValue(),
             fieldError.getDefaultMessage());
@@ -104,6 +146,11 @@ public class ApiError implements Serializable {
     fieldErrors.forEach(this::addValidationError);
   }
 
+  /**
+   * Add validation error.
+   *
+   * @param objectError the object error
+   */
   private void addValidationError(ObjectError objectError) {
     this.addValidationError(objectError.getObjectName(), objectError.getDefaultMessage());
   }

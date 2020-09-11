@@ -35,9 +35,17 @@ public enum FileError {
    */
   INVALID_ROW_LENGTH("$?");
 
+  /**
+   * The Message.
+   */
   @Getter
   private final String message;
 
+  /**
+   * Instantiates a new File error.
+   *
+   * @param message the message
+   */
   FileError(String message) {
     this.message = message;
   }

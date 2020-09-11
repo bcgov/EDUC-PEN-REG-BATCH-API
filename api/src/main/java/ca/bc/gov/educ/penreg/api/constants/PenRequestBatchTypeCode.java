@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.batch.constants;
+package ca.bc.gov.educ.penreg.api.constants;
 
 import lombok.Getter;
 
@@ -20,8 +20,16 @@ public enum PenRequestBatchTypeCode {
    */
   SLD("SLD");
 
+  /**
+   * The Code.
+   */
   private final String code;
 
+  /**
+   * Instantiates a new Pen request batch type code.
+   *
+   * @param code the code
+   */
   PenRequestBatchTypeCode(String code) {
     this.code = code;
   }

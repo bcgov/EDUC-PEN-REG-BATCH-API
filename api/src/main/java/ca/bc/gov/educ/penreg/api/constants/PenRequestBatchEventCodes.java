@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.batch.constants;
+package ca.bc.gov.educ.penreg.api.constants;
 
 import lombok.Getter;
 
@@ -14,9 +14,17 @@ public enum PenRequestBatchEventCodes {
    * Returned pen request batch event codes.
    */
   RETURNED("RETURNED");
+  /**
+   * The Code.
+   */
   @Getter
   private final String code;
 
+  /**
+   * Instantiates a new Pen request batch event codes.
+   *
+   * @param code the code
+   */
   PenRequestBatchEventCodes(String code) {
     this.code = code;
   }

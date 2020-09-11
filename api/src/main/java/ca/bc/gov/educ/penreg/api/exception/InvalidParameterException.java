@@ -7,6 +7,9 @@ package ca.bc.gov.educ.penreg.api.exception;
  */
 public class InvalidParameterException extends RuntimeException {
 
+  /**
+   * The constant serialVersionUID.
+   */
   private static final long serialVersionUID = -2325104800954988680L;
 
   /**
@@ -18,6 +21,12 @@ public class InvalidParameterException extends RuntimeException {
     super(InvalidParameterException.generateMessage(searchParamsMap));
   }
 
+  /**
+   * Generate message string.
+   *
+   * @param searchParams the search params
+   * @return the string
+   */
   private static String generateMessage(String... searchParams) {
     StringBuilder message = new StringBuilder("Unexpected request parameters provided: ");
     String prefix = "";

@@ -22,6 +22,9 @@ public interface PenRequestBatchFileMapper {
    * The constant mapper.
    */
   PenRequestBatchFileMapper mapper = Mappers.getMapper(PenRequestBatchFileMapper.class);
+  /**
+   * The constant PEN_REQUEST_BATCH_API.
+   */
   String PEN_REQUEST_BATCH_API = "PEN_REQUEST_BATCH_API";
 
 
@@ -32,7 +35,6 @@ public interface PenRequestBatchFileMapper {
    * @param file             the file
    * @return the pen request batch entity
    */
-
   @Mapping(target = "penRequestBatchHistoryEntities", ignore = true)
   @Mapping(target = "ministryPRBSourceCode", ignore = true)
   @Mapping(target = "extractDate", ignore = true)

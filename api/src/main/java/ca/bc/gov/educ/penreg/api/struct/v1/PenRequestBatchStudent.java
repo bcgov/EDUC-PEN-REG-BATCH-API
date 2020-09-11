@@ -85,7 +85,18 @@ public class PenRequestBatchStudent {
    */
   String studentID;
 
+  /**
+   * The Create user.
+   */
   String createUser;
 
+  /**
+   * The Update user.
+   */
   String updateUser;
+
+  /**
+   * The Record number.
+   */
+  Integer recordNumber;
 }

@@ -23,12 +23,29 @@ public class EntityNotFoundException extends RuntimeException {
     super(EntityNotFoundException.generateMessage(clazz.getSimpleName(), toMap(String.class, String.class, searchParamsMap)));
   }
 
+  /**
+   * Generate message string.
+   *
+   * @param entity       the entity
+   * @param searchParams the search params
+   * @return the string
+   */
   private static String generateMessage(String entity, Map<String, String> searchParams) {
     return StringUtils.capitalize(entity) +
         " was not found for parameters " +
         searchParams;
   }
 
+  /**
+   * To map map.
+   *
+   * @param <K>       the type parameter
+   * @param <V>       the type parameter
+   * @param keyType   the key type
+   * @param valueType the value type
+   * @param entries   the entries
+   * @return the map
+   */
   private static <K, V> Map<K, V> toMap(
       Class<K> keyType, Class<V> valueType, Object... entries) {
     if (entries.length % 2 == 1)

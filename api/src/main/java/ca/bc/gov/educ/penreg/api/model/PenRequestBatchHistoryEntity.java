@@ -68,18 +68,30 @@ public class PenRequestBatchHistoryEntity {
   @Column(name = "EVENT_REASON")
   String eventReason;
 
+  /**
+   * The Create user.
+   */
   @Basic
   @Column(name = "CREATE_USER", nullable = false, length = 32)
   String createUser;
 
+  /**
+   * The Create date.
+   */
   @Basic
   @Column(name = "CREATE_DATE", nullable = false)
   LocalDateTime createDate;
 
+  /**
+   * The Update user.
+   */
   @Basic
   @Column(name = "UPDATE_USER", nullable = false, length = 32)
   String updateUser;
 
+  /**
+   * The Update date.
+   */
   @Basic
   @Column(name = "UPDATE_DATE", nullable = false)
   LocalDateTime updateDate;
