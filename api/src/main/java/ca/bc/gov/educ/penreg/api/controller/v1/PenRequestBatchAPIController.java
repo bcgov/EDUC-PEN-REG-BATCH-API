@@ -111,16 +111,6 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   }
 
   /**
-   * Call the Init to make sure the method is proxied and the result is cached by spring.
-   */
-  @PostConstruct
-  public void init() {
-    log.info("init method called...");
-    var result = getStudentService().getAllStudentStatusCodes();
-    log.info("init method completed, loaded {} PenRequestBatchStudentStatusCodeEntity records...", result.size());
-  }
-
-  /**
    * Read pen request batch pen request batch.
    *
    * @param penRequestBatchID the pen request batch id
