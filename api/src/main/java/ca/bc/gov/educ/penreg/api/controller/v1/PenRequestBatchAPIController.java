@@ -29,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -107,6 +108,16 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     this.penRegBatchStudentFilterSpecs = penRegBatchStudentFilterSpecs;
     this.service = service;
     this.studentService = studentService;
+  }
+
+  /**
+   * Call the Init to make sure the method is proxied and the result is cached by spring.
+   */
+  @PostConstruct
+  public void init() {
+    log.info("init method called...");
+    var result = getStudentService().getAllStudentStatusCodes();
+    log.info("init method completed, loaded {} PenRequestBatchStudentStatusCodeEntity records...", result.size());
   }
 
   /**

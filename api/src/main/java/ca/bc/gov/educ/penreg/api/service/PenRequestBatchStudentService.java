@@ -197,11 +197,4 @@ public class PenRequestBatchStudentService {
   public List<PenRequestBatchStudentStatusCodeEntity> getAllStudentStatusCodes() {
     return getStudentStatusCodeRepository().findAll();
   }
-
-  @PostConstruct
-  public void init() {
-    log.info("init method started...");
-    var result = this.getAllStudentStatusCodes();
-    log.info("init method completed, loaded {} penRequestBatchStudentStatusCodes into cache...", result.size());
-  }
 }
