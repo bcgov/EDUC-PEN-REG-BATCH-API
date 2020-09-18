@@ -11,7 +11,10 @@ import static java.time.temporal.ChronoField.*;
 /**
  * The type Local date time util.
  */
-public class LocalDateTimeUtil {
+public final class LocalDateTimeUtil {
+
+  private LocalDateTimeUtil() {
+  }
 
   /**
    * Get api formatted date of birth string.
@@ -19,15 +22,15 @@ public class LocalDateTimeUtil {
    * @param dateOfBirth the date of birth
    * @return the string
    */
-  public static String getAPIFormattedDateOfBirth(String dateOfBirth){
-    if(Optional.ofNullable(dateOfBirth).isEmpty()){
+  public static String getAPIFormattedDateOfBirth(String dateOfBirth) {
+    if (Optional.ofNullable(dateOfBirth).isEmpty()) {
       return null;
     }
-    DateTimeFormatter ISO_LOCAL_DATE = new DateTimeFormatterBuilder()
-      .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
-      .appendValue(MONTH_OF_YEAR, 2)
-      .appendValue(DAY_OF_MONTH, 2).toFormatter();
-    LocalDate date = LocalDate.parse( dateOfBirth, ISO_LOCAL_DATE );
+    DateTimeFormatter dateTimeFormatter = new DateTimeFormatterBuilder()
+        .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
+        .appendValue(MONTH_OF_YEAR, 2)
+        .appendValue(DAY_OF_MONTH, 2).toFormatter();
+    LocalDate date = LocalDate.parse(dateOfBirth, dateTimeFormatter);
     return date.format(DateTimeFormatter.ISO_DATE);
   }
 }

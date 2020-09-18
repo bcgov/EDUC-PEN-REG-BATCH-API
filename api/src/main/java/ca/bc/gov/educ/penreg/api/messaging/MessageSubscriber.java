@@ -3,6 +3,8 @@ package ca.bc.gov.educ.penreg.api.messaging;
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.SagaEventHandler;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
+import ca.bc.gov.educ.penreg.api.struct.Event;
+import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import io.nats.streaming.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -76,7 +78,7 @@ public class MessageSubscriber extends MessagePubSub {
     }
 
     String queue = topic.replace("_", "-");
-    SubscriptionOptions options = new SubscriptionOptions.Builder().manualAcks().ackWait(Duration.ofMinutes(2)).durableName(queue + "-consumer").build();// ":" is not allowed in durable name by NATS.
+    SubscriptionOptions options = new SubscriptionOptions.Builder().durableName(queue + "-consumer").build();// ":" is not allowed in durable name by NATS.
     try {
       connection.subscribe(topic, queue, onMessage(eventHandler), options);
     } catch (IOException | InterruptedException | TimeoutException e) {
@@ -95,7 +97,9 @@ public class MessageSubscriber extends MessagePubSub {
       if (message != null) {
         log.trace("Message received is :: {} ", message);
         try {
-          eventHandler.onSagaEvent(message);
+          var eventString = new String(message.getData());
+          var event = JsonUtil.getJsonObjectFromString(Event.class, eventString);
+          eventHandler.onSagaEvent(event);
         } catch (final Exception e) {
           log.error("Exception ", e);
         }

@@ -27,4 +27,13 @@ public interface PenRequestBatchStudentRepository extends CrudRepository<PenRequ
    * @return the list
    */
   List<PenRequestBatchStudentEntity> findAllByPenRequestBatchEntity(PenRequestBatchEntity penRequestBatchEntity);
+
+  /**
+   * Find all by pen request batch entity and pen request batch student status code is not list.
+   *
+   * @param penRequestBatchEntity            the pen request batch entity
+   * @param penRequestBatchStudentStatusCode the pen request batch student status code
+   * @return the list
+   */
+  List<PenRequestBatchStudentEntity> findAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIsNot(PenRequestBatchEntity penRequestBatchEntity, String penRequestBatchStudentStatusCode);
 }

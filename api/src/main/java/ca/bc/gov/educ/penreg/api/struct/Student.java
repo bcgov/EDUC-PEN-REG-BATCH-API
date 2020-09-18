@@ -96,7 +96,6 @@ public class Student implements Serializable {
   /**
    * The Postal code.
    */
-  @Column(name = "postal_code")
   @Size(max = 7)
   @Pattern(regexp = "^([A-Z]\\d[A-Z]\\d[A-Z]\\d|)$")
   String postalCode;

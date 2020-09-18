@@ -338,15 +338,14 @@ public abstract class BaseOrchestrator<T> {
   /**
    * this method is called if there is a new message on this specific topic which this service is listening.
    *
-   * @param message the event in the topic received as a json string and then converted to {@link Message}
+   * @param event the event
    * @throws InterruptedException if thread is interrupted.
    * @throws IOException          if there is connectivity problem
    * @throws TimeoutException     if connection to messaging system times out.
    */
   @Async
   @Transactional
-  public void executeSagaEvent(@NotNull Message message) throws InterruptedException, IOException, TimeoutException {
-    Event event = JsonUtil.getJsonObjectFromByteArray(Event.class, message.getData());
+  public void executeSagaEvent(@NotNull Event event) throws InterruptedException, IOException, TimeoutException {
     Optional<Saga> sagaOptional;
     log.trace("executing saga event {}", event);
     if (event.getEventType() == EventType.READ_FROM_TOPIC && event.getEventOutcome() == EventOutcome.READ_FROM_TOPIC_SUCCESS) {
@@ -354,7 +353,6 @@ public abstract class BaseOrchestrator<T> {
       sagaOptional = getSagaService().findByPenRequestBatchStudentID(penRequestBatchStudentSagaData.getPenRequestBatchStudentID());
       if (sagaOptional.isPresent()) { // possible duplicate message.
         log.trace("Execution is not required for this message returning EVENT is :: {}", event.toString());
-        message.ack();
         return;
       }
       sagaOptional = Optional.of(createSagaRecordInDB(event.getEventPayload(), penRequestBatchStudentSagaData.getPenRequestBatchStudentID()));
@@ -378,7 +376,6 @@ public abstract class BaseOrchestrator<T> {
     } else {
       log.error("Saga process without DB record is not expected. {}", event);
     }
-    message.ack(); // manual acknowledgement to STAN.
   }
 
   /**

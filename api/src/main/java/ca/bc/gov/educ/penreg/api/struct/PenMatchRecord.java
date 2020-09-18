@@ -23,4 +23,8 @@ public class PenMatchRecord {
    * The Matching pen.
    */
   private String matchingPEN;
+  /**
+   * The Student id.
+   */
+  private String studentID;
 }

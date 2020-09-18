@@ -31,5 +31,9 @@ public enum EventOutcome {
   /**
    * Student updated event outcome.
    */
-  STUDENT_UPDATED
+  STUDENT_UPDATED,
+  /**
+   * Pen match results processed event outcome.
+   */
+  PEN_MATCH_RESULTS_PROCESSED
 }
