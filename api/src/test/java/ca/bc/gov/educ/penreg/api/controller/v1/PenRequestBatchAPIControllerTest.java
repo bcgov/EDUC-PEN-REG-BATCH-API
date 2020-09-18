@@ -383,7 +383,19 @@ public class PenRequestBatchAPIControllerTest {
     var students = studentEntities.stream().map(this::populateAuditColumns).peek(el-> el.setPenRequestBatchEntity(models.get(0))).collect(Collectors.toSet());
 
     models.get(0).setPenRequestBatchStudentEntities(students);
+
+    final File student2 = new File(
+      Objects.requireNonNull(getClass().getClassLoader().getResource("mock_pen_req_batch_student.json")).getFile()
+    );
+    List<PenRequestBatchStudentEntity> studentEntities2 = new ObjectMapper().readValue(student2, new TypeReference<>() {
+    });
+    var students2 = studentEntities2.stream().map(this::populateAuditColumns).peek(el-> el.setPenRequestBatchEntity(models.get(1))).collect(Collectors.toSet());
+
+    models.get(1).setPenRequestBatchStudentEntities(students2);
+
     penRequestBatchRepository.saveAll(models);
+
+    var batchIDs = models.get(0).getPenRequestBatchID().toString().toUpperCase() + "," + models.get(1).getPenRequestBatchID().toString().toUpperCase();
 
     SearchCriteria criteria = SearchCriteria.builder().key("penRequestBatchStudentStatusCode").operation(FilterOperation.EQUAL).value("LOADED").valueType(ValueType.STRING).build();
     SearchCriteria criteria2 = SearchCriteria.builder().key("legalFirstName").condition(OR).operation(FilterOperation.STARTS_WITH).value("AC").valueType(ValueType.STRING).build();
@@ -392,21 +404,30 @@ public class PenRequestBatchAPIControllerTest {
     criteriaList.add(criteria);
     criteriaList.add(criteria2);
     criteriaList.add(criteria3);
-    SearchCriteria criteria4 = SearchCriteria.builder().key("genderCode").operation(FilterOperation.EQUAL).value("M").valueType(ValueType.STRING).build();
+    SearchCriteria criteria4 = SearchCriteria.builder().key("penRequestBatchEntity.submissionNumber").operation(FilterOperation.EQUAL).value("T-534093").valueType(ValueType.STRING).build();
     SearchCriteria criteria5 = SearchCriteria.builder().key("gradeCode").condition(OR).operation(FilterOperation.GREATER_THAN).value("2").valueType(ValueType.STRING).build();
+    SearchCriteria criteria6 = SearchCriteria.builder().key("penRequestBatchEntity.penRequestBatchID").operation(FilterOperation.IN).value(batchIDs).valueType(ValueType.UUID).build();
     List<SearchCriteria> criteriaList1 = new LinkedList<>();
     criteriaList1.add(criteria4);
     criteriaList1.add(criteria5);
+    criteriaList1.add(criteria6);
     List<Search> searches = new LinkedList<>();
     searches.add(Search.builder().searchCriteriaList(criteriaList).build());
     searches.add(Search.builder().condition(AND).searchCriteriaList(criteriaList1).build());
     ObjectMapper objectMapper = new ObjectMapper();
     String criteriaJSON = objectMapper.writeValueAsString(searches);
+
+    Map<String, String> sortMap = new LinkedHashMap<>();
+    sortMap.put("penRequestBatchEntity.minCode", "DESC");
+    sortMap.put("legalLastName", "ASC");
+    sortMap.put("legalFirstName", "DESC");
+    String sort = new ObjectMapper().writeValueAsString(sortMap);
+
     MvcResult result = mockMvc
-        .perform(get("/api/v1/pen-request-batch/student/paginated").param("searchCriteriaList", criteriaJSON)
+        .perform(get("/api/v1/pen-request-batch/student/paginated").param("searchCriteriaList", criteriaJSON).param("sort", sort)
             .contentType(APPLICATION_JSON))
         .andReturn();
-    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(4)));
+    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(10)));
   }
 
   @Test

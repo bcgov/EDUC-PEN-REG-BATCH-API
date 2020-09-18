@@ -203,4 +203,10 @@ public class PenRequestBatchStudentEntity {
   @Basic
   @Column(name = "RECORD_NUMBER")
   Integer recordNumber;
+
+  /**
+   * The best match pen.
+   */
+  @Column(name = "BEST_MATCH_PEN", length = 9)
+  String bestMatchPEN;
 }

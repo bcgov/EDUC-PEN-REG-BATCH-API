@@ -25,3 +25,7 @@ api/target/
 api/src/main/java/META-INF/
 api/src/main/resources/application-local.properties
 api/src/main/resources/student-request.http
+
+# IDE
+.idea
+*.iml

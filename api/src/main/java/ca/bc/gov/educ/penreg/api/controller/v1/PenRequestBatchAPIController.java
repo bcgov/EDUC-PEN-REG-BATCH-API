@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.controller.v1;
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchAPIEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
+import ca.bc.gov.educ.penreg.api.filter.Associations;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchFilterSpecs;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchStudentFilterSpecs;
@@ -29,12 +30,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -305,13 +302,14 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     final List<Sort.Order> sorts = new ArrayList<>();
     Specification<PenRequestBatchStudentEntity> penRequestBatchStudentEntitySpecification = null;
     try {
-      getSortCriteria(sortCriteriaJson, objectMapper, sorts);
+      var associationNames = getSortCriteria(sortCriteriaJson, objectMapper, sorts);
       if (StringUtils.isNotBlank(searchCriteriaListJson)) {
         List<Search> searches = objectMapper.readValue(searchCriteriaListJson, new TypeReference<>() {
         });
+        getAssociationNamesFromSearchCriterials(associationNames, searches);
         int i = 0;
         for (var search : searches) {
-          penRequestBatchStudentEntitySpecification = getStudentSpecifications(penRequestBatchStudentEntitySpecification, i, search);
+          penRequestBatchStudentEntitySpecification = getStudentSpecifications(penRequestBatchStudentEntitySpecification, i, search, associationNames);
           i++;
         }
 
@@ -320,6 +318,24 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
       throw new InvalidParameterException(e.getMessage());
     }
     return getStudentService().findAll(penRequestBatchStudentEntitySpecification, pageNumber, pageSize, sorts).thenApplyAsync(penRegBatchEntities -> penRegBatchEntities.map(studentMapper::toStructure));
+  }
+
+  /**
+   * Get association names from search criterials, like penRequestBatchEntity.minCode
+   *
+   * @param associationNames the associations
+   * @param searches     the search criterials
+   */
+  private void getAssociationNamesFromSearchCriterials(Associations associationNames, List<Search> searches) {
+    searches.forEach(search -> {
+      search.getSearchCriteriaList().forEach(criteria -> {
+        var names = criteria.getKey().split("\\.");
+        if(names.length > 1) {
+          associationNames.getSortAssociations().remove(names[0]);
+          associationNames.getSearchAssociations().add(names[0]);
+        }
+      });
+    });
   }
 
   /**
@@ -338,13 +354,20 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * @param sortCriteriaJson the sort criteria json
    * @param objectMapper     the object mapper
    * @param sorts            the sorts
+   * @return the association names
    * @throws JsonProcessingException the json processing exception
    */
-  private void getSortCriteria(String sortCriteriaJson, ObjectMapper objectMapper, List<Sort.Order> sorts) throws JsonProcessingException {
+  private Associations getSortCriteria(String sortCriteriaJson, ObjectMapper objectMapper, List<Sort.Order> sorts) throws JsonProcessingException {
+    final Associations associationNames = new Associations();
     if (StringUtils.isNotBlank(sortCriteriaJson)) {
       Map<String, String> sortMap = objectMapper.readValue(sortCriteriaJson, new TypeReference<>() {
       });
       sortMap.forEach((k, v) -> {
+        var names = k.split("\\.");
+        if(names.length > 1) {
+          associationNames.getSortAssociations().add(names[0]);
+        }
+
         if ("ASC".equalsIgnoreCase(v)) {
           sorts.add(new Sort.Order(Sort.Direction.ASC, k));
         } else {
@@ -352,6 +375,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
         }
       });
     }
+    return associationNames;
   }
 
   /**
@@ -410,24 +434,25 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    */
   private Specification<PenRequestBatchEntity> getTypeSpecification(String key, FilterOperation filterOperation, String value, ValueType valueType) {
     Specification<PenRequestBatchEntity> penRequestBatchEntitySpecification = null;
+    Associations associationNames = new Associations();
     switch (valueType) {
       case STRING:
-        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getStringTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getStringTypeSpecification(key, value, filterOperation, associationNames);
         break;
       case DATE_TIME:
-        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getDateTimeTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getDateTimeTypeSpecification(key, value, filterOperation, associationNames);
         break;
       case LONG:
-        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getLongTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getLongTypeSpecification(key, value, filterOperation, associationNames);
         break;
       case INTEGER:
-        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getIntegerTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getIntegerTypeSpecification(key, value, filterOperation, associationNames);
         break;
       case DATE:
-        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getDateTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getDateTypeSpecification(key, value, filterOperation, associationNames);
         break;
       case UUID:
-        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getUUIDTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchFilterSpecs().getUUIDTypeSpecification(key, value, filterOperation, associationNames);
         break;
       default:
         break;
@@ -444,26 +469,26 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * @param valueType       the value type
    * @return the student type specification
    */
-  private Specification<PenRequestBatchStudentEntity> getStudentTypeSpecification(String key, FilterOperation filterOperation, String value, ValueType valueType) {
+  private Specification<PenRequestBatchStudentEntity> getStudentTypeSpecification(String key, FilterOperation filterOperation, String value, ValueType valueType, Associations associationNames) {
     Specification<PenRequestBatchStudentEntity> penRequestBatchEntitySpecification = null;
     switch (valueType) {
       case STRING:
-        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getStringTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getStringTypeSpecification(key, value, filterOperation, associationNames);
         break;
       case DATE_TIME:
-        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getDateTimeTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getDateTimeTypeSpecification(key, value, filterOperation, associationNames);
         break;
       case LONG:
-        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getLongTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getLongTypeSpecification(key, value, filterOperation, associationNames);
         break;
       case INTEGER:
-        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getIntegerTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getIntegerTypeSpecification(key, value, filterOperation, associationNames);
         break;
       case DATE:
-        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getDateTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getDateTypeSpecification(key, value, filterOperation, associationNames);
         break;
       case UUID:
-        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getUUIDTypeSpecification(key, value, filterOperation);
+        penRequestBatchEntitySpecification = getPenRegBatchStudentFilterSpecs().getUUIDTypeSpecification(key, value, filterOperation, associationNames);
         break;
       default:
         break;
@@ -480,14 +505,14 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * @param search                     the search
    * @return the student specifications
    */
-  private Specification<PenRequestBatchStudentEntity> getStudentSpecifications(Specification<PenRequestBatchStudentEntity> studentEntitySpecification, int i, Search search) {
+  private Specification<PenRequestBatchStudentEntity> getStudentSpecifications(Specification<PenRequestBatchStudentEntity> studentEntitySpecification, int i, Search search, Associations associationNames) {
     if (i == 0) {
-      studentEntitySpecification = getPenRequestBatchStudentEntitySpecification(search.getSearchCriteriaList());
+      studentEntitySpecification = getPenRequestBatchStudentEntitySpecification(search.getSearchCriteriaList(), associationNames);
     } else {
       if (search.getCondition() == Condition.AND) {
-        studentEntitySpecification = studentEntitySpecification.and(getPenRequestBatchStudentEntitySpecification(search.getSearchCriteriaList()));
+        studentEntitySpecification = studentEntitySpecification.and(getPenRequestBatchStudentEntitySpecification(search.getSearchCriteriaList(), associationNames));
       } else {
-        studentEntitySpecification = studentEntitySpecification.or(getPenRequestBatchStudentEntitySpecification(search.getSearchCriteriaList()));
+        studentEntitySpecification = studentEntitySpecification.or(getPenRequestBatchStudentEntitySpecification(search.getSearchCriteriaList(), associationNames));
       }
     }
     return studentEntitySpecification;
@@ -499,13 +524,13 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * @param criteriaList the criteria list
    * @return the pen request batch student entity specification
    */
-  private Specification<PenRequestBatchStudentEntity> getPenRequestBatchStudentEntitySpecification(List<SearchCriteria> criteriaList) {
+  private Specification<PenRequestBatchStudentEntity> getPenRequestBatchStudentEntitySpecification(List<SearchCriteria> criteriaList, Associations associationNames) {
     Specification<PenRequestBatchStudentEntity> penRequestBatchStudentEntitySpecification = null;
     if (!criteriaList.isEmpty()) {
       int i = 0;
       for (SearchCriteria criteria : criteriaList) {
         if (criteria.getKey() != null && criteria.getOperation() != null && criteria.getValueType() != null) {
-          Specification<PenRequestBatchStudentEntity> typeSpecification = getStudentTypeSpecification(criteria.getKey(), criteria.getOperation(), criteria.getValue(), criteria.getValueType());
+          Specification<PenRequestBatchStudentEntity> typeSpecification = getStudentTypeSpecification(criteria.getKey(), criteria.getOperation(), criteria.getValue(), criteria.getValueType(), associationNames);
           penRequestBatchStudentEntitySpecification = getSpecificationPerGroupOfStudentEntity(penRequestBatchStudentEntitySpecification, i, criteria, typeSpecification);
           i++;
         } else {

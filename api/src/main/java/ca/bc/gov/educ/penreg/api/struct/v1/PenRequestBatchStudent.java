@@ -99,4 +99,19 @@ public class PenRequestBatchStudent {
    * The Record number.
    */
   Integer recordNumber;
+
+  /**
+   * The best match pen.
+   */
+  String bestMatchPEN;
+
+  /**
+   * The Min code from PenRequestBatch
+   */
+  String minCode;
+
+  /**
+   * The Submission number from PenRequestBatch
+   */
+  String submissionNumber;
 }
