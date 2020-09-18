@@ -18,11 +18,11 @@ public enum PenRequestBatchStudentStatusCodes {
   /**
    * Sys matched pen request batch student status codes.
    */
-  SYS_MATCHED("SYSMATCHED"),
+  SYS_MATCHED("MATCHEDSYS"),
   /**
    * Sys new pen pen request batch student status codes.
    */
-  SYS_NEW_PEN("SYSNEWPEN"),
+  SYS_NEW_PEN("NEWPENSYS"),
   /**
    * Repeat pen request batch student status codes.
    */
@@ -30,7 +30,7 @@ public enum PenRequestBatchStudentStatusCodes {
   /**
    * New fixable pen request batch student status codes.
    */
-  NEW_FIXABLE("NEWFIXABLE"),
+  FIXABLE("FIXABLE"),
   /**
    * Usr matched pen request batch student status codes.
    */

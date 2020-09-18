@@ -22,7 +22,6 @@ public interface StudentMapper {
    * To student student.
    *
    * @param penRequestBatchStudentSagaData the pen request batch student saga data
-   * @param penMatchResult                 the pen match result
    * @return the student
    */
   @Mapping(target = "usualMiddleNames", source="penRequestBatchStudentSagaData.usualMiddleNames")
@@ -30,10 +29,10 @@ public interface StudentMapper {
   @Mapping(target = "usualFirstName", source="penRequestBatchStudentSagaData.usualFirstName")
   @Mapping(target = "updateUser", source="penRequestBatchStudentSagaData.updateUser")
   @Mapping(target = "studentID", ignore = true)
-  @Mapping(target = "statusCode", constant="A") // TODO need to verify
+  @Mapping(target = "statusCode", constant="A")
   @Mapping(target = "sexCode", source="penRequestBatchStudentSagaData.genderCode")
   @Mapping(target = "postalCode", source="penRequestBatchStudentSagaData.postalCode")
-  @Mapping(target = "pen", source="penMatchResult.pen")
+  @Mapping(target = "pen", ignore = true)
   @Mapping(target = "mincode", source="penRequestBatchStudentSagaData.mincode")
   @Mapping(target = "memo", ignore = true)
   @Mapping(target = "localID", source="penRequestBatchStudentSagaData.localID")
@@ -43,11 +42,11 @@ public interface StudentMapper {
   @Mapping(target = "gradeYear", ignore = true)
   @Mapping(target = "gradeCode", source="penRequestBatchStudentSagaData.gradeCode")
   @Mapping(target = "genderCode", source="penRequestBatchStudentSagaData.genderCode")
-  @Mapping(target = "emailVerified", constant="N") // TODO need to verify
+  @Mapping(target = "emailVerified", constant="N")
   @Mapping(target = "email", ignore = true)
   @Mapping(target = "dob", expression="java(ca.bc.gov.educ.penreg.api.util.LocalDateTimeUtil.getAPIFormattedDateOfBirth(penRequestBatchStudentSagaData.getDob()))")
   @Mapping(target = "demogCode", ignore = true)
   @Mapping(target = "deceasedDate",ignore = true)
   @Mapping(target = "createUser", source="penRequestBatchStudentSagaData.createUser")
-  Student toStudent(PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, PenMatchResult penMatchResult);
+  Student toStudent(PenRequestBatchStudentSagaData penRequestBatchStudentSagaData);
 }

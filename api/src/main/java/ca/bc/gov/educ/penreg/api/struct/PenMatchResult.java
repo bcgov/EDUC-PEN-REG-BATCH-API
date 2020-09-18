@@ -17,10 +17,6 @@ public class PenMatchResult {
    */
   private PriorityQueue<PenMatchRecord> matchingRecords;
   /**
-   * The Pen.
-   */
-  private String pen;
-  /**
    * The Pen status.
    */
   private String penStatus;
