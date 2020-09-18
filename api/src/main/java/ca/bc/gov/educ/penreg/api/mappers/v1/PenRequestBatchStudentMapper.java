@@ -28,6 +28,8 @@ public interface PenRequestBatchStudentMapper {
    * @return the pen request batch student
    */
   @Mapping(source = "penRequestBatchStudentEntity.penRequestBatchEntity.penRequestBatchID", target = "penRequestBatchID")
+  @Mapping(source = "penRequestBatchStudentEntity.penRequestBatchEntity.minCode", target = "minCode")
+  @Mapping(source = "penRequestBatchStudentEntity.penRequestBatchEntity.submissionNumber", target = "submissionNumber")
   PenRequestBatchStudent  toStructure(PenRequestBatchStudentEntity penRequestBatchStudentEntity);
 
   /**
