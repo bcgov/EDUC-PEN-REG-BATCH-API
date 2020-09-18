@@ -31,7 +31,7 @@ public class Associations {
 
   /**
    * Count the join operation and return the cached join operation
-   * also reset the count and remove the cache when all associations are joined because Hibernate may run anther count query to determine the number of results
+   * also reset the count and remove the cache when all associations are joined because Hibernate may run another count query to determine the number of results
    *
    * @param associationName  the association name
    * @return join            the cached join operation
