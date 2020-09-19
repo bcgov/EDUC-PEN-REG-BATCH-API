@@ -11,7 +11,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.*;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -93,11 +92,11 @@ public class RestUtils {
     defaultUriBuilderFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
     restTemplate.setUriTemplateHandler(defaultUriBuilderFactory);
 
-    ParameterizedTypeReference<PageImpl<Student>> responseType = new ParameterizedTypeReference<>() {
+    ParameterizedTypeReference<RestPageImpl<Student>> responseType = new ParameterizedTypeReference<>() {
     };
     var url = builder.toUriString();
     log.info("url is :: {}", url);
-    ResponseEntity<PageImpl<Student>> studentResponse = restTemplate.exchange(url, HttpMethod.GET, null, responseType);
+    ResponseEntity<RestPageImpl<Student>> studentResponse = restTemplate.exchange(url, HttpMethod.GET, null, responseType);
 
     var optionalStudent = Objects.requireNonNull(studentResponse.getBody()).getContent().stream().findFirst();
     if (optionalStudent.isPresent()) {
