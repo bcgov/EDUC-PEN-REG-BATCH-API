@@ -11,10 +11,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.PlatformTransactionManager;
 
 /**
@@ -28,6 +30,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 @EnableScheduling
 @EnableSchedulerLock(defaultLockAtMostFor = "1s")
 @EnableRetry
+@EnableAsync
 public class PenRegBatchApiApplication {
 
   /**
@@ -47,6 +50,15 @@ public class PenRegBatchApiApplication {
   @Configuration
   static
   class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+    /**
+     * Instantiates a new Web security configuration.
+     * This makes sure that security context is propagated to async threads as well.
+     */
+    public WebSecurityConfiguration() {
+      super();
+      SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
+    }
 
     /**
      * Configure paths to be excluded from security.

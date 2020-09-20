@@ -11,12 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.Closeable;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -42,6 +42,7 @@ import static lombok.AccessLevel.PRIVATE;
 @SuppressWarnings("java:S2142")
 public class MessageSubscriber extends MessagePubSub {
 
+  private final ExecutorService subscriberExecutor = Executors.newFixedThreadPool(20);
   /**
    * The Handlers.
    */
@@ -73,7 +74,7 @@ public class MessageSubscriber extends MessagePubSub {
    * @param eventHandler the event handler
    */
   public void subscribe(String topic, SagaEventHandler eventHandler) {
-    if(!handlers.containsKey(topic)){
+    if (!handlers.containsKey(topic)) {
       handlers.put(topic, eventHandler);
     }
 
@@ -93,16 +94,18 @@ public class MessageSubscriber extends MessagePubSub {
    * @return the message handler
    */
   private MessageHandler onMessage(SagaEventHandler eventHandler) {
-    return (Message message) ->  {
+    return (Message message) -> {
       if (message != null) {
         log.trace("Message received is :: {} ", message);
-        try {
-          var eventString = new String(message.getData());
-          var event = JsonUtil.getJsonObjectFromString(Event.class, eventString);
-          eventHandler.onSagaEvent(event);
-        } catch (final Exception e) {
-          log.error("Exception ", e);
-        }
+        subscriberExecutor.execute(() -> {
+          try {
+            var eventString = new String(message.getData());
+            var event = JsonUtil.getJsonObjectFromString(Event.class, eventString);
+            eventHandler.onSagaEvent(event);
+          } catch (final Exception e) {
+            log.error("Exception ", e);
+          }
+        });
       }
     };
   }
@@ -114,10 +117,11 @@ public class MessageSubscriber extends MessagePubSub {
    * @param e                   the e
    * @return the int
    */
+  @Override
   protected int connectionLostHandler(StreamingConnection streamingConnection, Exception e) {
     int numOfRetries = 1;
     if (e != null) {
-      numOfRetries = super.connectionLostHandler(streamingConnection,e);
+      numOfRetries = super.connectionLostHandler(streamingConnection, e);
       retrySubscription(numOfRetries);
     }
     return numOfRetries;

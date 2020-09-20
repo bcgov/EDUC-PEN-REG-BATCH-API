@@ -5,6 +5,7 @@ import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RBucket;
 import org.redisson.api.RPermitExpirableSemaphore;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,9 +131,9 @@ public class PenService {
       String id = semaphore.tryAcquire(120, 40, TimeUnit.SECONDS);
       int pen;
       if (id != null) {
-        var penBucket = getRedissonClient().getBucket("PEN_NUMBER");
+        final RBucket<Integer> penBucket = getRedissonClient().getBucket("PEN_NUMBER");
         if (penBucket.isExists()) {
-          pen = (int) penBucket.get();
+          pen = penBucket.get();
         } else {
           pen = restUtils.getLatestPenNumberFromStudentAPI();
           if(pen == 0){
