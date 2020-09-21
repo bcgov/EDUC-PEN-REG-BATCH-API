@@ -96,10 +96,10 @@ public class PenRegBatchApiApplication {
         new ThreadFactoryBuilder().setNameFormat("message-subscriber-%d").get();
     return Executors.newFixedThreadPool(20, namedThreadFactory);
   }
-  @Bean(name = "controllerExecutor")
+  @Bean(name = "taskExecutor")
   public Executor controllerTaskExecutor() {
     ThreadFactory namedThreadFactory =
-        new ThreadFactoryBuilder().setNameFormat("controller-%d").get();
+        new ThreadFactoryBuilder().setNameFormat("async-executor-%d").get();
     return Executors.newFixedThreadPool(10, namedThreadFactory);
   }
 }

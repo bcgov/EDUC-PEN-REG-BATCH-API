@@ -91,7 +91,6 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the completable future Page {@link PenRequestBatch}
    */
   @GetMapping("/paginated")
-  @Async("controllerExecutor")
   @PreAuthorize("#oauth2.hasScope('READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR.")})
   @Transactional(readOnly = true)
@@ -221,7 +220,6 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the completable future Page {@link PenRequestBatchStudent}
    */
   @GetMapping("/student/paginated")
-  @Async("controllerExecutor")
   @PreAuthorize("#oauth2.hasScope('READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR.")})
   @Transactional(readOnly = true)
