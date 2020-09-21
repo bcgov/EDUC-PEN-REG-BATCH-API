@@ -17,6 +17,7 @@ import java.util.concurrent.TimeoutException;
  * The type Message pub sub.
  */
 @Slf4j
+@SuppressWarnings("java:S2142")
 public abstract class MessagePubSub implements Closeable {
   /**
    * The Connection.

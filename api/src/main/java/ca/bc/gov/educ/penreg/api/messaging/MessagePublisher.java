@@ -3,7 +3,6 @@ package ca.bc.gov.educ.penreg.api.messaging;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import io.nats.streaming.AckHandler;
 import io.nats.streaming.Options;
-import io.nats.streaming.StreamingConnection;
 import io.nats.streaming.StreamingConnectionFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -36,7 +34,7 @@ public class MessagePublisher extends MessagePubSub {
    * @throws InterruptedException the interrupted exception
    */
   public MessagePublisher(final ApplicationProperties applicationProperties, boolean isConnectionRequired) throws IOException, InterruptedException {
-    Options.Builder builder = new Options.Builder();
+    var builder = new Options.Builder();
     builder.natsUrl(applicationProperties.getNatsUrl());
     builder.clusterId(applicationProperties.getNatsClusterId());
     builder.clientId("pen-reg-batch-api-publisher-" + UUID.randomUUID().toString());

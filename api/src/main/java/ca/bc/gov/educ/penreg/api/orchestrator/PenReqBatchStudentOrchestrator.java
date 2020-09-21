@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
@@ -46,14 +45,14 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    *
    * @param sagaService                               the saga service
    * @param messagePublisher                          the message publisher
-   * @param messageSubscriber                         the message subscriber
    * @param taskScheduler                             the task scheduler
    * @param penRequestBatchStudentOrchestratorService the pen request batch student orchestrator service
    */
   @Autowired
-  public PenReqBatchStudentOrchestrator(SagaService sagaService, MessagePublisher messagePublisher, MessageSubscriber messageSubscriber,
-                                        EventTaskScheduler taskScheduler, PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService) {
-    super(sagaService, messagePublisher, messageSubscriber, taskScheduler, PenRequestBatchStudentSagaData.class, PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString());
+  public PenReqBatchStudentOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
+                                        EventTaskScheduler taskScheduler,
+                                        PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService) {
+    super(sagaService, messagePublisher, taskScheduler, PenRequestBatchStudentSagaData.class, PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString());
     this.penRequestBatchStudentOrchestratorService = penRequestBatchStudentOrchestratorService;
   }
 
@@ -67,7 +66,6 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
         .step(PROCESS_PEN_MATCH, PEN_MATCH_PROCESSED, PROCESS_PEN_MATCH_RESULTS, this::processPenMatchResults)
         .step(PROCESS_PEN_MATCH_RESULTS, PEN_MATCH_RESULTS_PROCESSED, MARK_SAGA_COMPLETE, this::markSagaComplete);
   }
-
 
 
   /**

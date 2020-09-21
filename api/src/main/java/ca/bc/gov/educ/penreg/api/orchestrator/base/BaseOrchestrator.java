@@ -3,16 +3,13 @@ package ca.bc.gov.educ.penreg.api.orchestrator.base;
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
 import ca.bc.gov.educ.penreg.api.schedulers.EventTaskScheduler;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
-import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import io.nats.streaming.Message;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -29,7 +26,6 @@ import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.INITIATE_SUCCESS;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.INITIATED;
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.STARTED;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
 import static lombok.AccessLevel.PROTECTED;
 
 /**
@@ -81,21 +77,21 @@ public abstract class BaseOrchestrator<T> {
   /**
    * Instantiates a new Base orchestrator.
    *
-   * @param sagaService       the saga service
-   * @param messagePublisher  the message publisher
-   * @param messageSubscriber the message subscriber
-   * @param taskScheduler     the task scheduler
-   * @param clazz             the clazz
-   * @param sagaName          the saga name
-   * @param topicToSubscribe  the topic to subscribe
+   * @param sagaService      the saga service
+   * @param messagePublisher the message publisher
+   * @param taskScheduler    the task scheduler
+   * @param clazz            the clazz
+   * @param sagaName         the saga name
+   * @param topicToSubscribe the topic to subscribe
    */
-  public BaseOrchestrator(SagaService sagaService, MessagePublisher messagePublisher, MessageSubscriber messageSubscriber, EventTaskScheduler taskScheduler, Class<T> clazz, String sagaName, String topicToSubscribe) {
+  public BaseOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
+                          EventTaskScheduler taskScheduler, Class<T> clazz, String sagaName,
+                          String topicToSubscribe) {
     this.sagaService = sagaService;
     this.messagePublisher = messagePublisher;
     this.clazz = clazz;
     this.sagaName = sagaName;
     this.topicToSubscribe = topicToSubscribe;
-    messageSubscriber.subscribe(topicToSubscribe, this::executeSagaEvent);
     taskScheduler.registerSagaOrchestrators(sagaName, this);
     populateStepsToExecuteMap();
   }
@@ -198,16 +194,16 @@ public abstract class BaseOrchestrator<T> {
   protected SagaEvent createEventState(@NotNull Saga saga, @NotNull EventType eventType, @NotNull EventOutcome eventOutcome, String eventPayload) {
     var user = sagaName.length() > 32 ? sagaName.substring(0, 32) : sagaName;
     return SagaEvent.builder()
-      .createDate(LocalDateTime.now())
-      .createUser(user)
-      .updateDate(LocalDateTime.now())
-      .updateUser(user)
-      .saga(saga)
-      .sagaEventOutcome(eventOutcome.toString())
-      .sagaEventState(eventType.toString())
-      .sagaStepNumber(calculateStep(saga))
-      .sagaEventResponse(eventPayload == null ? "" : eventPayload)
-      .build();
+        .createDate(LocalDateTime.now())
+        .createUser(user)
+        .updateDate(LocalDateTime.now())
+        .updateUser(user)
+        .saga(saga)
+        .sagaEventOutcome(eventOutcome.toString())
+        .sagaEventState(eventType.toString())
+        .sagaStepNumber(calculateStep(saga))
+        .sagaEventResponse(eventPayload == null ? "" : eventPayload)
+        .build();
   }
 
   /**
@@ -302,10 +298,10 @@ public abstract class BaseOrchestrator<T> {
       EventType currentEvent = EventType.valueOf(sagaEvent.getSagaEventState());
       EventOutcome eventOutcome = EventOutcome.valueOf(sagaEvent.getSagaEventOutcome());
       Event event = Event.builder()
-        .eventOutcome(eventOutcome)
-        .eventType(currentEvent)
-        .eventPayload(sagaEvent.getSagaEventResponse())
-        .build();
+          .eventOutcome(eventOutcome)
+          .eventType(currentEvent)
+          .eventPayload(sagaEvent.getSagaEventResponse())
+          .build();
       Optional<SagaEventState<T>> sagaEventState = findNextSagaEventState(currentEvent, eventOutcome);
       if (sagaEventState.isPresent()) {
         log.trace(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.get().getNextEventType(), event.toString());
@@ -325,9 +321,9 @@ public abstract class BaseOrchestrator<T> {
    */
   private void replayFromBeginning(Saga saga, T t) throws InterruptedException, TimeoutException, IOException {
     Event event = Event.builder()
-      .eventOutcome(INITIATE_SUCCESS)
-      .eventType(INITIATED)
-      .build();
+        .eventOutcome(INITIATE_SUCCESS)
+        .eventType(INITIATED)
+        .build();
     Optional<SagaEventState<T>> sagaEventState = findNextSagaEventState(INITIATED, INITIATE_SUCCESS);
     if (sagaEventState.isPresent()) {
       log.trace(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.get().getNextEventType(), event.toString());
@@ -343,7 +339,7 @@ public abstract class BaseOrchestrator<T> {
    * @throws IOException          if there is connectivity problem
    * @throws TimeoutException     if connection to messaging system times out.
    */
-  @Async
+  @Async("subscriberExecutor")
   @Transactional
   public void executeSagaEvent(@NotNull Event event) throws InterruptedException, IOException, TimeoutException {
     Optional<Saga> sagaOptional;
@@ -387,17 +383,17 @@ public abstract class BaseOrchestrator<T> {
    */
   private Saga createSagaRecordInDB(String payload, UUID penRequestBatchStudentID) {
     var saga = Saga
-      .builder()
-      .payload(payload)
-      .penRequestBatchStudentID(penRequestBatchStudentID)
-      .sagaName(sagaName)
-      .status(STARTED.toString())
-      .sagaState(INITIATED.toString())
-      .createDate(LocalDateTime.now())
-      .createUser(API_NAME)
-      .updateUser(API_NAME)
-      .updateDate(LocalDateTime.now())
-      .build();
+        .builder()
+        .payload(payload)
+        .penRequestBatchStudentID(penRequestBatchStudentID)
+        .sagaName(sagaName)
+        .status(STARTED.toString())
+        .sagaState(INITIATED.toString())
+        .createDate(LocalDateTime.now())
+        .createUser(API_NAME)
+        .updateUser(API_NAME)
+        .updateDate(LocalDateTime.now())
+        .build();
     return getSagaService().createSagaRecord(saga);
   }
 
@@ -427,7 +423,7 @@ public abstract class BaseOrchestrator<T> {
   protected void process(@NotNull Event event, Saga saga, SagaEventState<T> sagaEventState) throws InterruptedException, TimeoutException, IOException {
     T sagaData = JsonUtil.getJsonObjectFromString(clazz, saga.getPayload());
     if (!saga.getSagaState().equalsIgnoreCase(COMPLETED.toString())
-      && isNotProcessedEvent(event.getEventType(), saga, this.nextStepsToExecute.keySet())) {
+        && isNotProcessedEvent(event.getEventType(), saga, this.nextStepsToExecute.keySet())) {
       log.info(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.getNextEventType(), event.toString());
       invokeNextEvent(event, saga, sagaData, sagaEventState);
     } else {
@@ -456,24 +452,4 @@ public abstract class BaseOrchestrator<T> {
    */
   public abstract void populateStepsToExecuteMap();
 
-  /**
-   * Delegate message posting for student.
-   *
-   * @param saga      the saga
-   * @param student   the student
-   * @param eventType the event type
-   */
-  protected void delegateMessagePostingForStudent(Saga saga, Student student, EventType eventType) {
-    var eventPayloadOptional = JsonUtil.getJsonString(student);
-    if (eventPayloadOptional.isPresent()) {
-      Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-        .eventType(eventType)
-        .replyTo(getTopicToSubscribe())
-        .eventPayload(eventPayloadOptional.get())
-        .build();
-      postMessageToTopic(STUDENT_API_TOPIC.toString(), nextEvent);
-    } else {
-      log.error("event payload is not present this should not have happened.");
-    }
-  }
 }

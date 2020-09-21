@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api;
 
+import jodd.util.concurrent.ThreadFactoryBuilder;
 import net.javacrumbs.shedlock.core.LockProvider;
 import net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateLockProvider;
 import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
@@ -18,6 +19,10 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.PlatformTransactionManager;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * The Pen reg batch api application.
@@ -83,5 +88,18 @@ public class PenRegBatchApiApplication {
   @Bean
   public LockProvider lockProvider(@Autowired JdbcTemplate jdbcTemplate, @Autowired PlatformTransactionManager transactionManager) {
     return new JdbcTemplateLockProvider(jdbcTemplate, transactionManager, "PEN_REQUEST_BATCH_SHEDLOCK");
+  }
+
+  @Bean(name = "subscriberExecutor")
+  public Executor threadPoolTaskExecutor() {
+    ThreadFactory namedThreadFactory =
+        new ThreadFactoryBuilder().setNameFormat("message-subscriber-%d").get();
+    return Executors.newFixedThreadPool(20, namedThreadFactory);
+  }
+  @Bean(name = "controllerExecutor")
+  public Executor controllerTaskExecutor() {
+    ThreadFactory namedThreadFactory =
+        new ThreadFactoryBuilder().setNameFormat("controller-%d").get();
+    return Executors.newFixedThreadPool(10, namedThreadFactory);
   }
 }

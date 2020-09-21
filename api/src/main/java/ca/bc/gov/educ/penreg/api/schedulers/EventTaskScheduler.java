@@ -10,7 +10,6 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -33,9 +32,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper.PEN_REQUEST_BATCH_API;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.ACTIVE;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.*;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -120,6 +118,7 @@ public class EventTaskScheduler implements Closeable {
   @Scheduled(cron = "${scheduled.jobs.extract.uncompleted.sagas.cron}") // 1 * * * * *
   @SchedulerLock(name = "EXTRACT_UNCOMPLETED_SAGAS",
       lockAtLeastFor = "${scheduled.jobs.extract.uncompleted.sagas.cron.lockAtLeastFor}", lockAtMostFor = "${scheduled.jobs.extract.uncompleted.sagas.cron.lockAtMostFor}")
+  @Transactional
   public void findAndProcessPendingSagaEvents() {
     LockAssert.assertLocked();
     executorService.execute(() -> {
@@ -169,18 +168,18 @@ public class EventTaskScheduler implements Closeable {
     LockAssert.assertLocked();
     executorService.execute(() -> {
       var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(LOADED.getCode());
-      if(!penReqBatches.isEmpty()){
+      if (!penReqBatches.isEmpty()) {
         var penReqBatchEntities = new ArrayList<PenRequestBatchEntity>();
-        penReqBatches.forEach(el ->{
+        penReqBatches.forEach(el -> {
           var students = getPenRequestBatchStudentRepository().findAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIsNot(el, LOADED.getCode());
-          if(students.isEmpty()){ // all records have been processed for this batch, make it active.
+          if (students.isEmpty()) { // all records have been processed for this batch, make it active.
             el.setPenRequestBatchStatusCode(ACTIVE.getCode());
-            PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(el, ACTIVE.getCode(),STATUS_CHANGED.getCode(), null);
+            PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(el, ACTIVE.getCode(), STATUS_CHANGED.getCode(), null);
             el.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
             penReqBatchEntities.add(el);
           }
         });
-        if(!penReqBatchEntities.isEmpty()){
+        if (!penReqBatchEntities.isEmpty()) {
           getPenRequestBatchRepository().saveAll(penReqBatchEntities); // update all of them in one commit.
         }
       }
@@ -210,6 +209,7 @@ public class EventTaskScheduler implements Closeable {
     penRequestBatchHistory.setEventReason(reason);
     return penRequestBatchHistory;
   }
+
   /**
    * Find loaded student records to be processed set.
    *
