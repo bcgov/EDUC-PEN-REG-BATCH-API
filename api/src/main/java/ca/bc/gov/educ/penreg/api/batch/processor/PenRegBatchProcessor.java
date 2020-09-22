@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.*;
 import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.*;
@@ -228,18 +229,20 @@ public class PenRegBatchProcessor {
   private Set<PenRequestBatchStudentSagaData> processLoadedRecordsInBatchFile(@NonNull String guid, @NonNull BatchFile batchFile, @NonNull PENWebBlobEntity penWebBlobEntity) {
     var counter = 1;
     log.info("going to persist data for batch :: {}", guid);
-    Set<PenRequestBatchStudentSagaData> penRequestBatchStudentSagaDataSet = new HashSet<>(batchFile.getStudentDetails().size());
     PenRequestBatchEntity entity = mapper.toPenReqBatchEntityLoaded(penWebBlobEntity, batchFile); // batch file can be processed further and persisted.
     for (var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.
-      var penRequestBatchStudentEntity = mapper.toPenRequestBatchStudentEntity(student,entity);
+      var penRequestBatchStudentEntity = mapper.toPenRequestBatchStudentEntity(student, entity);
       penRequestBatchStudentEntity.setRecordNumber(counter++);
-      var penRequestBatchStudentSagaData = studentSagaDataMapper.toPenReqBatchStudentSagaData(penRequestBatchStudentEntity);
-      penRequestBatchStudentSagaData.setMincode(entity.getMinCode());
-      penRequestBatchStudentSagaDataSet.add(penRequestBatchStudentSagaData);
       entity.getPenRequestBatchStudentEntities().add(penRequestBatchStudentEntity);
     }
     getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
-    return penRequestBatchStudentSagaDataSet;
+    return entity.getPenRequestBatchStudentEntities().stream()
+        .map(studentSagaDataMapper::toPenReqBatchStudentSagaData)
+        .map(element -> {
+          element.setMincode(entity.getMinCode());
+          element.setPenRequestBatchID(entity.getPenRequestBatchID());
+          return element;
+        }).collect(Collectors.toSet());
   }
 
 
