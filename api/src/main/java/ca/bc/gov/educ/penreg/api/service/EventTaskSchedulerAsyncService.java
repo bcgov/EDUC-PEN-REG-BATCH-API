@@ -71,12 +71,12 @@ public class EventTaskSchedulerAsyncService {
   }
   @Async("taskExecutor")
   @Transactional
-  public void markProcessedBatchesActive(){
+  public void markProcessedBatchesActive() {
     var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(LOADED.getCode());
     if (!penReqBatches.isEmpty()) {
       var penReqBatchEntities = new ArrayList<PenRequestBatchEntity>();
       penReqBatches.forEach(el -> {
-        var students = getPenRequestBatchStudentRepository().findAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIsNot(el, PenRequestBatchStatusCodes.LOADED.getCode());
+        var students = getPenRequestBatchStudentRepository().findAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIsIn(el, Collections.singletonList(PenRequestBatchStatusCodes.LOADED.getCode()));
         if (students.isEmpty()) { // all records have been processed for this batch, make it active.
           el.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ACTIVE.getCode());
           PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(el, PenRequestBatchStatusCodes.ACTIVE.getCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
@@ -92,12 +92,12 @@ public class EventTaskSchedulerAsyncService {
 
   @Async("taskExecutor")
   @Transactional
-  public void findAndProcessUncompletedSagas(Map<String, BaseOrchestrator<?>> sagaOrchestrators){
+  public void findAndProcessUncompletedSagas(Map<String, BaseOrchestrator<?>> sagaOrchestrators) {
     var sagas = getSagaRepository().findAllByStatusIn(getStatusFilters());
     if (!sagas.isEmpty()) {
       for (val saga : sagas) {
         if (saga.getCreateDate().isBefore(LocalDateTime.now().minusMinutes(5))
-            &&sagaOrchestrators.containsKey(saga.getSagaName())) {
+            && sagaOrchestrators.containsKey(saga.getSagaName())) {
           try {
             sagaOrchestrators.get(saga.getSagaName()).replaySaga(saga);
           } catch (IOException | InterruptedException | TimeoutException e) {
@@ -107,6 +107,7 @@ public class EventTaskSchedulerAsyncService {
       }
     }
   }
+
   /**
    * Create pen req batch history pen request batch history entity.
    *
@@ -131,7 +132,7 @@ public class EventTaskSchedulerAsyncService {
 
   @Async("taskExecutor")
   @Transactional
-  public void publishUnprocessedStudentRecords(){
+  public void publishUnprocessedStudentRecords() {
     Set<PenRequestBatchStudentSagaData> penRequestBatchStudents = findLoadedStudentRecordsToBeProcessed();
     log.info("found :: {}  records to be processed", penRequestBatchStudents.size());
     if (!penRequestBatchStudents.isEmpty()) {
@@ -153,11 +154,15 @@ public class EventTaskSchedulerAsyncService {
           studentEntitiesAlreadyInProcess.stream()
               .allMatch(saga -> (!penRequestBatchStudentEntity.getPenRequestBatchStudentID().equals(saga.getPenRequestBatchStudentID()))))
           .map(mapper::toPenReqBatchStudentSagaData)
-          .peek(penRequestBatchStudentSagaData -> penRequestBatchStudentSagaData.setMincode(penRequestBatchEntity.getMinCode()))
+          .peek(penRequestBatchStudentSagaData -> {
+            penRequestBatchStudentSagaData.setMincode(penRequestBatchEntity.getMinCode());
+            penRequestBatchStudentSagaData.setPenRequestBatchID(penRequestBatchEntity.getPenRequestBatchID());
+          })
           .collect(Collectors.toSet()));
     });
     return penRequestBatchStudents;
   }
+
   /**
    * Gets status filters.
    *

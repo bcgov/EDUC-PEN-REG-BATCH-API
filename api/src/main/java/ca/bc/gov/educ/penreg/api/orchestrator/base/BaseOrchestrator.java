@@ -351,8 +351,7 @@ public abstract class BaseOrchestrator<T> {
         log.trace("Execution is not required for this message returning EVENT is :: {}", event.toString());
         return;
       }
-      sagaOptional = Optional.of(createSagaRecordInDB(event.getEventPayload(), penRequestBatchStudentSagaData.getPenRequestBatchStudentID()));
-
+      sagaOptional = Optional.of(createSagaRecordInDB(event.getEventPayload(), penRequestBatchStudentSagaData.getPenRequestBatchStudentID(), penRequestBatchStudentSagaData.getPenRequestBatchID()));
     } else {
       sagaOptional = getSagaService().findSagaById(event.getSagaId()); // system expects a saga record to be present here.
     }
@@ -381,11 +380,12 @@ public abstract class BaseOrchestrator<T> {
    * @param penRequestBatchStudentID the pen request batch student id
    * @return the saga
    */
-  private Saga createSagaRecordInDB(String payload, UUID penRequestBatchStudentID) {
+  private Saga createSagaRecordInDB(String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID) {
     var saga = Saga
         .builder()
         .payload(payload)
         .penRequestBatchStudentID(penRequestBatchStudentID)
+        .penRequestBatchID(penRequestBatchID)
         .sagaName(sagaName)
         .status(STARTED.toString())
         .sagaState(INITIATED.toString())

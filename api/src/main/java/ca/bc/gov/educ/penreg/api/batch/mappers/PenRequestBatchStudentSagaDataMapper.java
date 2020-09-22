@@ -25,6 +25,6 @@ public interface PenRequestBatchStudentSagaDataMapper {
    */
   @Mapping(target = "penMatchResult", ignore = true)
   @Mapping(target = "mincode", ignore = true)
-  @Mapping(target = "penRequestBatchID", source = "entity.penRequestBatchEntity.penRequestBatchID")
+  @Mapping(target = "penRequestBatchID", ignore = true)
   PenRequestBatchStudentSagaData toPenReqBatchStudentSagaData(PenRequestBatchStudentEntity entity);
 }

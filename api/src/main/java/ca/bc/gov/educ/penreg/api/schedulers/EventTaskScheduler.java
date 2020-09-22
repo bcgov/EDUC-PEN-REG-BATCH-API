@@ -82,7 +82,7 @@ public class EventTaskScheduler {
   /**
    * Find all the pen request batch that has been processed and update their status and add history record.
    */
-  @Scheduled(cron = "1 * * * * *") // every 1 minutes
+  @Scheduled(cron = "0 0/1 * * * *") // every 1 minutes
   @SchedulerLock(name = "MARK_PROCESSED_BATCHES_ACTIVE",
       lockAtLeastFor = "50s", lockAtMostFor = "52s")
   @Transactional

@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
+import ca.bc.gov.educ.penreg.api.mappers.PenMatchSagaMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
@@ -38,6 +39,8 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    */
   @Getter(PRIVATE)
   private final PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService;
+
+  private static final PenMatchSagaMapper penMatchSagaMapper = PenMatchSagaMapper.mapper;
 
 
   /**
@@ -109,7 +112,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
     SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(PROCESS_PEN_MATCH.toString());
     getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-    var eventPayload = JsonUtil.getJsonString(penRequestBatchStudentSagaData);
+    var eventPayload = JsonUtil.getJsonString(penMatchSagaMapper.toPenMatchStudent(penRequestBatchStudentSagaData));
     if (eventPayload.isPresent()) {
       Event nextEvent = Event.builder().sagaId(saga.getSagaId())
           .eventType(PROCESS_PEN_MATCH)

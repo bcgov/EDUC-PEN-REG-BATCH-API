@@ -99,7 +99,7 @@ public class MessageSubscriber extends MessagePubSub {
   private MessageHandler onMessage() {
     return (Message message) -> {
       if (message != null) {
-        log.trace("Message received is :: {} ", message);
+        log.info("Message received is :: {} ", message);
           try {
             var eventString = new String(message.getData());
             var event = JsonUtil.getJsonObjectFromString(Event.class, eventString);

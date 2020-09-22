@@ -26,7 +26,6 @@ public interface PenMatchSagaMapper {
   @Mapping(target = "usualSurname", source = "usualLastName")
   @Mapping(target = "usualMiddleName", source = "usualMiddleNames")
   @Mapping(target = "usualGivenName", source = "usualFirstName")
-  @Mapping(target = "updateCode", ignore = true)
   @Mapping(target = "surname", source = "legalLastName")
   @Mapping(target = "sex", source = "genderCode")
   @Mapping(target = "postal", source = "postalCode")

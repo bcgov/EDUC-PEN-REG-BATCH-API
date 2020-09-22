@@ -61,8 +61,4 @@ public class PenMatchStudent {
    * The Postal.
    */
   protected String postal;
-  /**
-   * The Update code.
-   */
-  protected String updateCode;
 }

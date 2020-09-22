@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.struct;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -10,15 +11,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 public class PenMatchRecord {
-  /**
-   * The Matching algorithm result.
-   */
-  private Integer matchingAlgorithmResult;
-  /**
-   * The Matching score.
-   */
-  private Integer matchingScore;
   /**
    * The Matching pen.
    */

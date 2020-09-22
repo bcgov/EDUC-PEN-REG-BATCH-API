@@ -11,7 +11,6 @@ import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -142,13 +141,13 @@ public class PenRequestBatchStudentOrchestratorService {
       case B0:
       case C0:
       case D0:
-        eventOptional = Optional.of(handleCreateNewStudentStatus(saga, penRequestBatchStudentSagaData, penRequestBatchStudent));
+        eventOptional = Optional.of(handleCreateNewStudentStatus(saga, penRequestBatchStudentSagaData, penRequestBatchStudent, penMatchResult));
         break;
       case F1:
         eventOptional = Optional.of(handleF1Status(saga, penMatchResult, penRequestBatchStudent));
         break;
       default:
-        eventOptional = Optional.of(handleDefault(saga, penRequestBatchStudent));
+        eventOptional = Optional.of(handleDefault(saga, penRequestBatchStudent, penMatchResult));
         break;
     }
     return eventOptional;
@@ -168,7 +167,7 @@ public class PenRequestBatchStudentOrchestratorService {
     getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
     return Event.builder().sagaId(saga.getSagaId())
         .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
-        .build();
+        .eventPayload(penMatchResult.getPenStatus()).build();
   }
 
   /**
@@ -176,14 +175,15 @@ public class PenRequestBatchStudentOrchestratorService {
    *
    * @param saga                   the saga
    * @param penRequestBatchStudent the pen request batch student
+   * @param penMatchResult         the pen match result
    * @return the event
    */
-  private Event handleDefault(Saga saga, PenRequestBatchStudentEntity penRequestBatchStudent) {
+  private Event handleDefault(Saga saga, PenRequestBatchStudentEntity penRequestBatchStudent, PenMatchResult penMatchResult) {
     penRequestBatchStudent.setPenRequestBatchStudentStatusCode(FIXABLE.getCode());
     getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
     return Event.builder().sagaId(saga.getSagaId())
         .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
-        .build();
+        .eventPayload(penMatchResult.getPenStatus()).build();
   }
 
   /**
@@ -192,12 +192,10 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param saga                           the saga
    * @param penRequestBatchStudentSagaData the pen request batch student saga data
    * @param penRequestBatchStudent         the pen request batch student
+   * @param penMatchResult                 the pen match result
    * @return the event
-   * @throws InterruptedException the interrupted exception
-   * @throws IOException          the io exception
-   * @throws TimeoutException     the timeout exception
    */
-  private Event handleCreateNewStudentStatus(Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, PenRequestBatchStudentEntity penRequestBatchStudent) throws InterruptedException, IOException, TimeoutException {
+  private Event handleCreateNewStudentStatus(Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, PenRequestBatchStudentEntity penRequestBatchStudent, PenMatchResult penMatchResult) {
     var pen = generateNewPen();
     var student = studentMapper.toStudent(penRequestBatchStudentSagaData);
     student.setPen(pen);
@@ -206,7 +204,7 @@ public class PenRequestBatchStudentOrchestratorService {
     getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
     return Event.builder().sagaId(saga.getSagaId())
         .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
-        .build();
+        .eventPayload(penMatchResult.getPenStatus()).build();
   }
 
   /**
@@ -234,7 +232,7 @@ public class PenRequestBatchStudentOrchestratorService {
         getRestUtils().updateStudent(studentFromStudentAPI);
         return Event.builder().sagaId(saga.getSagaId())
             .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
-            .build();
+            .eventPayload(penMatchResult.getPenStatus()).build();
       } else { // sometime JAVA is dumb , we know for sure it is present and else will never be executed.
         log.error("Pen Request Batch was not present, this should not have happened.");
         throw new PenRegAPIRuntimeException("Pen Request Batch was not present.");
