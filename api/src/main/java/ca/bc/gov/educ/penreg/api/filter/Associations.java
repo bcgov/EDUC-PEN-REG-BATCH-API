@@ -21,6 +21,7 @@ public class Associations {
   /**
    * The count for joining association
    */
+  @Getter
   private int joinedCount = 0;
 
   /**
@@ -39,9 +40,6 @@ public class Associations {
   public Join<Object, Object> countJoin(String associationName) {
     var join = joinedSearchAssociations.get(associationName);
     joinedCount++;
-    if(searchAssociations.size() == joinedCount) {
-      reset();
-    }
     return join;
   }
 
@@ -54,6 +52,15 @@ public class Associations {
   public int cacheJoin(String associationName, Join<Object, Object> join) {
     joinedSearchAssociations.put(associationName, join);
     return joinedCount;
+  }
+
+  /**
+   * reset the count and remove the cache if all joins are processed
+   */
+  public void resetIfAllJoinsProcessed() {
+    if(searchAssociations.size() == joinedCount) {
+      reset();
+    }
   }
 
   /**

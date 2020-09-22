@@ -59,6 +59,7 @@ public class FilterSpecifications<E, T extends Comparable<T>> {
 				}
 				associationNames.cacheJoin(names[0], join);
 			}
+			associationNames.resetIfAllJoinsProcessed();
 			return join.get(names[1]);
 		}
 
