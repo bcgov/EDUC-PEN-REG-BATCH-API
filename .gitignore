@@ -29,3 +29,5 @@ api/src/main/resources/student-request.http
 # IDE
 .idea
 *.iml
+api/src/main/resources/*.http
+api/*.iml
