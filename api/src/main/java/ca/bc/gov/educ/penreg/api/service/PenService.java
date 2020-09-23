@@ -54,12 +54,13 @@ public class PenService {
   /**
    * Gets next pen number.
    *
+   * @param guid the guid to identify the transaction.
    * @return the next pen number
    */
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
-  public String getNextPenNumber() {
-    int penWithoutCheckDigit = getNextPenNumberWithoutCheckDigit();
-    int checkDigit = calculateCheckDigit(String.valueOf(penWithoutCheckDigit));
+  public String getNextPenNumber(String guid) {
+    int penWithoutCheckDigit = getNextPenNumberWithoutCheckDigit(guid);
+    int checkDigit = calculateCheckDigit(String.valueOf(penWithoutCheckDigit), guid);
     return penWithoutCheckDigit + "" + checkDigit;
   }
 
@@ -79,9 +80,10 @@ public class PenService {
    * </pre>
    *
    * @param penWithoutCheckDigit the pen without check digit
+   * @param guid                 the guid to identify the transaction.
    * @return checkDigit a number
    */
-  private int calculateCheckDigit(@NonNull String penWithoutCheckDigit) {
+  private int calculateCheckDigit(@NonNull String penWithoutCheckDigit, String guid) {
     List<Integer> odds = new LinkedList<>();
     List<Integer> evens = new LinkedList<>();
     createOddAndEven(penWithoutCheckDigit, odds, evens);
@@ -93,11 +95,12 @@ public class PenService {
     }
     int sumEvens = listOfFullEvenValueDoubled.stream().mapToInt(Integer::intValue).sum();
     int finalSum = sumEvens + sumOdds;
-
-    if (finalSum % 10 == 0) {
-      return 0;
+    int checkDigit = 0;
+    if (finalSum % 10 != 0) {
+      checkDigit = 10 - (finalSum % 10);
     }
-    return 10 - (finalSum % 10);
+    log.info("Check Digit calculated for :: {} , is :: {}", guid, checkDigit);
+    return checkDigit;
   }
 
   /**
@@ -121,9 +124,11 @@ public class PenService {
   /**
    * Gets next pen number without check digit.
    *
+   * @param guid the guid to identify transaction
    * @return the next pen number without check digit
    */
-  private int getNextPenNumberWithoutCheckDigit() {
+  private int getNextPenNumberWithoutCheckDigit(String guid) {
+    log.info("getNextPenNumberWithoutCheckDigit called for guid :: {}", guid);
     RPermitExpirableSemaphore semaphore = getRedissonClient().getPermitExpirableSemaphore("getNextPen");
     semaphore.trySetPermits(1);
     semaphore.expire(120, TimeUnit.SECONDS);
@@ -135,20 +140,22 @@ public class PenService {
         if (penBucket.isExists()) {
           pen = penBucket.get();
         } else {
-          pen = restUtils.getLatestPenNumberFromStudentAPI();
-          if(pen == 0){
+          pen = restUtils.getLatestPenNumberFromStudentAPI(guid);
+          if (pen == 0) {
             throw new PenRegAPIRuntimeException("Invalid Pen Returned from downstream method.");
           }
         }
         penBucket.set(pen + 1);
         semaphore.tryRelease(id);
-        log.debug("PEN IS :: {}", pen);
+        log.debug("PEN IS :: {} for guid :: {}", pen, guid);
         return pen;
       } else {
+        log.warn("PEN could not be retrieved, as lock could not be acquired for guid :: {}", guid);
         throw new PenRegAPIRuntimeException("PEN could not be retrieved, as lock could not be acquired.");
       }
 
     } catch (Exception e) {
+      log.warn("PEN could not be retrieved, for guid :: {} :: {}", guid, e.getMessage());
       throw new PenRegAPIRuntimeException("PEN could not be retrieved ".concat(e.getMessage()));
     }
   }
