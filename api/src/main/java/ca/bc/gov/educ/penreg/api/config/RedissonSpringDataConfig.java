@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.config;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 import org.redisson.spring.data.connection.RedissonConnectionFactory;
 import org.springframework.context.annotation.Bean;
@@ -24,14 +25,16 @@ public class RedissonSpringDataConfig {
 
   @Bean(destroyMethod = "shutdown")
   public RedissonClient redisson() {
+    RedissonClient redisson;
     if ("local".equals(applicationProperties.getEnvironment())) {
-      return Redisson.create();
+      redisson= Redisson.create();
     } else {
       Config config = new Config();
       config.useClusterServers()
           .addNodeAddress(applicationProperties.getRedisUrl());
-      return Redisson.create(config);
+      redisson = Redisson.create(config);
     }
-
+    redisson.getConfig().setCodec(StringCodec.INSTANCE);
+    return redisson;
   }
 }

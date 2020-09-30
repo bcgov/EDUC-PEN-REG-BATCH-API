@@ -1,0 +1,19 @@
+CREATE TABLE PEN_REQUEST_BATCH_STUDENT_POSSIBLE_MATCH
+(
+    PEN_REQUEST_BATCH_STUDENT_POSSIBLE_MATCH_ID RAW(16)     NOT NULL,
+    PEN_REQUEST_BATCH_STUDENT_ID                RAW(16)     NOT NULL,
+    MATCHED_STUDENT_ID                          RAW(16)     NOT NULL,
+    MATCHED_PRIORITY                            NUMBER      NOT NULL,
+    MATCHED_PEN                                 VARCHAR2(9) NOT NULL,
+    CONSTRAINT PEN_REQUEST_BATCH_STUDENT_POSSIBLE_MATCH_PK PRIMARY KEY (PEN_REQUEST_BATCH_STUDENT_POSSIBLE_MATCH_ID)
+);
+COMMENT ON TABLE PEN_REQUEST_BATCH_STUDENT_POSSIBLE_MATCH IS 'List of existing Student records identified by the system as possible matches to a Student in a PEN Request Batch.';
+-- Column Comments
+COMMENT ON COLUMN PEN_REQUEST_BATCH_STUDENT_POSSIBLE_MATCH.PEN_REQUEST_BATCH_STUDENT_POSSIBLE_MATCH_ID IS 'Unique surrogate key for each PEN Request Student Possible Match record. GUID value must be provided during insert.';
+COMMENT ON COLUMN PEN_REQUEST_BATCH_STUDENT_POSSIBLE_MATCH.PEN_REQUEST_BATCH_STUDENT_ID IS 'Foreign key to the PEN Request Batch Student record.';
+COMMENT ON COLUMN PEN_REQUEST_BATCH_STUDENT_POSSIBLE_MATCH.MATCHED_STUDENT_ID IS 'Soft Foreign key to an existing Student record in the Student subdomain.';
+COMMENT ON COLUMN PEN_REQUEST_BATCH_STUDENT_POSSIBLE_MATCH.MATCHED_PRIORITY IS 'A calculated value indicating the priority of each possible match relative to the other possible matches, so the possible results can be displayed in priority order.';
+COMMENT ON COLUMN PEN_REQUEST_BATCH_STUDENT_POSSIBLE_MATCH.MATCHED_PEN IS 'The PEN assigned to an existing Student record which is a possible match.';
+
+ALTER TABLE PEN_REQUEST_BATCH_STUDENT_POSSIBLE_MATCH
+    ADD CONSTRAINT PEN_REQUEST_BATCH_STUDENT_POSSIBLE_MATCH_PEN_REQUEST_BATCH_STUDENT_ID_FK FOREIGN KEY (PEN_REQUEST_BATCH_STUDENT_ID) REFERENCES PEN_REQUEST_BATCH_STUDENT (PEN_REQUEST_BATCH_STUDENT_ID);

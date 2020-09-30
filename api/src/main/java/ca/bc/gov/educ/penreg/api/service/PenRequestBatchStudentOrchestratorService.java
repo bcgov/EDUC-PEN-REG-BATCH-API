@@ -15,10 +15,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_MATCH_RESULTS_PROCESSED;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.PROCESS_PEN_MATCH_RESULTS;
@@ -123,11 +121,8 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param penRequestBatchStudentSagaData the pen request batch student saga data
    * @param penMatchResult                 the pen match result
    * @return the optional
-   * @throws InterruptedException the interrupted exception
-   * @throws TimeoutException     the timeout exception
-   * @throws IOException          the io exception
    */
-  public Optional<Event> processPenMatchResult(Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, PenMatchResult penMatchResult) throws InterruptedException, TimeoutException, IOException {
+  public Optional<Event> processPenMatchResult(Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, PenMatchResult penMatchResult) {
     var algorithmStatusCode = MatchAlgorithmStatusCode.valueOf(penMatchResult.getPenStatus());
     var penRequestBatchStudent = getPenRequestBatchStudentService()
         .getStudentById(penRequestBatchStudentSagaData.getPenRequestBatchID(), penRequestBatchStudentSagaData.getPenRequestBatchStudentID());
@@ -196,7 +191,7 @@ public class PenRequestBatchStudentOrchestratorService {
    * @return the event
    */
   private Event handleCreateNewStudentStatus(Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, PenRequestBatchStudentEntity penRequestBatchStudent, PenMatchResult penMatchResult) {
-    var pen = generateNewPen();
+    var pen = generateNewPen(saga.getSagaId().toString());
     var student = studentMapper.toStudent(penRequestBatchStudentSagaData);
     student.setPen(pen);
     var studentFromAPIResponse = getRestUtils().createStudent(student);
@@ -215,11 +210,8 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param penRequestBatchStudent the pen request batch student
    * @param penRequestBatch        the pen request batch
    * @return the event
-   * @throws InterruptedException the interrupted exception
-   * @throws IOException          the io exception
-   * @throws TimeoutException     the timeout exception
    */
-  private Event handleD1Status(Saga saga, PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent, java.util.Optional<PenRequestBatchEntity> penRequestBatch) throws InterruptedException, IOException, TimeoutException {
+  private Event handleD1Status(Saga saga, PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent, java.util.Optional<PenRequestBatchEntity> penRequestBatch){
     var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
     if (penMatchRecordOptional.isPresent()) {
       var studentID = penMatchRecordOptional.get().getStudentID();
@@ -248,9 +240,11 @@ public class PenRequestBatchStudentOrchestratorService {
    * Generate new pen string.
    *
    * @return the string
+   * @param guid the guid to identify the transaction.
    */
-  private String generateNewPen() {
-    return getPenService().getNextPenNumber();
+  private String generateNewPen(String guid) {
+    log.info("generate new pen called for guid :: {}", guid);
+    return getPenService().getNextPenNumber(guid);
   }
 
   /**

@@ -74,7 +74,7 @@ public class RestUtils {
   }
 
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
-  public int getLatestPenNumberFromStudentAPI() throws JsonProcessingException {
+  public int getLatestPenNumberFromStudentAPI(String guid) throws JsonProcessingException {
     RestTemplate restTemplate = getRestTemplate();
     SearchCriteria criteria = SearchCriteria.builder().key("pen").operation(FilterOperation.STARTS_WITH).value("1").valueType(ValueType.STRING).build();
     List<SearchCriteria> criteriaList = new ArrayList<>();
@@ -103,7 +103,7 @@ public class RestUtils {
       var firstStudent = optionalStudent.get();
       return Integer.parseInt(firstStudent.getPen().substring(0, 8));
     }
-
+    log.warn("PEN could not be retrieved, returning 0 for guid :: {}", guid);
     return 0;
   }
 
