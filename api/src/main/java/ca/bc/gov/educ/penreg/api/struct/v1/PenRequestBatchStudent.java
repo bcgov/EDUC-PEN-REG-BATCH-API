@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 /**
  * The type Pen request batch student.
  *
@@ -94,6 +96,21 @@ public class PenRequestBatchStudent {
    * The Update user.
    */
   String updateUser;
+
+  /**
+   * The Match algorithm status code.
+   */
+  String matchAlgorithmStatusCode;
+
+  /**
+   * The Questionable match student id.
+   */
+  UUID questionableMatchStudentId;
+
+  /**
+   * The Info request.
+   */
+  String infoRequest;
 
   /**
    * The Record number.
