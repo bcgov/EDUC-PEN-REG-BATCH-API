@@ -58,6 +58,20 @@ public class PenRequestBatchStudentEntity {
   String penRequestBatchStudentStatusCode;
 
   /**
+   * The Pen request repeat sequence number.
+   */
+  @Column(name = "REPEAT_REQUEST_SEQUENCE_NUMBER")
+
+  Integer repeatRequestSequenceNumber;
+
+  /**
+   * The Pen request original repeat ID.
+   */
+  @Column(name = "REPEAT_REQUEST_ORIGINAL_ID", columnDefinition = "BINARY(16)")
+
+  UUID repeatRequestOriginalID;
+
+  /**
    * The Local id.
    */
   @Column(name = "LOCAL_ID", length = 12)

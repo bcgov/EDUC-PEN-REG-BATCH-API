@@ -1,12 +1,18 @@
 package ca.bc.gov.educ.penreg.api.batch.processor;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
+import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
+import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -26,14 +32,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOAD_FAIL;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
 import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.K12;
 import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.PSI;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,6 +50,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class PenRegBatchProcessorTest {
+  /**
+   * The constant PEN_REQUEST_BATCH_API.
+   */
+  public static final String PEN_REQUEST_BATCH_API = "PEN_REQUEST_BATCH_API";
+  /**
+   * The constant mapper.
+   */
+  private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
   /**
    * The Min.
    */
@@ -241,9 +252,10 @@ public class PenRegBatchProcessorTest {
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
-    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).isNull();
+    assertThat(entity.getRepeatCount()).isEqualTo(0);
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
     Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
@@ -253,6 +265,44 @@ public class PenRegBatchProcessorTest {
     assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
     assertThat(students.size()).isEqualTo(30);
 
+    students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
+    log.error("students {}",students);
+    var counter = 1;
+    for (PenRequestBatchStudentEntity student : students) {
+      assertThat(counter++).isEqualTo(student.getRecordNumber());
+    }
+  }
+
+  /**
+   * Test process pen reg batch file from tsw given 30 row valid file should create records in db.
+   *
+   * @throws IOException the io exception
+   */
+  @Test
+  @Transactional
+  public void testProcessPenRegBatchFileFromTSW_Given30RowValidFileAndExistingRecords_ShouldShowRepeats() throws IOException {
+    createBatchStudentRecords();
+    File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
+    byte[] bFile = Files.readAllBytes(file.toPath());
+    var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
+    var result = repository.findAll();
+    assertThat(result.size()).isEqualTo(2);
+    var entity = result.get(1);
+    assertThat(entity.getPenRequestBatchID()).isNotNull();
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    assertThat(entity.getRepeatCount()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
+    var students = studentRepository.findAllByPenRequestBatchEntity(result.get(1));
+    assertThat(students.stream().filter(s -> PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(s.getPenRequestBatchStudentStatusCode())).count()).isEqualTo(1);
+    assertThat(students.size()).isEqualTo(5);
     students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
     log.error("students {}",students);
     var counter = 1;
@@ -278,7 +328,7 @@ public class PenRegBatchProcessorTest {
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
-    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).isNull();
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
@@ -366,7 +416,7 @@ public class PenRegBatchProcessorTest {
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
-    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(PSI.getCode());
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
@@ -401,7 +451,7 @@ public class PenRegBatchProcessorTest {
     assertThat(result.size()).isEqualTo(1);
     var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
-    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
     Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
@@ -427,6 +477,57 @@ public class PenRegBatchProcessorTest {
   public void after() {
     repository.deleteAll();
     penWebBlobRepository.deleteAll();
+  }
+
+  private void createBatchStudentRecords() throws java.io.IOException {
+    final File file = new File(
+            Objects.requireNonNull(getClass().getClassLoader().getResource("mock_pen_req_batch_repeat.json")).getFile()
+    );
+    List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
+    });
+    var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(this::populateAuditColumns).collect(Collectors.toList());
+
+    final File student = new File(
+            Objects.requireNonNull(getClass().getClassLoader().getResource("mock_pen_req_batch_student_repeat.json")).getFile()
+    );
+    List<PenRequestBatchStudentEntity> studentEntities = new ObjectMapper().readValue(student, new TypeReference<>() {
+    });
+    var students = studentEntities.stream().map(this::populateAuditColumns).peek(el -> el.setPenRequestBatchEntity(models.get(0))).collect(Collectors.toSet());
+
+    models.get(0).setProcessDate(LocalDateTime.now().minusDays(3));
+    models.get(0).setPenRequestBatchStudentEntities(students);
+
+    repository.saveAll(models);
+  }
+
+  /**
+   * Populate audit columns pen request batch entity.
+   *
+   * @param model the model
+   * @return the pen request batch entity
+   */
+  private PenRequestBatchEntity populateAuditColumns(PenRequestBatchEntity model) {
+    if (model.getCreateUser() == null) {
+      model.setCreateUser(PEN_REQUEST_BATCH_API);
+    }
+    if (model.getUpdateUser() == null) {
+      model.setUpdateUser(PEN_REQUEST_BATCH_API);
+    }
+    model.setCreateDate(LocalDateTime.now());
+    model.setUpdateDate(LocalDateTime.now());
+    return model;
+  }
+
+  private PenRequestBatchStudentEntity populateAuditColumns(PenRequestBatchStudentEntity model) {
+    if (model.getCreateUser() == null) {
+      model.setCreateUser(PEN_REQUEST_BATCH_API);
+    }
+    if (model.getUpdateUser() == null) {
+      model.setUpdateUser(PEN_REQUEST_BATCH_API);
+    }
+    model.setCreateDate(LocalDateTime.now());
+    model.setUpdateDate(LocalDateTime.now());
+    return model;
   }
 
   /**

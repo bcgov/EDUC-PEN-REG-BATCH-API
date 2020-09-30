@@ -1,25 +1,26 @@
 package ca.bc.gov.educ.penreg.api.batch.processor;
 
-import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchStudentSagaDataMapper;
+import ca.bc.gov.educ.penreg.api.batch.service.PenRequestBatchFileService;
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.Closeable;
-import java.io.IOException;
-import java.util.Optional;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+
+import static lombok.AccessLevel.PRIVATE;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC;
 
@@ -38,6 +39,11 @@ public class PenRegBatchStudentRecordsProcessor implements Closeable {
    * The Message publisher.
    */
   private final MessagePublisher messagePublisher;
+  /**
+   * The pen request batch file service.
+   */
+  @Getter(PRIVATE)
+  private final PenRequestBatchFileService penRequestBatchFileService;
 
 
   /**
@@ -46,8 +52,9 @@ public class PenRegBatchStudentRecordsProcessor implements Closeable {
    * @param messagePublisher the message publisher
    */
   @Autowired
-  public PenRegBatchStudentRecordsProcessor(MessagePublisher messagePublisher) {
+  public PenRegBatchStudentRecordsProcessor(MessagePublisher messagePublisher, PenRequestBatchFileService penRequestBatchFileService) {
     this.messagePublisher = messagePublisher;
+    this.penRequestBatchFileService = penRequestBatchFileService;
   }
 
   /**
@@ -81,6 +88,14 @@ public class PenRegBatchStudentRecordsProcessor implements Closeable {
         log.error("Event payload is empty, skipping the publish to topic :: {}", penRequestBatchStudentSagaData);
       }
     };
+  }
+
+  /**
+   * Filters repeats for all pen request batches in loaded status.
+   * @param penRequestBatchEntities the list of pen request batch entities
+   */
+  public void checkLoadedStudentRecordsForRepeats(List<PenRequestBatchEntity> penRequestBatchEntities) {
+    executorService.execute(() -> penRequestBatchEntities.forEach(penRequestBatchEntity -> getPenRequestBatchFileService().filterRepeatRequests(penRequestBatchEntity)));
   }
 
   /**

@@ -236,12 +236,12 @@ public class PenRegBatchProcessor {
       entity.getPenRequestBatchStudentEntities().add(penRequestBatchStudentEntity);
     }
     getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
-    return entity.getPenRequestBatchStudentEntities().stream()
+    var noRepeatsEntity = getPenRequestBatchFileService().filterRepeatRequests(entity);
+    return noRepeatsEntity.stream()
         .map(studentSagaDataMapper::toPenReqBatchStudentSagaData)
-        .map(element -> {
+        .peek(element -> {
           element.setMincode(entity.getMinCode());
           element.setPenRequestBatchID(entity.getPenRequestBatchID());
-          return element;
         }).collect(Collectors.toSet());
   }
 

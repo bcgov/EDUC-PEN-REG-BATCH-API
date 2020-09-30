@@ -1,10 +1,13 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentStatusCodeEntity;
+import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentStatusCodeRepository;
@@ -23,6 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -51,6 +56,9 @@ public class PenRequestBatchStudentService {
   @Getter(PRIVATE)
   private final PenRequestBatchStudentStatusCodeRepository studentStatusCodeRepository;
 
+  @Getter
+  private final ApplicationProperties applicationProperties;
+
   /**
    * Instantiates a new Pen request batch student service.
    *
@@ -58,10 +66,11 @@ public class PenRequestBatchStudentService {
    * @param penRequestBatchRepository the pen request batch repository
    */
   @Autowired
-  public PenRequestBatchStudentService(PenRequestBatchStudentRepository repository, PenRequestBatchRepository penRequestBatchRepository, PenRequestBatchStudentStatusCodeRepository studentStatusCodeRepository) {
+  public PenRequestBatchStudentService(PenRequestBatchStudentRepository repository, PenRequestBatchRepository penRequestBatchRepository, PenRequestBatchStudentStatusCodeRepository studentStatusCodeRepository, ApplicationProperties applicationProperties) {
     this.repository = repository;
     this.penRequestBatchRepository = penRequestBatchRepository;
     this.studentStatusCodeRepository = studentStatusCodeRepository;
+    this.applicationProperties = applicationProperties;
   }
 
   /**
@@ -170,6 +179,17 @@ public class PenRequestBatchStudentService {
       throw new EntityNotFoundException(PenRequestBatchStudentEntity.class, penRequestBatchID.toString());
     }
 
+  }
+
+  /**
+   * Find all students requests that are repeats of the current student request
+   *
+   * @param penRequestBatchStudent the student request
+   * @return the list
+   */
+  public List<PenRequestBatchStudentEntity> findAllRepeatsGivenBatchStudent(PenRequestBatchStudentEntity penRequestBatchStudent) {
+    LocalDateTime startDate = LocalDateTime.now().minusDays(getApplicationProperties().getRepeatTimeWindow());
+    return repository.findAllRepeatsGivenBatchStudent(penRequestBatchStudent.getPenRequestBatchEntity().getMinCode(), PenRequestBatchStatusCodes.ARCHIVED.getCode(), startDate, penRequestBatchStudent.getLocalID(), Arrays.asList(PenRequestBatchStudentStatusCodes.FIXABLE.getCode(), PenRequestBatchStudentStatusCodes.ERROR.getCode(), PenRequestBatchStudentStatusCodes.LOADED.getCode()), penRequestBatchStudent.getSubmittedPen(), penRequestBatchStudent.getLegalFirstName(), penRequestBatchStudent.getLegalMiddleNames(), penRequestBatchStudent.getLegalLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames(), penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getDob(), penRequestBatchStudent.getGenderCode(), penRequestBatchStudent.getGradeCode(), penRequestBatchStudent.getPostalCode());
   }
 
   /**

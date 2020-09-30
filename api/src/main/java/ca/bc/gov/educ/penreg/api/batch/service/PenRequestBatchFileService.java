@@ -1,9 +1,13 @@
 package ca.bc.gov.educ.penreg.api.batch.service;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
+import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +19,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
-
+import java.util.*;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -35,6 +38,12 @@ public class PenRequestBatchFileService {
   private final PenRequestBatchService penRequestBatchService;
 
   /**
+   * The Pen request batch student service
+   */
+  @Getter(PRIVATE)
+  private final PenRequestBatchStudentService penRequestBatchStudentService;
+
+  /**
    * The Pen web blob repository.
    */
   @Getter(PRIVATE)
@@ -45,11 +54,13 @@ public class PenRequestBatchFileService {
    * Instantiates a new Pen request batch file service.
    *
    * @param penRequestBatchService the pen request batch service
+   * @param penRequestBatchStudentService the pen request batch student service
    * @param penWebBlobRepository   the pen web blob repository
    */
   @Autowired
-  public PenRequestBatchFileService(PenRequestBatchService penRequestBatchService, PenWebBlobRepository penWebBlobRepository) {
+  public PenRequestBatchFileService(PenRequestBatchService penRequestBatchService, PenRequestBatchStudentService penRequestBatchStudentService, PenWebBlobRepository penWebBlobRepository) {
     this.penRequestBatchService = penRequestBatchService;
+    this.penRequestBatchStudentService = penRequestBatchStudentService;
     this.penWebBlobRepository = penWebBlobRepository;
   }
 
@@ -84,5 +95,51 @@ public class PenRequestBatchFileService {
   @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
   public List<PENWebBlobEntity> getAllNotExtractedRecords(@NonNull String fileType) {
     return getPenWebBlobRepository().findAllByExtractDateTimeIsNullAndFileType(fileType);
+  }
+
+  /**
+   * Filter out repeat requests
+   *
+   * @param penRequestBatchEntity the pen request batch entity
+   * @return the list of filtered requests
+   */
+  public Set<PenRequestBatchStudentEntity> filterRepeatRequests(PenRequestBatchEntity penRequestBatchEntity) {
+    var studentEntities = penRequestBatchEntity.getPenRequestBatchStudentEntities();
+    long numRepeats = 0;
+    var filteredStudentEntities = new HashSet<PenRequestBatchStudentEntity>();
+
+    for(PenRequestBatchStudentEntity penRequestBatchStudent : studentEntities) {
+      List<PenRequestBatchStudentEntity> repeatRequests = penRequestBatchStudentService.findAllRepeatsGivenBatchStudent(penRequestBatchStudent);
+      if(!repeatRequests.isEmpty()) {
+        updatePenRequestBatchStudentRequest(repeatRequests, penRequestBatchStudent);
+        numRepeats++;
+      } else {
+        filteredStudentEntities.add(penRequestBatchStudent);
+      }
+    }
+    penRequestBatchEntity.setRepeatCount(numRepeats);
+    penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.REPEATS_CHECKED.getCode());
+    getPenRequestBatchService().saveAttachedEntity(penRequestBatchEntity);
+
+    return filteredStudentEntities;
+  }
+
+  /**
+   * Update student batch requests to mark them as repeats
+   *
+   * @param repeatRequests the list of previous identical requests
+   * @param penRequestBatchStudent the request to be updated
+   */
+  private void updatePenRequestBatchStudentRequest(List<PenRequestBatchStudentEntity> repeatRequests, PenRequestBatchStudentEntity penRequestBatchStudent) {
+    if(repeatRequests.size() > 1) {
+      PenRequestBatchStudentEntity mostRecentRepeat = Collections.max(repeatRequests, Comparator.comparing(t -> t.getPenRequestBatchEntity().getProcessDate()));
+      penRequestBatchStudent.setRepeatRequestOriginalID(mostRecentRepeat.getRepeatRequestOriginalID());
+      penRequestBatchStudent.setRepeatRequestSequenceNumber(mostRecentRepeat.getRepeatRequestSequenceNumber() + 1);
+    } else {
+      penRequestBatchStudent.setRepeatRequestOriginalID(repeatRequests.get(0).getRepeatRequestOriginalID());
+      penRequestBatchStudent.setRepeatRequestSequenceNumber(1);
+    }
+    penRequestBatchStudent.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.REPEAT.getCode());
+    getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
   }
 }
