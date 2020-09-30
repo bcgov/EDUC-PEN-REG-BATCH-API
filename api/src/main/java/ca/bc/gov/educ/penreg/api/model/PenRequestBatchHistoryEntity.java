@@ -36,7 +36,7 @@ public class PenRequestBatchHistoryEntity {
    */
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
-  @ManyToOne(cascade = CascadeType.ALL, optional = false, targetEntity = PenRequestBatchEntity.class)
+  @ManyToOne(optional = false, targetEntity = PenRequestBatchEntity.class)
   @JoinColumn(name = "PEN_REQUEST_BATCH_ID", referencedColumnName = "PEN_REQUEST_BATCH_ID", updatable = false)
   PenRequestBatchEntity penRequestBatchEntity;
 

@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper.PEN_REQUEST_BATCH_API;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REPEATS_CHECKED;
 import static lombok.AccessLevel.PRIVATE;
 
 @Service
@@ -72,7 +73,7 @@ public class EventTaskSchedulerAsyncService {
   @Async("taskExecutor")
   @Transactional
   public void markProcessedBatchesActive() {
-    var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(LOADED.getCode());
+    var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
     if (!penReqBatches.isEmpty()) {
       var penReqBatchEntities = new ArrayList<PenRequestBatchEntity>();
       penReqBatches.forEach(el -> {
@@ -133,7 +134,7 @@ public class EventTaskSchedulerAsyncService {
   @Async("taskExecutor")
   @Transactional
   public void publishUnprocessedStudentRecords() {
-    Set<PenRequestBatchStudentSagaData> penRequestBatchStudents = findLoadedStudentRecordsToBeProcessed();
+    Set<PenRequestBatchStudentSagaData> penRequestBatchStudents = findRepeatsCheckedStudentRecordsToBeProcessed();
     log.info("found :: {}  records to be processed", penRequestBatchStudents.size());
     if (!penRequestBatchStudents.isEmpty()) {
       getPenRegBatchStudentRecordsProcessor().publishUnprocessedStudentRecordsForProcessing(penRequestBatchStudents);
@@ -141,13 +142,13 @@ public class EventTaskSchedulerAsyncService {
   }
 
   /**
-   * Find loaded student records to be processed set.
+   * Find repeats checked student records to be processed set.
    *
    * @return the set
    */
-  private Set<PenRequestBatchStudentSagaData> findLoadedStudentRecordsToBeProcessed() {
+  private Set<PenRequestBatchStudentSagaData> findRepeatsCheckedStudentRecordsToBeProcessed() {
     Set<PenRequestBatchStudentSagaData> penRequestBatchStudents = new HashSet<>();
-    var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(LOADED.getCode());
+    var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
     penReqBatches.forEach(penRequestBatchEntity -> {
       val studentEntitiesAlreadyInProcess = getSagaRepository().findByPenRequestBatchID(penRequestBatchEntity.getPenRequestBatchID());
       penRequestBatchStudents.addAll(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().filter(penRequestBatchStudentEntity ->
@@ -161,6 +162,16 @@ public class EventTaskSchedulerAsyncService {
           .collect(Collectors.toSet()));
     });
     return penRequestBatchStudents;
+  }
+
+  @Async("taskExecutor")
+  @Transactional
+  public void processLoadedPenRequestBatchesForRepeats() {
+    var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(LOADED.getCode());
+    log.info("founds :: {}  records to be checked for repeats", penReqBatches.size());
+    if (!penReqBatches.isEmpty()) {
+      getPenRegBatchStudentRecordsProcessor().checkLoadedStudentRecordsForRepeats(penReqBatches);
+    }
   }
 
   /**

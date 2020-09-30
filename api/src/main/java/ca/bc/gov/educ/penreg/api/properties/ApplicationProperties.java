@@ -53,4 +53,11 @@ public class ApplicationProperties {
 
   @Value("${url.redis}")
   private String redisUrl;
+  /**
+   * Amount of time that can elapse before a duplicate request is not considered a repeat
+   */
+  @Getter
+  @Value("${repeat.time.window}")
+  private int repeatTimeWindow;
+
 }

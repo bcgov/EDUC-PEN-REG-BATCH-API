@@ -1,0 +1,17 @@
+[
+  {
+    "penRequestBatchStudentStatusCode": "ARCHIVED",
+    "localID": "000000000004",
+    "submittedPen": null,
+    "legalLastName": "Hickle",
+    "legalFirstName": "Arnold",
+    "legalMiddleNames": null,
+    "usualLastName": "Huels",
+    "usualFirstName": "Junius",
+    "usualMiddleNames": null,
+    "dob": "19930411",
+    "genderCode": "F",
+    "gradeCode": "09",
+    "postalCode": "V8N1C4"
+  }
+]

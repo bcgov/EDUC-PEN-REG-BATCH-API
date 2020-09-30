@@ -1,6 +1,5 @@
 package ca.bc.gov.educ.penreg.api.mappers;
 
-import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import org.mapstruct.Mapper;

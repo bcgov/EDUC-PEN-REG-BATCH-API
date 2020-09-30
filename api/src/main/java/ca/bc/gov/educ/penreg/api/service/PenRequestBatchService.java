@@ -120,6 +120,16 @@ public class PenRequestBatchService {
   }
 
   /**
+   * Save pen request batch pen request batch entity.
+   * @param entity
+   * @return
+   */
+  @Transactional(propagation = Propagation.MANDATORY)
+  public PenRequestBatchEntity saveAttachedEntity(final PenRequestBatchEntity entity) {
+    return getRepository().save(entity);
+  }
+
+  /**
    * Find pen request batch by submission number optional.
    *
    * @param submissionNumber the submission number
@@ -168,4 +178,7 @@ public class PenRequestBatchService {
     getRepository().delete(penRequestBatchEntity);
   }
 
+  public Optional<PenRequestBatchEntity> findById(UUID penRequestBatchID) {
+    return repository.findById(penRequestBatchID);
+  }
 }
