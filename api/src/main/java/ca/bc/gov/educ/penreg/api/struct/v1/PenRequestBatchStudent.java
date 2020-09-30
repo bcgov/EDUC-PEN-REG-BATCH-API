@@ -98,6 +98,16 @@ public class PenRequestBatchStudent {
   String updateUser;
 
   /**
+   * The Pen request repeat sequence number.
+   */
+  Integer repeatRequestSequenceNumber;
+
+  /**
+   * The Pen request original repeat ID.
+   */
+  UUID repeatRequestOriginalID;
+
+  /**
    * The Match algorithm status code.
    */
   String matchAlgorithmStatusCode;
