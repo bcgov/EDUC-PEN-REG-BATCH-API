@@ -620,7 +620,6 @@ public class PenRequestBatchAPIControllerTest {
     var models = createBatchStudents(total);
 
     return models.stream().map(batch -> batch.getPenRequestBatchID().toString().toUpperCase()).collect(Collectors.joining(","));
-      //.get(0).getPenRequestBatchID().toString().toUpperCase() + "," + models.get(1).getPenRequestBatchID().toString().toUpperCase();
   }
 
   private String createSortParam() throws JsonProcessingException {
