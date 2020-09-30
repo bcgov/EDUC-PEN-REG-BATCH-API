@@ -289,7 +289,7 @@ public class PenRegBatchProcessorTest {
     penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     var result = repository.findAll();
     assertThat(result.size()).isEqualTo(2);
-    var entity = result.get(1);
+    var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
@@ -300,7 +300,7 @@ public class PenRegBatchProcessorTest {
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
-    var students = studentRepository.findAllByPenRequestBatchEntity(result.get(1));
+    var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.stream().filter(s -> PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(s.getPenRequestBatchStudentStatusCode())).count()).isEqualTo(1);
     assertThat(students.size()).isEqualTo(5);
     students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
