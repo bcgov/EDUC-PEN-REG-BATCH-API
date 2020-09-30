@@ -13,6 +13,7 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenWebBlobMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.StudentStatusCodeMapper;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.service.EventTaskSchedulerAsyncService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
@@ -91,20 +92,22 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    */
   private static final StudentStatusCodeMapper studentStatusCodeMapper = StudentStatusCodeMapper.mapper;
 
+  private final EventTaskSchedulerAsyncService eventTaskSchedulerAsyncService;
   /**
    * Instantiates a new Pen request batch api controller.
-   *
-   * @param penRegBatchFilterSpecs        the pen reg batch filter specs
+   *  @param penRegBatchFilterSpecs        the pen reg batch filter specs
    * @param penRegBatchStudentFilterSpecs the pen reg batch student filter specs
    * @param service                       the service
    * @param studentService                the student service
+   * @param eventTaskSchedulerAsyncService
    */
   @Autowired
-  public PenRequestBatchAPIController(final PenRegBatchFilterSpecs penRegBatchFilterSpecs, PenRegBatchStudentFilterSpecs penRegBatchStudentFilterSpecs, final PenRequestBatchService service, PenRequestBatchStudentService studentService) {
+  public PenRequestBatchAPIController(final PenRegBatchFilterSpecs penRegBatchFilterSpecs, PenRegBatchStudentFilterSpecs penRegBatchStudentFilterSpecs, final PenRequestBatchService service, PenRequestBatchStudentService studentService, EventTaskSchedulerAsyncService eventTaskSchedulerAsyncService) {
     this.penRegBatchFilterSpecs = penRegBatchFilterSpecs;
     this.penRegBatchStudentFilterSpecs = penRegBatchStudentFilterSpecs;
     this.service = service;
     this.studentService = studentService;
+    this.eventTaskSchedulerAsyncService = eventTaskSchedulerAsyncService;
   }
 
   /**
@@ -593,5 +596,9 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     }
     model.setCreateDate(LocalDateTime.now());
     model.setUpdateDate(LocalDateTime.now());
+  }
+
+  public void test(){
+    eventTaskSchedulerAsyncService.publishUnprocessedStudentRecords();
   }
 }

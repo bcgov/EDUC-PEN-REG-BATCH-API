@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -243,4 +242,11 @@ public interface PenRequestBatchAPIEndpoint {
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to get all the PenRequestBatchStudentStatusCode.")
   List<PenRequestBatchStudentStatusCode> getAllPenRequestBatchStudentStatusCodes();
+
+  @GetMapping("/test")
+  @PreAuthorize("#oauth2.hasAnyScope('READ_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
+  @Transactional
+  @Tag(name = "Endpoint to get all the PenRequestBatchStudentStatusCode.")
+  void test();
 }
