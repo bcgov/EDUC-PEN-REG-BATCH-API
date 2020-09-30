@@ -104,7 +104,7 @@ public class PenRequestBatchFileService {
    * @return the list of filtered requests
    */
   public Set<PenRequestBatchStudentEntity> filterRepeatRequests(PenRequestBatchEntity penRequestBatchEntity) {
-    var studentEntities = penRequestBatchEntity.getPenRequestBatchStudentEntities();
+    Set<PenRequestBatchStudentEntity> studentEntities = penRequestBatchEntity.getPenRequestBatchStudentEntities();
     long numRepeats = 0;
     var filteredStudentEntities = new HashSet<PenRequestBatchStudentEntity>();
 
@@ -140,6 +140,9 @@ public class PenRequestBatchFileService {
       penRequestBatchStudent.setRepeatRequestSequenceNumber(1);
     }
     penRequestBatchStudent.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.REPEAT.getCode());
-    getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
+  }
+
+  public Optional<PenRequestBatchEntity> findEntity(UUID penRequestBatchID) {
+    return getPenRequestBatchService().findById(penRequestBatchID);
   }
 }

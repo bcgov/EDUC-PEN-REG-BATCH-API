@@ -178,4 +178,7 @@ public class PenRequestBatchService {
     getRepository().delete(penRequestBatchEntity);
   }
 
+  public Optional<PenRequestBatchEntity> findById(UUID penRequestBatchID) {
+    return repository.findById(penRequestBatchID);
+  }
 }

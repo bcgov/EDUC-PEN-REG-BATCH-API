@@ -21,6 +21,7 @@ import net.sf.flatpack.DefaultParserFactory;
 import net.sf.flatpack.Parser;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -236,13 +237,20 @@ public class PenRegBatchProcessor {
       entity.getPenRequestBatchStudentEntities().add(penRequestBatchStudentEntity);
     }
     getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
-    var noRepeatsEntity = getPenRequestBatchFileService().filterRepeatRequests(entity);
-    return noRepeatsEntity.stream()
-        .map(studentSagaDataMapper::toPenReqBatchStudentSagaData)
-        .peek(element -> {
-          element.setMincode(entity.getMinCode());
-          element.setPenRequestBatchID(entity.getPenRequestBatchID());
-        }).collect(Collectors.toSet());
+    // the entity was saved in propagation new context , so system needs to get it again from DB to have an attached entity bound to the current thread.
+    final Optional<PenRequestBatchEntity> penRequestBatchEntityOptional = getPenRequestBatchFileService().findEntity(entity.getPenRequestBatchID());
+    if(penRequestBatchEntityOptional.isPresent()){
+      var noRepeatsEntity = getPenRequestBatchFileService().filterRepeatRequests(penRequestBatchEntityOptional.get());
+      return noRepeatsEntity.stream()
+          .map(studentSagaDataMapper::toPenReqBatchStudentSagaData)
+          .peek(element -> {
+            element.setMincode(entity.getMinCode());
+            element.setPenRequestBatchID(entity.getPenRequestBatchID());
+          }).collect(Collectors.toSet());
+    }else{
+      log.info("system knows it wont happen");
+    }
+    return new HashSet<>();
   }
 
 
