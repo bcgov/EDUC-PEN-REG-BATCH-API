@@ -15,6 +15,10 @@ public enum PenRequestBatchStatusCodes {
    */
   LOADED("LOADED"),
   /**
+   * Checked pen request batch for repeats.
+   */
+  REPEATS_CHECKED("CHECKED"),
+  /**
    * Validated pen request batch status codes.
    */
   VALIDATED("VALIDATED"),

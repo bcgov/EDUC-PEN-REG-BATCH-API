@@ -1,4 +1,4 @@
-[
+ [
   {
     "submissionNumber": "T-534093",
     "penRequestBatchStatusCode": "LOADED",
@@ -10,7 +10,7 @@
     "fileType": "txt",
     "insertDate": "2020-08-04T12:19:29",
     "extractDate": "2020-08-04T12:19:29",
-    "processDate": null,
+    "processDate": "2020-08-04T12:19:29",
     "sourceApplication": "TSW",
     "ministryPRBSourceCode": "TSWPENWEB",
     "minCode": "10210518",

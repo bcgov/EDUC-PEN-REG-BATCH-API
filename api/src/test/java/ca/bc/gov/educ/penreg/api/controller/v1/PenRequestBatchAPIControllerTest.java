@@ -4,6 +4,7 @@ import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.exception.RestExceptionHandler;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
+import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
@@ -35,9 +36,11 @@ import java.util.stream.Collectors;
 import static ca.bc.gov.educ.penreg.api.struct.v1.Condition.AND;
 import static ca.bc.gov.educ.penreg.api.struct.v1.Condition.OR;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -62,6 +65,10 @@ public class PenRequestBatchAPIControllerTest {
    * The constant mapper.
    */
   private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
+  /**
+   * The constant student mapper.
+   */
+  private static final PenRequestBatchStudentMapper studentMapper = PenRequestBatchStudentMapper.mapper;
   /**
    * The Pen request batch api controller.
    */
@@ -371,7 +378,7 @@ public class PenRequestBatchAPIControllerTest {
   @Test
   @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchStudentPaginated_GivenMultipleGroupCondition_ShouldReturnStatusOk() throws Exception {
-    String batchIDs = createBatchStudentRecords();
+    String batchIDs = createBatchStudentRecords(2);
 
     SearchCriteria criteria = SearchCriteria.builder().key("penRequestBatchStudentStatusCode").operation(FilterOperation.EQUAL).value("LOADED").valueType(ValueType.STRING).build();
     SearchCriteria criteria2 = SearchCriteria.builder().key("legalFirstName").condition(OR).operation(FilterOperation.STARTS_WITH).value("AC").valueType(ValueType.STRING).build();
@@ -405,7 +412,7 @@ public class PenRequestBatchAPIControllerTest {
   @Test
   @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchStudentPaginated_GivenPenRequestBatchIdsAndStudentStatusCodes_ShouldReturnStatusOk() throws Exception {
-    String batchIDs = createBatchStudentRecords();
+    String batchIDs = createBatchStudentRecords(2);
 
     SearchCriteria criteria = SearchCriteria.builder().key("penRequestBatchEntity.penRequestBatchID").operation(FilterOperation.IN).value(batchIDs).valueType(ValueType.UUID).build();
 
@@ -434,7 +441,7 @@ public class PenRequestBatchAPIControllerTest {
   @Test
   @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchStudentPaginated_GivenPenRequestBatchIdsAndAllStudentStatusCodesAndOtherConditions_ShouldReturnStatusOk() throws Exception {
-    String batchIDs = createBatchStudentRecords();
+    String batchIDs = createBatchStudentRecords(2);
 
     SearchCriteria criteria = SearchCriteria.builder().key("penRequestBatchEntity.penRequestBatchID").operation(FilterOperation.IN).value(batchIDs).valueType(ValueType.UUID).build();
 
@@ -506,6 +513,23 @@ public class PenRequestBatchAPIControllerTest {
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(5)));
   }
 
+  @Test
+  @WithMockOAuth2Scope(scope = "WRITE_PEN_REQUEST_BATCH")
+  public void testUpdatePenRequestBatchStudent_GivenPenRequestBatchStudent_ShouldReturnStatusOk() throws Exception {
+    var models = createBatchStudents(1);
+    var student = studentMapper.toStructure(models.get(0).getPenRequestBatchStudentEntities().stream().findFirst().get());
+
+    student.setPenRequestBatchStudentStatusCode("FIXABLE");
+    student.setInfoRequest("Test Info");
+    var request = new ObjectMapper().writeValueAsString(student);
+
+    mockMvc
+      .perform(put(String.format("/api/v1/pen-request-batch/%s/student/%s", student.getPenRequestBatchID(), student.getPenRequestBatchStudentID()))
+        .contentType(APPLICATION_JSON).accept(APPLICATION_JSON).content(request))
+      .andDo(print()).andExpect(status().isOk())
+      .andExpect(jsonPath("$.penRequestBatchStudentStatusCode", is("FIXABLE")))
+      .andExpect(jsonPath("$.infoRequest", is("Test Info")));
+  }
 
   /**
    * Test read pen request batch given invalid id should return status not found.
@@ -566,7 +590,7 @@ public class PenRequestBatchAPIControllerTest {
     return model;
   }
 
-  private String createBatchStudentRecords() throws java.io.IOException {
+  private List<PenRequestBatchEntity> createBatchStudents(Integer total) throws java.io.IOException {
     final File file = new File(
       Objects.requireNonNull(getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
     );
@@ -574,27 +598,28 @@ public class PenRequestBatchAPIControllerTest {
     });
     var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(this::populateAuditColumns).collect(Collectors.toList());
 
-    final File student = new File(
-      Objects.requireNonNull(getClass().getClassLoader().getResource("mock_pen_req_batch_student.json")).getFile()
-    );
-    List<PenRequestBatchStudentEntity> studentEntities = new ObjectMapper().readValue(student, new TypeReference<>() {
-    });
-    var students = studentEntities.stream().map(this::populateAuditColumns).peek(el -> el.setPenRequestBatchEntity(models.get(0))).collect(Collectors.toSet());
+    for(int i = 0; i < total && i < models.size(); i++) {
+      final File student = new File(
+        Objects.requireNonNull(getClass().getClassLoader().getResource("mock_pen_req_batch_student.json")).getFile()
+      );
+      List<PenRequestBatchStudentEntity> studentEntities = new ObjectMapper().readValue(student, new TypeReference<>() {
+      });
+      final PenRequestBatchEntity batch = models.get(i);
+      var students = studentEntities.stream().map(this::populateAuditColumns).peek(el -> el.setPenRequestBatchEntity(batch)).collect(Collectors.toSet());
 
-    models.get(0).setPenRequestBatchStudentEntities(students);
-
-    final File student2 = new File(
-      Objects.requireNonNull(getClass().getClassLoader().getResource("mock_pen_req_batch_student.json")).getFile()
-    );
-    List<PenRequestBatchStudentEntity> studentEntities2 = new ObjectMapper().readValue(student2, new TypeReference<>() {
-    });
-    var students2 = studentEntities2.stream().map(this::populateAuditColumns).peek(el -> el.setPenRequestBatchEntity(models.get(1))).collect(Collectors.toSet());
-
-    models.get(1).setPenRequestBatchStudentEntities(students2);
+      batch.setPenRequestBatchStudentEntities(students);
+    }
 
     penRequestBatchRepository.saveAll(models);
 
-    return models.get(0).getPenRequestBatchID().toString().toUpperCase() + "," + models.get(1).getPenRequestBatchID().toString().toUpperCase();
+    return models;
+  }
+
+  private String createBatchStudentRecords(Integer total) throws java.io.IOException {
+
+    var models = createBatchStudents(total);
+
+    return models.stream().map(batch -> batch.getPenRequestBatchID().toString().toUpperCase()).collect(Collectors.joining(","));
   }
 
   private String createSortParam() throws JsonProcessingException {

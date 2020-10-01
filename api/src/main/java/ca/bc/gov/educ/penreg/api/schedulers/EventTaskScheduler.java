@@ -68,7 +68,7 @@ public class EventTaskScheduler {
   }
 
   /**
-   * Process loaded pen request batches.
+   * Process repeats checked pen request batches.
    */
   @Scheduled(cron = "${scheduled.jobs.extract.unprocessed.students.cron}")
   @SchedulerLock(name = "EXTRACT_UNPROCESSED_STUDENT_RECORDS",
@@ -89,6 +89,17 @@ public class EventTaskScheduler {
   public void markProcessedPenRequestBatchesActive() {
     LockAssert.assertLocked();
     getTaskSchedulerAsyncService().markProcessedBatchesActive();
+  }
+
+  /**
+   * Process all loaded pen request batches.
+   */
+  @Scheduled(cron = "0 0/15 * * * *")
+  @SchedulerLock(name = "PROCESS_LOADED_BATCHES_FOR_REPEATS", lockAtLeastFor = "50s", lockAtMostFor = "52s")
+  @Transactional
+  public void processLoadedPenRequestBatchesForRepeats() {
+    LockAssert.assertLocked();
+    getTaskSchedulerAsyncService().processLoadedPenRequestBatchesForRepeats();
   }
 
 }

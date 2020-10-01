@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -47,7 +45,7 @@ public class PenRequestBatchStudentEntity {
    */
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
-  @ManyToOne(cascade = CascadeType.ALL, optional = false, targetEntity = PenRequestBatchEntity.class)
+  @ManyToOne(optional = false, targetEntity = PenRequestBatchEntity.class)
   @JoinColumn(name = "PEN_REQUEST_BATCH_ID", referencedColumnName = "PEN_REQUEST_BATCH_ID", updatable = false)
   PenRequestBatchEntity penRequestBatchEntity;
 
@@ -56,6 +54,20 @@ public class PenRequestBatchStudentEntity {
    */
   @Column(name = "PEN_REQUEST_BATCH_STUDENT_STATUS_CODE", nullable = false, length = 10)
   String penRequestBatchStudentStatusCode;
+
+  /**
+   * The Pen request repeat sequence number.
+   */
+  @Column(name = "REPEAT_REQUEST_SEQUENCE_NUMBER")
+
+  Integer repeatRequestSequenceNumber;
+
+  /**
+   * The Pen request original repeat ID.
+   */
+  @Column(name = "REPEAT_REQUEST_ORIGINAL_ID", columnDefinition = "BINARY(16)")
+
+  UUID repeatRequestOriginalID;
 
   /**
    * The Local id.

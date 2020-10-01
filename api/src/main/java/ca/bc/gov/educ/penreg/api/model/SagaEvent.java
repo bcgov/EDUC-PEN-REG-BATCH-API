@@ -1,6 +1,5 @@
 package ca.bc.gov.educ.penreg.api.model;
 
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
