@@ -80,6 +80,9 @@ public class PenRequestBatchAPIControllerTest {
   @Autowired
   PenRequestBatchRepository penRequestBatchRepository;
 
+  /**
+   * The Pen request batch student repository.
+   */
   @Autowired
   PenRequestBatchStudentRepository penRequestBatchStudentRepository;
 
@@ -375,6 +378,11 @@ public class PenRequestBatchAPIControllerTest {
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk());
   }
 
+  /**
+   * Test read pen request batch student paginated given multiple group condition should return status ok.
+   *
+   * @throws Exception the exception
+   */
   @Test
   @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchStudentPaginated_GivenMultipleGroupCondition_ShouldReturnStatusOk() throws Exception {
@@ -409,6 +417,11 @@ public class PenRequestBatchAPIControllerTest {
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(10)));
   }
 
+  /**
+   * Test read pen request batch student paginated given pen request batch ids and student status codes should return status ok.
+   *
+   * @throws Exception the exception
+   */
   @Test
   @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchStudentPaginated_GivenPenRequestBatchIdsAndStudentStatusCodes_ShouldReturnStatusOk() throws Exception {
@@ -438,6 +451,11 @@ public class PenRequestBatchAPIControllerTest {
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(3)));
   }
 
+  /**
+   * Test read pen request batch student paginated given pen request batch ids and all student status codes and other conditions should return status ok.
+   *
+   * @throws Exception the exception
+   */
   @Test
   @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchStudentPaginated_GivenPenRequestBatchIdsAndAllStudentStatusCodesAndOtherConditions_ShouldReturnStatusOk() throws Exception {
@@ -472,6 +490,11 @@ public class PenRequestBatchAPIControllerTest {
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(3)));
   }
 
+  /**
+   * Test read pen request batch student paginated given multiple group condition 2 should return status ok.
+   *
+   * @throws Exception the exception
+   */
   @Test
   @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchStudentPaginated_GivenMultipleGroupCondition2_ShouldReturnStatusOk() throws Exception {
@@ -513,6 +536,11 @@ public class PenRequestBatchAPIControllerTest {
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(5)));
   }
 
+  /**
+   * Test update pen request batch student given pen request batch student should return status ok.
+   *
+   * @throws Exception the exception
+   */
   @Test
   @WithMockOAuth2Scope(scope = "WRITE_PEN_REQUEST_BATCH")
   public void testUpdatePenRequestBatchStudent_GivenPenRequestBatchStudent_ShouldReturnStatusOk() throws Exception {
@@ -578,6 +606,12 @@ public class PenRequestBatchAPIControllerTest {
     return model;
   }
 
+  /**
+   * Populate audit columns pen request batch student entity.
+   *
+   * @param model the model
+   * @return the pen request batch student entity
+   */
   private PenRequestBatchStudentEntity populateAuditColumns(PenRequestBatchStudentEntity model) {
     if (model.getCreateUser() == null) {
       model.setCreateUser(PEN_REQUEST_BATCH_API);
@@ -590,6 +624,13 @@ public class PenRequestBatchAPIControllerTest {
     return model;
   }
 
+  /**
+   * Create batch students list.
+   *
+   * @param total the total
+   * @return the list
+   * @throws IOException the io exception
+   */
   private List<PenRequestBatchEntity> createBatchStudents(Integer total) throws java.io.IOException {
     final File file = new File(
       Objects.requireNonNull(getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
@@ -615,6 +656,13 @@ public class PenRequestBatchAPIControllerTest {
     return models;
   }
 
+  /**
+   * Create batch student records string.
+   *
+   * @param total the total
+   * @return the string
+   * @throws IOException the io exception
+   */
   private String createBatchStudentRecords(Integer total) throws java.io.IOException {
 
     var models = createBatchStudents(total);
@@ -622,6 +670,12 @@ public class PenRequestBatchAPIControllerTest {
     return models.stream().map(batch -> batch.getPenRequestBatchID().toString().toUpperCase()).collect(Collectors.joining(","));
   }
 
+  /**
+   * Create sort param string.
+   *
+   * @return the string
+   * @throws JsonProcessingException the json processing exception
+   */
   private String createSortParam() throws JsonProcessingException {
     Map<String, String> sortMap = new LinkedHashMap<>();
     sortMap.put("penRequestBatchEntity.minCode", "DESC");

@@ -32,6 +32,9 @@ import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOA
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REPEATS_CHECKED;
 import static lombok.AccessLevel.PRIVATE;
 
+/**
+ * The type Event task scheduler async service.
+ */
 @Service
 @Slf4j
 @SuppressWarnings("java:S2142")
@@ -43,6 +46,9 @@ public class EventTaskSchedulerAsyncService {
   @Getter(PRIVATE)
   private final SagaRepository sagaRepository;
 
+  /**
+   * The Pen request batch repository.
+   */
   @Getter(PRIVATE)
   private final PenRequestBatchRepository penRequestBatchRepository;
   /**
@@ -56,6 +62,9 @@ public class EventTaskSchedulerAsyncService {
   @Getter(PRIVATE)
   private final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor;
 
+  /**
+   * The constant mapper.
+   */
   private static final PenRequestBatchStudentSagaDataMapper mapper = PenRequestBatchStudentSagaDataMapper.mapper;
 
   /**
@@ -64,6 +73,14 @@ public class EventTaskSchedulerAsyncService {
   @Setter
   private List<String> statusFilters;
 
+  /**
+   * Instantiates a new Event task scheduler async service.
+   *
+   * @param sagaRepository                     the saga repository
+   * @param penRequestBatchRepository          the pen request batch repository
+   * @param penRequestBatchStudentRepository   the pen request batch student repository
+   * @param penRegBatchStudentRecordsProcessor the pen reg batch student records processor
+   */
   public EventTaskSchedulerAsyncService(SagaRepository sagaRepository, PenRequestBatchRepository penRequestBatchRepository, PenRequestBatchStudentRepository penRequestBatchStudentRepository, PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor) {
     this.sagaRepository = sagaRepository;
     this.penRequestBatchRepository = penRequestBatchRepository;
@@ -71,6 +88,9 @@ public class EventTaskSchedulerAsyncService {
     this.penRegBatchStudentRecordsProcessor = penRegBatchStudentRecordsProcessor;
   }
 
+  /**
+   * Mark processed batches active.
+   */
   @Async("taskExecutor")
   @Transactional
   public void markProcessedBatchesActive() {
@@ -95,6 +115,11 @@ public class EventTaskSchedulerAsyncService {
     }
   }
 
+  /**
+   * Find and process uncompleted sagas.
+   *
+   * @param sagaOrchestrators the saga orchestrators
+   */
   @Async("taskExecutor")
   @Transactional
   public void findAndProcessUncompletedSagas(Map<String, BaseOrchestrator<?>> sagaOrchestrators) {
@@ -135,6 +160,9 @@ public class EventTaskSchedulerAsyncService {
     return penRequestBatchHistory;
   }
 
+  /**
+   * Publish unprocessed student records.
+   */
   @Async("taskExecutor")
   @Transactional
   public void publishUnprocessedStudentRecords() {
@@ -168,6 +196,9 @@ public class EventTaskSchedulerAsyncService {
     return penRequestBatchStudents;
   }
 
+  /**
+   * Process loaded pen request batches for repeats.
+   */
   @Async("taskExecutor")
   @Transactional
   public void processLoadedPenRequestBatchesForRepeats() {

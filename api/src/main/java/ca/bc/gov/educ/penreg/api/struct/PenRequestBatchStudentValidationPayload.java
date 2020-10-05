@@ -14,6 +14,11 @@ import java.util.List;
 @Builder
 public class PenRequestBatchStudentValidationPayload {
 
+  /**
+   * Gets issue list.
+   *
+   * @return the issue list
+   */
   public List<PenRequestBatchStudentValidationIssue> getIssueList() {
     if(this.issueList == null){
       this.issueList = new LinkedList<>();
@@ -24,7 +29,6 @@ public class PenRequestBatchStudentValidationPayload {
   /**
    * The Issue list.
    */
-
   private List<PenRequestBatchStudentValidationIssue> issueList;
   /**
    * The Is interactive.

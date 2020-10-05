@@ -359,7 +359,7 @@ public class PenRequestBatchStudentOrchestratorService {
    *
    * @param usualMiddleName the usual middle name
    * @param payload         the payload
-   * @return boolean
+   * @return boolean boolean
    */
   private boolean doesMiddleNameNeedsToBeBlank(String usualMiddleName, PenRequestBatchStudentValidationPayload payload) {
     return StringUtils.isNotEmpty(usualMiddleName)

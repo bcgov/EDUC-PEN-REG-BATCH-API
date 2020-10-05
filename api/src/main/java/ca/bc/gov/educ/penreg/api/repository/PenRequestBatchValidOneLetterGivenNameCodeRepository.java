@@ -6,8 +6,16 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * The interface Pen request batch valid one letter given name code repository.
+ */
 @Repository
 public interface PenRequestBatchValidOneLetterGivenNameCodeRepository extends CrudRepository<PenRequestBatchValidOneLetterGivenNameCodeEntity, String> {
 
+  /**
+   * Find all list.
+   *
+   * @return the list
+   */
   List<PenRequestBatchValidOneLetterGivenNameCodeEntity> findAll();
 }

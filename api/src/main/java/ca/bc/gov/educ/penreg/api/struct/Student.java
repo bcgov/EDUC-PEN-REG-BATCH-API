@@ -18,6 +18,9 @@ import java.io.Serializable;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Student implements Serializable {
+  /**
+   * The constant serialVersionUID.
+   */
   private static final long serialVersionUID = 1L;
 
   /**

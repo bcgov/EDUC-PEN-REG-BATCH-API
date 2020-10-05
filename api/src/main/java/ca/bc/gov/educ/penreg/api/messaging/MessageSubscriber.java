@@ -76,7 +76,6 @@ public class MessageSubscriber extends MessagePubSub {
   /**
    * This subscription will makes sure the messages are required to acknowledge manually to STAN.
    * Subscribe.
-   *
    */
   @PostConstruct
   public void subscribe() {

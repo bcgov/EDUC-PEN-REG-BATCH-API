@@ -54,17 +54,25 @@ public class PenRequestBatchStudentService {
   @Getter(PRIVATE)
   private final PenRequestBatchRepository penRequestBatchRepository;
 
+  /**
+   * The Student status code repository.
+   */
   @Getter(PRIVATE)
   private final PenRequestBatchStudentStatusCodeRepository studentStatusCodeRepository;
 
+  /**
+   * The Application properties.
+   */
   @Getter
   private final ApplicationProperties applicationProperties;
 
   /**
    * Instantiates a new Pen request batch student service.
    *
-   * @param repository                the repository
-   * @param penRequestBatchRepository the pen request batch repository
+   * @param repository                  the repository
+   * @param penRequestBatchRepository   the pen request batch repository
+   * @param studentStatusCodeRepository the student status code repository
+   * @param applicationProperties       the application properties
    */
   @Autowired
   public PenRequestBatchStudentService(PenRequestBatchStudentRepository repository, PenRequestBatchRepository penRequestBatchRepository, PenRequestBatchStudentStatusCodeRepository studentStatusCodeRepository, ApplicationProperties applicationProperties) {
@@ -214,11 +222,22 @@ public class PenRequestBatchStudentService {
   }
 
 
+  /**
+   * Gets all student status codes.
+   *
+   * @return the all student status codes
+   */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
   public List<PenRequestBatchStudentStatusCodeEntity> getAllStudentStatusCodes() {
     return getStudentStatusCodeRepository().findAll();
   }
 
+  /**
+   * Find by id optional.
+   *
+   * @param penRequestBatchStudentID the pen request batch student id
+   * @return the optional
+   */
   public Optional<PenRequestBatchStudentEntity> findByID(UUID penRequestBatchStudentID) {
     return getRepository().findById(penRequestBatchStudentID);
   }

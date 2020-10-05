@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
+/**
+ * The interface Pen request batch student possible match repository.
+ */
 @Repository
 public interface PenRequestBatchStudentPossibleMatchRepository extends CrudRepository<PenRequestBatchStudentPossibleMatchEntity, UUID> {
 }

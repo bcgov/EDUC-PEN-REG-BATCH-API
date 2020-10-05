@@ -92,14 +92,19 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    */
   private static final StudentStatusCodeMapper studentStatusCodeMapper = StudentStatusCodeMapper.mapper;
 
+  /**
+   * The Event task scheduler async service.
+   */
   private final EventTaskSchedulerAsyncService eventTaskSchedulerAsyncService;
+
   /**
    * Instantiates a new Pen request batch api controller.
-   *  @param penRegBatchFilterSpecs        the pen reg batch filter specs
-   * @param penRegBatchStudentFilterSpecs the pen reg batch student filter specs
-   * @param service                       the service
-   * @param studentService                the student service
-   * @param eventTaskSchedulerAsyncService
+   *
+   * @param penRegBatchFilterSpecs         the pen reg batch filter specs
+   * @param penRegBatchStudentFilterSpecs  the pen reg batch student filter specs
+   * @param service                        the service
+   * @param studentService                 the student service
+   * @param eventTaskSchedulerAsyncService the event task scheduler async service
    */
   @Autowired
   public PenRequestBatchAPIController(final PenRegBatchFilterSpecs penRegBatchFilterSpecs, PenRegBatchStudentFilterSpecs penRegBatchStudentFilterSpecs, final PenRequestBatchService service, PenRequestBatchStudentService studentService, EventTaskSchedulerAsyncService eventTaskSchedulerAsyncService) {
@@ -327,7 +332,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * Get association names from search criterias, like penRequestBatchEntity.minCode
    *
    * @param associationNames the associations
-   * @param searches     the search criterias
+   * @param searches         the search criterias
    */
   private void getAssociationNamesFromSearchCriterias(Associations associationNames, List<Search> searches) {
     searches.forEach(search -> search.getSearchCriteriaList().forEach(criteria -> {
@@ -464,10 +469,11 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   /**
    * Gets student type specification.
    *
-   * @param key             the key
-   * @param filterOperation the filter operation
-   * @param value           the value
-   * @param valueType       the value type
+   * @param key              the key
+   * @param filterOperation  the filter operation
+   * @param value            the value
+   * @param valueType        the value type
+   * @param associationNames the association names
    * @return the student type specification
    */
   private Specification<PenRequestBatchStudentEntity> getStudentTypeSpecification(String key, FilterOperation filterOperation, String value, ValueType valueType, Associations associationNames) {
@@ -504,6 +510,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * @param studentEntitySpecification the student entity specification
    * @param i                          the
    * @param search                     the search
+   * @param associationNames           the association names
    * @return the student specifications
    */
   private Specification<PenRequestBatchStudentEntity> getStudentSpecifications(Specification<PenRequestBatchStudentEntity> studentEntitySpecification, int i, Search search, Associations associationNames) {
@@ -522,7 +529,8 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   /**
    * Gets pen request batch student entity specification.
    *
-   * @param criteriaList the criteria list
+   * @param criteriaList     the criteria list
+   * @param associationNames the association names
    * @return the pen request batch student entity specification
    */
   private Specification<PenRequestBatchStudentEntity> getPenRequestBatchStudentEntitySpecification(List<SearchCriteria> criteriaList, Associations associationNames) {
@@ -596,6 +604,9 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     model.setUpdateDate(LocalDateTime.now());
   }
 
+  /**
+   * Test.
+   */
   public void test(){
     eventTaskSchedulerAsyncService.publishUnprocessedStudentRecords();
   }

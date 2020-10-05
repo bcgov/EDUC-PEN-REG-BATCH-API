@@ -39,7 +39,16 @@ public class FilterSpecifications<E, T extends Comparable<T>> {
 		return map.get(operation);
 	}
 
-	private Path<T> getFieldValue(FilterCriteria<T> filterCriteria, Root<E> root, CriteriaQuery criteriaQuery,Associations associationNames) {
+  /**
+   * Gets field value.
+   *
+   * @param filterCriteria   the filter criteria
+   * @param root             the root
+   * @param criteriaQuery    the criteria query
+   * @param associationNames the association names
+   * @return the field value
+   */
+  private Path<T> getFieldValue(FilterCriteria<T> filterCriteria, Root<E> root, CriteriaQuery criteriaQuery,Associations associationNames) {
 
   	//fetch all associations in the orderBy statement, execute fetch only once for one association
 		associationNames.getSortAssociations().forEach(association -> root.fetch(association, JoinType.INNER));

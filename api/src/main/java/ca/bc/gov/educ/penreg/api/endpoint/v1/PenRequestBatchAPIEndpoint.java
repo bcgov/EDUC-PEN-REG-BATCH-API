@@ -243,6 +243,9 @@ public interface PenRequestBatchAPIEndpoint {
   @Tag(name = "Endpoint to get all the PenRequestBatchStudentStatusCode.")
   List<PenRequestBatchStudentStatusCode> getAllPenRequestBatchStudentStatusCodes();
 
+  /**
+   * Test.
+   */
   @GetMapping("/test")
   @PreAuthorize("#oauth2.hasAnyScope('READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})

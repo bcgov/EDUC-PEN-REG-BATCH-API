@@ -52,6 +52,9 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    */
   private static final PenMatchSagaMapper penMatchSagaMapper = PenMatchSagaMapper.mapper;
 
+  /**
+   * The constant validationMapper.
+   */
   private static final PenStudentDemogValidationMapper validationMapper = PenStudentDemogValidationMapper.mapper;
 
 
@@ -92,6 +95,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    * @param event                          the event
    * @param saga                           the saga
    * @param penRequestBatchStudentSagaData the pen request batch student saga data
+   * @throws JsonProcessingException the json processing exception
    */
   private void validateStudentDemographics(Event event, Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) throws JsonProcessingException {
     SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
@@ -154,6 +158,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    * @param event                          the event
    * @param saga                           the saga
    * @param penRequestBatchStudentSagaData the pen request batch student saga data
+   * @throws JsonProcessingException the json processing exception
    */
   private void processPenMatch(final Event event, final Saga saga, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) throws JsonProcessingException {
     SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
@@ -176,6 +181,13 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
 
   }
 
+  /**
+   * Save demog validation results.
+   *
+   * @param event    the event
+   * @param sagaData the saga data
+   * @throws JsonProcessingException the json processing exception
+   */
   @Override
   protected void saveDemogValidationResults(Event event, PenRequestBatchStudentSagaData sagaData) throws JsonProcessingException {
     if (event.getEventType() == VALIDATE_STUDENT_DEMOGRAPHICS

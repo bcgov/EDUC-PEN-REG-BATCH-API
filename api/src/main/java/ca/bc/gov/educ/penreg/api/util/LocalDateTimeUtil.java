@@ -13,6 +13,9 @@ import static java.time.temporal.ChronoField.*;
  */
 public final class LocalDateTimeUtil {
 
+  /**
+   * Instantiates a new Local date time util.
+   */
   private LocalDateTimeUtil() {
   }
 

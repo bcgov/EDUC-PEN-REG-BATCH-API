@@ -41,7 +41,8 @@ public class PenRegBatchStudentRecordsProcessor {
   /**
    * Instantiates a new Pen reg batch student records processor.
    *
-   * @param messagePublisher the message publisher
+   * @param messagePublisher           the message publisher
+   * @param penRequestBatchFileService the pen request batch file service
    */
   @Autowired
   public PenRegBatchStudentRecordsProcessor(MessagePublisher messagePublisher, PenRequestBatchFileService penRequestBatchFileService) {

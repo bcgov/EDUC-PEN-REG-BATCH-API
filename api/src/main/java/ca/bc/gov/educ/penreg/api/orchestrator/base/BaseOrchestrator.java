@@ -37,6 +37,9 @@ import static lombok.AccessLevel.PROTECTED;
  */
 @Slf4j
 public abstract class BaseOrchestrator<T> {
+  /**
+   * The constant issueMapper.
+   */
   protected static final PenRequestBatchStudentValidationIssueMapper issueMapper = PenRequestBatchStudentValidationIssueMapper.mapper;
   /**
    * The constant SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT.
@@ -215,6 +218,7 @@ public abstract class BaseOrchestrator<T> {
    * @param event    the current event.
    * @param saga     the saga model object.
    * @param sagaData the payload string as object.
+   * @throws JsonProcessingException the json processing exception
    */
   protected void markSagaComplete(Event event, Saga saga, T sagaData) throws JsonProcessingException {
     log.trace("payload is {}", sagaData);
@@ -227,6 +231,13 @@ public abstract class BaseOrchestrator<T> {
 
   }
 
+  /**
+   * Save demog validation results.
+   *
+   * @param event    the event
+   * @param sagaData the saga data
+   * @throws JsonProcessingException the json processing exception
+   */
   protected abstract void saveDemogValidationResults(Event event, T sagaData) throws JsonProcessingException;
 
   /**
@@ -384,6 +395,7 @@ public abstract class BaseOrchestrator<T> {
    *
    * @param payload                  the payload
    * @param penRequestBatchStudentID the pen request batch student id
+   * @param penRequestBatchID        the pen request batch id
    * @return the saga
    */
   private Saga createSagaRecordInDB(String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID) {

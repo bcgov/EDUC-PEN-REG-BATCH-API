@@ -26,6 +26,9 @@ public class PenRequestBatchStudentValidationIssueEntity {
   @Column(name = "PEN_REQUEST_BATCH_STUDENT_VALIDATION_ISSUE_ID", unique = true, updatable = false, columnDefinition = "BINARY(16)")
   UUID penRequestBatchStudentValidationIssueId;
 
+  /**
+   * The Pen request batch student entity.
+   */
   @ToString.Exclude
   @EqualsAndHashCode.Exclude
   @ManyToOne(optional = false, targetEntity = PenRequestBatchStudentEntity.class)

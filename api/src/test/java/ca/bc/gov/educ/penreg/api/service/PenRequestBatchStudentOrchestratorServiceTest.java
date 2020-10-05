@@ -15,20 +15,39 @@ import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+/**
+ * The type Pen request batch student orchestrator service test.
+ */
 @SpringBootTest
 @RunWith(JUnitParamsRunner.class)
 @ActiveProfiles("test")
 @Slf4j
 public class PenRequestBatchStudentOrchestratorServiceTest {
+  /**
+   * The constant scr.
+   */
   @ClassRule
   public static final SpringClassRule scr = new SpringClassRule();
 
+  /**
+   * The Smr.
+   */
   @Rule
   public final SpringMethodRule smr = new SpringMethodRule();
 
+  /**
+   * The Orchestrator service.
+   */
   @Autowired
   private PenRequestBatchStudentOrchestratorService orchestratorService;
 
+  /**
+   * Test are both field value equal.
+   *
+   * @param field1 the field 1
+   * @param field2 the field 2
+   * @param res    the res
+   */
   @Test
   @Parameters({
       "null, null, true",
@@ -49,6 +68,12 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
 
   }
 
+  /**
+   * Scrub name field.
+   *
+   * @param fieldValue    the field value
+   * @param scrubbedValue the scrubbed value
+   */
   @Test
   @Parameters({
       "a,A",

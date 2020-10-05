@@ -42,22 +42,23 @@ public interface PenRequestBatchStudentRepository extends CrudRepository<PenRequ
 
   /**
    * Find all pen request batch student entities that are repeats given the input parameters
-   * @param minCode the mincode of pen request batch entity
-   * @param penRequestBatchStatusCode the penRequestBatchStatusCode of pen request batch entity
-   * @param startDate the earliest process of pen request batch entity
-   * @param localID the localID of the pen request batch student entity
+   *
+   * @param minCode                           the mincode of pen request batch entity
+   * @param penRequestBatchStatusCode         the penRequestBatchStatusCode of pen request batch entity
+   * @param startDate                         the earliest process of pen request batch entity
+   * @param localID                           the localID of the pen request batch student entity
    * @param penRequestBatchStudentStatusCodes the allowed penRequestBatchStudentStatusCodes
-   * @param submittedPen the submittedPen of the pen request batch student entity
-   * @param legalFirstName the legalFirstName of the pen request batch student entity
-   * @param legalMiddleNames the legalMiddleNames of the pen request batch student entity
-   * @param legalLastName the legalLastName of the pen request batch student entity
-   * @param usualFirstName the usualFirstName of the pen request batch student entity
-   * @param usualMiddleNames the usualMiddleNames of the pen request batch student entity
-   * @param usualLastName the usualLastName of the pen request batch student entity
-   * @param dob the dob of the pen request batch student entity
-   * @param genderCode the genderCode of the pen request batch student entity
-   * @param gradeCode the gradeCode of the pen request batch student entity
-   * @param postalCode the postalCode of the pen request batch student entity
+   * @param submittedPen                      the submittedPen of the pen request batch student entity
+   * @param legalFirstName                    the legalFirstName of the pen request batch student entity
+   * @param legalMiddleNames                  the legalMiddleNames of the pen request batch student entity
+   * @param legalLastName                     the legalLastName of the pen request batch student entity
+   * @param usualFirstName                    the usualFirstName of the pen request batch student entity
+   * @param usualMiddleNames                  the usualMiddleNames of the pen request batch student entity
+   * @param usualLastName                     the usualLastName of the pen request batch student entity
+   * @param dob                               the dob of the pen request batch student entity
+   * @param genderCode                        the genderCode of the pen request batch student entity
+   * @param gradeCode                         the gradeCode of the pen request batch student entity
+   * @param postalCode                        the postalCode of the pen request batch student entity
    * @return the list
    */
   @Query("select t from PenRequestBatchStudentEntity t WHERE t.penRequestBatchEntity IN (select s from PenRequestBatchEntity s WHERE s.minCode = :minCode AND s.penRequestBatchStatusCode = :penRequestBatchStatusCode AND s.processDate >= :startDate) AND (:localID is null or t.localID = :localID) AND t.penRequestBatchStudentStatusCode NOT IN :penRequestBatchStudentStatusCodes AND  (:submittedPen is null or t.submittedPen = :submittedPen) AND (:legalFirstName is null or t.legalFirstName = :legalFirstName) AND (:legalMiddleNames is null or t.legalMiddleNames = :legalMiddleNames) AND (:legalLastName is null or t.legalLastName = :legalLastName) AND (:usualFirstName is null or t.usualFirstName = :usualFirstName) AND (:usualMiddleNames is null or t.usualMiddleNames = :usualMiddleNames) AND (:usualLastName is null or t.usualLastName = :usualLastName) AND (:dob is null or t.dob = :dob) AND (:genderCode is null or t.genderCode = :genderCode) AND (:gradeCode is null or t.gradeCode = :gradeCode) AND (:postalCode is null or t.postalCode = :postalCode)")
