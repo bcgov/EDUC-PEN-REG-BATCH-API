@@ -604,10 +604,4 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     model.setUpdateDate(LocalDateTime.now());
   }
 
-  /**
-   * Test.
-   */
-  public void test(){
-    eventTaskSchedulerAsyncService.publishUnprocessedStudentRecords();
-  }
 }
