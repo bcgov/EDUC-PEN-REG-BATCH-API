@@ -121,8 +121,9 @@ public class PenRequestBatchService {
 
   /**
    * Save pen request batch pen request batch entity.
-   * @param entity
-   * @return
+   *
+   * @param entity the entity
+   * @return pen request batch entity
    */
   @Transactional(propagation = Propagation.MANDATORY)
   public PenRequestBatchEntity saveAttachedEntity(final PenRequestBatchEntity entity) {
@@ -178,6 +179,12 @@ public class PenRequestBatchService {
     getRepository().delete(penRequestBatchEntity);
   }
 
+  /**
+   * Find by id optional.
+   *
+   * @param penRequestBatchID the pen request batch id
+   * @return the optional
+   */
   public Optional<PenRequestBatchEntity> findById(UUID penRequestBatchID) {
     return repository.findById(penRequestBatchID);
   }

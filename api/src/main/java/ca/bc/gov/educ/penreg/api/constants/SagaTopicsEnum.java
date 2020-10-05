@@ -15,5 +15,9 @@ public enum SagaTopicsEnum {
   /**
    * Student api topic saga topics enum.
    */
-  STUDENT_API_TOPIC
+  STUDENT_API_TOPIC,
+  /**
+   * Pen validation api topic saga topics enum.
+   */
+  PEN_VALIDATION_API_TOPIC
 }

@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.orchestrator.base;
 
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
+import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchStudentValidationIssueMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
@@ -10,6 +11,7 @@ import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -35,6 +37,10 @@ import static lombok.AccessLevel.PROTECTED;
  */
 @Slf4j
 public abstract class BaseOrchestrator<T> {
+  /**
+   * The constant issueMapper.
+   */
+  protected static final PenRequestBatchStudentValidationIssueMapper issueMapper = PenRequestBatchStudentValidationIssueMapper.mapper;
   /**
    * The constant SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT.
    */
@@ -212,9 +218,11 @@ public abstract class BaseOrchestrator<T> {
    * @param event    the current event.
    * @param saga     the saga model object.
    * @param sagaData the payload string as object.
+   * @throws JsonProcessingException the json processing exception
    */
-  protected void markSagaComplete(Event event, Saga saga, T sagaData) {
+  protected void markSagaComplete(Event event, Saga saga, T sagaData) throws JsonProcessingException {
     log.trace("payload is {}", sagaData);
+    saveDemogValidationResults(event, sagaData);
     SagaEvent sagaEvent = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(COMPLETED.toString());
     saga.setStatus(COMPLETED.toString());
@@ -222,6 +230,15 @@ public abstract class BaseOrchestrator<T> {
     getSagaService().updateAttachedSagaWithEvents(saga, sagaEvent);
 
   }
+
+  /**
+   * Save demog validation results.
+   *
+   * @param event    the event
+   * @param sagaData the saga data
+   * @throws JsonProcessingException the json processing exception
+   */
+  protected abstract void saveDemogValidationResults(Event event, T sagaData) throws JsonProcessingException;
 
   /**
    * calculate step number
@@ -378,6 +395,7 @@ public abstract class BaseOrchestrator<T> {
    *
    * @param payload                  the payload
    * @param penRequestBatchStudentID the pen request batch student id
+   * @param penRequestBatchID        the pen request batch id
    * @return the saga
    */
   private Saga createSagaRecordInDB(String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID) {

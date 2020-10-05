@@ -33,18 +33,40 @@ import java.util.*;
 @Slf4j
 public class RestUtils {
 
+  /**
+   * The constant PARAMETERS_ATTRIBUTE.
+   */
   private static final String PARAMETERS_ATTRIBUTE = "parameters";
 
+  /**
+   * The Props.
+   */
   private final ApplicationProperties props;
 
+  /**
+   * Instantiates a new Rest utils.
+   *
+   * @param props the props
+   */
   public RestUtils(@Autowired final ApplicationProperties props) {
     this.props = props;
   }
 
+  /**
+   * Gets rest template.
+   *
+   * @return the rest template
+   */
   public RestTemplate getRestTemplate() {
     return getRestTemplate(null);
   }
 
+  /**
+   * Gets rest template.
+   *
+   * @param scopes the scopes
+   * @return the rest template
+   */
   public RestTemplate getRestTemplate(List<String> scopes) {
     log.debug("Calling get token method");
     ClientCredentialsResourceDetails resourceDetails = new ClientCredentialsResourceDetails();
@@ -57,6 +79,12 @@ public class RestUtils {
     return new OAuth2RestTemplate(resourceDetails, new DefaultOAuth2ClientContext());
   }
 
+  /**
+   * Gets student by student id.
+   *
+   * @param studentID the student id
+   * @return the student by student id
+   */
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Student getStudentByStudentID(String studentID) {
     RestTemplate restTemplate = getRestTemplate();
@@ -65,6 +93,11 @@ public class RestUtils {
     return restTemplate.exchange(props.getStudentApiURL() + "/" + studentID, HttpMethod.GET, new HttpEntity<>(PARAMETERS_ATTRIBUTE, headers), Student.class).getBody();
   }
 
+  /**
+   * Update student.
+   *
+   * @param studentFromStudentAPI the student from student api
+   */
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public void updateStudent(Student studentFromStudentAPI) {
     RestTemplate restTemplate = getRestTemplate();
@@ -73,6 +106,13 @@ public class RestUtils {
     restTemplate.exchange(props.getStudentApiURL(), HttpMethod.PUT, new HttpEntity<>(studentFromStudentAPI, headers), Student.class);
   }
 
+  /**
+   * Gets latest pen number from student api.
+   *
+   * @param guid the guid
+   * @return the latest pen number from student api
+   * @throws JsonProcessingException the json processing exception
+   */
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public int getLatestPenNumberFromStudentAPI(String guid) throws JsonProcessingException {
     RestTemplate restTemplate = getRestTemplate();
@@ -107,6 +147,12 @@ public class RestUtils {
     return 0;
   }
 
+  /**
+   * Create student student.
+   *
+   * @param student the student
+   * @return the student
+   */
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Student createStudent(Student student) {
     RestTemplate restTemplate = getRestTemplate();

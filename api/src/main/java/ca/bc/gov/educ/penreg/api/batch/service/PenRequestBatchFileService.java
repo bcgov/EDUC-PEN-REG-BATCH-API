@@ -53,9 +53,9 @@ public class PenRequestBatchFileService {
   /**
    * Instantiates a new Pen request batch file service.
    *
-   * @param penRequestBatchService the pen request batch service
+   * @param penRequestBatchService        the pen request batch service
    * @param penRequestBatchStudentService the pen request batch student service
-   * @param penWebBlobRepository   the pen web blob repository
+   * @param penWebBlobRepository          the pen web blob repository
    */
   @Autowired
   public PenRequestBatchFileService(PenRequestBatchService penRequestBatchService, PenRequestBatchStudentService penRequestBatchStudentService, PenWebBlobRepository penWebBlobRepository) {
@@ -127,7 +127,7 @@ public class PenRequestBatchFileService {
   /**
    * Update student batch requests to mark them as repeats
    *
-   * @param repeatRequests the list of previous identical requests
+   * @param repeatRequests         the list of previous identical requests
    * @param penRequestBatchStudent the request to be updated
    */
   private void updatePenRequestBatchStudentRequest(List<PenRequestBatchStudentEntity> repeatRequests, PenRequestBatchStudentEntity penRequestBatchStudent) {
@@ -142,6 +142,12 @@ public class PenRequestBatchFileService {
     penRequestBatchStudent.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.REPEAT.getCode());
   }
 
+  /**
+   * Find entity optional.
+   *
+   * @param penRequestBatchID the pen request batch id
+   * @return the optional
+   */
   public Optional<PenRequestBatchEntity> findEntity(UUID penRequestBatchID) {
     return getPenRequestBatchService().findById(penRequestBatchID);
   }

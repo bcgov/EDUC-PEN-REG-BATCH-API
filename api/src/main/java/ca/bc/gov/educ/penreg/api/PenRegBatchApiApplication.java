@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -90,16 +91,39 @@ public class PenRegBatchApiApplication {
     return new JdbcTemplateLockProvider(jdbcTemplate, transactionManager, "PEN_REQUEST_BATCH_SHEDLOCK");
   }
 
+  /**
+   * Thread pool task executor executor.
+   *
+   * @return the executor
+   */
   @Bean(name = "subscriberExecutor")
   public Executor threadPoolTaskExecutor() {
     ThreadFactory namedThreadFactory =
         new ThreadFactoryBuilder().setNameFormat("message-subscriber-%d").get();
-    return Executors.newFixedThreadPool(8, namedThreadFactory);
+    return Executors.newFixedThreadPool(50, namedThreadFactory);
   }
+
+  /**
+   * Controller task executor executor.
+   *
+   * @return the executor
+   */
   @Bean(name = "taskExecutor")
   public Executor controllerTaskExecutor() {
     ThreadFactory namedThreadFactory =
         new ThreadFactoryBuilder().setNameFormat("async-executor-%d").get();
     return Executors.newFixedThreadPool(8, namedThreadFactory);
+  }
+
+  /**
+   * Thread pool task scheduler thread pool task scheduler.
+   *
+   * @return the thread pool task scheduler
+   */
+  @Bean
+  public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
+    ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
+    threadPoolTaskScheduler.setPoolSize(2);
+    return threadPoolTaskScheduler;
   }
 }

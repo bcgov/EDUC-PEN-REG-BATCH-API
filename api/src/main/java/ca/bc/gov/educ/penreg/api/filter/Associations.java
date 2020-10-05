@@ -5,6 +5,9 @@ import lombok.Getter;
 import javax.persistence.criteria.Join;
 import java.util.*;
 
+/**
+ * The type Associations.
+ */
 public class Associations {
   /**
    * The association names in the orderBy statement
@@ -34,8 +37,8 @@ public class Associations {
    * Count the join operation and return the cached join operation
    * also reset the count and remove the cache when all associations are joined because Hibernate may run another count query to determine the number of results
    *
-   * @param associationName  the association name
-   * @return join            the cached join operation
+   * @param associationName the association name
+   * @return join the cached join operation
    */
   public Join<Object, Object> countJoin(String associationName) {
     var join = joinedSearchAssociations.get(associationName);
@@ -45,6 +48,7 @@ public class Associations {
 
   /**
    * Cache the join operation because we just need one join operation for one association
+   *
    * @param associationName the association name
    * @param join            the join operation
    * @return the count for the join operation

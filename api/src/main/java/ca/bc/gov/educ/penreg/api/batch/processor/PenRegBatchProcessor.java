@@ -21,15 +21,14 @@ import net.sf.flatpack.DefaultParserFactory;
 import net.sf.flatpack.Parser;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.*;
 import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.*;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.*;
 import static lombok.AccessLevel.PRIVATE;
 
 /**

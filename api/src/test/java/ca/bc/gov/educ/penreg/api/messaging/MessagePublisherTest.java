@@ -22,22 +22,49 @@ import static org.mockito.AdditionalMatchers.aryEq;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+/**
+ * The type Message publisher test.
+ */
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @SpringBootTest
 public class MessagePublisherTest {
+  /**
+   * The constant PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.
+   */
   public static final String PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC = SagaTopicsEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString();
 
+  /**
+   * The Executor service.
+   */
   @Mock
   private ExecutorService executorService;
+  /**
+   * The Connection.
+   */
   @Mock
   private StreamingConnection connection;
+  /**
+   * The Connection factory.
+   */
   @Mock
   private StreamingConnectionFactory connectionFactory;
+  /**
+   * The Application properties.
+   */
   @Autowired
   private ApplicationProperties applicationProperties;
+  /**
+   * The Message publisher.
+   */
   private MessagePublisher messagePublisher;
 
+  /**
+   * Sets up.
+   *
+   * @throws IOException          the io exception
+   * @throws InterruptedException the interrupted exception
+   */
   @Before
   public void setUp() throws IOException, InterruptedException {
     initMocks(this);
@@ -48,17 +75,33 @@ public class MessagePublisherTest {
     messagePublisher.connect();
   }
 
+  /**
+   * Test message publisher given invalid nats url should thrown exception.
+   *
+   * @throws IOException          the io exception
+   * @throws InterruptedException the interrupted exception
+   */
   @Test(expected = IOException.class)
   public void testMessagePublisher_givenInvalidNatsUrl_shouldThrownException() throws IOException, InterruptedException {
     var messagePublisher = new MessagePublisher(applicationProperties);
   }
 
+  /**
+   * Test dispatch message given message should publish.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testDispatchMessage_givenMessage_shouldPublish() throws Exception {
     messagePublisher.dispatchMessage(PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC, "Test".getBytes());
     verify(connection, atMostOnce()).publish(eq(PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC), aryEq("Test".getBytes()), any(AckHandler.class));
   }
 
+  /**
+   * Test retry publish given message should publish.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRetryPublish_givenMessage_shouldPublish() throws Exception {
     messagePublisher.retryPublish(PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC, "Test".getBytes());
@@ -66,12 +109,22 @@ public class MessagePublisherTest {
   }
 
 
+  /**
+   * Test close should close.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testClose_shouldClose() throws Exception {
     messagePublisher.close();
     verify(connection, atMostOnce()).close();
   }
 
+  /**
+   * Test close given exception should close.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testClose_givenException_shouldClose() throws Exception {
     doThrow(new IOException("Test")).when(connection).close();
@@ -79,6 +132,11 @@ public class MessagePublisherTest {
     verify(connection, atMostOnce()).close();
   }
 
+  /**
+   * Test on ack given exception should retry publish.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testOnAck_givenException_shouldRetryPublish() throws Exception {
     var ackHandler = messagePublisher.getAckHandler();
@@ -88,6 +146,11 @@ public class MessagePublisherTest {
     verify(executorService, atMostOnce()).execute(any(Runnable.class));
   }
 
+  /**
+   * Test connection lost handler given exception should create connection.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testConnectionLostHandler_givenException_shouldCreateConnection() throws Exception {
     when(connectionFactory.createConnection()).thenThrow(new IOException("Test")).thenReturn(connection);

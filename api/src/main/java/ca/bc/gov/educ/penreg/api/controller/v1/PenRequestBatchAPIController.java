@@ -31,7 +31,10 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -91,13 +94,14 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    */
   private static final StudentStatusCodeMapper studentStatusCodeMapper = StudentStatusCodeMapper.mapper;
 
+
   /**
    * Instantiates a new Pen request batch api controller.
    *
-   * @param penRegBatchFilterSpecs        the pen reg batch filter specs
-   * @param penRegBatchStudentFilterSpecs the pen reg batch student filter specs
-   * @param service                       the service
-   * @param studentService                the student service
+   * @param penRegBatchFilterSpecs         the pen reg batch filter specs
+   * @param penRegBatchStudentFilterSpecs  the pen reg batch student filter specs
+   * @param service                        the service
+   * @param studentService                 the student service
    */
   @Autowired
   public PenRequestBatchAPIController(final PenRegBatchFilterSpecs penRegBatchFilterSpecs, PenRegBatchStudentFilterSpecs penRegBatchStudentFilterSpecs, final PenRequestBatchService service, PenRequestBatchStudentService studentService) {
@@ -306,7 +310,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
       if (StringUtils.isNotBlank(searchCriteriaListJson)) {
         List<Search> searches = objectMapper.readValue(searchCriteriaListJson, new TypeReference<>() {
         });
-        getAssociationNamesFromSearchCriterials(associationNames, searches);
+        getAssociationNamesFromSearchCriterias(associationNames, searches);
         int i = 0;
         for (var search : searches) {
           penRequestBatchStudentEntitySpecification = getStudentSpecifications(penRequestBatchStudentEntitySpecification, i, search, associationNames);
@@ -321,21 +325,19 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   }
 
   /**
-   * Get association names from search criterials, like penRequestBatchEntity.minCode
+   * Get association names from search criterias, like penRequestBatchEntity.minCode
    *
    * @param associationNames the associations
-   * @param searches     the search criterials
+   * @param searches         the search criterias
    */
-  private void getAssociationNamesFromSearchCriterials(Associations associationNames, List<Search> searches) {
-    searches.forEach(search -> {
-      search.getSearchCriteriaList().forEach(criteria -> {
-        var names = criteria.getKey().split("\\.");
-        if(names.length > 1) {
-          associationNames.getSortAssociations().remove(names[0]);
-          associationNames.getSearchAssociations().add(names[0]);
-        }
-      });
-    });
+  private void getAssociationNamesFromSearchCriterias(Associations associationNames, List<Search> searches) {
+    searches.forEach(search -> search.getSearchCriteriaList().forEach(criteria -> {
+      var names = criteria.getKey().split("\\.");
+      if(names.length > 1) {
+        associationNames.getSortAssociations().remove(names[0]);
+        associationNames.getSearchAssociations().add(names[0]);
+      }
+    }));
   }
 
   /**
@@ -463,10 +465,11 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   /**
    * Gets student type specification.
    *
-   * @param key             the key
-   * @param filterOperation the filter operation
-   * @param value           the value
-   * @param valueType       the value type
+   * @param key              the key
+   * @param filterOperation  the filter operation
+   * @param value            the value
+   * @param valueType        the value type
+   * @param associationNames the association names
    * @return the student type specification
    */
   private Specification<PenRequestBatchStudentEntity> getStudentTypeSpecification(String key, FilterOperation filterOperation, String value, ValueType valueType, Associations associationNames) {
@@ -503,6 +506,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * @param studentEntitySpecification the student entity specification
    * @param i                          the
    * @param search                     the search
+   * @param associationNames           the association names
    * @return the student specifications
    */
   private Specification<PenRequestBatchStudentEntity> getStudentSpecifications(Specification<PenRequestBatchStudentEntity> studentEntitySpecification, int i, Search search, Associations associationNames) {
@@ -521,7 +525,8 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   /**
    * Gets pen request batch student entity specification.
    *
-   * @param criteriaList the criteria list
+   * @param criteriaList     the criteria list
+   * @param associationNames the association names
    * @return the pen request batch student entity specification
    */
   private Specification<PenRequestBatchStudentEntity> getPenRequestBatchStudentEntitySpecification(List<SearchCriteria> criteriaList, Associations associationNames) {
@@ -594,4 +599,5 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     model.setCreateDate(LocalDateTime.now());
     model.setUpdateDate(LocalDateTime.now());
   }
+
 }

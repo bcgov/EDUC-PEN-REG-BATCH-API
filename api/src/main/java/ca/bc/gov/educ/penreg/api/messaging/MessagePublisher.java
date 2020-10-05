@@ -21,6 +21,13 @@ import java.util.concurrent.TimeoutException;
 public class MessagePublisher extends MessagePubSub {
 
 
+  /**
+   * Instantiates a new Message publisher.
+   *
+   * @param applicationProperties the application properties
+   * @throws IOException          the io exception
+   * @throws InterruptedException the interrupted exception
+   */
   @Autowired
   public MessagePublisher(final ApplicationProperties applicationProperties) throws IOException, InterruptedException {
     this(applicationProperties, true);
@@ -30,6 +37,7 @@ public class MessagePublisher extends MessagePubSub {
    * Instantiates a new Message publisher.
    *
    * @param applicationProperties the application properties
+   * @param isConnectionRequired  the is connection required
    * @throws IOException          the io exception
    * @throws InterruptedException the interrupted exception
    */
@@ -47,6 +55,12 @@ public class MessagePublisher extends MessagePubSub {
 
   }
 
+  /**
+   * Connect.
+   *
+   * @throws IOException          the io exception
+   * @throws InterruptedException the interrupted exception
+   */
   protected void connect() throws IOException, InterruptedException {
     this.connection = connectionFactory.createConnection();
   }

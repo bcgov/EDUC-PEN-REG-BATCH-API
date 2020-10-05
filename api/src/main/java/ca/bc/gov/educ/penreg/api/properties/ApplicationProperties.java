@@ -48,9 +48,15 @@ public class ApplicationProperties {
   @Value("${url.api.student}")
   private String studentApiURL;
 
+  /**
+   * The Environment.
+   */
   @Value("${environment}")
   private String environment;
 
+  /**
+   * The Redis url.
+   */
   @Value("${url.redis}")
   private String redisUrl;
   /**

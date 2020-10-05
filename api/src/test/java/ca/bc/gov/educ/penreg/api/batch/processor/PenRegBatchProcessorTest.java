@@ -255,7 +255,7 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).isNull();
-    assertThat(entity.getRepeatCount()).isEqualTo(0);
+    assertThat(entity.getRepeatCount()).isZero();
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
     Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
@@ -479,6 +479,11 @@ public class PenRegBatchProcessorTest {
     penWebBlobRepository.deleteAll();
   }
 
+  /**
+   * Create batch student records.
+   *
+   * @throws IOException the io exception
+   */
   private void createBatchStudentRecords() throws java.io.IOException {
     final File file = new File(
             Objects.requireNonNull(getClass().getClassLoader().getResource("mock_pen_req_batch_repeat.json")).getFile()
@@ -518,6 +523,12 @@ public class PenRegBatchProcessorTest {
     return model;
   }
 
+  /**
+   * Populate audit columns pen request batch student entity.
+   *
+   * @param model the model
+   * @return the pen request batch student entity
+   */
   private PenRequestBatchStudentEntity populateAuditColumns(PenRequestBatchStudentEntity model) {
     if (model.getCreateUser() == null) {
       model.setCreateUser(PEN_REQUEST_BATCH_API);

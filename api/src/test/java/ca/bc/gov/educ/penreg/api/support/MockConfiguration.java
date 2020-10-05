@@ -50,6 +50,11 @@ public class MockConfiguration {
     return Mockito.mock(EventTaskScheduler.class);
   }
 
+  /**
+   * Redisson spring data config redisson spring data config.
+   *
+   * @return the redisson spring data config
+   */
   @Bean
   @Primary
   public RedissonSpringDataConfig redissonSpringDataConfig() {
@@ -57,12 +62,22 @@ public class MockConfiguration {
   }
 
 
+  /**
+   * Redisson connection factory redisson connection factory.
+   *
+   * @return the redisson connection factory
+   */
   @Bean
   @Primary
   public RedissonConnectionFactory redissonConnectionFactory() {
     return Mockito.mock(RedissonConnectionFactory.class);
   }
 
+  /**
+   * Redisson client redisson client.
+   *
+   * @return the redisson client
+   */
   @Bean
   @Primary
   public RedissonClient redissonClient() {

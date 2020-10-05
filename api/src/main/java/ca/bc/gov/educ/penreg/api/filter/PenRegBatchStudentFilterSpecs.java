@@ -70,9 +70,10 @@ public class PenRegBatchStudentFilterSpecs {
   /**
    * Gets date type specification.
    *
-   * @param fieldName       the field name
-   * @param filterValue     the filter value
-   * @param filterOperation the filter operation
+   * @param fieldName        the field name
+   * @param filterValue      the filter value
+   * @param filterOperation  the filter operation
+   * @param associationNames the association names
    * @return the date type specification
    */
   public Specification<PenRequestBatchStudentEntity> getDateTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation, Associations associationNames) {
@@ -82,9 +83,10 @@ public class PenRegBatchStudentFilterSpecs {
   /**
    * Gets date time type specification.
    *
-   * @param fieldName       the field name
-   * @param filterValue     the filter value
-   * @param filterOperation the filter operation
+   * @param fieldName        the field name
+   * @param filterValue      the filter value
+   * @param filterOperation  the filter operation
+   * @param associationNames the association names
    * @return the date time type specification
    */
   public Specification<PenRequestBatchStudentEntity> getDateTimeTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation, Associations associationNames) {
@@ -94,9 +96,10 @@ public class PenRegBatchStudentFilterSpecs {
   /**
    * Gets integer type specification.
    *
-   * @param fieldName       the field name
-   * @param filterValue     the filter value
-   * @param filterOperation the filter operation
+   * @param fieldName        the field name
+   * @param filterValue      the filter value
+   * @param filterOperation  the filter operation
+   * @param associationNames the association names
    * @return the integer type specification
    */
   public Specification<PenRequestBatchStudentEntity> getIntegerTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation, Associations associationNames) {
@@ -106,9 +109,10 @@ public class PenRegBatchStudentFilterSpecs {
   /**
    * Gets long type specification.
    *
-   * @param fieldName       the field name
-   * @param filterValue     the filter value
-   * @param filterOperation the filter operation
+   * @param fieldName        the field name
+   * @param filterValue      the filter value
+   * @param filterOperation  the filter operation
+   * @param associationNames the association names
    * @return the long type specification
    */
   public Specification<PenRequestBatchStudentEntity> getLongTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation, Associations associationNames) {
@@ -118,9 +122,10 @@ public class PenRegBatchStudentFilterSpecs {
   /**
    * Gets string type specification.
    *
-   * @param fieldName       the field name
-   * @param filterValue     the filter value
-   * @param filterOperation the filter operation
+   * @param fieldName        the field name
+   * @param filterValue      the filter value
+   * @param filterOperation  the filter operation
+   * @param associationNames the association names
    * @return the string type specification
    */
   public Specification<PenRequestBatchStudentEntity> getStringTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation, Associations associationNames) {
@@ -130,9 +135,10 @@ public class PenRegBatchStudentFilterSpecs {
   /**
    * Gets uuid type specification.
    *
-   * @param fieldName       the field name
-   * @param filterValue     the filter value
-   * @param filterOperation the filter operation
+   * @param fieldName        the field name
+   * @param filterValue      the filter value
+   * @param filterOperation  the filter operation
+   * @param associationNames the association names
    * @return the uuid type specification
    */
   public Specification<PenRequestBatchStudentEntity> getUUIDTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation, Associations associationNames) {
@@ -142,12 +148,13 @@ public class PenRegBatchStudentFilterSpecs {
   /**
    * Gets specification.
    *
-   * @param <T>             the type parameter
-   * @param fieldName       the field name
-   * @param filterValue     the filter value
-   * @param filterOperation the filter operation
-   * @param converter       the converter
-   * @param specifications  the specifications
+   * @param <T>              the type parameter
+   * @param fieldName        the field name
+   * @param filterValue      the filter value
+   * @param filterOperation  the filter operation
+   * @param converter        the converter
+   * @param specifications   the specifications
+   * @param associationNames the association names
    * @return the specification
    */
   private <T extends Comparable<T>> Specification<PenRequestBatchStudentEntity> getSpecification(String fieldName,

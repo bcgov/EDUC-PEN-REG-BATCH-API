@@ -35,5 +35,17 @@ public enum EventOutcome {
   /**
    * Pen match results processed event outcome.
    */
-  PEN_MATCH_RESULTS_PROCESSED
+  PEN_MATCH_RESULTS_PROCESSED,
+  /**
+   * Validation success no error warning event outcome.
+   */
+  VALIDATION_SUCCESS_NO_ERROR_WARNING,
+  /**
+   * Validation success with error event outcome.
+   */
+  VALIDATION_SUCCESS_WITH_ERROR,
+  /**
+   * Validation success with only warning event outcome.
+   */
+  VALIDATION_SUCCESS_WITH_ONLY_WARNING
 }

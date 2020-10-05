@@ -12,5 +12,10 @@ import java.util.List;
 @Repository
 public interface PenRequestBatchStudentStatusCodeRepository extends CrudRepository<PenRequestBatchStudentStatusCodeEntity, String> {
 
+  /**
+   * Find all list.
+   *
+   * @return the list
+   */
   List<PenRequestBatchStudentStatusCodeEntity> findAll();
 }

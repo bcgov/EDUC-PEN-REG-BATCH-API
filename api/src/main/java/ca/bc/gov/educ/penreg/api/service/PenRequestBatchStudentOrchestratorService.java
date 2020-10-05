@@ -1,20 +1,28 @@
 package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.MatchAlgorithmStatusCode;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.mappers.StudentMapper;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentValidationIssueEntity;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
-import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
-import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.*;
+import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -211,7 +219,7 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param penRequestBatch        the pen request batch
    * @return the event
    */
-  private Event handleD1Status(Saga saga, PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent, java.util.Optional<PenRequestBatchEntity> penRequestBatch){
+  private Event handleD1Status(Saga saga, PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent, java.util.Optional<PenRequestBatchEntity> penRequestBatch) {
     var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
     if (penMatchRecordOptional.isPresent()) {
       var studentID = penMatchRecordOptional.get().getStudentID();
@@ -239,8 +247,8 @@ public class PenRequestBatchStudentOrchestratorService {
   /**
    * Generate new pen string.
    *
-   * @return the string
    * @param guid the guid to identify the transaction.
+   * @return the string
    */
   private String generateNewPen(String guid) {
     log.info("generate new pen called for guid :: {}", guid);
@@ -267,6 +275,126 @@ public class PenRequestBatchStudentOrchestratorService {
     studentFromStudentAPI.setGradeCode(penRequestBatchStudent.getGradeCode());
     studentFromStudentAPI.setPostalCode(penRequestBatchStudent.getPostalCode());
     studentFromStudentAPI.setUpdateUser("PEN_REG_BATCH_API");
+  }
+
+  /**
+   * Save demog validation results and update student status.
+   *
+   * @param validationIssueEntities  the validation issue entities
+   * @param statusCode               the status code
+   * @param penRequestBatchStudentID the pen request batch student id
+   */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
+  public void saveDemogValidationResultsAndUpdateStudentStatus(List<PenRequestBatchStudentValidationIssueEntity> validationIssueEntities, PenRequestBatchStudentStatusCodes statusCode, UUID penRequestBatchStudentID) {
+    var studentOptional = getPenRequestBatchStudentService().findByID(penRequestBatchStudentID);
+    if (studentOptional.isPresent()) {
+      var student = studentOptional.get();
+      student.setPenRequestBatchStudentStatusCode(statusCode.getCode());
+      student.setUpdateDate(LocalDateTime.now());
+      student.setUpdateUser("PEN_REQUEST_BATCH_API");
+      validationIssueEntities.forEach(el -> el.setPenRequestBatchStudentEntity(student)); // create the PK/FK relationship
+      student.getPenRequestBatchStudentValidationIssueEntities().addAll(validationIssueEntities);
+      getPenRequestBatchStudentService().saveAttachedEntity(student);
+
+    } else {
+      log.error("Student request record could not be found for :: {}", penRequestBatchStudentID);
+    }
+  }
+
+  /**
+   * the method makes a deep clone as it needs the original payload to do comparison and update fields.
+   * Perform the following actions on the CurrentRequest:
+   * <p>
+   * Remove periods from all legal and usual names elements
+   * Convert all name elements to all UPPER case.
+   * Change tab characters within name elements to single spaces
+   * Remove leading and trailing spaces from all name elements
+   * Convert multiple contiguous spaces within any name element to a single space
+   * Blank out usual name if it is an initial (a single character)
+   * Blank out each of the three usual name elements if it is the same as the corresponding legal name element
+   * Blank out usual middle name if it is the same as legal given name
+   * Blank out usual middle name if it is the same as usual given name
+   * Blank out usual middle name if it is the same as (legal given name + space + legal middle name)
+   * Blank out usual middle name if it is contained within legal middle name
+   *
+   * @param payload the payload which needs to be updated.
+   * @return the updated payload.
+   * @throws JsonProcessingException the json processing exception
+   */
+  public PenRequestBatchStudentValidationPayload scrubValidationPayload(PenRequestBatchStudentValidationPayload payload) throws JsonProcessingException {
+    PenRequestBatchStudentValidationPayload updatedPayload = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentValidationPayload.class, JsonUtil.getJsonStringFromObject(payload));
+    if (StringUtils.isNotBlank(payload.getLegalLastName())) {
+      updatedPayload.setLegalLastName(scrubNameField(payload.getLegalLastName()));
+    }
+    if (StringUtils.isNotBlank(payload.getLegalFirstName())) {
+      updatedPayload.setLegalFirstName(scrubNameField(payload.getLegalFirstName()));
+    }
+    if (StringUtils.isNotBlank(payload.getLegalMiddleNames())) {
+      updatedPayload.setLegalMiddleNames(scrubNameField(payload.getLegalMiddleNames()));
+    }
+    var usualFirstName = payload.getUsualFirstName();
+    if (StringUtils.isNotEmpty(usualFirstName)
+        && (usualFirstName.trim().length() == 1) || (usualFirstName.trim().equalsIgnoreCase(payload.getLegalFirstName()))) {
+      updatedPayload.setUsualFirstName("");
+    }
+    var usualLastName = payload.getUsualLastName();
+    if (StringUtils.isNotEmpty(usualLastName)
+        && (usualLastName.trim().length() == 1) || (usualLastName.trim().equalsIgnoreCase(payload.getLegalLastName()))) {
+      updatedPayload.setUsualLastName("");
+    }
+    var usualMiddleName = payload.getUsualMiddleNames();
+    if (doesMiddleNameNeedsToBeBlank(usualMiddleName, payload)) {
+      updatedPayload.setUsualMiddleNames("");
+    }
+
+    return updatedPayload;
+  }
+
+  /**
+   * Blank out usual middle name if it is the same as legal given name
+   * Blank out usual middle name if it is the same as usual given name
+   * Blank out usual middle name if it is the same as (legal given name + space + legal middle name)
+   * Blank out usual middle name if it is contained within legal middle name
+   *
+   * @param usualMiddleName the usual middle name
+   * @param payload         the payload
+   * @return boolean boolean
+   */
+  private boolean doesMiddleNameNeedsToBeBlank(String usualMiddleName, PenRequestBatchStudentValidationPayload payload) {
+    return StringUtils.isNotEmpty(usualMiddleName)
+        && (usualMiddleName.trim().length() == 1
+        || areBothFieldValueEqual(usualMiddleName, payload.getLegalMiddleNames())
+        || areBothFieldValueEqual(usualMiddleName, payload.getLegalFirstName())
+        || (StringUtils.isNotBlank(payload.getLegalMiddleNames()) && payload.getLegalMiddleNames().contains(usualMiddleName))
+        || (usualMiddleName.trim().equals(payload.getLegalFirstName() + " " + payload.getLegalMiddleNames())));
+  }
+
+  /**
+   * Are both field value equal boolean.
+   *
+   * @param field1 the field 1
+   * @param field2 the field 2
+   * @return the boolean
+   */
+  protected boolean areBothFieldValueEqual(String field1, String field2) {
+    return ((field1 == null && field2 == null)
+        || (field1 != null && field2 != null && field1.trim().equals(field2.trim())));
+  }
+
+  /**
+   * This method is responsible to do the following.
+   * 1.Remove periods from all legal and usual names elements
+   * 2.Convert all name elements to all UPPER case.
+   * 3.Change tab characters within name elements to single spaces
+   * 4.Remove leading and trailing spaces from all name elements
+   * 5.Convert multiple contiguous spaces within any name element to a single space
+   *
+   * @param nameFieldValue the value of the name field
+   * @return modified string value.
+   */
+  protected String scrubNameField(String nameFieldValue) {
+    return nameFieldValue.trim().toUpperCase().replace("\t", " ").replace(".", "").replaceAll("\\s{2,}", " ");
   }
 
 }
