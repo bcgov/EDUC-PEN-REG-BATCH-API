@@ -1,6 +1,8 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.PenMatchSagaMapper;
+import ca.bc.gov.educ.penreg.api.mappers.PenStudentDemogValidationMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
@@ -11,20 +13,25 @@ import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_MATCH_API_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -40,7 +47,12 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
   @Getter(PRIVATE)
   private final PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService;
 
+  /**
+   * The constant penMatchSagaMapper.
+   */
   private static final PenMatchSagaMapper penMatchSagaMapper = PenMatchSagaMapper.mapper;
+
+  private static final PenStudentDemogValidationMapper validationMapper = PenStudentDemogValidationMapper.mapper;
 
 
   /**
@@ -65,9 +77,43 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
   @Override
   public void populateStepsToExecuteMap() {
     stepBuilder()
-        .step(READ_FROM_TOPIC, READ_FROM_TOPIC_SUCCESS, PROCESS_PEN_MATCH, this::processPenMatch)
+        .step(READ_FROM_TOPIC, READ_FROM_TOPIC_SUCCESS, VALIDATE_STUDENT_DEMOGRAPHICS, this::validateStudentDemographics)
+        .step(VALIDATE_STUDENT_DEMOGRAPHICS, VALIDATION_SUCCESS_NO_ERROR_WARNING, PROCESS_PEN_MATCH, this::processPenMatch)
+        .step(VALIDATE_STUDENT_DEMOGRAPHICS, VALIDATION_SUCCESS_WITH_ONLY_WARNING, PROCESS_PEN_MATCH, this::processPenMatch)
+        .step(VALIDATE_STUDENT_DEMOGRAPHICS, VALIDATION_SUCCESS_WITH_ERROR, MARK_SAGA_COMPLETE, this::markSagaComplete)
         .step(PROCESS_PEN_MATCH, PEN_MATCH_PROCESSED, PROCESS_PEN_MATCH_RESULTS, this::processPenMatchResults)
         .step(PROCESS_PEN_MATCH_RESULTS, PEN_MATCH_RESULTS_PROCESSED, MARK_SAGA_COMPLETE, this::markSagaComplete);
+  }
+
+
+  /**
+   * Validate student demographics.
+   *
+   * @param event                          the event
+   * @param saga                           the saga
+   * @param penRequestBatchStudentSagaData the pen request batch student saga data
+   */
+  private void validateStudentDemographics(Event event, Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) throws JsonProcessingException {
+    SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
+    saga.setSagaState(VALIDATE_STUDENT_DEMOGRAPHICS.toString());
+    getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
+
+    var validationPayload = getPenRequestBatchStudentOrchestratorService()
+        .scrubValidationPayload(validationMapper.toStudentDemogValidationPayload(penRequestBatchStudentSagaData));
+
+    validationPayload.setTransactionID(saga.getSagaId().toString());
+    var eventPayload = JsonUtil.getJsonString(validationPayload);
+    if (eventPayload.isPresent()) {
+      Event nextEvent = Event.builder().sagaId(saga.getSagaId())
+          .eventType(VALIDATE_STUDENT_DEMOGRAPHICS)
+          .replyTo(getTopicToSubscribe())
+          .eventPayload(eventPayload.get())
+          .build();
+      postMessageToTopic(PEN_VALIDATION_API_TOPIC.toString(), nextEvent);
+      log.info("message sent to PEN_MATCH_API_TOPIC for PROCESS_PEN_MATCH Event. :: {}", saga.getSagaId());
+    } else {
+      log.error("event payload is not present this should not have happened. :: {}", saga.getSagaId());
+    }
   }
 
 
@@ -88,6 +134,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
     saga.setSagaState(PROCESS_PEN_MATCH_RESULTS.toString());
     var penMatchResult = JsonUtil.getJsonObjectFromString(PenMatchResult.class, event.getEventPayload());
     penRequestBatchStudentSagaData.setPenMatchResult(penMatchResult); // update the original payload with response from PEN_MATCH_API
+    saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchStudentSagaData)); // save the updated payload to DB...
     getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
     var eventOptional = getPenRequestBatchStudentOrchestratorService().processPenMatchResult(saga, penRequestBatchStudentSagaData, penMatchResult);
     if (eventOptional.isPresent()) {
@@ -108,10 +155,12 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    * @param saga                           the saga
    * @param penRequestBatchStudentSagaData the pen request batch student saga data
    */
-  private void processPenMatch(final Event event, final Saga saga, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
+  private void processPenMatch(final Event event, final Saga saga, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) throws JsonProcessingException {
     SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(PROCESS_PEN_MATCH.toString());
     getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
+    // need to persist the validation warnings from response payload.
+    saveDemogValidationResults(event, penRequestBatchStudentSagaData);
     var eventPayload = JsonUtil.getJsonString(penMatchSagaMapper.toPenMatchStudent(penRequestBatchStudentSagaData));
     if (eventPayload.isPresent()) {
       Event nextEvent = Event.builder().sagaId(saga.getSagaId())
@@ -123,6 +172,27 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
       log.info("message sent to PEN_MATCH_API_TOPIC for PROCESS_PEN_MATCH Event. :: {}", saga.getSagaId());
     } else {
       log.error("event payload is not present this should not have happened. :: {}", saga.getSagaId());
+    }
+
+  }
+
+  @Override
+  protected void saveDemogValidationResults(Event event, PenRequestBatchStudentSagaData sagaData) throws JsonProcessingException {
+    if (event.getEventType() == VALIDATE_STUDENT_DEMOGRAPHICS
+        && event.getEventPayload() != null) {
+      PenRequestBatchStudentStatusCodes statusCode;
+      if (event.getEventOutcome() == VALIDATION_SUCCESS_WITH_ERROR) {
+        statusCode = PenRequestBatchStudentStatusCodes.ERROR;
+      } else {
+        statusCode = PenRequestBatchStudentStatusCodes.FIXABLE;
+      }
+      TypeReference<List<PenRequestBatchStudentValidationIssue>> responseType = new TypeReference<>() {
+      };
+      var validationResults = new ObjectMapper().readValue(event.getEventPayload(), responseType);
+      if (!validationResults.isEmpty()) {
+        var mappedEntities = validationResults.stream().map(issueMapper::toModel).collect(Collectors.toList());
+        getPenRequestBatchStudentOrchestratorService().saveDemogValidationResultsAndUpdateStudentStatus(mappedEntities, statusCode, sagaData.getPenRequestBatchStudentID());
+      }
     }
   }
 }

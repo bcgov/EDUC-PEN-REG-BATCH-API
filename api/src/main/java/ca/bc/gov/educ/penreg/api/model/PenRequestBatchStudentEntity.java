@@ -15,6 +15,8 @@ import org.hibernate.annotations.Parameter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -35,7 +37,7 @@ public class PenRequestBatchStudentEntity {
   @Id
   @GeneratedValue(generator = "UUID")
   @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator", parameters = {
-    @Parameter(name = "uuid_gen_strategy_class", value = "org.hibernate.id.uuid.CustomVersionOneStrategy")})
+      @Parameter(name = "uuid_gen_strategy_class", value = "org.hibernate.id.uuid.CustomVersionOneStrategy")})
   @Column(name = "PEN_REQUEST_BATCH_STUDENT_ID", unique = true, updatable = false, columnDefinition = "BINARY(16)")
   UUID penRequestBatchStudentID;
 
@@ -221,4 +223,24 @@ public class PenRequestBatchStudentEntity {
    */
   @Column(name = "BEST_MATCH_PEN", length = 9)
   String bestMatchPEN;
+
+  /**
+   * The Pen request batch student validation issue entities.
+   */
+  @EqualsAndHashCode.Exclude
+  @ToString.Exclude
+  @OneToMany(mappedBy = "penRequestBatchStudentEntity", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, targetEntity = PenRequestBatchStudentValidationIssueEntity.class)
+  Set<PenRequestBatchStudentValidationIssueEntity> penRequestBatchStudentValidationIssueEntities;
+
+  /**
+   * Gets pen request batch student validation issue entities.
+   *
+   * @return the pen request batch student validation issue entities
+   */
+  public Set<PenRequestBatchStudentValidationIssueEntity> getPenRequestBatchStudentValidationIssueEntities() {
+    if (this.penRequestBatchStudentValidationIssueEntities == null) {
+      this.penRequestBatchStudentValidationIssueEntities = new HashSet<>();
+    }
+    return this.penRequestBatchStudentValidationIssueEntities;
+  }
 }

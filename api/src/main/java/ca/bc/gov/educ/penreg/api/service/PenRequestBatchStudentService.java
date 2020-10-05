@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -130,7 +131,7 @@ public class PenRequestBatchStudentService {
       if (penRequestBatchStudentOptional.isPresent()) {
         var penRequestBatchStudent = penRequestBatchStudentOptional.get();
         if (penRequestBatchStudent.getPenRequestBatchEntity().getPenRequestBatchID().equals(penRequestBatch.getPenRequestBatchID())) {
-          BeanUtils.copyProperties(entity, penRequestBatchStudent);
+          BeanUtils.copyProperties(entity, penRequestBatchStudent,"penRequestBatchStudentValidationIssueEntities","penRequestBatchEntity","penRequestBatchStudentID");
           return repository.save(penRequestBatchStudent);
         } else {
           throw new InvalidParameterException(penRequestBatchID.toString(), penRequestBatchStudentID.toString()); // this student does not belong to the specific batch ID.
@@ -216,5 +217,9 @@ public class PenRequestBatchStudentService {
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
   public List<PenRequestBatchStudentStatusCodeEntity> getAllStudentStatusCodes() {
     return getStudentStatusCodeRepository().findAll();
+  }
+
+  public Optional<PenRequestBatchStudentEntity> findByID(UUID penRequestBatchStudentID) {
+    return getRepository().findById(penRequestBatchStudentID);
   }
 }

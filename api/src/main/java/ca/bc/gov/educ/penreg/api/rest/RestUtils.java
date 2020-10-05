@@ -1,6 +1,5 @@
 package ca.bc.gov.educ.penreg.api.rest;
 
-import ca.bc.gov.educ.penreg.api.exception.errors.ApiError;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.struct.Student;
@@ -13,22 +12,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.lang.NonNull;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.oauth2.client.DefaultOAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.validation.FieldError;
-import org.springframework.web.client.ResponseErrorHandler;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -117,26 +110,6 @@ public class RestUtils {
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Student createStudent(Student student) {
     RestTemplate restTemplate = getRestTemplate();
-    /*restTemplate.setErrorHandler(new ResponseErrorHandler() {
-      @Override
-      public boolean hasError(@NonNull ClientHttpResponse response) throws IOException {
-        return response.getRawStatusCode() > 204;
-      }
-
-      @Override
-      public void handleError(@NonNull ClientHttpResponse response) throws IOException {
-        if(response.getRawStatusCode() == 400){
-          ApiError error = new ObjectMapper().readValue(response.getBody(), ApiError.class);
-          if(error.getSubErrors() != null){
-            for(var subError: error.getSubErrors()){
-              if("PEN is already associated to a student.".equalsIgnoreCase(subError.getMessage())){
-
-              }
-            }
-          }
-        }
-      }
-    });*/
     HttpHeaders headers = new HttpHeaders();
     headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
     return restTemplate.exchange(props.getStudentApiURL(), HttpMethod.POST, new HttpEntity<>(student, headers), Student.class).getBody();

@@ -196,7 +196,8 @@ INSERT INTO PEN_REQUEST_BATCH_VALIDATION_ISSUE_TYPE_CODE (CODE, LABEL, LEGACY_LA
                                                           EFFECTIVE_DATE,
                                                           EXPIRY_DATE, CREATE_USER, CREATE_DATE, UPDATE_USER,
                                                           UPDATE_DATE)
-VALUES ('BEGININVALID', 'Field begins with special char', 'C6,C8, C11, C13, C77, C78', 'Field begins with one several special characters', 30,
+VALUES ('BEGININVALID', 'Field begins with special char', 'C6,C8, C11, C13, C77, C78',
+        'Field begins with one several special characters', 30,
         to_date('2020-01-01', 'YYYY-MM-DD'),
         to_date('2099-12-31', 'YYYY-MM-DD'),
         'IDIR/MVILLENE',
@@ -218,6 +219,17 @@ INSERT INTO PEN_REQUEST_BATCH_VALIDATION_ISSUE_TYPE_CODE (CODE, LABEL, LEGACY_LA
                                                           EXPIRY_DATE, CREATE_USER, CREATE_DATE, UPDATE_USER,
                                                           UPDATE_DATE)
 VALUES ('BLANKINNAME', 'Field has embedded blanks', 'C6, C8, C11, C13, C77, C78', 'Field has embedded blanks', 50,
+        to_date('2020-01-01', 'YYYY-MM-DD'),
+        to_date('2099-12-31', 'YYYY-MM-DD'),
+        'IDIR/MVILLENE',
+        to_date('2019-11-07', 'YYYY-MM-DD'),
+        'IDIR/MVILLENE',
+        to_date('2019-11-07', 'YYYY-MM-DD'));
+INSERT INTO PEN_REQUEST_BATCH_VALIDATION_ISSUE_TYPE_CODE (CODE, LABEL, LEGACY_LABEL, DESCRIPTION, DISPLAY_ORDER,
+                                                          EFFECTIVE_DATE,
+                                                          EXPIRY_DATE, CREATE_USER, CREATE_DATE, UPDATE_USER,
+                                                          UPDATE_DATE)
+VALUES ('BLOCKEDNAME', 'Value is on the blocked list', 'C6, C8, C11, C13', 'Field value is on the list of blocked names, that are either flagged as an error or warning', 55,
         to_date('2020-01-01', 'YYYY-MM-DD'),
         to_date('2099-12-31', 'YYYY-MM-DD'),
         'IDIR/MVILLENE',
@@ -387,59 +399,6 @@ VALUES ('YOUNG4GRADE', 'Age is too young for Grade', 'C44', 'Age is too young fo
         'IDIR/MVILLENE',
         to_date('2019-11-07', 'YYYY-MM-DD'));
 
-
-CREATE TABLE PEN_REQUEST_BATCH_VALID_ONE_LETTER_GIVEN_NAME_CODE
-(
-    CODE           VARCHAR2(20)         NOT NULL,
-    LABEL          VARCHAR2(30)         NOT NULL,
-    DESCRIPTION    VARCHAR2(255),
-    DISPLAY_ORDER  NUMBER,
-    EFFECTIVE_DATE DATE                 NOT NULL,
-    EXPIRY_DATE    DATE                 NOT NULL,
-    CREATE_USER    VARCHAR2(32)         NOT NULL,
-    CREATE_DATE    DATE DEFAULT SYSDATE NOT NULL,
-    UPDATE_USER    VARCHAR2(32)         NOT NULL,
-    UPDATE_DATE    DATE DEFAULT SYSDATE NOT NULL,
-    CONSTRAINT PEN_REQUEST_BATCH_VALID_ONE_LETTER_GIVEN_NAME_CODE_PK PRIMARY KEY (CODE)
-);
--- PEN_REQUEST_BATCH_VALID_ONE_LETTER_GIVEN_NAME_CODE
-
-INSERT INTO PEN_REQUEST_BATCH_VALID_ONE_LETTER_GIVEN_NAME_CODE (CODE, LABEL, DESCRIPTION, DISPLAY_ORDER, EFFECTIVE_DATE,
-                                                                EXPIRY_DATE, CREATE_USER, CREATE_DATE, UPDATE_USER,
-                                                                UPDATE_DATE)
-VALUES ('A', 'Lettter A', 'Letter A used as a Given Name', 1, to_date('2020-01-01', 'YYYY-MM-DD'),
-        to_date('2099-12-31', 'YYYY-MM-DD'),
-        'IDIR/MVILLENE',
-        to_date('2019-11-07', 'YYYY-MM-DD'),
-        'IDIR/MVILLENE',
-        to_date('2019-11-07', 'YYYY-MM-DD'));
-INSERT INTO PEN_REQUEST_BATCH_VALID_ONE_LETTER_GIVEN_NAME_CODE (CODE, LABEL, DESCRIPTION, DISPLAY_ORDER, EFFECTIVE_DATE,
-                                                                EXPIRY_DATE, CREATE_USER, CREATE_DATE, UPDATE_USER,
-                                                                UPDATE_DATE)
-VALUES ('I', 'Lettter I', 'Letter I used as a Given Name', 2, to_date('2020-01-01', 'YYYY-MM-DD'),
-        to_date('2099-12-31', 'YYYY-MM-DD'),
-        'IDIR/MVILLENE',
-        to_date('2019-11-07', 'YYYY-MM-DD'),
-        'IDIR/MVILLENE',
-        to_date('2019-11-07', 'YYYY-MM-DD'));
-INSERT INTO PEN_REQUEST_BATCH_VALID_ONE_LETTER_GIVEN_NAME_CODE (CODE, LABEL, DESCRIPTION, DISPLAY_ORDER, EFFECTIVE_DATE,
-                                                                EXPIRY_DATE, CREATE_USER, CREATE_DATE, UPDATE_USER,
-                                                                UPDATE_DATE)
-VALUES ('O', 'Lettter O', 'Letter O used as a Given Name', 3, to_date('2020-01-01', 'YYYY-MM-DD'),
-        to_date('2099-12-31', 'YYYY-MM-DD'),
-        'IDIR/MVILLENE',
-        to_date('2019-11-07', 'YYYY-MM-DD'),
-        'IDIR/MVILLENE',
-        to_date('2019-11-07', 'YYYY-MM-DD'));
-INSERT INTO PEN_REQUEST_BATCH_VALID_ONE_LETTER_GIVEN_NAME_CODE (CODE, LABEL, DESCRIPTION, DISPLAY_ORDER, EFFECTIVE_DATE,
-                                                                EXPIRY_DATE, CREATE_USER, CREATE_DATE, UPDATE_USER,
-                                                                UPDATE_DATE)
-VALUES ('Y', 'Lettter Y', 'Letter Y used as a Given Name', 4, to_date('2020-01-01', 'YYYY-MM-DD'),
-        to_date('2099-12-31', 'YYYY-MM-DD'),
-        'IDIR/MVILLENE',
-        to_date('2019-11-07', 'YYYY-MM-DD'),
-        'IDIR/MVILLENE',
-        to_date('2019-11-07', 'YYYY-MM-DD'));
 
 CREATE TABLE PEN_REQUEST_BATCH_STUDENT_VALIDATION_ISSUE
 (

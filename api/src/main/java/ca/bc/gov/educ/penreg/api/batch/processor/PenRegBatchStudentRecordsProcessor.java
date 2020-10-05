@@ -13,16 +13,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.Closeable;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-import static lombok.AccessLevel.PRIVATE;
-
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC;
+import static lombok.AccessLevel.PRIVATE;
 
 /**
  * The type Pen reg batch student records processor.
@@ -30,11 +26,7 @@ import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BAT
 @Component
 @Slf4j
 @SuppressWarnings("java:S2142")
-public class PenRegBatchStudentRecordsProcessor implements Closeable {
-  /**
-   * The Executor service.
-   */
-  private final ExecutorService executorService = Executors.newWorkStealingPool(2);
+public class PenRegBatchStudentRecordsProcessor {
   /**
    * The Message publisher.
    */
@@ -65,7 +57,7 @@ public class PenRegBatchStudentRecordsProcessor implements Closeable {
    * @param batchStudentSagaDataSet the student entities
    */
   public void publishUnprocessedStudentRecordsForProcessing(final Set<PenRequestBatchStudentSagaData> batchStudentSagaDataSet) {
-    executorService.execute(() -> batchStudentSagaDataSet.forEach(sendIndividualStudentAsMessageToTopic()));
+    batchStudentSagaDataSet.forEach(sendIndividualStudentAsMessageToTopic());
   }
 
   /**
@@ -92,19 +84,11 @@ public class PenRegBatchStudentRecordsProcessor implements Closeable {
 
   /**
    * Filters repeats for all pen request batches in loaded status.
+   *
    * @param penRequestBatchEntities the list of pen request batch entities
    */
   public void checkLoadedStudentRecordsForRepeats(List<PenRequestBatchEntity> penRequestBatchEntities) {
-    executorService.execute(() -> penRequestBatchEntities.forEach(penRequestBatchEntity -> getPenRequestBatchFileService().filterRepeatRequests(penRequestBatchEntity)));
+    penRequestBatchEntities.forEach(penRequestBatchEntity -> getPenRequestBatchFileService().filterRepeatRequests(penRequestBatchEntity));
   }
 
-  /**
-   * Close.
-   */
-  @Override
-  public void close() {
-    if (!executorService.isShutdown()) {
-      executorService.shutdown();
-    }
-  }
 }

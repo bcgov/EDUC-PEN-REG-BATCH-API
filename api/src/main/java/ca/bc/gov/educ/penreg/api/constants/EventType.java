@@ -35,5 +35,9 @@ public enum EventType {
   /**
    * Update student event type.
    */
-  UPDATE_STUDENT
+  UPDATE_STUDENT,
+  /**
+   * Validate student demographics event type.
+   */
+  VALIDATE_STUDENT_DEMOGRAPHICS
 }

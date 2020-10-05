@@ -70,6 +70,7 @@ public class EventTaskSchedulerAsyncService {
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
     this.penRegBatchStudentRecordsProcessor = penRegBatchStudentRecordsProcessor;
   }
+
   @Async("taskExecutor")
   @Transactional
   public void markProcessedBatchesActive() {
@@ -77,12 +78,15 @@ public class EventTaskSchedulerAsyncService {
     if (!penReqBatches.isEmpty()) {
       var penReqBatchEntities = new ArrayList<PenRequestBatchEntity>();
       penReqBatches.forEach(el -> {
-        var students = getPenRequestBatchStudentRepository().findAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIsIn(el, Collections.singletonList(PenRequestBatchStatusCodes.LOADED.getCode()));
-        if (students.isEmpty()) { // all records have been processed for this batch, make it active.
-          el.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ACTIVE.getCode());
-          PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(el, PenRequestBatchStatusCodes.ACTIVE.getCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
-          el.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
-          penReqBatchEntities.add(el);
+        var studentEntitiesAlreadyInProcess = getSagaRepository().findByPenRequestBatchID(el.getPenRequestBatchID());
+        if (!studentEntitiesAlreadyInProcess.isEmpty()) {
+          long count = studentEntitiesAlreadyInProcess.stream().filter(saga -> saga.getStatus().equalsIgnoreCase(SagaStatusEnum.COMPLETED.toString())).count();
+          if (count == studentEntitiesAlreadyInProcess.size()) {
+            el.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ACTIVE.getCode());
+            PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(el, PenRequestBatchStatusCodes.ACTIVE.getCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
+            el.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
+            penReqBatchEntities.add(el);
+          }
         }
       });
       if (!penReqBatchEntities.isEmpty()) {

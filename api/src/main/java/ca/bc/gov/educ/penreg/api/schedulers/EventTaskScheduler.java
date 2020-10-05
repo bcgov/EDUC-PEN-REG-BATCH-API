@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.schedulers;
 
+import ca.bc.gov.educ.penreg.api.batch.schedulers.PenRegBatchScheduler;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
 import ca.bc.gov.educ.penreg.api.service.EventTaskSchedulerAsyncService;
 import lombok.Getter;
@@ -92,10 +93,13 @@ public class EventTaskScheduler {
   }
 
   /**
+   * This is for edge case scenarios when the pod which was processing the batch file dies before persisting the repeat check updates.
+   * please look at timing of this {@link PenRegBatchScheduler#extractUnProcessedFilesFromPenWebBlobs()}
+   * as the timing of thi scheduler
    * Process all loaded pen request batches.
    */
-  @Scheduled(cron = "0 0/15 * * * *")
-  @SchedulerLock(name = "PROCESS_LOADED_BATCHES_FOR_REPEATS", lockAtLeastFor = "50s", lockAtMostFor = "52s")
+  @Scheduled(cron = "0 0/12 * * * *") //every 12 minutes, it is dependent on the other scheduler timing.
+  @SchedulerLock(name = "PROCESS_LOADED_BATCHES_FOR_REPEATS", lockAtLeastFor = "PT10M", lockAtMostFor = "PT11M")
   @Transactional
   public void processLoadedPenRequestBatchesForRepeats() {
     LockAssert.assertLocked();

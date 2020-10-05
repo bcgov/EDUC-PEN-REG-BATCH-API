@@ -1,9 +1,6 @@
 package ca.bc.gov.educ.penreg.api.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -28,6 +25,12 @@ public class PenRequestBatchStudentValidationIssueEntity {
       @org.hibernate.annotations.Parameter(name = "uuid_gen_strategy_class", value = "org.hibernate.id.uuid.CustomVersionOneStrategy")})
   @Column(name = "PEN_REQUEST_BATCH_STUDENT_VALIDATION_ISSUE_ID", unique = true, updatable = false, columnDefinition = "BINARY(16)")
   UUID penRequestBatchStudentValidationIssueId;
+
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
+  @ManyToOne(optional = false, targetEntity = PenRequestBatchStudentEntity.class)
+  @JoinColumn(name = "PEN_REQUEST_BATCH_STUDENT_ID", referencedColumnName = "PEN_REQUEST_BATCH_STUDENT_ID", updatable = false)
+  PenRequestBatchStudentEntity penRequestBatchStudentEntity;
   /**
    * The Additional info.
    */

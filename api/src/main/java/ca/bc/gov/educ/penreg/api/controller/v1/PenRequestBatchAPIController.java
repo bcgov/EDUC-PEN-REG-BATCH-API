@@ -309,7 +309,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
       if (StringUtils.isNotBlank(searchCriteriaListJson)) {
         List<Search> searches = objectMapper.readValue(searchCriteriaListJson, new TypeReference<>() {
         });
-        getAssociationNamesFromSearchCriterials(associationNames, searches);
+        getAssociationNamesFromSearchCriterias(associationNames, searches);
         int i = 0;
         for (var search : searches) {
           penRequestBatchStudentEntitySpecification = getStudentSpecifications(penRequestBatchStudentEntitySpecification, i, search, associationNames);
@@ -324,21 +324,19 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   }
 
   /**
-   * Get association names from search criterials, like penRequestBatchEntity.minCode
+   * Get association names from search criterias, like penRequestBatchEntity.minCode
    *
    * @param associationNames the associations
-   * @param searches     the search criterials
+   * @param searches     the search criterias
    */
-  private void getAssociationNamesFromSearchCriterials(Associations associationNames, List<Search> searches) {
-    searches.forEach(search -> {
-      search.getSearchCriteriaList().forEach(criteria -> {
-        var names = criteria.getKey().split("\\.");
-        if(names.length > 1) {
-          associationNames.getSortAssociations().remove(names[0]);
-          associationNames.getSearchAssociations().add(names[0]);
-        }
-      });
-    });
+  private void getAssociationNamesFromSearchCriterias(Associations associationNames, List<Search> searches) {
+    searches.forEach(search -> search.getSearchCriteriaList().forEach(criteria -> {
+      var names = criteria.getKey().split("\\.");
+      if(names.length > 1) {
+        associationNames.getSortAssociations().remove(names[0]);
+        associationNames.getSearchAssociations().add(names[0]);
+      }
+    }));
   }
 
   /**
