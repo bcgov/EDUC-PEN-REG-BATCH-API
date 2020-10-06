@@ -6,7 +6,6 @@ import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchStudentValidationIssueMa
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
-import ca.bc.gov.educ.penreg.api.schedulers.EventTaskScheduler;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
@@ -50,6 +49,14 @@ public abstract class BaseOrchestrator<T> {
    */
   protected static final String API_NAME = "PEN_REG_BATCH_API";
   /**
+   * The Clazz.
+   */
+  protected final Class<T> clazz;
+  /**
+   * The Next steps to execute.
+   */
+  protected final Map<EventType, List<SagaEventState<T>>> nextStepsToExecute = new LinkedHashMap<>();
+  /**
    * The Saga service.
    */
   @Getter(PROTECTED)
@@ -59,11 +66,6 @@ public abstract class BaseOrchestrator<T> {
    */
   @Getter(PROTECTED)
   private final MessagePublisher messagePublisher;
-  /**
-   * The Clazz.
-   */
-  protected final Class<T> clazz;
-
   /**
    * The Saga name.
    */
@@ -76,29 +78,22 @@ public abstract class BaseOrchestrator<T> {
   private final String topicToSubscribe;
 
   /**
-   * The Next steps to execute.
-   */
-  protected final Map<EventType, List<SagaEventState<T>>> nextStepsToExecute = new LinkedHashMap<>();
-
-  /**
    * Instantiates a new Base orchestrator.
    *
    * @param sagaService      the saga service
    * @param messagePublisher the message publisher
-   * @param taskScheduler    the task scheduler
    * @param clazz            the clazz
    * @param sagaName         the saga name
    * @param topicToSubscribe the topic to subscribe
    */
   public BaseOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
-                          EventTaskScheduler taskScheduler, Class<T> clazz, String sagaName,
+                          Class<T> clazz, String sagaName,
                           String topicToSubscribe) {
     this.sagaService = sagaService;
     this.messagePublisher = messagePublisher;
     this.clazz = clazz;
     this.sagaName = sagaName;
     this.topicToSubscribe = topicToSubscribe;
-    taskScheduler.registerSagaOrchestrators(sagaName, this);
     populateStepsToExecuteMap();
   }
 

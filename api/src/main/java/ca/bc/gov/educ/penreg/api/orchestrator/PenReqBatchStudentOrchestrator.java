@@ -7,7 +7,6 @@ import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
-import ca.bc.gov.educ.penreg.api.schedulers.EventTaskScheduler;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentOrchestratorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
@@ -63,14 +62,12 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    *
    * @param sagaService                               the saga service
    * @param messagePublisher                          the message publisher
-   * @param taskScheduler                             the task scheduler
    * @param penRequestBatchStudentOrchestratorService the pen request batch student orchestrator service
    */
   @Autowired
   public PenReqBatchStudentOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
-                                        EventTaskScheduler taskScheduler,
                                         PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService) {
-    super(sagaService, messagePublisher, taskScheduler, PenRequestBatchStudentSagaData.class, PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString());
+    super(sagaService, messagePublisher, PenRequestBatchStudentSagaData.class, PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString());
     this.penRequestBatchStudentOrchestratorService = penRequestBatchStudentOrchestratorService;
   }
 

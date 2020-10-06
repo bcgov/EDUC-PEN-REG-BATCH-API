@@ -115,8 +115,6 @@ public class PenRequestBatchStudentService {
    * @param entity the attached entity
    * @return the pen request batch student entity
    */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public PenRequestBatchStudentEntity saveAttachedEntity(final PenRequestBatchStudentEntity entity) {
     return repository.save(entity);
   }

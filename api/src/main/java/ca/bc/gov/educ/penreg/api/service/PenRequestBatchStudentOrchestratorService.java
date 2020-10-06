@@ -15,6 +15,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -279,7 +281,8 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param statusCode               the status code
    * @param penRequestBatchStudentID the pen request batch student id
    */
-  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
+
+  @Transactional(propagation = Propagation.MANDATORY)
   public void saveDemogValidationResultsAndUpdateStudentStatus(List<PenRequestBatchStudentValidationIssueEntity> validationIssueEntities, PenRequestBatchStudentStatusCodes statusCode, UUID penRequestBatchStudentID) {
     var studentOptional = getPenRequestBatchStudentService().findByID(penRequestBatchStudentID);
     if (studentOptional.isPresent()) {
@@ -290,7 +293,6 @@ public class PenRequestBatchStudentOrchestratorService {
       validationIssueEntities.forEach(el -> el.setPenRequestBatchStudentEntity(student)); // create the PK/FK relationship
       student.getPenRequestBatchStudentValidationIssueEntities().addAll(validationIssueEntities);
       getPenRequestBatchStudentService().saveAttachedEntity(student);
-
     } else {
       log.error("Student request record could not be found for :: {}", penRequestBatchStudentID);
     }

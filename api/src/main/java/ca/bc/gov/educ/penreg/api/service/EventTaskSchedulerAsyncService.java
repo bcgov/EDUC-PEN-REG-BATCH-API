@@ -7,7 +7,7 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchHistoryEntity;
-import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
+import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
@@ -23,7 +23,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -118,18 +121,17 @@ public class EventTaskSchedulerAsyncService {
   /**
    * Find and process uncompleted sagas.
    *
-   * @param sagaOrchestrators the saga orchestrators
+   * @param penReqBatchStudentOrchestrator the pen req batch student orchestrator
    */
   @Async("taskExecutor")
   @Transactional
-  public void findAndProcessUncompletedSagas(Map<String, BaseOrchestrator<?>> sagaOrchestrators) {
+  public void findAndProcessUncompletedSagas(PenReqBatchStudentOrchestrator penReqBatchStudentOrchestrator) {
     var sagas = getSagaRepository().findAllByStatusIn(getStatusFilters());
     if (!sagas.isEmpty()) {
       for (val saga : sagas) {
-        if (saga.getCreateDate().isBefore(LocalDateTime.now().minusMinutes(5))
-            && sagaOrchestrators.containsKey(saga.getSagaName())) {
+        if (saga.getCreateDate().isBefore(LocalDateTime.now().minusMinutes(5))) {
           try {
-            sagaOrchestrators.get(saga.getSagaName()).replaySaga(saga);
+            penReqBatchStudentOrchestrator.replaySaga(saga);
           } catch (IOException | InterruptedException | TimeoutException e) {
             log.error("Exception while findAndProcessPendingSagaEvents :: for saga :: {} :: {}", saga, e);
           }
