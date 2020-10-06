@@ -1,8 +1,6 @@
 package ca.bc.gov.educ.penreg.api.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -29,6 +27,15 @@ public class PenRequestBatchStudentPossibleMatchEntity {
   UUID penRequestBatchStudentPossibleMatchId;
 
   /**
+   * The Pen request batch student entity.
+   */
+  @ToString.Exclude
+  @EqualsAndHashCode.Exclude
+  @ManyToOne(optional = false, targetEntity = PenRequestBatchStudentEntity.class)
+  @JoinColumn(name = "PEN_REQUEST_BATCH_STUDENT_ID", referencedColumnName = "PEN_REQUEST_BATCH_STUDENT_ID", updatable = false)
+  PenRequestBatchStudentEntity penRequestBatchStudentEntity;
+
+  /**
    * The Matched student id.
    */
   @Basic
@@ -39,8 +46,8 @@ public class PenRequestBatchStudentPossibleMatchEntity {
    * The Matched priority.
    */
   @Basic
-  @Column(name = "MATCHED_PRIORITY", nullable = false, precision = 0)
-  Long matchedPriority;
+  @Column(name = "MATCHED_PRIORITY", nullable = false)
+  Integer matchedPriority;
 
   /**
    * The Matched pen.

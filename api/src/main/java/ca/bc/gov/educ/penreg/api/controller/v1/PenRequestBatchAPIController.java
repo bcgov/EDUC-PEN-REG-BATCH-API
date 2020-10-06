@@ -7,10 +7,7 @@ import ca.bc.gov.educ.penreg.api.filter.Associations;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchFilterSpecs;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchStudentFilterSpecs;
-import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
-import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
-import ca.bc.gov.educ.penreg.api.mappers.v1.PenWebBlobMapper;
-import ca.bc.gov.educ.penreg.api.mappers.v1.StudentStatusCodeMapper;
+import ca.bc.gov.educ.penreg.api.mappers.v1.*;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
@@ -55,12 +52,29 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * The constant PEN_REQUEST_BATCH_API.
    */
   public static final String PEN_REQUEST_BATCH_API = "PEN_REQUEST_BATCH_API";
+
+  private static final PenRequestBatchStudentPossibleMatchMapper possibleMatchMapper = PenRequestBatchStudentPossibleMatchMapper.mapper;
+  /**
+   * The constant mapper.
+   */
+  private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
+  /**
+   * The constant studentMapper.
+   */
+  private static final PenRequestBatchStudentMapper studentMapper = PenRequestBatchStudentMapper.mapper;
+  /**
+   * The constant penWebBlobMapper.
+   */
+  private static final PenWebBlobMapper penWebBlobMapper = PenWebBlobMapper.mapper;
+  /**
+   * The constant studentStatusCodeMapper.
+   */
+  private static final StudentStatusCodeMapper studentStatusCodeMapper = StudentStatusCodeMapper.mapper;
   /**
    * The Pen reg batch filter specs.
    */
   @Getter(PRIVATE)
   private final PenRegBatchFilterSpecs penRegBatchFilterSpecs;
-
   /**
    * The Pen reg batch student filter specs.
    */
@@ -76,32 +90,15 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    */
   @Getter(PRIVATE)
   private final PenRequestBatchStudentService studentService;
-  /**
-   * The constant mapper.
-   */
-  private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
-  /**
-   * The constant studentMapper.
-   */
-  private static final PenRequestBatchStudentMapper studentMapper = PenRequestBatchStudentMapper.mapper;
-  /**
-   * The constant penWebBlobMapper.
-   */
-  private static final PenWebBlobMapper penWebBlobMapper = PenWebBlobMapper.mapper;
-
-  /**
-   * The constant studentStatusCodeMapper.
-   */
-  private static final StudentStatusCodeMapper studentStatusCodeMapper = StudentStatusCodeMapper.mapper;
 
 
   /**
    * Instantiates a new Pen request batch api controller.
    *
-   * @param penRegBatchFilterSpecs         the pen reg batch filter specs
-   * @param penRegBatchStudentFilterSpecs  the pen reg batch student filter specs
-   * @param service                        the service
-   * @param studentService                 the student service
+   * @param penRegBatchFilterSpecs        the pen reg batch filter specs
+   * @param penRegBatchStudentFilterSpecs the pen reg batch student filter specs
+   * @param service                       the service
+   * @param studentService                the student service
    */
   @Autowired
   public PenRequestBatchAPIController(final PenRegBatchFilterSpecs penRegBatchFilterSpecs, PenRegBatchStudentFilterSpecs penRegBatchStudentFilterSpecs, final PenRequestBatchService service, PenRequestBatchStudentService studentService) {
@@ -333,7 +330,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   private void getAssociationNamesFromSearchCriterias(Associations associationNames, List<Search> searches) {
     searches.forEach(search -> search.getSearchCriteriaList().forEach(criteria -> {
       var names = criteria.getKey().split("\\.");
-      if(names.length > 1) {
+      if (names.length > 1) {
         associationNames.getSortAssociations().remove(names[0]);
         associationNames.getSearchAssociations().add(names[0]);
       }
@@ -348,6 +345,11 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   @Override
   public List<PenRequestBatchStudentStatusCode> getAllPenRequestBatchStudentStatusCodes() {
     return getStudentService().getAllStudentStatusCodes().stream().map(studentStatusCodeMapper::toStruct).collect(Collectors.toList());
+  }
+
+  @Override
+  public List<PenRequestBatchStudentPossibleMatch> getAllPossibleMatches(UUID penRequestBatchID, UUID penRequestBatchStudentID) {
+    return getStudentService().getAllPossibleMatches(penRequestBatchID, penRequestBatchStudentID).stream().map(possibleMatchMapper::toStruct).collect(Collectors.toList());
   }
 
   /**
@@ -366,7 +368,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
       });
       sortMap.forEach((k, v) -> {
         var names = k.split("\\.");
-        if(names.length > 1) {
+        if (names.length > 1) {
           associationNames.getSortAssociations().add(names[0]);
         }
 

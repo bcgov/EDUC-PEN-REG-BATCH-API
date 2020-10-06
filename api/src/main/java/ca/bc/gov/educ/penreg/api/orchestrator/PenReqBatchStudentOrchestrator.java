@@ -140,6 +140,9 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
     penRequestBatchStudentSagaData.setPenMatchResult(penMatchResult); // update the original payload with response from PEN_MATCH_API
     saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchStudentSagaData)); // save the updated payload to DB...
     getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
+    if (!penMatchResult.getMatchingRecords().isEmpty()) {
+      getPenRequestBatchStudentOrchestratorService().persistPossibleMatches(saga.getPenRequestBatchStudentID(), penMatchResult.getMatchingRecords());
+    }
     var eventOptional = getPenRequestBatchStudentOrchestratorService().processPenMatchResult(saga, penRequestBatchStudentSagaData, penMatchResult);
     if (eventOptional.isPresent()) {
       executeSagaEvent(eventOptional.get());

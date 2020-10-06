@@ -6,6 +6,7 @@ import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentPossibleMatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentStatusCodeEntity;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
@@ -27,10 +28,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -139,7 +137,7 @@ public class PenRequestBatchStudentService {
       if (penRequestBatchStudentOptional.isPresent()) {
         var penRequestBatchStudent = penRequestBatchStudentOptional.get();
         if (penRequestBatchStudent.getPenRequestBatchEntity().getPenRequestBatchID().equals(penRequestBatch.getPenRequestBatchID())) {
-          BeanUtils.copyProperties(entity, penRequestBatchStudent,"penRequestBatchStudentValidationIssueEntities","penRequestBatchEntity","penRequestBatchStudentID");
+          BeanUtils.copyProperties(entity, penRequestBatchStudent, "penRequestBatchStudentValidationIssueEntities", "penRequestBatchEntity", "penRequestBatchStudentID", "penRequestBatchStudentPossibleMatchEntities");
           return repository.save(penRequestBatchStudent);
         } else {
           throw new InvalidParameterException(penRequestBatchID.toString(), penRequestBatchStudentID.toString()); // this student does not belong to the specific batch ID.
@@ -240,5 +238,19 @@ public class PenRequestBatchStudentService {
    */
   public Optional<PenRequestBatchStudentEntity> findByID(UUID penRequestBatchStudentID) {
     return getRepository().findById(penRequestBatchStudentID);
+  }
+
+  @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+  public Set<PenRequestBatchStudentPossibleMatchEntity> getAllPossibleMatches(UUID penRequestBatchID, UUID penRequestBatchStudentID) {
+    var penRequestBatchStudentOptional = getRepository().findById(penRequestBatchStudentID);
+    if (penRequestBatchStudentOptional.isPresent()) {
+      var student = penRequestBatchStudentOptional.get();
+      if (!student.getPenRequestBatchEntity().getPenRequestBatchID().equals(penRequestBatchID)) {
+        throw new EntityNotFoundException(PenRequestBatchStudentEntity.class);
+      }
+      return student.getPenRequestBatchStudentPossibleMatchEntities();
+    } else {
+      throw new EntityNotFoundException(PenRequestBatchStudentEntity.class);
+    }
   }
 }

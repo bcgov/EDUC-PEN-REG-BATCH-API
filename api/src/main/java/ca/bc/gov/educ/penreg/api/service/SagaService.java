@@ -71,7 +71,6 @@ public class SagaService {
    * @param saga      the saga object.
    * @param sagaEvent the saga event
    */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
   public void updateAttachedSagaWithEvents(Saga saga, SagaEvent sagaEvent) {
     saga.setUpdateDate(LocalDateTime.now());
