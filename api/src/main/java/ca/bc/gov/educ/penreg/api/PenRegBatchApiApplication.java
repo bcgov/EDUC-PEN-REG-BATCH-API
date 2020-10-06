@@ -100,7 +100,7 @@ public class PenRegBatchApiApplication {
   public Executor threadPoolTaskExecutor() {
     ThreadFactory namedThreadFactory =
         new ThreadFactoryBuilder().setNameFormat("message-subscriber-%d").get();
-    return Executors.newFixedThreadPool(50, namedThreadFactory);
+    return Executors.newFixedThreadPool(10, namedThreadFactory);
   }
 
   /**
