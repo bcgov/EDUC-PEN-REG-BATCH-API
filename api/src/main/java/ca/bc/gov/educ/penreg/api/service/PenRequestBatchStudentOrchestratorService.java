@@ -328,14 +328,16 @@ public class PenRequestBatchStudentOrchestratorService {
       updatedPayload.setLegalMiddleNames(scrubNameField(payload.getLegalMiddleNames()));
     }
     var usualFirstName = payload.getUsualFirstName();
-    if (StringUtils.isNotEmpty(usualFirstName)
-        && (usualFirstName.trim().length() == 1) || (usualFirstName.trim().equalsIgnoreCase(payload.getLegalFirstName()))) {
-      updatedPayload.setUsualFirstName("");
+    if (StringUtils.isNotEmpty(usualFirstName)) {
+      if (usualFirstName.trim().length() == 1 || usualFirstName.trim().equalsIgnoreCase(payload.getLegalFirstName())) {
+        updatedPayload.setUsualFirstName("");
+      }
     }
     var usualLastName = payload.getUsualLastName();
-    if (StringUtils.isNotEmpty(usualLastName)
-        && (usualLastName.trim().length() == 1) || (usualLastName.trim().equalsIgnoreCase(payload.getLegalLastName()))) {
-      updatedPayload.setUsualLastName("");
+    if (StringUtils.isNotEmpty(usualLastName)) {
+      if (usualLastName.trim().length() == 1 || usualLastName.trim().equalsIgnoreCase(payload.getLegalLastName())) {
+        updatedPayload.setUsualLastName("");
+      }
     }
     var usualMiddleName = payload.getUsualMiddleNames();
     if (doesMiddleNameNeedsToBeBlank(usualMiddleName, payload)) {
