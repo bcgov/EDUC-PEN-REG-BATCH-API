@@ -4,10 +4,7 @@ import ca.bc.gov.educ.penreg.api.constants.MatchAlgorithmStatusCode;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.mappers.StudentMapper;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentValidationIssueEntity;
-import ca.bc.gov.educ.penreg.api.model.Saga;
+import ca.bc.gov.educ.penreg.api.model.*;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.*;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -18,8 +15,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -284,7 +279,6 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param statusCode               the status code
    * @param penRequestBatchStudentID the pen request batch student id
    */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public void saveDemogValidationResultsAndUpdateStudentStatus(List<PenRequestBatchStudentValidationIssueEntity> validationIssueEntities, PenRequestBatchStudentStatusCodes statusCode, UUID penRequestBatchStudentID) {
     var studentOptional = getPenRequestBatchStudentService().findByID(penRequestBatchStudentID);
@@ -395,6 +389,25 @@ public class PenRequestBatchStudentOrchestratorService {
    */
   protected String scrubNameField(String nameFieldValue) {
     return nameFieldValue.trim().toUpperCase().replace("\t", " ").replace(".", "").replaceAll("\\s{2,}", " ");
+  }
+
+  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
+  public void persistPossibleMatches(UUID penRequestBatchStudentID, List<PenMatchRecord> penMatchRecords) {
+    var studentOptional = getPenRequestBatchStudentService().findByID(penRequestBatchStudentID);
+    if (studentOptional.isPresent()) {
+
+      var student = studentOptional.get();
+      int priority = 1;
+      for (var penMatchRecord : penMatchRecords) {
+        PenRequestBatchStudentPossibleMatchEntity entity = new PenRequestBatchStudentPossibleMatchEntity();
+        entity.setMatchedPen(penMatchRecord.getMatchingPEN());
+        entity.setMatchedPriority(priority++);
+        entity.setMatchedStudentId(UUID.fromString(penMatchRecord.getStudentID()));
+        entity.setPenRequestBatchStudentEntity(student); // PK/FK relationship.
+        student.getPenRequestBatchStudentPossibleMatchEntities().add(entity);
+      }
+      getPenRequestBatchStudentService().saveAttachedEntity(student);
+    }
   }
 
 }

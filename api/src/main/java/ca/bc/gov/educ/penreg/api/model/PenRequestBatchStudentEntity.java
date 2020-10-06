@@ -233,6 +233,14 @@ public class PenRequestBatchStudentEntity {
   Set<PenRequestBatchStudentValidationIssueEntity> penRequestBatchStudentValidationIssueEntities;
 
   /**
+   * The Pen request batch student validation issue entities.
+   */
+  @EqualsAndHashCode.Exclude
+  @ToString.Exclude
+  @OneToMany(mappedBy = "penRequestBatchStudentEntity", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, targetEntity = PenRequestBatchStudentPossibleMatchEntity.class)
+  Set<PenRequestBatchStudentPossibleMatchEntity> penRequestBatchStudentPossibleMatchEntities;
+
+  /**
    * Gets pen request batch student validation issue entities.
    *
    * @return the pen request batch student validation issue entities
@@ -242,5 +250,17 @@ public class PenRequestBatchStudentEntity {
       this.penRequestBatchStudentValidationIssueEntities = new HashSet<>();
     }
     return this.penRequestBatchStudentValidationIssueEntities;
+  }
+
+  /**
+   * Gets pen request batch student validation issue entities.
+   *
+   * @return the pen request batch student validation issue entities
+   */
+  public Set<PenRequestBatchStudentPossibleMatchEntity> getPenRequestBatchStudentPossibleMatchEntities() {
+    if (this.penRequestBatchStudentPossibleMatchEntities == null) {
+      this.penRequestBatchStudentPossibleMatchEntities = new HashSet<>();
+    }
+    return this.penRequestBatchStudentPossibleMatchEntities;
   }
 }

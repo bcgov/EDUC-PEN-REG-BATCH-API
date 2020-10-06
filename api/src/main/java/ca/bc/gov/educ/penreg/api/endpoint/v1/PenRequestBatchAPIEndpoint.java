@@ -1,9 +1,6 @@
 package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
-import ca.bc.gov.educ.penreg.api.struct.v1.PENWebBlob;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentStatusCode;
+import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -242,5 +239,12 @@ public interface PenRequestBatchAPIEndpoint {
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to get all the PenRequestBatchStudentStatusCode.")
   List<PenRequestBatchStudentStatusCode> getAllPenRequestBatchStudentStatusCodes();
+
+  @GetMapping("/{penRequestBatchID}/student/{penRequestBatchStudentID}/possible-match")
+  @PreAuthorize("#oauth2.hasAnyScope('READ_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
+  @Transactional(readOnly = true)
+  @Tag(name = "Endpoint to get all the PenRequestBatchStudentPossibleMatch.")
+  List<PenRequestBatchStudentPossibleMatch> getAllPossibleMatches(@PathVariable UUID penRequestBatchID, @PathVariable UUID penRequestBatchStudentID);
 
 }
