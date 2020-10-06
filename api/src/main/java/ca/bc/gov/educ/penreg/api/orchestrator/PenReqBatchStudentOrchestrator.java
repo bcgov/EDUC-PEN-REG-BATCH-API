@@ -114,7 +114,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
           .eventPayload(eventPayload.get())
           .build();
       postMessageToTopic(PEN_VALIDATION_API_TOPIC.toString(), nextEvent);
-      log.info("message sent to PEN_MATCH_API_TOPIC for PROCESS_PEN_MATCH Event. :: {}", saga.getSagaId());
+      log.info("message sent to PEN_VALIDATION_API_TOPIC for VALIDATE_STUDENT_DEMOGRAPHICS Event. :: {}", saga.getSagaId());
     } else {
       log.error("event payload is not present this should not have happened. :: {}", saga.getSagaId());
     }
