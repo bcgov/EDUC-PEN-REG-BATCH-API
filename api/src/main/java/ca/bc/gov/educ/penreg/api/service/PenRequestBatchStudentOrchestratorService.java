@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_MATCH_RESULTS_PROCESSED;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.PROCESS_PEN_MATCH_RESULTS;
@@ -291,7 +292,24 @@ public class PenRequestBatchStudentOrchestratorService {
       student.setUpdateDate(LocalDateTime.now());
       student.setUpdateUser("PEN_REQUEST_BATCH_API");
       validationIssueEntities.forEach(el -> el.setPenRequestBatchStudentEntity(student)); // create the PK/FK relationship
-      student.getPenRequestBatchStudentValidationIssueEntities().addAll(validationIssueEntities);
+      if (!student.getPenRequestBatchStudentValidationIssueEntities().isEmpty()) {
+        var filteredIssues = validationIssueEntities.stream().filter(el -> {
+          boolean isRecordAlreadyPresent = false;
+          for (var validationIssue : student.getPenRequestBatchStudentValidationIssueEntities()) {
+            if (StringUtils.equalsIgnoreCase(validationIssue.getAdditionalInfo(), el.getAdditionalInfo())
+                && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationFieldCode(), el.getPenRequestBatchValidationFieldCode())
+                && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationIssueSeverityCode(), el.getPenRequestBatchValidationIssueSeverityCode())
+                && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationIssueTypeCode(), el.getPenRequestBatchValidationIssueTypeCode())) {
+              isRecordAlreadyPresent = true;
+              break;
+            }
+          }
+          return !isRecordAlreadyPresent;
+        }).collect(Collectors.toSet());
+        student.getPenRequestBatchStudentValidationIssueEntities().addAll(filteredIssues);
+      } else {
+        student.getPenRequestBatchStudentValidationIssueEntities().addAll(validationIssueEntities);
+      }
       getPenRequestBatchStudentService().saveAttachedEntity(student);
     } else {
       log.error("Student request record could not be found for :: {}", penRequestBatchStudentID);

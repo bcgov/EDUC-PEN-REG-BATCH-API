@@ -186,10 +186,9 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    *
    * @param event    the event
    * @param sagaData the saga data
-   * @throws JsonProcessingException the json processing exception
    */
   @Override
-  protected void saveDemogValidationResults(Event event, PenRequestBatchStudentSagaData sagaData) throws JsonProcessingException {
+  protected void saveDemogValidationResults(Event event, PenRequestBatchStudentSagaData sagaData) {
     if (event.getEventType() == VALIDATE_STUDENT_DEMOGRAPHICS
         && event.getEventPayload() != null) {
       PenRequestBatchStudentStatusCodes statusCode;
@@ -198,12 +197,16 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
       } else {
         statusCode = PenRequestBatchStudentStatusCodes.FIXABLE;
       }
-      TypeReference<List<PenRequestBatchStudentValidationIssue>> responseType = new TypeReference<>() {
-      };
-      var validationResults = new ObjectMapper().readValue(event.getEventPayload(), responseType);
-      if (!validationResults.isEmpty()) {
-        var mappedEntities = validationResults.stream().map(issueMapper::toModel).collect(Collectors.toList());
-        getPenRequestBatchStudentOrchestratorService().saveDemogValidationResultsAndUpdateStudentStatus(mappedEntities, statusCode, sagaData.getPenRequestBatchStudentID());
+      try {
+        TypeReference<List<PenRequestBatchStudentValidationIssue>> responseType = new TypeReference<>() {
+        };
+        var validationResults = new ObjectMapper().readValue(event.getEventPayload(), responseType);
+        if (!validationResults.isEmpty()) {
+          var mappedEntities = validationResults.stream().map(issueMapper::toModel).collect(Collectors.toList());
+          getPenRequestBatchStudentOrchestratorService().saveDemogValidationResultsAndUpdateStudentStatus(mappedEntities, statusCode, sagaData.getPenRequestBatchStudentID());
+        }
+      }catch (final JsonProcessingException ex){
+        log.error("json exception for :: {} {}", event.getSagaId().toString(), ex);
       }
     }
   }
