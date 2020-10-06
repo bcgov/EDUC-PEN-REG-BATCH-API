@@ -19,6 +19,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -41,20 +42,18 @@ import static lombok.AccessLevel.PRIVATE;
 public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestBatchStudentSagaData> {
 
   /**
-   * The Pen request batch student orchestrator service.
-   */
-  @Getter(PRIVATE)
-  private final PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService;
-
-  /**
    * The constant penMatchSagaMapper.
    */
   private static final PenMatchSagaMapper penMatchSagaMapper = PenMatchSagaMapper.mapper;
-
   /**
    * The constant validationMapper.
    */
   private static final PenStudentDemogValidationMapper validationMapper = PenStudentDemogValidationMapper.mapper;
+  /**
+   * The Pen request batch student orchestrator service.
+   */
+  @Getter(PRIVATE)
+  private final PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService;
 
 
   /**
@@ -190,7 +189,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
   @Override
   protected void saveDemogValidationResults(Event event, PenRequestBatchStudentSagaData sagaData) {
     if (event.getEventType() == VALIDATE_STUDENT_DEMOGRAPHICS
-        && event.getEventPayload() != null) {
+        && StringUtils.isNotBlank(event.getEventPayload())) {
       PenRequestBatchStudentStatusCodes statusCode;
       if (event.getEventOutcome() == VALIDATION_SUCCESS_WITH_ERROR) {
         statusCode = PenRequestBatchStudentStatusCodes.ERROR;
@@ -205,7 +204,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
           var mappedEntities = validationResults.stream().map(issueMapper::toModel).collect(Collectors.toList());
           getPenRequestBatchStudentOrchestratorService().saveDemogValidationResultsAndUpdateStudentStatus(mappedEntities, statusCode, sagaData.getPenRequestBatchStudentID());
         }
-      }catch (final JsonProcessingException ex){
+      } catch (final JsonProcessingException ex) {
         log.error("json exception for :: {} {}", event.getSagaId().toString(), ex);
       }
     }
