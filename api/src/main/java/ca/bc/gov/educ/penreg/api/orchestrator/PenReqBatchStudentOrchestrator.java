@@ -190,7 +190,8 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
   @Override
   protected void saveDemogValidationResults(Event event, PenRequestBatchStudentSagaData sagaData) {
     if (event.getEventType() == VALIDATE_STUDENT_DEMOGRAPHICS
-        && StringUtils.isNotBlank(event.getEventPayload())) {
+        && StringUtils.isNotBlank(event.getEventPayload())
+        && !StringUtils.equalsIgnoreCase(VALIDATION_SUCCESS_NO_ERROR_WARNING.toString(), event.getEventPayload())) {
       PenRequestBatchStudentStatusCodes statusCode;
       if (event.getEventOutcome() == VALIDATION_SUCCESS_WITH_ERROR) {
         statusCode = PenRequestBatchStudentStatusCodes.ERROR;
