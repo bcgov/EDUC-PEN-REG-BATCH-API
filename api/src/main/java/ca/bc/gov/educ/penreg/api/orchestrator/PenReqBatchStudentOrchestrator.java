@@ -94,12 +94,14 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    * @throws JsonProcessingException the json processing exception
    */
   private void validateStudentDemographics(Event event, Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) throws JsonProcessingException {
+    var scrubbedSagaData = getPenRequestBatchStudentOrchestratorService()
+        .scrubPayload(penRequestBatchStudentSagaData);
     SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(VALIDATE_STUDENT_DEMOGRAPHICS.toString());
+    saga.setPayload(JsonUtil.getJsonStringFromObject(scrubbedSagaData)); // update the payload with scrubbed values to use it in the saga process...
     getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
-    var validationPayload = getPenRequestBatchStudentOrchestratorService()
-        .scrubValidationPayload(validationMapper.toStudentDemogValidationPayload(penRequestBatchStudentSagaData));
+    var validationPayload = validationMapper.toStudentDemogValidationPayload(scrubbedSagaData);
 
     validationPayload.setTransactionID(saga.getSagaId().toString());
     var eventPayload = JsonUtil.getJsonString(validationPayload);
@@ -157,9 +159,8 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    * @param event                          the event
    * @param saga                           the saga
    * @param penRequestBatchStudentSagaData the pen request batch student saga data
-   * @throws JsonProcessingException the json processing exception
    */
-  private void processPenMatch(final Event event, final Saga saga, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) throws JsonProcessingException {
+  private void processPenMatch(final Event event, final Saga saga, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
     SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(PROCESS_PEN_MATCH.toString());
     getSagaService().updateAttachedSagaWithEvents(saga, eventStates);

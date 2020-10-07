@@ -317,7 +317,7 @@ public class PenRequestBatchStudentOrchestratorService {
   }
 
   /**
-   * the method makes a deep clone as it needs the original payload to do comparison and update fields.
+   * the method makes a deep clone as it needs the original sagaData to do comparison and update fields.
    * Perform the following actions on the CurrentRequest:
    * <p>
    * Remove periods from all legal and usual names elements
@@ -332,35 +332,35 @@ public class PenRequestBatchStudentOrchestratorService {
    * Blank out usual middle name if it is the same as (legal given name + space + legal middle name)
    * Blank out usual middle name if it is contained within legal middle name
    *
-   * @param payload the payload which needs to be updated.
-   * @return the updated payload.
+   * @param sagaData the sagaData which needs to be updated.
+   * @return the updated sagaData.
    * @throws JsonProcessingException the json processing exception
    */
-  public PenRequestBatchStudentValidationPayload scrubValidationPayload(PenRequestBatchStudentValidationPayload payload) throws JsonProcessingException {
-    PenRequestBatchStudentValidationPayload updatedPayload = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentValidationPayload.class, JsonUtil.getJsonStringFromObject(payload));
-    if (StringUtils.isNotBlank(payload.getLegalLastName())) {
-      updatedPayload.setLegalLastName(scrubNameField(payload.getLegalLastName()));
+  public PenRequestBatchStudentSagaData scrubPayload(PenRequestBatchStudentSagaData sagaData) throws JsonProcessingException {
+    PenRequestBatchStudentSagaData updatedPayload = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, JsonUtil.getJsonStringFromObject(sagaData));
+    if (StringUtils.isNotBlank(sagaData.getLegalLastName())) {
+      updatedPayload.setLegalLastName(scrubNameField(sagaData.getLegalLastName()));
     }
-    if (StringUtils.isNotBlank(payload.getLegalFirstName())) {
-      updatedPayload.setLegalFirstName(scrubNameField(payload.getLegalFirstName()));
+    if (StringUtils.isNotBlank(sagaData.getLegalFirstName())) {
+      updatedPayload.setLegalFirstName(scrubNameField(sagaData.getLegalFirstName()));
     }
-    if (StringUtils.isNotBlank(payload.getLegalMiddleNames())) {
-      updatedPayload.setLegalMiddleNames(scrubNameField(payload.getLegalMiddleNames()));
+    if (StringUtils.isNotBlank(sagaData.getLegalMiddleNames())) {
+      updatedPayload.setLegalMiddleNames(scrubNameField(sagaData.getLegalMiddleNames()));
     }
-    var usualFirstName = payload.getUsualFirstName();
+    var usualFirstName = sagaData.getUsualFirstName();
     if (StringUtils.isNotEmpty(usualFirstName)) {
-      if (usualFirstName.trim().length() == 1 || usualFirstName.trim().equalsIgnoreCase(payload.getLegalFirstName())) {
+      if (usualFirstName.trim().length() == 1 || usualFirstName.trim().equalsIgnoreCase(sagaData.getLegalFirstName())) {
         updatedPayload.setUsualFirstName("");
       }
     }
-    var usualLastName = payload.getUsualLastName();
+    var usualLastName = sagaData.getUsualLastName();
     if (StringUtils.isNotEmpty(usualLastName)) {
-      if (usualLastName.trim().length() == 1 || usualLastName.trim().equalsIgnoreCase(payload.getLegalLastName())) {
+      if (usualLastName.trim().length() == 1 || usualLastName.trim().equalsIgnoreCase(sagaData.getLegalLastName())) {
         updatedPayload.setUsualLastName("");
       }
     }
-    var usualMiddleName = payload.getUsualMiddleNames();
-    if (doesMiddleNameNeedsToBeBlank(usualMiddleName, payload)) {
+    var usualMiddleName = sagaData.getUsualMiddleNames();
+    if (doesMiddleNameNeedsToBeBlank(usualMiddleName, sagaData)) {
       updatedPayload.setUsualMiddleNames("");
     }
 
@@ -374,16 +374,16 @@ public class PenRequestBatchStudentOrchestratorService {
    * Blank out usual middle name if it is contained within legal middle name
    *
    * @param usualMiddleName the usual middle name
-   * @param payload         the payload
+   * @param sagaData         the sagaData
    * @return boolean boolean
    */
-  private boolean doesMiddleNameNeedsToBeBlank(String usualMiddleName, PenRequestBatchStudentValidationPayload payload) {
+  private boolean doesMiddleNameNeedsToBeBlank(String usualMiddleName, PenRequestBatchStudentSagaData sagaData) {
     return StringUtils.isNotEmpty(usualMiddleName)
         && (usualMiddleName.trim().length() == 1
-        || areBothFieldValueEqual(usualMiddleName, payload.getLegalMiddleNames())
-        || areBothFieldValueEqual(usualMiddleName, payload.getLegalFirstName())
-        || (StringUtils.isNotBlank(payload.getLegalMiddleNames()) && payload.getLegalMiddleNames().contains(usualMiddleName))
-        || (usualMiddleName.trim().equals(payload.getLegalFirstName() + " " + payload.getLegalMiddleNames())));
+        || areBothFieldValueEqual(usualMiddleName, sagaData.getLegalMiddleNames())
+        || areBothFieldValueEqual(usualMiddleName, sagaData.getLegalFirstName())
+        || (StringUtils.isNotBlank(sagaData.getLegalMiddleNames()) && sagaData.getLegalMiddleNames().contains(usualMiddleName))
+        || (usualMiddleName.trim().equals(sagaData.getLegalFirstName() + " " + sagaData.getLegalMiddleNames())));
   }
 
   /**
