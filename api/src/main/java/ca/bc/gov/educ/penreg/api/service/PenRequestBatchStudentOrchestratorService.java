@@ -374,7 +374,7 @@ public class PenRequestBatchStudentOrchestratorService {
    * Blank out usual middle name if it is contained within legal middle name
    *
    * @param usualMiddleName the usual middle name
-   * @param sagaData         the sagaData
+   * @param sagaData        the sagaData
    * @return boolean boolean
    */
   private boolean doesMiddleNameNeedsToBeBlank(String usualMiddleName, PenRequestBatchStudentSagaData sagaData) {
@@ -422,7 +422,8 @@ public class PenRequestBatchStudentOrchestratorService {
       int priority = 1;
       for (var penMatchRecord : penMatchRecords) {
         PenRequestBatchStudentPossibleMatchEntity entity = new PenRequestBatchStudentPossibleMatchEntity();
-        entity.setMatchedPen(penMatchRecord.getMatchingPEN());
+        //remove the question mark from pen before saving...
+        entity.setMatchedPen(penMatchRecord.getMatchingPEN().length() < 10 ? penMatchRecord.getMatchingPEN() : penMatchRecord.getMatchingPEN().substring(0, 9));
         entity.setMatchedPriority(priority++);
         entity.setMatchedStudentId(UUID.fromString(penMatchRecord.getStudentID()));
         entity.setPenRequestBatchStudentEntity(student); // PK/FK relationship.
