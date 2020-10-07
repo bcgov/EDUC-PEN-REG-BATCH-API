@@ -43,7 +43,7 @@ public abstract class BaseOrchestrator<T> {
   /**
    * The constant SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT.
    */
-  protected static final String SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT = "system is going to execute next event :: {} for current event {}";
+  protected static final String SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT = "system is going to execute next event :: {} for current event {} and SAGA ID :: {}";
   /**
    * The constant API_NAME.
    */
@@ -316,7 +316,7 @@ public abstract class BaseOrchestrator<T> {
           .build();
       Optional<SagaEventState<T>> sagaEventState = findNextSagaEventState(currentEvent, eventOutcome);
       if (sagaEventState.isPresent()) {
-        log.trace(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.get().getNextEventType(), event.toString());
+        log.trace(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.get().getNextEventType(), event.toString(), saga.getSagaId());
         invokeNextEvent(event, saga, t, sagaEventState.get());
       }
     }
@@ -338,7 +338,7 @@ public abstract class BaseOrchestrator<T> {
         .build();
     Optional<SagaEventState<T>> sagaEventState = findNextSagaEventState(INITIATED, INITIATE_SUCCESS);
     if (sagaEventState.isPresent()) {
-      log.trace(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.get().getNextEventType(), event.toString());
+      log.trace(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.get().getNextEventType(), event.toString(), saga.getSagaId());
       invokeNextEvent(event, saga, t, sagaEventState.get());
     }
   }
@@ -355,7 +355,7 @@ public abstract class BaseOrchestrator<T> {
   @Transactional
   public void executeSagaEvent(@NotNull Event event) throws InterruptedException, IOException, TimeoutException {
     Optional<Saga> sagaOptional;
-    log.trace("executing saga event {}", event);
+    log.info("executing saga event {}", event);
     if (event.getEventType() == EventType.READ_FROM_TOPIC && event.getEventOutcome() == EventOutcome.READ_FROM_TOPIC_SUCCESS) {
       PenRequestBatchStudentSagaData penRequestBatchStudentSagaData = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, event.getEventPayload());
       sagaOptional = getSagaService().findByPenRequestBatchStudentID(penRequestBatchStudentSagaData.getPenRequestBatchStudentID());
@@ -437,7 +437,7 @@ public abstract class BaseOrchestrator<T> {
     T sagaData = JsonUtil.getJsonObjectFromString(clazz, saga.getPayload());
     if (!saga.getSagaState().equalsIgnoreCase(COMPLETED.toString())
         && isNotProcessedEvent(event.getEventType(), saga, this.nextStepsToExecute.keySet())) {
-      log.info(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.getNextEventType(), event.toString());
+      log.info(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.getNextEventType(), event.toString(), saga.getSagaId());
       invokeNextEvent(event, saga, sagaData, sagaEventState);
     } else {
       log.info("ignoring this message as we have already processed it or it is completed. {}", event.toString()); // it is expected to receive duplicate message in saga pattern, system should be designed to handle duplicates.

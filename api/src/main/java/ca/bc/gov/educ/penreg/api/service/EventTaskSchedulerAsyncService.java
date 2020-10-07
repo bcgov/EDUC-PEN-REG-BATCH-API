@@ -4,9 +4,11 @@ import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchStudentSagaDataMap
 import ca.bc.gov.educ.penreg.api.batch.processor.PenRegBatchStudentRecordsProcessor;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchHistoryEntity;
+import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -44,11 +46,14 @@ import static lombok.AccessLevel.PRIVATE;
 public class EventTaskSchedulerAsyncService {
 
   /**
+   * The constant mapper.
+   */
+  private static final PenRequestBatchStudentSagaDataMapper mapper = PenRequestBatchStudentSagaDataMapper.mapper;
+  /**
    * The Saga repository.
    */
   @Getter(PRIVATE)
   private final SagaRepository sagaRepository;
-
   /**
    * The Pen request batch repository.
    */
@@ -64,12 +69,6 @@ public class EventTaskSchedulerAsyncService {
    */
   @Getter(PRIVATE)
   private final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor;
-
-  /**
-   * The constant mapper.
-   */
-  private static final PenRequestBatchStudentSagaDataMapper mapper = PenRequestBatchStudentSagaDataMapper.mapper;
-
   /**
    * The Status filters.
    */
@@ -100,22 +99,51 @@ public class EventTaskSchedulerAsyncService {
     var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
     if (!penReqBatches.isEmpty()) {
       var penReqBatchEntities = new ArrayList<PenRequestBatchEntity>();
-      penReqBatches.forEach(el -> {
-        var studentEntitiesAlreadyInProcess = getSagaRepository().findByPenRequestBatchID(el.getPenRequestBatchID());
-        if (!studentEntitiesAlreadyInProcess.isEmpty()) {
-          long count = studentEntitiesAlreadyInProcess.stream().filter(saga -> saga.getStatus().equalsIgnoreCase(SagaStatusEnum.COMPLETED.toString())).count();
-          if (count == studentEntitiesAlreadyInProcess.size()) {
-            el.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ACTIVE.getCode());
-            PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(el, PenRequestBatchStatusCodes.ACTIVE.getCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
-            el.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
-            penReqBatchEntities.add(el);
+      for (var penRequestBatchEntity : penReqBatches) {
+        var studentSagaRecords = getSagaRepository().findByPenRequestBatchID(penRequestBatchEntity.getPenRequestBatchID());
+        var studentEntities = penRequestBatchEntity.getPenRequestBatchStudentEntities();
+        var repeatCount = studentEntities.stream().filter(student -> PenRequestBatchStudentStatusCodes.REPEAT.toString().equals(student.getPenRequestBatchStudentStatusCode())).count();
+        if (penRequestBatchEntity.getStudentCount() == repeatCount) { // all records are repeats, need to be marked active.
+          penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ACTIVE.getCode());
+          PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchStatusCodes.ACTIVE.getCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
+          penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
+          penReqBatchEntities.add(penRequestBatchEntity);
+        } else if (!studentSagaRecords.isEmpty()) {
+          long count = studentSagaRecords.stream().filter(saga -> saga.getStatus().equalsIgnoreCase(SagaStatusEnum.COMPLETED.toString())).count();
+          if (count == studentSagaRecords.size()) { // All records are processed mark batch to active.
+            setDifferentCounts(penRequestBatchEntity, studentEntities);
+            penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ACTIVE.getCode());
+            PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchStatusCodes.ACTIVE.getCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
+            penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
+            penReqBatchEntities.add(penRequestBatchEntity);
           }
         }
-      });
+      }
       if (!penReqBatchEntities.isEmpty()) {
         getPenRequestBatchRepository().saveAll(penReqBatchEntities); // update all of them in one commit.
       }
     }
+  }
+
+  private void setDifferentCounts(PenRequestBatchEntity penRequestBatchEntity, Set<PenRequestBatchStudentEntity> studentEntities) {
+    //run through the student records and update the counts on the header record...
+    long errorCount = 0;
+    long fixableCount = 0;
+    long matchedCount = 0;
+    for (var studentReq : studentEntities) {
+      if (PenRequestBatchStudentStatusCodes.FIXABLE.toString().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
+        fixableCount++;
+      }
+      if (PenRequestBatchStudentStatusCodes.ERROR.toString().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
+        errorCount++;
+      }
+      if (PenRequestBatchStudentStatusCodes.SYS_MATCHED.toString().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
+        matchedCount++;
+      }
+    }
+    penRequestBatchEntity.setErrorCount(errorCount);
+    penRequestBatchEntity.setFixableCount(fixableCount);
+    penRequestBatchEntity.setMatchedCount(matchedCount);
   }
 
   /**
