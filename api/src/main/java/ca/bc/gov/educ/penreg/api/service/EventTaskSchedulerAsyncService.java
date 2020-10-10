@@ -98,6 +98,7 @@ public class EventTaskSchedulerAsyncService {
   public void markProcessedBatchesActive() {
     var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
     if (!penReqBatches.isEmpty()) {
+      log.info("found {} records in repeat checked state", penReqBatches.size());
       var penReqBatchEntities = new ArrayList<PenRequestBatchEntity>();
       for (var penRequestBatchEntity : penReqBatches) {
         var studentSagaRecords = getSagaRepository().findByPenRequestBatchID(penRequestBatchEntity.getPenRequestBatchID());
@@ -120,6 +121,7 @@ public class EventTaskSchedulerAsyncService {
         }
       }
       if (!penReqBatchEntities.isEmpty()) {
+        log.info("marking {} records ACTIVE", penReqBatchEntities.size());
         getPenRequestBatchRepository().saveAll(penReqBatchEntities); // update all of them in one commit.
       }
     }
