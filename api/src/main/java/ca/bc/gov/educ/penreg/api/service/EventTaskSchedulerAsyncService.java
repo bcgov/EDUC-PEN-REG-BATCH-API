@@ -131,13 +131,13 @@ public class EventTaskSchedulerAsyncService {
     long fixableCount = 0;
     long matchedCount = 0;
     for (var studentReq : studentEntities) {
-      if (PenRequestBatchStudentStatusCodes.FIXABLE.toString().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
+      if (PenRequestBatchStudentStatusCodes.FIXABLE.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
         fixableCount++;
       }
-      if (PenRequestBatchStudentStatusCodes.ERROR.toString().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
+      if (PenRequestBatchStudentStatusCodes.ERROR.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
         errorCount++;
       }
-      if (PenRequestBatchStudentStatusCodes.SYS_MATCHED.toString().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
+      if (PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
         matchedCount++;
       }
     }
