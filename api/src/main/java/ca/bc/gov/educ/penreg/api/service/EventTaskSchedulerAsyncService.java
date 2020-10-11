@@ -139,7 +139,7 @@ public class EventTaskSchedulerAsyncService {
       if (PenRequestBatchStudentStatusCodes.ERROR.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
         errorCount++;
       }
-      if (PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
+      if (PenRequestBatchStudentStatusCodes.MATCHED_SYS.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
         matchedCount++;
       }
     }

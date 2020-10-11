@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -132,16 +133,28 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    * @throws TimeoutException     the timeout exception
    */
   private void processPenMatchResults(Event event, Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) throws IOException, InterruptedException, TimeoutException {
-    SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
-    saga.setSagaState(PROCESS_PEN_MATCH_RESULTS.toString());
-    var penMatchResult = JsonUtil.getJsonObjectFromString(PenMatchResult.class, event.getEventPayload());
-    penRequestBatchStudentSagaData.setPenMatchResult(penMatchResult); // update the original payload with response from PEN_MATCH_API
-    saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchStudentSagaData)); // save the updated payload to DB...
-    getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-    if (!penMatchResult.getMatchingRecords().isEmpty()) {
-      getPenRequestBatchStudentOrchestratorService().persistPossibleMatches(saga.getPenRequestBatchStudentID(), penMatchResult.getMatchingRecords());
+    Optional<Event> eventOptional;
+    if (penRequestBatchStudentSagaData.getIsPENMatchResultsProcessed() == null || !penRequestBatchStudentSagaData.getIsPENMatchResultsProcessed()) {
+      // this is necessary to check, to avoid duplicate execution during replay process.
+      SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
+      saga.setSagaState(PROCESS_PEN_MATCH_RESULTS.toString());
+      var penMatchResult = JsonUtil.getJsonObjectFromString(PenMatchResult.class, event.getEventPayload());
+      penRequestBatchStudentSagaData.setPenMatchResult(penMatchResult); // update the original payload with response from PEN_MATCH_API
+      saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchStudentSagaData)); // save the updated payload to DB...
+      getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
+      if (!penMatchResult.getMatchingRecords().isEmpty()) {
+        getPenRequestBatchStudentOrchestratorService().persistPossibleMatches(saga.getPenRequestBatchStudentID(), penMatchResult.getMatchingRecords());
+      }
+      eventOptional = getPenRequestBatchStudentOrchestratorService().processPenMatchResult(saga, penRequestBatchStudentSagaData, penMatchResult);
+      penRequestBatchStudentSagaData.setIsPENMatchResultsProcessed(true);
+      saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchStudentSagaData)); // save the updated payload to DB...
+      getSagaService().updateAttachedEntityDuringSagaProcess(saga);
+    } else {
+      eventOptional = Optional.of(Event.builder().sagaId(saga.getSagaId())
+          .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED).eventPayload(penRequestBatchStudentSagaData.getPenMatchResult().getPenStatus())
+          .build());
     }
-    var eventOptional = getPenRequestBatchStudentOrchestratorService().processPenMatchResult(saga, penRequestBatchStudentSagaData, penMatchResult);
+
     if (eventOptional.isPresent()) {
       executeSagaEvent(eventOptional.get());
     } else {

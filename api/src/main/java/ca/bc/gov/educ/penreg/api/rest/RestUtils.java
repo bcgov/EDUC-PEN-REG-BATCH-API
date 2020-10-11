@@ -160,4 +160,18 @@ public class RestUtils {
     headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
     return restTemplate.exchange(props.getStudentApiURL(), HttpMethod.POST, new HttpEntity<>(student, headers), Student.class).getBody();
   }
+
+  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
+  public Optional<Student> getStudentByPEN(String pen) {
+    RestTemplate restTemplate = getRestTemplate();
+    HttpHeaders headers = new HttpHeaders();
+    headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+    ParameterizedTypeReference<List<Student>> responseType = new ParameterizedTypeReference<>() {
+    };
+    List<Student> students = restTemplate.exchange(props.getStudentApiURL() + "/?pen=" + pen, HttpMethod.GET, new HttpEntity<>(PARAMETERS_ATTRIBUTE, headers), responseType).getBody();
+    if (students != null && !students.isEmpty()) {
+      return Optional.of(students.get(0));
+    }
+    return Optional.empty();
+  }
 }

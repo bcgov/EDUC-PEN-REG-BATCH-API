@@ -18,7 +18,7 @@ public enum PenRequestBatchStudentStatusCodes {
   /**
    * Sys matched pen request batch student status codes.
    */
-  SYS_MATCHED("MATCHEDSYS"),
+  MATCHED_SYS("MATCHEDSYS"),
   /**
    * Sys new pen pen request batch student status codes.
    */
@@ -56,5 +56,10 @@ public enum PenRequestBatchStudentStatusCodes {
    */
   PenRequestBatchStudentStatusCodes(String code) {
     this.code = code;
+  }
+
+  @Override
+  public String toString(){
+    return this.getCode();
   }
 }

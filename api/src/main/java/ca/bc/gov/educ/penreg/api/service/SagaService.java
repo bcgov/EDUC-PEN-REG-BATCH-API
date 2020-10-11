@@ -72,6 +72,7 @@ public class SagaService {
    * @param sagaEvent the saga event
    */
   @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void updateAttachedSagaWithEvents(Saga saga, SagaEvent sagaEvent) {
     saga.setUpdateDate(LocalDateTime.now());
     getSagaRepository().save(saga);
@@ -121,5 +122,11 @@ public class SagaService {
    */
   public Optional<Saga> findByPenRequestBatchStudentID(UUID penRequestBatchStudentID){
     return getSagaRepository().findByPenRequestBatchStudentID(penRequestBatchStudentID);
+  }
+  
+  @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void updateAttachedEntityDuringSagaProcess(Saga saga){
+    getSagaRepository().save(saga);
   }
 }
