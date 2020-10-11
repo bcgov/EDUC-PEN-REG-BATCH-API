@@ -415,8 +415,7 @@ public class PenRequestBatchStudentOrchestratorService {
    * @return the boolean
    */
   protected boolean areBothFieldValueEqual(String field1, String field2) {
-    return ((field1 == null && field2 == null)
-        || (field1 != null && field2 != null && field1.trim().equals(field2.trim())));
+    return StringUtils.equals(StringUtils.trim(field1), StringUtils.trim(field2));
   }
 
   /**
