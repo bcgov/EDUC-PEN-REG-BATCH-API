@@ -1,0 +1,36 @@
+--PEN Request Batch Student Status Codes
+UPDATE PEN_REQUEST_BATCH_STUDENT_STATUS_CODE
+SET    DISPLAY_ORDER = '1', LABEL = 'Matched by system', DESCRIPTION = 'Request matched to an existing student by the system'
+WHERE  PEN_REQUEST_BATCH_STUDENT_STATUS_CODE = 'MATCHEDSYS';
+
+UPDATE PEN_REQUEST_BATCH_STUDENT_STATUS_CODE
+SET    DISPLAY_ORDER = '2', LABEL = 'Matched by user', DESCRIPTION = 'Request matched to an existing student by a staff member'
+WHERE  PEN_REQUEST_BATCH_STUDENT_STATUS_CODE = 'MATCHEDUSR';
+
+UPDATE PEN_REQUEST_BATCH_STUDENT_STATUS_CODE
+SET    DISPLAY_ORDER = '3', LABEL = 'New PEN by system', DESCRIPTION = 'Request triggered the creation of a new PEN by the system'
+WHERE  PEN_REQUEST_BATCH_STUDENT_STATUS_CODE = 'NEWPENSYS';
+
+UPDATE PEN_REQUEST_BATCH_STUDENT_STATUS_CODE
+SET    DISPLAY_ORDER = '4', LABEL = 'New PEN by user', DESCRIPTION = 'Request triggered the creation of a new PEN by the user'
+WHERE  PEN_REQUEST_BATCH_STUDENT_STATUS_CODE = 'NEWPENUSR';
+
+UPDATE PEN_REQUEST_BATCH_STUDENT_STATUS_CODE
+SET    DISPLAY_ORDER = '5', LABEL = 'Fixable Request', DESCRIPTION = 'Request is new and needs manual matching performed by a staff user'
+WHERE  PEN_REQUEST_BATCH_STUDENT_STATUS_CODE = 'FIXABLE';
+
+UPDATE PEN_REQUEST_BATCH_STUDENT_STATUS_CODE
+SET    DISPLAY_ORDER = '6', LABEL = 'Error', DESCRIPTION = 'Request fails one or more validation checks'
+WHERE  PEN_REQUEST_BATCH_STUDENT_STATUS_CODE = 'ERROR';
+
+UPDATE PEN_REQUEST_BATCH_STUDENT_STATUS_CODE
+SET    DISPLAY_ORDER = '7', LABEL = 'Info requested', DESCRIPTION = 'Request returned to the school for additional details needed to process the request'
+WHERE  PEN_REQUEST_BATCH_STUDENT_STATUS_CODE = 'INFOREQ';
+
+UPDATE PEN_REQUEST_BATCH_STUDENT_STATUS_CODE
+SET    DISPLAY_ORDER = '8', LABEL = 'Repeats', DESCRIPTION = 'Request is the same as the last request for this student'
+WHERE  PEN_REQUEST_BATCH_STUDENT_STATUS_CODE = 'REPEAT';
+
+UPDATE PEN_REQUEST_BATCH_STUDENT_STATUS_CODE
+SET    DISPLAY_ORDER = '9', LABEL = 'Loaded', DESCRIPTION = 'Request loaded to database'
+WHERE  PEN_REQUEST_BATCH_STUDENT_STATUS_CODE = 'LOADED';
