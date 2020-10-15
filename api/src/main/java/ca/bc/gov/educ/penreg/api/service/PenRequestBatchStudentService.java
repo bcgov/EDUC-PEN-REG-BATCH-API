@@ -122,6 +122,17 @@ public class PenRequestBatchStudentService {
   }
 
   /**
+   * BE CAREFUL while changing the transaction propagation.
+   *
+   * @param entity the entity
+   */
+  @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
+  @Transactional(propagation = Propagation.MANDATORY)
+  public void saveAttachedEntityWithChildEntities(final PenRequestBatchStudentEntity entity) {
+    repository.save(entity);
+  }
+
+  /**
    * Update student pen request batch student entity.
    *
    * @param entity                   the entity
@@ -240,6 +251,13 @@ public class PenRequestBatchStudentService {
     return getRepository().findById(penRequestBatchStudentID);
   }
 
+  /**
+   * Gets all possible matches.
+   *
+   * @param penRequestBatchID        the pen request batch id
+   * @param penRequestBatchStudentID the pen request batch student id
+   * @return the all possible matches
+   */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
   public Set<PenRequestBatchStudentPossibleMatchEntity> getAllPossibleMatches(UUID penRequestBatchID, UUID penRequestBatchStudentID) {
     var penRequestBatchStudentOptional = getRepository().findById(penRequestBatchStudentID);
