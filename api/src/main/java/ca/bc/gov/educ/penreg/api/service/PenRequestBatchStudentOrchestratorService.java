@@ -314,7 +314,7 @@ public class PenRequestBatchStudentOrchestratorService {
       student.setPenRequestBatchStudentStatusCode(statusCode.getCode());
       student.setUpdateDate(LocalDateTime.now());
       student.setUpdateUser("PEN_REQUEST_BATCH_API");
-      validationIssueEntities.forEach(el -> el.setPenRequestBatchStudentEntity(student)); // create the PK/FK relationship
+
       if (!student.getPenRequestBatchStudentValidationIssueEntities().isEmpty()) {
         var filteredIssues = validationIssueEntities.stream().filter(el -> {
           boolean isRecordAlreadyPresent = false;
@@ -329,8 +329,10 @@ public class PenRequestBatchStudentOrchestratorService {
           }
           return !isRecordAlreadyPresent;
         }).collect(Collectors.toSet());
+        filteredIssues.forEach(el -> el.setPenRequestBatchStudentEntity(student)); // create the PK/FK relationship
         student.getPenRequestBatchStudentValidationIssueEntities().addAll(filteredIssues);
       } else {
+        validationIssueEntities.forEach(el -> el.setPenRequestBatchStudentEntity(student)); // create the PK/FK relationship
         student.getPenRequestBatchStudentValidationIssueEntities().addAll(validationIssueEntities);
       }
       getPenRequestBatchStudentService().saveAttachedEntity(student);
