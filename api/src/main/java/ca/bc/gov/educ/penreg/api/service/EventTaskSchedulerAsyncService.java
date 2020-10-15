@@ -97,8 +97,8 @@ public class EventTaskSchedulerAsyncService {
   @Transactional
   public void markProcessedBatchesActive() {
     var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
+    log.info("found {} records in repeat checked state", penReqBatches.size());
     if (!penReqBatches.isEmpty()) {
-      log.info("found {} records in repeat checked state", penReqBatches.size());
       var penReqBatchEntities = new ArrayList<PenRequestBatchEntity>();
       for (var penRequestBatchEntity : penReqBatches) {
         var studentSagaRecords = getSagaRepository().findByPenRequestBatchID(penRequestBatchEntity.getPenRequestBatchID());
