@@ -311,37 +311,18 @@ public class PenRequestBatchStudentOrchestratorService {
       student.setPenRequestBatchStudentStatusCode(statusCode.getCode());
       student.setUpdateDate(LocalDateTime.now());
       student.setUpdateUser("PEN_REQUEST_BATCH_API");
-
-      if (!student.getPenRequestBatchStudentValidationIssueEntities().isEmpty()) {
-        var filteredIssues = validationIssueEntities.stream().filter(el -> {
-          boolean isRecordAlreadyPresent = false;
-          for (var validationIssue : student.getPenRequestBatchStudentValidationIssueEntities()) {
-            if (StringUtils.equalsIgnoreCase(validationIssue.getAdditionalInfo(), el.getAdditionalInfo())
-                && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationFieldCode(), el.getPenRequestBatchValidationFieldCode())
-                && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationIssueSeverityCode(), el.getPenRequestBatchValidationIssueSeverityCode())
-                && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationIssueTypeCode(), el.getPenRequestBatchValidationIssueTypeCode())) {
-              isRecordAlreadyPresent = true;
-              break;
-            }
-          }
-          return !isRecordAlreadyPresent;
-        }).collect(Collectors.toSet());
-        addValidationIssueEntitiesToStudent(filteredIssues, student);
-      } else {
-        addValidationIssueEntitiesToStudent(validationIssueEntities, student);
+      log.info("current validation issue entities size {} for Student :: {}", student.getPenRequestBatchStudentValidationIssueEntities().size(), student.getPenRequestBatchStudentID());
+      if(student.getPenRequestBatchStudentValidationIssueEntities().isEmpty()) { // add only when there is no existing records.
+        validationIssueEntities.forEach(el -> el.setPenRequestBatchStudentEntity(student)); // create the PK/FK relationship
+        student.getPenRequestBatchStudentValidationIssueEntities().addAll(validationIssueEntities);
       }
       getPenRequestBatchStudentService().saveAttachedEntity(student);
+
     } else {
       log.error("Student request record could not be found for :: {}", penRequestBatchStudentID);
     }
   }
 
-  private void addValidationIssueEntitiesToStudent(Collection<PenRequestBatchStudentValidationIssueEntity> validationIssueEntities, PenRequestBatchStudentEntity student) {
-    for(var issue: validationIssueEntities){
-      issue.setPenRequestBatchStudentEntity(student);
-      student.getPenRequestBatchStudentValidationIssueEntities().add(issue);
-    }
-  }
 
   /**
    * the method makes a deep clone as it needs the original sagaData to do comparison and update fields.
