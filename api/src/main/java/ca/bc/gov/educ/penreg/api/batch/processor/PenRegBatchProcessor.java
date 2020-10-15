@@ -90,10 +90,9 @@ public class PenRegBatchProcessor {
    * 2. <p>If The data is successfully retrieved from TSW table and file header cant be parsed, system will create only the header record and persist it.
    *
    * @param penWebBlobEntity the pen web blob entity
-   * @return the string
    */
   @Transactional
-  public String processPenRegBatchFileFromPenWebBlob(@NonNull final PENWebBlobEntity penWebBlobEntity) {
+  public void processPenRegBatchFileFromPenWebBlob(@NonNull final PENWebBlobEntity penWebBlobEntity) {
     var guid = UUID.randomUUID().toString(); // this guid will be used throughout the logs for easy tracking.
     log.info("Started processing row from Pen Web Blobs with submission Number :: {} and guid :: {}", penWebBlobEntity.getSubmissionNumber(), guid);
     BatchFile batchFile = new BatchFile();
@@ -126,7 +125,6 @@ public class PenRegBatchProcessor {
         }
       }
     }
-    return "SUCCESS";
   }
 
 
@@ -240,7 +238,7 @@ public class PenRegBatchProcessor {
     getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
     // the entity was saved in propagation new context , so system needs to get it again from DB to have an attached entity bound to the current thread.
     final Optional<PenRequestBatchEntity> penRequestBatchEntityOptional = getPenRequestBatchFileService().findEntity(entity.getPenRequestBatchID());
-    if(penRequestBatchEntityOptional.isPresent()){
+    if (penRequestBatchEntityOptional.isPresent()) {
       var noRepeatsEntity = getPenRequestBatchFileService().filterRepeatRequests(penRequestBatchEntityOptional.get());
       return noRepeatsEntity.stream()
           .map(studentSagaDataMapper::toPenReqBatchStudentSagaData)
@@ -248,7 +246,7 @@ public class PenRegBatchProcessor {
             element.setMincode(entity.getMinCode());
             element.setPenRequestBatchID(entity.getPenRequestBatchID());
           }).collect(Collectors.toSet());
-    }else{
+    } else {
       log.info("system knows it wont happen");
     }
     return new HashSet<>();

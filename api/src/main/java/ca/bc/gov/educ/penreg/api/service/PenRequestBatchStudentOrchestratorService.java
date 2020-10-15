@@ -28,8 +28,7 @@ import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_MATCH_RESULTS_PROCESSED;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.PROCESS_PEN_MATCH_RESULTS;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.MATCHED_SYS;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.*;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -155,7 +154,7 @@ public class PenRequestBatchStudentOrchestratorService {
         eventOptional = Optional.of(handleCreateNewStudentStatus(saga, penRequestBatchStudentSagaData, penRequestBatchStudent, penMatchResult));
         break;
       case F1:
-        eventOptional = Optional.of(handleF1Status(saga, penMatchResult, penRequestBatchStudent));
+        eventOptional = Optional.of(handleF1Status(saga, penMatchResult, penRequestBatchStudent)); // FIXABLE
         break;
       default:
         eventOptional = Optional.of(handleDefault(saga, penRequestBatchStudent, penMatchResult));
@@ -175,6 +174,7 @@ public class PenRequestBatchStudentOrchestratorService {
   private Event handleF1Status(Saga saga, PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent) {
     var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
     penMatchRecordOptional.ifPresent(penMatchRecord -> penRequestBatchStudent.setQuestionableMatchStudentId(UUID.fromString(penMatchRecord.getStudentID())));
+    penRequestBatchStudent.setPenRequestBatchStudentStatusCode(FIXABLE.getCode());
     getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
     return Event.builder().sagaId(saga.getSagaId())
         .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
@@ -226,6 +226,7 @@ public class PenRequestBatchStudentOrchestratorService {
       } else {
         penRequestBatchStudent.setStudentID(UUID.fromString(studentFromStudentAPIOptional.get().getStudentID()));
       }
+      penRequestBatchStudent.setPenRequestBatchStudentStatusCode(SYS_NEW_PEN.getCode());
       getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
     } else {
       log.info("Student ID is already present for PRBStudent, replay process..., student ID :: {} , PRBStudent ID:: {}", penRequestBatchStudent.getStudentID(), penRequestBatchStudent.getPenRequestBatchStudentID());

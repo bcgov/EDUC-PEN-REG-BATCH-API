@@ -11,9 +11,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -70,20 +69,10 @@ public class PenRegBatchScheduler implements Closeable {
     var unExtractedRecords = getPenRequestBatchFileService().getAllNotExtractedRecords(FILE_TYPE_PEN); // PEN is the file type based on which records will be filtered.
     if (!unExtractedRecords.isEmpty()) {
       log.info("{} :: records found where extract date is null", unExtractedRecords.size());
-      List<Future<String>> futureResults = new ArrayList<>(unExtractedRecords.size());
       for (var penWebBlob : unExtractedRecords) {
-        final Callable<String> callable = () -> getPenRegBatchProcessor().processPenRegBatchFileFromPenWebBlob(penWebBlob);
-        futureResults.add(executorService.submit(callable));
+        executorService.execute(() -> getPenRegBatchProcessor().processPenRegBatchFileFromPenWebBlob(penWebBlob));
       }
-      // this will make sure that this thread waits for all the processing threads to complete.
-      for (final Future<String> futureResult : futureResults) {
-        try {
-          futureResult.get(); //wait for all the threads to complete
-        } catch (ExecutionException | InterruptedException e) {
-          log.warn("Error waiting for result", e);
-        }
-      }
-    }else {
+    } else {
       log.info("No Records found to be processed.");
     }
   }

@@ -143,11 +143,13 @@ public class PenService {
           pen = restUtils.getLatestPenNumberFromStudentAPI(guid);
           if (pen == 0) {
             throw new PenRegAPIRuntimeException("Invalid Pen Returned from downstream method.");
+          } else {
+            pen += 1; // increase the number by 1 so that it wont be the same which is already associated to a STUDENT.
           }
         }
-        penBucket.set(pen + 1);
+        penBucket.set(pen + 1); // store after increasing.
         semaphore.tryRelease(id);
-        log.debug("PEN IS :: {} for guid :: {}", pen, guid);
+        log.info("PEN IS :: {} for guid :: {}", pen, guid);
         return pen;
       } else {
         log.warn("PEN could not be retrieved, as lock could not be acquired for guid :: {}", guid);

@@ -116,10 +116,8 @@ public class FilterSpecifications<E, T extends Comparable<T>> {
 						getFieldValue(filterCriteria, root, criteriaQuery, associationNames), filterCriteria.getMinValue(),
 						filterCriteria.getMaxValue()));
 
-		map.put(FilterOperation.CONTAINS, (filterCriteria, associationNames) -> (root, criteriaQuery, criteriaBuilder) -> {
-			return criteriaBuilder
-					.like((Expression<String>) getFieldValue(filterCriteria, root, criteriaQuery, associationNames), "%" + filterCriteria.getConvertedSingleValue() + "%");
-		});
+		map.put(FilterOperation.CONTAINS, (filterCriteria, associationNames) -> (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder
+        .like((Expression<String>) getFieldValue(filterCriteria, root, criteriaQuery, associationNames), "%" + filterCriteria.getConvertedSingleValue() + "%"));
 
 		map.put(FilterOperation.CONTAINS_IGNORE_CASE, (filterCriteria, associationNames) -> (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder
 				.like(criteriaBuilder.lower((Expression<String>)getFieldValue(filterCriteria, root, criteriaQuery, associationNames)), "%" + filterCriteria.getConvertedSingleValue().toString().toLowerCase() + "%"));

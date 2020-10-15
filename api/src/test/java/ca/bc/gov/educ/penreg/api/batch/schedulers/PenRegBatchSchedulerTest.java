@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -127,6 +128,9 @@ public class PenRegBatchSchedulerTest {
   @Test
   public void testExtractUnProcessedFilesFromTSW_GivenRowsInTSWithExtractDateNull_ShouldBeProcessed() throws InterruptedException {
     penRegBatchScheduler.extractUnProcessedFilesFromPenWebBlobs();
+    while(studentRepository.findAll().isEmpty()){
+      TimeUnit.MILLISECONDS.sleep(100);
+    }
     assertThat(studentRepository.findAll().size()).isEqualTo(10);
   }
 }
