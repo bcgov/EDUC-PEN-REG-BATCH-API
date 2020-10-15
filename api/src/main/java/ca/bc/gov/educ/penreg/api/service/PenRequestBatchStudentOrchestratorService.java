@@ -19,10 +19,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -329,15 +326,20 @@ public class PenRequestBatchStudentOrchestratorService {
           }
           return !isRecordAlreadyPresent;
         }).collect(Collectors.toSet());
-        filteredIssues.forEach(el -> el.setPenRequestBatchStudentEntity(student)); // create the PK/FK relationship
-        student.getPenRequestBatchStudentValidationIssueEntities().addAll(filteredIssues);
+        addValidationIssueEntitiesToStudent(filteredIssues, student);
       } else {
-        validationIssueEntities.forEach(el -> el.setPenRequestBatchStudentEntity(student)); // create the PK/FK relationship
-        student.getPenRequestBatchStudentValidationIssueEntities().addAll(validationIssueEntities);
+        addValidationIssueEntitiesToStudent(validationIssueEntities, student);
       }
       getPenRequestBatchStudentService().saveAttachedEntity(student);
     } else {
       log.error("Student request record could not be found for :: {}", penRequestBatchStudentID);
+    }
+  }
+
+  private void addValidationIssueEntitiesToStudent(Collection<PenRequestBatchStudentValidationIssueEntity> validationIssueEntities, PenRequestBatchStudentEntity student) {
+    for(var issue: validationIssueEntities){
+      issue.setPenRequestBatchStudentEntity(student);
+      student.getPenRequestBatchStudentValidationIssueEntities().add(issue);
     }
   }
 
