@@ -70,10 +70,8 @@ $KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body
 ###########################################################
 #Setup for config-map
 ###########################################################
-SPLUNK_URL=""
-if [ "$envValue" != "prod" ]; then
-  SPLUNK_URL="dev.splunk.educ.gov.bc.ca"
-  FLB_CONFIG="[SERVICE]
+SPLUNK_URL="gww.splunk.educ.gov.bc.ca"
+FLB_CONFIG="[SERVICE]
    Flush        1
    Daemon       Off
    Log_Level    debug
@@ -101,27 +99,6 @@ if [ "$envValue" != "prod" ]; then
    Message_Key $APP_NAME
    Splunk_Token $SPLUNK_TOKEN
 "
-else
-  FLB_CONFIG="[SERVICE]
-   Flush        1
-   Daemon       Off
-   Log_Level    debug
-   HTTP_Server   On
-   HTTP_Listen   0.0.0.0
-   HTTP_Port     2020
-[INPUT]
-   Name   tail
-   Path   /mnt/log/*
-   Mem_Buf_Limit 20MB
-[FILTER]
-   Name record_modifier
-   Match *
-   Record hostname \${HOSTNAME}
-[OUTPUT]
-   Name   stdout
-   Match  *
-"
-fi
 
 echo Creating config map "$APP_NAME"-config-map
 oc create -n "$PEN_NAMESPACE"-"$envValue" configmap "$APP_NAME"-config-map --from-literal=TZ=$TZVALUE --from-literal=JDBC_URL=$DB_JDBC_CONNECT_STRING --from-literal=ORACLE_USERNAME="$DB_USER" --from-literal=ORACLE_PASSWORD="$DB_PWD" --from-literal=KEYCLOAK_PUBLIC_KEY="$soamFullPublicKey" --from-literal=SPRING_SECURITY_LOG_LEVEL=INFO --from-literal=SPRING_WEB_LOG_LEVEL=INFO --from-literal=APP_LOG_LEVEL=INFO --from-literal=SPRING_BOOT_AUTOCONFIG_LOG_LEVEL=INFO --from-literal=SPRING_SHOW_REQUEST_DETAILS=false --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON="0 0/10 * * * *" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON_LOCK_AT_LEAST_FOR="540s" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON_LOCK_AT_MOST_FOR="580s" --from-literal=NATS_URL="$NATS_URL" --from-literal=NATS_CLUSTER="$NATS_CLUSTER" --from-literal=SPRING_JPA_SHOW_SQL="false" --from-literal=SCHEDULED_JOBS_EXTRACT_UNCOMPLETED_SAGAS_CRON="0 0/1 * * * *" --from-literal=SCHEDULED_JOBS_EXTRACT_UNCOMPLETED_SAGAS_CRON_LOCK_AT_LEAST_FOR="55s" --from-literal=SCHEDULED_JOBS_EXTRACT_UNCOMPLETED_SAGAS_CRON_LOCK_AT_MOST_FOR="57s" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_STUDENTS_CRON="0 0/5 * * * *" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_STUDENTS_CRON_LOCK_AT_LEAST_FOR="250s" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_STUDENTS_CRON_LOCK_AT_MOST_FOR="280s" --from-literal=CLIENT_ID="pen-reg-batch-api-service" --from-literal=CLIENT_SECRET="$PRB_APIServiceClientSecret" --from-literal=STUDENT_API_URL="https://student-api-$COMMON_NAMESPACE-$envValue.pathfinder.gov.bc.ca" --from-literal=TOKEN_URL="https://$SOAM_KC/auth/realms/$SOAM_KC_REALM_ID/protocol/openid-connect/token" --from-literal=REDIS_URL="redis://redis:6379" --from-literal=REPEAT_TIME_WINDOW_K12=60 --from-literal=REPEAT_TIME_WINDOW_PSI=366 --from-literal=SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=20 --from-literal=SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=20 --from-literal=PEN_SERVICES_API_URL="https://pen-services-api-$PEN_NAMESPACE-$envValue.pathfinder.gov.bc.ca" --dry-run -o yaml | oc apply -f -
