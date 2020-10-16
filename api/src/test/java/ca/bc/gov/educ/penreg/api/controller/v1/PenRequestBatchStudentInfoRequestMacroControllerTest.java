@@ -62,20 +62,20 @@ public class PenRequestBatchStudentInfoRequestMacroControllerTest {
   }
 
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQ_BATCH_MACRO")
+  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH_MACRO")
   public void testRetrievePenRequestBatchMacros_ShouldReturnStatusOK() throws Exception {
     this.mockMvc.perform(get("/api/v1/pen-request-batch-macro")).andDo(print()).andExpect(status().isOk());
   }
 
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQ_BATCH_MACRO")
+  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH_MACRO")
   public void testRetrievePenRequestBatchMacros_GivenInvalidMacroID_ShouldReturnStatusNotFound() throws Exception {
     var result = this.mockMvc.perform(get("/api/v1/pen-request-batch-macro/" + UUID.randomUUID().toString())).andDo(print()).andExpect(status().isNotFound());
     assertThat(result).isNotNull();
   }
 
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQ_BATCH_MACRO")
+  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH_MACRO")
   public void testRetrievePenRequestBatchMacros_GivenValidMacroID_ShouldReturnStatusOK() throws Exception {
     val entity = mapper.toModel(getPenRequestMacroEntityFromJsonString());
     entity.setMacroId(null);
@@ -87,21 +87,21 @@ public class PenRequestBatchStudentInfoRequestMacroControllerTest {
   }
 
   @Test
-  @WithMockOAuth2Scope(scope = "WRITE_PEN_REQ_BATCH_MACRO")
+  @WithMockOAuth2Scope(scope = "WRITE_PEN_REQUEST_BATCH_MACRO")
   public void testCreatePenRequestBatchMacros_GivenValidPayload_ShouldReturnStatusCreated() throws Exception {
     this.mockMvc.perform(post("/api/v1/pen-request-batch-macro").contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON).content(dummyPenRequestBatchStudentInfoRequestMacroJson())).andDo(print()).andExpect(status().isCreated());
   }
 
   @Test
-  @WithMockOAuth2Scope(scope = "WRITE_PEN_REQ_BATCH_MACRO")
+  @WithMockOAuth2Scope(scope = "WRITE_PEN_REQUEST_BATCH_MACRO")
   public void testCreatePenRequestMacros_GivenInValidPayload_ShouldReturnStatusBadRequest() throws Exception {
     this.mockMvc.perform(post("/api/v1/pen-request-batch-macro").contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON).content(dummyPenRequestBatchStudentInfoRequestMacroJsonWithId())).andDo(print()).andExpect(status().isBadRequest());
   }
 
   @Test
-  @WithMockOAuth2Scope(scope = "WRITE_PEN_REQ_BATCH_MACRO")
+  @WithMockOAuth2Scope(scope = "WRITE_PEN_REQUEST_BATCH_MACRO")
   public void testUpdatePenRequestMacros_GivenValidPayload_ShouldReturnStatusOK() throws Exception {
     val entity = mapper.toModel(getPenRequestMacroEntityFromJsonString());
     entity.setMacroId(null);
@@ -118,7 +118,7 @@ public class PenRequestBatchStudentInfoRequestMacroControllerTest {
 
   }
   @Test
-  @WithMockOAuth2Scope(scope = "WRITE_PEN_REQ_BATCH_MACRO")
+  @WithMockOAuth2Scope(scope = "WRITE_PEN_REQUEST_BATCH_MACRO")
   public void testUpdatePenRequestMacros_GivenInValidPayload_ShouldReturnStatusNotFound() throws Exception {
     val entity = mapper.toModel(getPenRequestMacroEntityFromJsonString());
     entity.setMacroId(null);

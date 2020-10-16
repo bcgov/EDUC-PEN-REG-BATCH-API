@@ -15,23 +15,23 @@ import static org.springframework.http.HttpStatus.CREATED;
 @RequestMapping("/api/v1/pen-request-batch-macro")
 public interface PenRequestBatchStudentInfoRequestMacroEndpoint {
     @GetMapping
-    @PreAuthorize("#oauth2.hasScope('READ_PEN_REQ_BATCH_MACRO')")
+    @PreAuthorize("#oauth2.hasScope('READ_PEN_REQUEST_BATCH_MACRO')")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
     List<PenRequestBatchStudentInfoRequestMacro> findPenReqMacros();
 
     @GetMapping("/{macroId}")
-    @PreAuthorize("#oauth2.hasScope('READ_PEN_REQ_BATCH_MACRO')")
+    @PreAuthorize("#oauth2.hasScope('READ_PEN_REQUEST_BATCH_MACRO')")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
     PenRequestBatchStudentInfoRequestMacro findPenReqMacroById(@PathVariable UUID macroId);
 
     @PostMapping
-    @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQ_BATCH_MACRO')")
+    @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQUEST_BATCH_MACRO')")
     @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "CREATED")})
     @ResponseStatus(CREATED)
     PenRequestBatchStudentInfoRequestMacro createPenReqMacro(@Validated @RequestBody PenRequestBatchStudentInfoRequestMacro penRequestMacro);
 
     @PutMapping("/{macroId}")
-    @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQ_BATCH_MACRO')")
+    @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQUEST_BATCH_MACRO')")
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
     PenRequestBatchStudentInfoRequestMacro updatePenReqMacro(@PathVariable UUID macroId, @Validated @RequestBody PenRequestBatchStudentInfoRequestMacro penRequestMacro);
 }
