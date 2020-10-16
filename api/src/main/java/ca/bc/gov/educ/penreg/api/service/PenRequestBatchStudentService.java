@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
@@ -206,7 +207,13 @@ public class PenRequestBatchStudentService {
    * @return the list
    */
   public List<PenRequestBatchStudentEntity> findAllRepeatsGivenBatchStudent(PenRequestBatchStudentEntity penRequestBatchStudent) {
-    LocalDateTime startDate = LocalDateTime.now().minusDays(getApplicationProperties().getRepeatTimeWindow());
+    int repeatTimeWindow;
+    if(penRequestBatchStudent.getPenRequestBatchEntity().getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())){
+      repeatTimeWindow = getApplicationProperties().getRepeatTimeWindowPSI();
+    }else {
+      repeatTimeWindow = getApplicationProperties().getRepeatTimeWindowK12();
+    }
+    LocalDateTime startDate = LocalDateTime.now().minusDays(repeatTimeWindow);
     return repository.findAllRepeatsGivenBatchStudent(penRequestBatchStudent.getPenRequestBatchEntity().getMinCode(), PenRequestBatchStatusCodes.ARCHIVED.getCode(), startDate, penRequestBatchStudent.getLocalID(), Arrays.asList(PenRequestBatchStudentStatusCodes.FIXABLE.getCode(), PenRequestBatchStudentStatusCodes.ERROR.getCode(), PenRequestBatchStudentStatusCodes.LOADED.getCode()), penRequestBatchStudent.getSubmittedPen(), penRequestBatchStudent.getLegalFirstName(), penRequestBatchStudent.getLegalMiddleNames(), penRequestBatchStudent.getLegalLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames(), penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getDob(), penRequestBatchStudent.getGenderCode(), penRequestBatchStudent.getGradeCode(), penRequestBatchStudent.getPostalCode());
   }
 
