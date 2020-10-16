@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "PEN_REQUEST_BATCH_STUDENT_INFO_REQUEST_MACRO_ENTITY")
+@Table(name = "PEN_REQUEST_BATCH_STUDENT_INFO_REQUEST_MACRO")
 public class PenRequestBatchStudentInfoRequestMacroEntity {
     @Id
     @GeneratedValue(generator = "UUID")
