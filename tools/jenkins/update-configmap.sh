@@ -67,6 +67,12 @@ $KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body
 #WRITE_PEN_REQUEST_BATCH_BLOB
 $KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body "{\"description\": \"Update Pen Request Batch Source data\",\"id\": \"WRITE_PEN_REQUEST_BATCH_BLOB\",\"name\": \"WRITE_PEN_REQUEST_BATCH_BLOB\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
 
+#READ_PEN_REQUEST_BATCH_MACRO
+$KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body "{\"description\": \"Read Pen Request Batch Macro Data\",\"id\": \"READ_PEN_REQUEST_BATCH_MACRO\",\"name\": \"READ_PEN_REQUEST_BATCH_MACRO\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
+
+#WRITE_PEN_REQUEST_BATCH_MACRO
+$KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body "{\"description\": \"Write Pen Request Batch Macro Data\",\"id\": \"WRITE_PEN_REQUEST_BATCH_MACRO\",\"name\": \"WRITE_PEN_REQUEST_BATCH_MACRO\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
+
 ###########################################################
 #Setup for config-map
 ###########################################################
