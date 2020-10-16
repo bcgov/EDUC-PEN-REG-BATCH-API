@@ -63,7 +63,15 @@ public class ApplicationProperties {
    * Amount of time that can elapse before a duplicate request is not considered a repeat
    */
   @Getter
-  @Value("${repeat.time.window}")
-  private int repeatTimeWindow;
+  @Value("${repeat.time.window.psi}")
+  private int repeatTimeWindowPSI;
+
+  /**
+   * Amount of time that can elapse before a duplicate request is not considered a repeat
+   */
+  @Getter
+  @Value("${repeat.time.window.k12}")
+  private int repeatTimeWindowK12;
+
 
 }
