@@ -450,16 +450,20 @@ public class PenRequestBatchStudentOrchestratorService {
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void persistPossibleMatches(UUID penRequestBatchStudentID, List<PenMatchRecord> penMatchRecords) {
+    log.debug("going to persist possible matches , records size is :: {}", penMatchRecords.size());
     var studentOptional = getPenRequestBatchStudentService().findByID(penRequestBatchStudentID);
     if (studentOptional.isPresent()) {
 
       var student = studentOptional.get();
       int priority = 1;
-      List<PenMatchRecord> filteredPenMatchRecords = Collections.emptyList();
+      List<PenMatchRecord> filteredPenMatchRecords;
       if (!student.getPenRequestBatchStudentPossibleMatchEntities().isEmpty()) { // check if match records are already present, possible when replay process.
         filteredPenMatchRecords = penMatchRecords.stream().filter(getPenMatchRecordPredicate(student)).collect(Collectors.toList()); // update the data so that only new data will be persisted.
+      }else {
+        filteredPenMatchRecords = penMatchRecords;
       }
       if (!filteredPenMatchRecords.isEmpty()) {
+        log.debug("found {} new match records that needs to be stored ",filteredPenMatchRecords.size());
         for (var penMatchRecord : filteredPenMatchRecords) {
           PenRequestBatchStudentPossibleMatchEntity entity = new PenRequestBatchStudentPossibleMatchEntity();
           //remove the question mark from pen before saving...
