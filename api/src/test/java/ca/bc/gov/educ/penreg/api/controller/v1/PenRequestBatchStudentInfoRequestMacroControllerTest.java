@@ -16,7 +16,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -37,7 +36,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class PenRequestBatchStudentInfoRequestMacroControllerTest {
   private static final PenRequestBatchStudentInfoRequestMacroMapper mapper = PenRequestBatchStudentInfoRequestMacroMapper.mapper;
   @Autowired
@@ -66,13 +64,13 @@ public class PenRequestBatchStudentInfoRequestMacroControllerTest {
   @Test
   @WithMockOAuth2Scope(scope = "READ_PEN_REQ_BATCH_MACRO")
   public void testRetrievePenRequestBatchMacros_ShouldReturnStatusOK() throws Exception {
-    this.mockMvc.perform(get("/pen-request-batch-macro")).andDo(print()).andExpect(status().isOk());
+    this.mockMvc.perform(get("/api/v1/pen-request-batch-macro")).andDo(print()).andExpect(status().isOk());
   }
 
   @Test
   @WithMockOAuth2Scope(scope = "READ_PEN_REQ_BATCH_MACRO")
   public void testRetrievePenRequestBatchMacros_GivenInvalidMacroID_ShouldReturnStatusNotFound() throws Exception {
-    var result = this.mockMvc.perform(get("/pen-request-batch-macro/" + UUID.randomUUID().toString())).andDo(print()).andExpect(status().isNotFound());
+    var result = this.mockMvc.perform(get("/api/v1/pen-request-batch-macro/" + UUID.randomUUID().toString())).andDo(print()).andExpect(status().isNotFound());
     assertThat(result).isNotNull();
   }
 
@@ -84,21 +82,21 @@ public class PenRequestBatchStudentInfoRequestMacroControllerTest {
     entity.setCreateDate(LocalDateTime.now());
     entity.setUpdateDate(LocalDateTime.now());
     val savedEntity = service.createMacro(entity);
-    var result = this.mockMvc.perform(get("/pen-request-batch-macro/" + savedEntity.getMacroId().toString())).andDo(print()).andExpect(MockMvcResultMatchers.jsonPath("$.macroId").value(entity.getMacroId().toString())).andExpect(status().isOk()).andReturn();
+    var result = this.mockMvc.perform(get("/api/v1/pen-request-batch-macro/" + savedEntity.getMacroId().toString())).andDo(print()).andExpect(MockMvcResultMatchers.jsonPath("$.macroId").value(entity.getMacroId().toString())).andExpect(status().isOk()).andReturn();
     assertThat(result).isNotNull();
   }
 
   @Test
   @WithMockOAuth2Scope(scope = "WRITE_PEN_REQ_BATCH_MACRO")
   public void testCreatePenRequestBatchMacros_GivenValidPayload_ShouldReturnStatusCreated() throws Exception {
-    this.mockMvc.perform(post("/pen-request-batch-macro").contentType(MediaType.APPLICATION_JSON)
+    this.mockMvc.perform(post("/api/v1/pen-request-batch-macro").contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON).content(dummyPenRequestBatchStudentInfoRequestMacroJson())).andDo(print()).andExpect(status().isCreated());
   }
 
   @Test
   @WithMockOAuth2Scope(scope = "WRITE_PEN_REQ_BATCH_MACRO")
   public void testCreatePenRequestMacros_GivenInValidPayload_ShouldReturnStatusBadRequest() throws Exception {
-    this.mockMvc.perform(post("/pen-request-batch-macro").contentType(MediaType.APPLICATION_JSON)
+    this.mockMvc.perform(post("/api/v1/pen-request-batch-macro").contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON).content(dummyPenRequestBatchStudentInfoRequestMacroJsonWithId())).andDo(print()).andExpect(status().isBadRequest());
   }
 
@@ -114,7 +112,7 @@ public class PenRequestBatchStudentInfoRequestMacroControllerTest {
     savedEntity.setUpdateDate(null);
     savedEntity.setMacroText("updated text");
     String jsonString = new ObjectMapper().writeValueAsString(mapper.toStructure(savedEntity));
-    var result = this.mockMvc.perform(put("/pen-request-batch-macro/" + savedEntity.getMacroId().toString()).contentType(MediaType.APPLICATION_JSON)
+    var result = this.mockMvc.perform(put("/api/v1/pen-request-batch-macro/" + savedEntity.getMacroId().toString()).contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON).content(jsonString)).andDo(print()).andExpect(status().isOk());
     assertThat(result).isNotNull();
 
@@ -131,7 +129,7 @@ public class PenRequestBatchStudentInfoRequestMacroControllerTest {
     savedEntity.setUpdateDate(null);
     savedEntity.setMacroText("updated text");
     String jsonString = new ObjectMapper().writeValueAsString(mapper.toStructure(savedEntity));
-    var result = this.mockMvc.perform(put("/pen-request-batch-macro/" + UUID.randomUUID().toString()).contentType(MediaType.APPLICATION_JSON)
+    var result = this.mockMvc.perform(put("/api/v1/pen-request-batch-macro/" + UUID.randomUUID().toString()).contentType(MediaType.APPLICATION_JSON)
             .accept(MediaType.APPLICATION_JSON).content(jsonString)).andDo(print()).andExpect(status().isNotFound());
     assertThat(result).isNotNull();
 
