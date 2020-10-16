@@ -16,7 +16,7 @@ public class PenRequestBatchStudentInfoRequestMacroEntity {
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator", parameters = {
             @org.hibernate.annotations.Parameter(name = "uuid_gen_strategy_class", value = "org.hibernate.id.uuid.CustomVersionOneStrategy")})
-    @Column(name = "PEN_REQUEST_BATCH_STUDENT_INFO_REQUEST_MACRO_ID", unique = true, updatable = false, columnDefinition = "BINARY(16)")
+    @Column(name = "PRB_STUDENT_INFO_REQUEST_MACRO_ID", unique = true, updatable = false, columnDefinition = "BINARY(16)")
     UUID macroId;
 
     @Column(name = "MACRO_CODE")
