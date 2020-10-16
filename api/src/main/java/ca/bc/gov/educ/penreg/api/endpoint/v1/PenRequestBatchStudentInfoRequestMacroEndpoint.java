@@ -12,7 +12,7 @@ import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.CREATED;
 
-@RequestMapping("/pen-request-batch-macro")
+@RequestMapping("/api/v1/pen-request-batch-macro")
 public interface PenRequestBatchStudentInfoRequestMacroEndpoint {
     @GetMapping
     @PreAuthorize("#oauth2.hasScope('READ_PEN_REQ_BATCH_MACRO')")
