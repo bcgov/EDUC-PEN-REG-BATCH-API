@@ -271,7 +271,9 @@ public class PenRequestBatchStudentOrchestratorService {
    */
   private String generateNewPen(String guid) {
     log.info("generate new pen called for guid :: {}", guid);
-    return getPenService().getNextPenNumber(guid);
+    String pen = getPenService().getNextPenNumber(guid);
+    log.info("got new pen :: {} for guid :: {}", pen, guid);
+    return pen;
   }
 
   /**
@@ -338,7 +340,7 @@ public class PenRequestBatchStudentOrchestratorService {
   }
 
   private void addValidationIssueEntitiesToStudent(Collection<PenRequestBatchStudentValidationIssueEntity> validationIssueEntities, PenRequestBatchStudentEntity student) {
-    for(var issue: validationIssueEntities){
+    for (var issue : validationIssueEntities) {
       issue.setPenRequestBatchStudentEntity(student);
       student.getPenRequestBatchStudentValidationIssueEntities().add(issue);
     }

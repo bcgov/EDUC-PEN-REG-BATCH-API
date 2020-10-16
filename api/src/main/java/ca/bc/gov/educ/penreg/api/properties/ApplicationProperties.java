@@ -49,29 +49,18 @@ public class ApplicationProperties {
   private String studentApiURL;
 
   /**
-   * The Environment.
-   */
-  @Value("${environment}")
-  private String environment;
-
-  /**
-   * The Redis url.
-   */
-  @Value("${url.redis}")
-  private String redisUrl;
-  /**
    * Amount of time that can elapse before a duplicate request is not considered a repeat
    */
-  @Getter
   @Value("${repeat.time.window.psi}")
   private int repeatTimeWindowPSI;
 
   /**
    * Amount of time that can elapse before a duplicate request is not considered a repeat
    */
-  @Getter
   @Value("${repeat.time.window.k12}")
   private int repeatTimeWindowK12;
 
+  @Value("${url.api.pen.services}")
+  private String penServicesApiURL;
 
 }

@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api;
 
-import jodd.util.concurrent.ThreadFactoryBuilder;
+import ca.bc.gov.educ.penreg.api.util.ThreadFactoryBuilder;
 import net.javacrumbs.shedlock.core.LockProvider;
 import net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateLockProvider;
 import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
@@ -99,7 +99,7 @@ public class PenRegBatchApiApplication {
   @Bean(name = "subscriberExecutor")
   public Executor threadPoolTaskExecutor() {
     ThreadFactory namedThreadFactory =
-        new ThreadFactoryBuilder().setNameFormat("message-subscriber-%d").get();
+        new ThreadFactoryBuilder().withNameFormat("message-subscriber-%d").get();
     return Executors.newFixedThreadPool(10, namedThreadFactory);
   }
 
@@ -111,7 +111,7 @@ public class PenRegBatchApiApplication {
   @Bean(name = "taskExecutor")
   public Executor controllerTaskExecutor() {
     ThreadFactory namedThreadFactory =
-        new ThreadFactoryBuilder().setNameFormat("async-executor-%d").get();
+        new ThreadFactoryBuilder().withNameFormat("async-executor-%d").get();
     return Executors.newFixedThreadPool(8, namedThreadFactory);
   }
 

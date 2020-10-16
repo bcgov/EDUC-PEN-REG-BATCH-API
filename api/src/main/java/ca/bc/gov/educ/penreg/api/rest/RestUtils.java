@@ -106,46 +106,6 @@ public class RestUtils {
     restTemplate.exchange(props.getStudentApiURL(), HttpMethod.PUT, new HttpEntity<>(studentFromStudentAPI, headers), Student.class);
   }
 
-  /**
-   * Gets latest pen number from student api.
-   *
-   * @param guid the guid
-   * @return the latest pen number from student api
-   * @throws JsonProcessingException the json processing exception
-   */
-  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
-  public int getLatestPenNumberFromStudentAPI(String guid) throws JsonProcessingException {
-    RestTemplate restTemplate = getRestTemplate();
-    SearchCriteria criteria = SearchCriteria.builder().key("pen").operation(FilterOperation.STARTS_WITH).value("1").valueType(ValueType.STRING).build();
-    List<SearchCriteria> criteriaList = new ArrayList<>();
-    criteriaList.add(criteria);
-    List<Search> searches = new LinkedList<>();
-    searches.add(Search.builder().searchCriteriaList(criteriaList).build());
-    ObjectMapper objectMapper = new ObjectMapper();
-    String criteriaJSON = objectMapper.writeValueAsString(searches);
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(props.getStudentApiURL() + "/paginated")
-        .queryParam("searchCriteriaList", criteriaJSON)
-        .queryParam("pageSize", 1)
-        .queryParam("sort", "{\"pen\":\"DESC\"}");
-
-    DefaultUriBuilderFactory defaultUriBuilderFactory = new DefaultUriBuilderFactory();
-    defaultUriBuilderFactory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
-    restTemplate.setUriTemplateHandler(defaultUriBuilderFactory);
-
-    ParameterizedTypeReference<RestPageImpl<Student>> responseType = new ParameterizedTypeReference<>() {
-    };
-    var url = builder.toUriString();
-    log.info("url is :: {}", url);
-    ResponseEntity<RestPageImpl<Student>> studentResponse = restTemplate.exchange(url, HttpMethod.GET, null, responseType);
-
-    var optionalStudent = Objects.requireNonNull(studentResponse.getBody()).getContent().stream().findFirst();
-    if (optionalStudent.isPresent()) {
-      var firstStudent = optionalStudent.get();
-      return Integer.parseInt(firstStudent.getPen().substring(0, 8));
-    }
-    log.warn("PEN could not be retrieved, returning 0 for guid :: {}", guid);
-    return 0;
-  }
 
   /**
    * Create student student.
@@ -173,5 +133,12 @@ public class RestUtils {
       return Optional.of(students.get(0));
     }
     return Optional.empty();
+  }
+
+  public String getNextPenNumberFromPenServiceAPI(String guid) {
+    RestTemplate restTemplate = getRestTemplate();
+    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(props.getPenServicesApiURL().concat("/api/v1/pen-services/next-pen-number"))
+        .queryParam("transactionID", guid);
+    return restTemplate.getForEntity(builder.build().encode().toUri(), String.class).getBody();
   }
 }

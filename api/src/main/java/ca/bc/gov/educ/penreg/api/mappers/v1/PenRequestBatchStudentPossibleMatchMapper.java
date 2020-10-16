@@ -24,3 +24,4 @@ public interface PenRequestBatchStudentPossibleMatchMapper {
   @Mapping(target = "penRequestBatchStudentId", source = "penRequestBatchStudentEntity.penRequestBatchStudentID")
   PenRequestBatchStudentPossibleMatch toStruct(PenRequestBatchStudentPossibleMatchEntity entity);
 }
+
