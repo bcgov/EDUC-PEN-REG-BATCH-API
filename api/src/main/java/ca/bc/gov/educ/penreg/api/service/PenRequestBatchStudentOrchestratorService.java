@@ -142,8 +142,11 @@ public class PenRequestBatchStudentOrchestratorService {
     penRequestBatchStudent.setMatchAlgorithmStatusCode(algorithmStatusCode.toString());
     Optional<Event> eventOptional;
     switch (algorithmStatusCode) {
+      case AA:
+      case B1:
+      case C1:
       case D1:
-        eventOptional = Optional.of(handleD1Status(saga, penMatchResult, penRequestBatchStudent, penRequestBatch));
+        eventOptional = Optional.of(handleMatchStatus(saga, penMatchResult, penRequestBatchStudent, penRequestBatch));
         break;
       case B0:
       case C0:
@@ -153,6 +156,10 @@ public class PenRequestBatchStudentOrchestratorService {
       case F1:
         eventOptional = Optional.of(handleF1Status(saga, penMatchResult, penRequestBatchStudent)); // FIXABLE
         break;
+      case BM:
+      case CM:
+      case DM:
+      case G0:
       default:
         eventOptional = Optional.of(handleDefault(saga, penRequestBatchStudent, penMatchResult));
         break;
@@ -243,7 +250,7 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param penRequestBatch        the pen request batch
    * @return the event
    */
-  private Event handleD1Status(Saga saga, PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent, PenRequestBatchEntity penRequestBatch) {
+  private Event handleMatchStatus(Saga saga, PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent, PenRequestBatchEntity penRequestBatch) {
     var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
     if (penMatchRecordOptional.isPresent()) {
       var studentID = penMatchRecordOptional.get().getStudentID();
