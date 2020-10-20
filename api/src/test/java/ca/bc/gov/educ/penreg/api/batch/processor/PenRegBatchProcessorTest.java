@@ -3,16 +3,12 @@ package ca.bc.gov.educ.penreg.api.batch.processor;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,12 +29,12 @@ import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
 import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.K12;
 import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.PSI;
+import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils.createBatchStudents;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -281,7 +277,8 @@ public class PenRegBatchProcessorTest {
   @Test
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given30RowValidFileAndExistingRecords_ShouldShowRepeats() throws IOException {
-    createBatchStudentRecords();
+    createBatchStudents(repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
+      (batch) -> batch.setProcessDate(LocalDateTime.now().minusDays(3)));
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
@@ -477,68 +474,6 @@ public class PenRegBatchProcessorTest {
   public void after() {
     repository.deleteAll();
     penWebBlobRepository.deleteAll();
-  }
-
-  /**
-   * Create batch student records.
-   *
-   * @throws IOException the io exception
-   */
-  private void createBatchStudentRecords() throws java.io.IOException {
-    final File file = new File(
-            Objects.requireNonNull(getClass().getClassLoader().getResource("mock_pen_req_batch_repeat.json")).getFile()
-    );
-    List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
-    });
-    var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(this::populateAuditColumns).collect(Collectors.toList());
-
-    final File student = new File(
-            Objects.requireNonNull(getClass().getClassLoader().getResource("mock_pen_req_batch_student_repeat.json")).getFile()
-    );
-    List<PenRequestBatchStudentEntity> studentEntities = new ObjectMapper().readValue(student, new TypeReference<>() {
-    });
-    var students = studentEntities.stream().map(this::populateAuditColumns).peek(el -> el.setPenRequestBatchEntity(models.get(0))).collect(Collectors.toSet());
-
-    models.get(0).setProcessDate(LocalDateTime.now().minusDays(3));
-    models.get(0).setPenRequestBatchStudentEntities(students);
-
-    repository.saveAll(models);
-  }
-
-  /**
-   * Populate audit columns pen request batch entity.
-   *
-   * @param model the model
-   * @return the pen request batch entity
-   */
-  private PenRequestBatchEntity populateAuditColumns(PenRequestBatchEntity model) {
-    if (model.getCreateUser() == null) {
-      model.setCreateUser(PEN_REQUEST_BATCH_API);
-    }
-    if (model.getUpdateUser() == null) {
-      model.setUpdateUser(PEN_REQUEST_BATCH_API);
-    }
-    model.setCreateDate(LocalDateTime.now());
-    model.setUpdateDate(LocalDateTime.now());
-    return model;
-  }
-
-  /**
-   * Populate audit columns pen request batch student entity.
-   *
-   * @param model the model
-   * @return the pen request batch student entity
-   */
-  private PenRequestBatchStudentEntity populateAuditColumns(PenRequestBatchStudentEntity model) {
-    if (model.getCreateUser() == null) {
-      model.setCreateUser(PEN_REQUEST_BATCH_API);
-    }
-    if (model.getUpdateUser() == null) {
-      model.setUpdateUser(PEN_REQUEST_BATCH_API);
-    }
-    model.setCreateDate(LocalDateTime.now());
-    model.setUpdateDate(LocalDateTime.now());
-    return model;
   }
 
   /**

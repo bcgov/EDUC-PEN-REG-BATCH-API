@@ -132,6 +132,7 @@ public class EventTaskSchedulerAsyncService {
     long errorCount = 0;
     long fixableCount = 0;
     long matchedCount = 0;
+    long newCount = 0;
     for (var studentReq : studentEntities) {
       if (PenRequestBatchStudentStatusCodes.FIXABLE.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
         fixableCount++;
@@ -142,10 +143,14 @@ public class EventTaskSchedulerAsyncService {
       if (PenRequestBatchStudentStatusCodes.MATCHED_SYS.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
         matchedCount++;
       }
+      if (PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
+        newCount++;
+      }
     }
     penRequestBatchEntity.setErrorCount(errorCount);
     penRequestBatchEntity.setFixableCount(fixableCount);
     penRequestBatchEntity.setMatchedCount(matchedCount);
+    penRequestBatchEntity.setNewPenCount(newCount);
   }
 
   /**
