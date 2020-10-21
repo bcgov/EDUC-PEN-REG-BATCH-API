@@ -36,7 +36,6 @@ import java.util.concurrent.ThreadFactory;
 @EnableScheduling
 @EnableSchedulerLock(defaultLockAtMostFor = "1s")
 @EnableRetry
-@EnableAsync
 public class PenRegBatchApiApplication {
 
   /**
@@ -89,30 +88,6 @@ public class PenRegBatchApiApplication {
   @Bean
   public LockProvider lockProvider(@Autowired JdbcTemplate jdbcTemplate, @Autowired PlatformTransactionManager transactionManager) {
     return new JdbcTemplateLockProvider(jdbcTemplate, transactionManager, "PEN_REQUEST_BATCH_SHEDLOCK");
-  }
-
-  /**
-   * Thread pool task executor executor.
-   *
-   * @return the executor
-   */
-  @Bean(name = "subscriberExecutor")
-  public Executor threadPoolTaskExecutor() {
-    ThreadFactory namedThreadFactory =
-        new ThreadFactoryBuilder().withNameFormat("message-subscriber-%d").get();
-    return Executors.newFixedThreadPool(10, namedThreadFactory);
-  }
-
-  /**
-   * Controller task executor executor.
-   *
-   * @return the executor
-   */
-  @Bean(name = "taskExecutor")
-  public Executor controllerTaskExecutor() {
-    ThreadFactory namedThreadFactory =
-        new ThreadFactoryBuilder().withNameFormat("async-executor-%d").get();
-    return Executors.newFixedThreadPool(8, namedThreadFactory);
   }
 
   /**
