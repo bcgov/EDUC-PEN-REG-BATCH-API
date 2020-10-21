@@ -223,6 +223,7 @@ public class PenRequestBatchStudentOrchestratorService {
       }
       var student = studentMapper.toStudent(penRequestBatchStudentSagaData);
       student.setPen(pen);
+      penRequestBatchStudent.setAssignedPEN(pen);
       var studentFromStudentAPIOptional = getRestUtils().getStudentByPEN(pen);
       if (studentFromStudentAPIOptional.isEmpty()) { // create the student only if it does not exist.
         var studentFromAPIResponse = getRestUtils().createStudent(student);
