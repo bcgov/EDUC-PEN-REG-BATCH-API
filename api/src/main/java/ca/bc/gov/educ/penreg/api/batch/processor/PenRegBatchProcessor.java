@@ -236,18 +236,20 @@ public class PenRegBatchProcessor {
       entity.getPenRequestBatchStudentEntities().add(penRequestBatchStudentEntity);
     }
     getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
-    // the entity was saved in propagation new context , so system needs to get it again from DB to have an attached entity bound to the current thread.
-    final Optional<PenRequestBatchEntity> penRequestBatchEntityOptional = getPenRequestBatchFileService().findEntity(entity.getPenRequestBatchID());
-    if (penRequestBatchEntityOptional.isPresent()) {
-      var noRepeatsEntity = getPenRequestBatchFileService().filterRepeatRequests(penRequestBatchEntityOptional.get());
-      return noRepeatsEntity.stream()
-          .map(studentSagaDataMapper::toPenReqBatchStudentSagaData)
-          .peek(element -> {
-            element.setMincode(entity.getMinCode());
-            element.setPenRequestBatchID(entity.getPenRequestBatchID());
-          }).collect(Collectors.toSet());
-    } else {
-      log.info("system knows it wont happen");
+    if (entity.getPenRequestBatchID() != null) { // this could happen when the same submission number is picked up again, system should not process the same submission.
+      // the entity was saved in propagation new context , so system needs to get it again from DB to have an attached entity bound to the current thread.
+      final Optional<PenRequestBatchEntity> penRequestBatchEntityOptional = getPenRequestBatchFileService().findEntity(entity.getPenRequestBatchID());
+      if (penRequestBatchEntityOptional.isPresent()) {
+        var noRepeatsEntity = getPenRequestBatchFileService().filterRepeatRequests(penRequestBatchEntityOptional.get());
+        return noRepeatsEntity.stream()
+            .map(studentSagaDataMapper::toPenReqBatchStudentSagaData)
+            .peek(element -> {
+              element.setMincode(entity.getMinCode());
+              element.setPenRequestBatchID(entity.getPenRequestBatchID());
+            }).collect(Collectors.toSet());
+      } else {
+        log.info("system knows it wont happen");
+      }
     }
     return new HashSet<>();
   }
