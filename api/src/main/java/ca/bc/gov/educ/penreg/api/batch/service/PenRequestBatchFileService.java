@@ -110,8 +110,8 @@ public class PenRequestBatchFileService {
 
     for(PenRequestBatchStudentEntity penRequestBatchStudent : studentEntities) {
       List<PenRequestBatchStudentEntity> repeatRequests = penRequestBatchStudentService.findAllRepeatsGivenBatchStudent(penRequestBatchStudent);
-      log.trace("filterRepeatRequests :: {} :: Checking following penRequestBatchStudent for repeats :: {}", guid,penRequestBatchStudent);
-      log.debug("filterRepeatRequests :: {} :: Found {} repeat records for prb student record :: {}", guid, repeatRequests.size(), penRequestBatchStudent.getPenRequestBatchStudentID());
+      log.trace("{} :: Checking following penRequestBatchStudent for repeats :: {}", guid,penRequestBatchStudent);
+      log.debug("{} :: Found {} repeat records for prb student record :: {}", guid, repeatRequests.size(), penRequestBatchStudent.getPenRequestBatchStudentID());
       if(!repeatRequests.isEmpty()) {
         updatePenRequestBatchStudentRequest(repeatRequests, penRequestBatchStudent);
         numRepeats++;
@@ -119,7 +119,7 @@ public class PenRequestBatchFileService {
         filteredStudentEntities.add(penRequestBatchStudent);
       }
     }
-    log.debug("filterRepeatRequests :: {} :: Found {} total repeats", guid, numRepeats);
+    log.debug("{} :: Found {} total repeats", guid, numRepeats);
     penRequestBatchEntity.setRepeatCount(numRepeats);
     penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.REPEATS_CHECKED.getCode());
     getPenRequestBatchService().saveAttachedEntity(penRequestBatchEntity);
