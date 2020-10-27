@@ -103,15 +103,15 @@ public class PenRequestBatchFileService {
    * @param penRequestBatchEntity the pen request batch entity
    * @return the list of filtered requests
    */
-  public Set<PenRequestBatchStudentEntity> filterRepeatRequests(PenRequestBatchEntity penRequestBatchEntity) {
+  public Set<PenRequestBatchStudentEntity> filterRepeatRequests(@NonNull String guid, PenRequestBatchEntity penRequestBatchEntity) {
     Set<PenRequestBatchStudentEntity> studentEntities = penRequestBatchEntity.getPenRequestBatchStudentEntities();
     long numRepeats = 0;
     var filteredStudentEntities = new HashSet<PenRequestBatchStudentEntity>();
 
     for(PenRequestBatchStudentEntity penRequestBatchStudent : studentEntities) {
       List<PenRequestBatchStudentEntity> repeatRequests = penRequestBatchStudentService.findAllRepeatsGivenBatchStudent(penRequestBatchStudent);
-      log.trace("Checking following penRequestBatchStudent for repeats :: {}", penRequestBatchStudent);
-      log.debug("Found {} repeat records for prb student record :: {}", repeatRequests.size(), penRequestBatchStudent.getPenRequestBatchStudentID());
+      log.trace("{} :: Checking following penRequestBatchStudent for repeats :: {}", guid,penRequestBatchStudent);
+      log.debug("{} :: Found {} repeat records for prb student record :: {}", guid, repeatRequests.size(), penRequestBatchStudent.getPenRequestBatchStudentID());
       if(!repeatRequests.isEmpty()) {
         updatePenRequestBatchStudentRequest(repeatRequests, penRequestBatchStudent);
         numRepeats++;
@@ -119,7 +119,7 @@ public class PenRequestBatchFileService {
         filteredStudentEntities.add(penRequestBatchStudent);
       }
     }
-    log.debug("Found {} total repeats for penRequestBatchEntity :: {}", numRepeats, penRequestBatchEntity.getPenRequestBatchID());
+    log.debug("{} :: Found {} total repeats", guid, numRepeats);
     penRequestBatchEntity.setRepeatCount(numRepeats);
     penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.REPEATS_CHECKED.getCode());
     getPenRequestBatchService().saveAttachedEntity(penRequestBatchEntity);
