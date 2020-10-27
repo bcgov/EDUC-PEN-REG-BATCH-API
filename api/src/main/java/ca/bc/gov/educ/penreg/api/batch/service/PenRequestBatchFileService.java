@@ -110,6 +110,8 @@ public class PenRequestBatchFileService {
 
     for(PenRequestBatchStudentEntity penRequestBatchStudent : studentEntities) {
       List<PenRequestBatchStudentEntity> repeatRequests = penRequestBatchStudentService.findAllRepeatsGivenBatchStudent(penRequestBatchStudent);
+      log.trace("Checking following penRequestBatchStudent for repeats :: {}", penRequestBatchStudent);
+      log.debug("Found {} repeat records for prb student record :: {}", repeatRequests.size(), penRequestBatchStudent.getPenRequestBatchStudentID());
       if(!repeatRequests.isEmpty()) {
         updatePenRequestBatchStudentRequest(repeatRequests, penRequestBatchStudent);
         numRepeats++;
@@ -117,6 +119,7 @@ public class PenRequestBatchFileService {
         filteredStudentEntities.add(penRequestBatchStudent);
       }
     }
+    log.debug("Found {} total repeats for penRequestBatchEntity :: {}", numRepeats, penRequestBatchEntity.getPenRequestBatchID());
     penRequestBatchEntity.setRepeatCount(numRepeats);
     penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.REPEATS_CHECKED.getCode());
     getPenRequestBatchService().saveAttachedEntity(penRequestBatchEntity);
