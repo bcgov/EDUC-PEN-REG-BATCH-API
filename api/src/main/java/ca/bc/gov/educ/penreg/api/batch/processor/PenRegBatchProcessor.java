@@ -240,7 +240,7 @@ public class PenRegBatchProcessor {
       // the entity was saved in propagation new context , so system needs to get it again from DB to have an attached entity bound to the current thread.
       final Optional<PenRequestBatchEntity> penRequestBatchEntityOptional = getPenRequestBatchFileService().findEntity(entity.getPenRequestBatchID());
       if (penRequestBatchEntityOptional.isPresent()) {
-        var noRepeatsEntity = getPenRequestBatchFileService().filterRepeatRequests(penRequestBatchEntityOptional.get());
+        var noRepeatsEntity = getPenRequestBatchFileService().filterRepeatRequests(guid, penRequestBatchEntityOptional.get());
         return noRepeatsEntity.stream()
             .map(studentSagaDataMapper::toPenReqBatchStudentSagaData)
             .peek(element -> {
