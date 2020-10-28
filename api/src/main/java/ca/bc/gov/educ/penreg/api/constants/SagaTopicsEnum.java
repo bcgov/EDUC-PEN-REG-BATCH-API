@@ -9,6 +9,10 @@ public enum SagaTopicsEnum {
    */
   PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC,
   /**
+   * Pen request batch issue processing topic saga topics enum.
+   */
+  PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC,
+  /**
    * Pen match api topic saga topics enum.
    */
   PEN_MATCH_API_TOPIC,
@@ -19,5 +23,9 @@ public enum SagaTopicsEnum {
   /**
    * Pen validation api topic saga topics enum.
    */
-  PEN_SERVICES_API_TOPIC
+  PEN_SERVICES_API_TOPIC,
+  /**
+   * Pen request batch api topic saga topics enum.
+   */
+  PEN_REQUEST_BATCH_API_TOPIC
 }

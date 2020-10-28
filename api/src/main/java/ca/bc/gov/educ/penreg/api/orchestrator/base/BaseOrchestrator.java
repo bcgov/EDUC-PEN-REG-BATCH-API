@@ -4,16 +4,19 @@ import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchStudentValidationIssueMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
+import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
+import ca.bc.gov.educ.penreg.api.service.EventTaskSchedulerAsyncService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
+import ca.bc.gov.educ.penreg.api.struct.NotificationEvent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,9 +27,10 @@ import java.util.*;
 import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.INITIATE_SUCCESS;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.SAGA_COMPLETED;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.INITIATED;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.MARK_SAGA_COMPLETE;
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
-import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.STARTED;
 import static lombok.AccessLevel.PROTECTED;
 
 /**
@@ -35,7 +39,7 @@ import static lombok.AccessLevel.PROTECTED;
  * @param <T> the type parameter
  */
 @Slf4j
-public abstract class BaseOrchestrator<T> {
+public abstract class BaseOrchestrator<T> implements EventHandler {
   /**
    * The constant issueMapper.
    */
@@ -48,6 +52,15 @@ public abstract class BaseOrchestrator<T> {
    * The constant API_NAME.
    */
   protected static final String API_NAME = "PEN_REG_BATCH_API";
+  /**
+   * The constant SELF
+   */
+  protected static final String SELF = "SELF";
+  /**
+   * The flag to indicate whether t
+   */
+  @Setter(PROTECTED)
+  protected boolean shouldSendNotificationEvent = true;
   /**
    * The Clazz.
    */
@@ -87,6 +100,7 @@ public abstract class BaseOrchestrator<T> {
    * @param topicToSubscribe the topic to subscribe
    */
   public BaseOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
+                          MessageSubscriber messageSubscriber, EventTaskSchedulerAsyncService taskSchedulerService,
                           Class<T> clazz, String sagaName,
                           String topicToSubscribe) {
     this.sagaService = sagaService;
@@ -94,6 +108,8 @@ public abstract class BaseOrchestrator<T> {
     this.clazz = clazz;
     this.sagaName = sagaName;
     this.topicToSubscribe = topicToSubscribe;
+    messageSubscriber.subscribe(topicToSubscribe, this);
+    taskSchedulerService.registerSagaOrchestrators(sagaName, this);
     populateStepsToExecuteMap();
   }
 
@@ -158,6 +174,52 @@ public abstract class BaseOrchestrator<T> {
   }
 
   /**
+   * Beginning step base orchestrator.
+   *
+   * @param nextEvent     next event that will occur.
+   * @param stepToExecute which method to execute for the next event. it is a lambda function.
+   * @return {@link BaseOrchestrator}
+   */
+  public BaseOrchestrator<T> begin(EventType nextEvent, SagaStep<T> stepToExecute) {
+    return registerStepToExecute(INITIATED, INITIATE_SUCCESS, nextEvent, stepToExecute);
+  }
+
+  /**
+   * End step base orchestrator with complete status.
+   *
+   * @param currentEvent  the event that has occurred.
+   * @param outcome       outcome of the event.
+   * @return {@link BaseOrchestrator}
+   */
+  public BaseOrchestrator<T> end(EventType currentEvent, EventOutcome outcome) {
+    return registerStepToExecute(currentEvent, outcome, MARK_SAGA_COMPLETE, this::markSagaComplete);
+  }
+
+  /**
+   * End step with method to execute with complete status.
+   *
+   * @param currentEvent  the event that has occurred.
+   * @param outcome       outcome of the event.
+   * @param stepToExecute which method to execute for the MARK_SAGA_COMPLETE event. it is a lambda function.
+   * @return {@link BaseOrchestrator}
+   */
+  public BaseOrchestrator<T> end(EventType currentEvent, EventOutcome outcome, SagaStep<T> stepToExecute) {
+    return registerStepToExecute(currentEvent, outcome, MARK_SAGA_COMPLETE, (Event event, Saga saga, T sagaData) -> {
+      stepToExecute.apply(event, saga, sagaData);
+      markSagaComplete(event, saga, sagaData);
+    });
+  }
+
+  /**
+   * Syntax sugar to make the step statement expressive
+   *
+   * @return {@link BaseOrchestrator}
+   */
+  public BaseOrchestrator<T> or() {
+    return this;
+  }
+
+  /**
    * this is a simple and convenient method to trigger builder pattern in the child classes.
    *
    * @return {@link BaseOrchestrator}
@@ -213,11 +275,19 @@ public abstract class BaseOrchestrator<T> {
    * @param event    the current event.
    * @param saga     the saga model object.
    * @param sagaData the payload string as object.
-   * @throws JsonProcessingException the json processing exception
    */
-  protected void markSagaComplete(Event event, Saga saga, T sagaData) throws JsonProcessingException {
+  protected void markSagaComplete(Event event, Saga saga, T sagaData) {
     log.trace("payload is {}", sagaData);
-    saveDemogValidationResults(event, sagaData);
+    if(shouldSendNotificationEvent) {
+      var finalEvent = new NotificationEvent();
+      BeanUtils.copyProperties(event, finalEvent);
+      finalEvent.setEventType(MARK_SAGA_COMPLETE);
+      finalEvent.setEventOutcome(SAGA_COMPLETED);
+      finalEvent.setSagaStatus(COMPLETED.toString());
+      finalEvent.setSagaName(getSagaName());
+      postMessageToTopic(getTopicToSubscribe(), finalEvent);
+    }
+
     SagaEvent sagaEvent = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(COMPLETED.toString());
     saga.setStatus(COMPLETED.toString());
@@ -225,15 +295,6 @@ public abstract class BaseOrchestrator<T> {
     getSagaService().updateAttachedSagaWithEvents(saga, sagaEvent);
 
   }
-
-  /**
-   * Save demog validation results.
-   *
-   * @param event    the event
-   * @param sagaData the saga data
-   * @throws JsonProcessingException the json processing exception
-   */
-  protected abstract void saveDemogValidationResults(Event event, T sagaData) throws JsonProcessingException;
 
   /**
    * calculate step number
@@ -284,7 +345,7 @@ public abstract class BaseOrchestrator<T> {
   @Transactional
   public void replaySaga(Saga saga) throws IOException, InterruptedException, TimeoutException {
     var eventStates = getSagaService().findAllSagaStates(saga);
-    T t = JsonUtil.getJsonObjectFromString(clazz, saga.getPayload());
+    var t = JsonUtil.getJsonObjectFromString(clazz, saga.getPayload());
     if (eventStates.isEmpty()) { //process did not start last time, lets start from beginning.
       replayFromBeginning(saga, t);
     } else {
@@ -353,20 +414,15 @@ public abstract class BaseOrchestrator<T> {
    */
   @Async("subscriberExecutor")
   @Transactional
-  public void executeSagaEvent(@NotNull Event event) throws InterruptedException, IOException, TimeoutException {
-    Optional<Saga> sagaOptional;
+  public void handleEvent(@NotNull Event event) throws InterruptedException, IOException, TimeoutException {
     log.info("executing saga event {}", event);
-    if (event.getEventType() == EventType.READ_FROM_TOPIC && event.getEventOutcome() == EventOutcome.READ_FROM_TOPIC_SUCCESS) {
-      PenRequestBatchStudentSagaData penRequestBatchStudentSagaData = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, event.getEventPayload());
-      sagaOptional = getSagaService().findByPenRequestBatchStudentID(penRequestBatchStudentSagaData.getPenRequestBatchStudentID());
-      if (sagaOptional.isPresent()) { // possible duplicate message.
-        log.trace("Execution is not required for this message returning EVENT is :: {}", event.toString());
-        return;
-      }
-      sagaOptional = Optional.of(createSagaRecordInDB(event.getEventPayload(), penRequestBatchStudentSagaData.getPenRequestBatchStudentID(), penRequestBatchStudentSagaData.getPenRequestBatchID()));
-    } else {
-      sagaOptional = getSagaService().findSagaById(event.getSagaId()); // system expects a saga record to be present here.
+    if (sagaEventExecutionNotRequired(event)) {
+      log.trace("Execution is not required for this message returning EVENT is :: {}", event.toString());
+      return;
     }
+    broadcastSagaInitiatedMessage(event);
+
+    var sagaOptional = getSagaService().findSagaById(event.getSagaId()); // system expects a saga record to be present here.
     if (sagaOptional.isPresent()) {
       val saga = sagaOptional.get();
       if (!COMPLETED.toString().equalsIgnoreCase(sagaOptional.get().getStatus())) {//possible duplicate message or force stop scenario check
@@ -386,30 +442,55 @@ public abstract class BaseOrchestrator<T> {
   }
 
   /**
-   * Create saga record in db saga.
+   * Start to execute saga
    *
-   * @param payload                  the payload
-   * @param penRequestBatchStudentID the pen request batch student id
-   * @param penRequestBatchID        the pen request batch id
-   * @return the saga
+   * @param payload                    the event payload
+   * @param penRequestBatchStudentID   the pen request batch student id
+   * @param penRequestBatchID          the pen request batch id
+   * @return saga record
+   * @throws InterruptedException
+   * @throws TimeoutException
+   * @throws IOException
    */
-  private Saga createSagaRecordInDB(String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID) {
-    var saga = Saga
-        .builder()
-        .payload(payload)
-        .penRequestBatchStudentID(penRequestBatchStudentID)
-        .penRequestBatchID(penRequestBatchID)
-        .sagaName(sagaName)
-        .status(STARTED.toString())
-        .sagaState(INITIATED.toString())
-        .createDate(LocalDateTime.now())
-        .createUser(API_NAME)
-        .updateUser(API_NAME)
-        .updateDate(LocalDateTime.now())
-        .build();
-    return getSagaService().createSagaRecord(saga);
+  public Saga startSaga(@NotNull String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID) throws InterruptedException, TimeoutException, IOException {
+    var saga = sagaService.createSagaRecordInDB(sagaName, API_NAME, payload, penRequestBatchStudentID, penRequestBatchID);
+    handleEvent(Event.builder()
+      .eventType(EventType.INITIATED)
+      .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+      .sagaId(saga.getSagaId())
+      .build());
+    return saga;
   }
 
+  /**
+   * DONT DO ANYTHING the message was broad-casted for the frontend listeners, that a saga process has initiated, completed.
+   * @param event the event object received from queue.
+   * @return true if this message need not be processed further.
+   */
+  private boolean sagaEventExecutionNotRequired(@NotNull Event event) {
+    return (event.getEventType() == INITIATED && event.getEventOutcome() == INITIATE_SUCCESS && SELF.equalsIgnoreCase(event.getReplyTo()))
+      || event.getEventType() == MARK_SAGA_COMPLETE && event.getEventOutcome() == SAGA_COMPLETED;
+  }
+
+  /**
+   * Broadcast the saga initiated message
+   * @param event the event object
+   * @throws InterruptedException
+   * @throws IOException
+   * @throws TimeoutException
+   */
+  private void broadcastSagaInitiatedMessage(@NotNull Event event) {
+    // !SELF.equalsIgnoreCase(event.getReplyTo()):- this check makes sure it is not broadcast-ed infinitely.
+    if (shouldSendNotificationEvent && event.getEventType() == INITIATED && event.getEventOutcome() == INITIATE_SUCCESS
+      && !SELF.equalsIgnoreCase(event.getReplyTo())) {
+      var notificationEvent = new NotificationEvent();
+      BeanUtils.copyProperties(event, notificationEvent);
+      notificationEvent.setSagaStatus(INITIATED.toString());
+      notificationEvent.setReplyTo(SELF);
+      notificationEvent.setSagaName(getSagaName());
+      postMessageToTopic(getTopicToSubscribe(), notificationEvent);
+    }
+  }
 
   /**
    * this method finds the next event that needs to be executed.

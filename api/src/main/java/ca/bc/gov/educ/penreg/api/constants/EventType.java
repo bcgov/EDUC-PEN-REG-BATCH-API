@@ -39,5 +39,17 @@ public enum EventType {
   /**
    * Validate student demographics event type.
    */
-  VALIDATE_STUDENT_DEMOGRAPHICS
+  VALIDATE_STUDENT_DEMOGRAPHICS,
+  /**
+   * Get the next PEN number event type.
+   */
+  GET_NEXT_PEN_NUMBER,
+  /**
+   * Update pen request batch student event type.
+   */
+  UPDATE_PEN_REQUEST_BATCH_STUDENT,
+  /**
+   * Pen request batch event outbox processed event type.
+   */
+  PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED
 }

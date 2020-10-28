@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static ca.bc.gov.educ.penreg.api.constants.EventType.INITIATED;
+import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.STARTED;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -58,7 +60,6 @@ public class SagaService {
    * @param saga the saga
    * @return the saga
    */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public Saga createSagaRecord(Saga saga) {
     return getSagaRepository().save(saga);
   }
@@ -118,15 +119,48 @@ public class SagaService {
    * Find by pen request batch student id optional.
    *
    * @param penRequestBatchStudentID the pen request batch student id
-   * @return the optional
+   * @return the list
    */
-  public Optional<Saga> findByPenRequestBatchStudentID(UUID penRequestBatchStudentID){
-    return getSagaRepository().findByPenRequestBatchStudentID(penRequestBatchStudentID);
+  public List<Saga> findByPenRequestBatchStudentIDAndSagaName(UUID penRequestBatchStudentID, String sagaName){
+    return getSagaRepository().findByPenRequestBatchStudentIDAndSagaName(penRequestBatchStudentID, sagaName);
+  }
+
+  public List<Saga> findAllByPenRequestBatchStudentIDAndStatusIn(UUID penRequestBatchStudentID, String sagaName, List<String> statuses){
+    return getSagaRepository().findAllByPenRequestBatchStudentIDAndSagaNameAndStatusIn(penRequestBatchStudentID, sagaName, statuses);
   }
   
   @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void updateAttachedEntityDuringSagaProcess(Saga saga){
     getSagaRepository().save(saga);
+  }
+
+
+  /**
+   * Create saga record in db saga.
+   *
+   * @param sagaName                 the saga name
+   * @param apiName                  the API name
+   * @param payload                  the payload
+   * @param penRequestBatchStudentID the pen request batch student id
+   * @param penRequestBatchID        the pen request batch id
+   * @return the saga
+   */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public Saga createSagaRecordInDB(String sagaName, String apiName, String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID) {
+    var saga = Saga
+      .builder()
+      .payload(payload)
+      .penRequestBatchStudentID(penRequestBatchStudentID)
+      .penRequestBatchID(penRequestBatchID)
+      .sagaName(sagaName)
+      .status(STARTED.toString())
+      .sagaState(INITIATED.toString())
+      .createDate(LocalDateTime.now())
+      .createUser(apiName)
+      .updateUser(apiName)
+      .updateDate(LocalDateTime.now())
+      .build();
+    return createSagaRecord(saga);
   }
 }

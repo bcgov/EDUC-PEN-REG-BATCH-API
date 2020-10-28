@@ -4,15 +4,14 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.PenMatchSagaMapper;
 import ca.bc.gov.educ.penreg.api.mappers.PenStudentDemogValidationMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
+import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
+import ca.bc.gov.educ.penreg.api.service.EventTaskSchedulerAsyncService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentOrchestratorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
-import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
+import ca.bc.gov.educ.penreg.api.struct.*;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -66,8 +65,11 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    */
   @Autowired
   public PenReqBatchStudentOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
+                                        MessageSubscriber messageSubscriber, EventTaskSchedulerAsyncService taskSchedulerService,
                                         PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService) {
-    super(sagaService, messagePublisher, PenRequestBatchStudentSagaData.class, PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString());
+    super(sagaService, messagePublisher, messageSubscriber, taskSchedulerService, PenRequestBatchStudentSagaData.class,
+      PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString());
+    setShouldSendNotificationEvent(false);
     this.penRequestBatchStudentOrchestratorService = penRequestBatchStudentOrchestratorService;
   }
 
@@ -77,12 +79,13 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
   @Override
   public void populateStepsToExecuteMap() {
     stepBuilder()
-        .step(READ_FROM_TOPIC, READ_FROM_TOPIC_SUCCESS, VALIDATE_STUDENT_DEMOGRAPHICS, this::validateStudentDemographics)
+        .begin(VALIDATE_STUDENT_DEMOGRAPHICS, this::validateStudentDemographics)
         .step(VALIDATE_STUDENT_DEMOGRAPHICS, VALIDATION_SUCCESS_NO_ERROR_WARNING, PROCESS_PEN_MATCH, this::processPenMatch)
         .step(VALIDATE_STUDENT_DEMOGRAPHICS, VALIDATION_SUCCESS_WITH_ONLY_WARNING, PROCESS_PEN_MATCH, this::processPenMatch)
-        .step(VALIDATE_STUDENT_DEMOGRAPHICS, VALIDATION_SUCCESS_WITH_ERROR, MARK_SAGA_COMPLETE, this::markSagaComplete)
+        .end(VALIDATE_STUDENT_DEMOGRAPHICS, VALIDATION_SUCCESS_WITH_ERROR, this::completePenRequestBatchStudentSaga)
+        .or()
         .step(PROCESS_PEN_MATCH, PEN_MATCH_PROCESSED, PROCESS_PEN_MATCH_RESULTS, this::processPenMatchResults)
-        .step(PROCESS_PEN_MATCH_RESULTS, PEN_MATCH_RESULTS_PROCESSED, MARK_SAGA_COMPLETE, this::markSagaComplete);
+        .end(PROCESS_PEN_MATCH_RESULTS, PEN_MATCH_RESULTS_PROCESSED, this::completePenRequestBatchStudentSaga);
   }
 
 
@@ -113,7 +116,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
           .eventPayload(eventPayload.get())
           .build();
       postMessageToTopic(PEN_SERVICES_API_TOPIC.toString(), nextEvent);
-      log.info("message sent to PEN_VALIDATION_API_TOPIC for VALIDATE_STUDENT_DEMOGRAPHICS Event. :: {}", saga.getSagaId());
+      log.info("message sent to PEN_SERVICES_API_TOPIC for VALIDATE_STUDENT_DEMOGRAPHICS Event. :: {}", saga.getSagaId());
     } else {
       log.error("event payload is not present this should not have happened. :: {}", saga.getSagaId());
     }
@@ -156,9 +159,9 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
     }
 
     if (eventOptional.isPresent()) {
-      executeSagaEvent(eventOptional.get());
+      handleEvent(eventOptional.get());
     } else {
-      executeSagaEvent(Event.builder().sagaId(saga.getSagaId())
+      handleEvent(Event.builder().sagaId(saga.getSagaId())
           .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
           .build());
     }
@@ -195,13 +198,23 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
   }
 
   /**
+   * This method updates the DB and marks the process as complete.
+   *
+   * @param event    the current event.
+   * @param saga     the saga model object.
+   * @param sagaData the payload string as object.
+   */
+  private void completePenRequestBatchStudentSaga(Event event, Saga saga, PenRequestBatchStudentSagaData sagaData) {
+    saveDemogValidationResults(event, sagaData);
+  }
+
+  /**
    * Save demog validation results.
    *
    * @param event    the event
    * @param sagaData the saga data
    */
-  @Override
-  protected void saveDemogValidationResults(Event event, PenRequestBatchStudentSagaData sagaData) {
+  private void saveDemogValidationResults(Event event, PenRequestBatchStudentSagaData sagaData) {
     if (event.getEventType() == VALIDATE_STUDENT_DEMOGRAPHICS
         && StringUtils.isNotBlank(event.getEventPayload())
         && !StringUtils.equalsIgnoreCase(VALIDATION_SUCCESS_NO_ERROR_WARNING.toString(), event.getEventPayload())) {

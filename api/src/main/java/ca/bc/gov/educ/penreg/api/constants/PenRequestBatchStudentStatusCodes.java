@@ -2,6 +2,9 @@ package ca.bc.gov.educ.penreg.api.constants;
 
 import lombok.Getter;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * The enum Pen request batch student status codes.
  */
@@ -18,7 +21,7 @@ public enum PenRequestBatchStudentStatusCodes {
   /**
    * Sys matched pen request batch student status codes.
    */
-  MATCHED_SYS("MATCHEDSYS"),
+  SYS_MATCHED("MATCHEDSYS"),
   /**
    * Sys new pen pen request batch student status codes.
    */
@@ -34,15 +37,23 @@ public enum PenRequestBatchStudentStatusCodes {
   /**
    * Usr matched pen request batch student status codes.
    */
-  USR_MATCHED("USRMATCHED"),
+  USR_MATCHED("MATCHEDUSR"),
   /**
    * Usr new pen pen request batch student status codes.
    */
-  USR_NEW_PEN("USRNEWPEN"),
+  USR_NEW_PEN("NEWPENUSR"),
   /**
-   * Returned pen request batch student status codes.
+   * Info requested request batch student status codes.
    */
-  RETURNED("RETURNED");
+  INFOREQ("INFOREQ");
+
+  private static final Map<String, PenRequestBatchStudentStatusCodes> codeMap = new HashMap<>();
+
+  static {
+    for (PenRequestBatchStudentStatusCodes status: values()) {
+      codeMap.put(status.getCode(), status);
+    }
+  }
 
   /**
    * The Code.
@@ -61,5 +72,9 @@ public enum PenRequestBatchStudentStatusCodes {
   @Override
   public String toString(){
     return this.getCode();
+  }
+
+  public static PenRequestBatchStudentStatusCodes valueOfCode(String code) {
+    return codeMap.get(code);
   }
 }

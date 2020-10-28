@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.*;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * The type Student.
@@ -146,4 +147,9 @@ public class Student implements Serializable {
    */
   @Size(max = 32)
   String updateUser;
+
+  /**
+   * The Twins
+   */
+  List<StudentTwinAssociation> studentTwinAssociations;
 }

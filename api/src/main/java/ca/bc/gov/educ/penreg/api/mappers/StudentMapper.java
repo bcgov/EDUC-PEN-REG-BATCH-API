@@ -1,7 +1,8 @@
 package ca.bc.gov.educ.penreg.api.mappers;
 
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
+import ca.bc.gov.educ.penreg.api.struct.BasePenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.StudentTwinAssociation;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -29,7 +30,7 @@ public interface StudentMapper {
   @Mapping(target = "updateUser", source="penRequestBatchStudentSagaData.updateUser")
   @Mapping(target = "studentID", ignore = true)
   @Mapping(target = "statusCode", constant="A")
-  @Mapping(target = "sexCode", source="penRequestBatchStudentSagaData.genderCode")
+  @Mapping(target = "sexCode", expression="java(ca.bc.gov.educ.penreg.api.util.CodeUtil.getSexCodeFromGenderCode(penRequestBatchStudentSagaData.getGenderCode()))")
   @Mapping(target = "postalCode", source="penRequestBatchStudentSagaData.postalCode")
   @Mapping(target = "pen", ignore = true)
   @Mapping(target = "mincode", source="penRequestBatchStudentSagaData.mincode")
@@ -47,5 +48,5 @@ public interface StudentMapper {
   @Mapping(target = "demogCode", ignore = true)
   @Mapping(target = "deceasedDate",ignore = true)
   @Mapping(target = "createUser", source="penRequestBatchStudentSagaData.createUser")
-  Student toStudent(PenRequestBatchStudentSagaData penRequestBatchStudentSagaData);
+  Student toStudent(BasePenRequestBatchStudentSagaData penRequestBatchStudentSagaData);
 }

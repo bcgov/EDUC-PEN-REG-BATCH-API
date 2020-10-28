@@ -32,15 +32,27 @@ public interface SagaRepository extends CrudRepository<Saga, UUID> {
    * Find by pen request batch student id optional.
    *
    * @param penRequestBatchStudentID the pen request batch student id
+   * @param sagaName                 the saga name
    * @return the optional Saga
    */
-  Optional<Saga> findByPenRequestBatchStudentID(UUID penRequestBatchStudentID);
+  List<Saga> findByPenRequestBatchStudentIDAndSagaName(UUID penRequestBatchStudentID, String sagaName);
 
   /**
    * Find by pen request batch id list.
    *
    * @param penRequestBatchID the pen request batch id
+   * @param sagaName          the saga name
    * @return the list
    */
-  List<Saga> findByPenRequestBatchID(UUID penRequestBatchID);
+  List<Saga> findByPenRequestBatchIDAndSagaName(UUID penRequestBatchID, String sagaName);
+
+  /**
+   * ind by pen request batch student id and status
+   *
+   * @param penRequestBatchStudentID the pen request batch student id
+   * @param sagaName                 the saga name
+   * @param statuses                 the statuses
+   * @return the list
+   */
+  List<Saga> findAllByPenRequestBatchStudentIDAndSagaNameAndStatusIn(UUID penRequestBatchStudentID, String sagaName, List<String> statuses);
 }
