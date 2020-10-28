@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -73,7 +74,7 @@ public class PenRegBatchStudentRecordsProcessor {
         Event event = Event.builder().eventType(EventType.READ_FROM_TOPIC).eventOutcome(EventOutcome.READ_FROM_TOPIC_SUCCESS).eventPayload(eventPayload.get()).build();
         var eventString = JsonUtil.getJsonString(event);
         if (eventString.isPresent()) {
-          messagePublisher.dispatchMessage(PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString(), eventString.get().getBytes());
+          messagePublisher.dispatchMessage(PEN_REQUEST_BATCH_API_TOPIC.toString(), eventString.get().getBytes());
         } else {
           log.error("Event Sting is empty, skipping the publish to topic :: {}", penRequestBatchStudentSagaData);
         }
