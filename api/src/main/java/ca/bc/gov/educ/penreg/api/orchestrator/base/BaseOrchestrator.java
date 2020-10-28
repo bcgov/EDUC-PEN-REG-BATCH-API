@@ -265,7 +265,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler {
         .sagaEventOutcome(eventOutcome.toString())
         .sagaEventState(eventType.toString())
         .sagaStepNumber(calculateStep(saga))
-        .sagaEventResponse(eventPayload == null ? "" : eventPayload)
+        .sagaEventResponse(eventPayload == null ? " " : eventPayload)
         .build();
   }
 
@@ -458,6 +458,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler {
       .eventType(EventType.INITIATED)
       .eventOutcome(EventOutcome.INITIATE_SUCCESS)
       .sagaId(saga.getSagaId())
+      .eventPayload(payload)
       .build());
     return saga;
   }
