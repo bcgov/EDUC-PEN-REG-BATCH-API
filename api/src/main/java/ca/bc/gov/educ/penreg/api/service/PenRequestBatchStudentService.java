@@ -32,7 +32,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.function.BiFunction;
 
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.*;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -135,12 +137,14 @@ public class PenRequestBatchStudentService {
 
   /**
    * Update student pen request batch student entity.
+   * EntityNotFoundException will not cause the caller's transaction to rollback
    *
    * @param entity                   the entity
    * @param penRequestBatchID        the pen request batch id
    * @param penRequestBatchStudentID the pen request batch student id
    * @return the pen request batch student entity
    */
+  @Transactional(propagation = Propagation.MANDATORY, noRollbackFor = {EntityNotFoundException.class})
   public PenRequestBatchStudentEntity updateStudent(PenRequestBatchStudentEntity entity, UUID penRequestBatchID, UUID penRequestBatchStudentID) {
     var penRequestBatchOptional = getPenRequestBatchRepository().findById(penRequestBatchID);
     if (penRequestBatchOptional.isPresent()) {
@@ -149,18 +153,65 @@ public class PenRequestBatchStudentService {
       if (penRequestBatchStudentOptional.isPresent()) {
         var penRequestBatchStudent = penRequestBatchStudentOptional.get();
         if (penRequestBatchStudent.getPenRequestBatchEntity().getPenRequestBatchID().equals(penRequestBatch.getPenRequestBatchID())) {
+          var originalStatus = PenRequestBatchStudentStatusCodes.valueOfCode(penRequestBatchStudent.getPenRequestBatchStudentStatusCode());
           BeanUtils.copyProperties(entity, penRequestBatchStudent, "penRequestBatchStudentValidationIssueEntities", "penRequestBatchEntity", "penRequestBatchStudentID", "penRequestBatchStudentPossibleMatchEntities");
-          return repository.save(penRequestBatchStudent);
+          var savedPrbStudent = repository.save(penRequestBatchStudent);
+
+          //adjust the summary Count values in the PEN Request Batch
+          var currentStatus = PenRequestBatchStudentStatusCodes.valueOfCode(entity.getPenRequestBatchStudentStatusCode());
+          if(!useSameSummaryCounter(originalStatus, currentStatus)) {
+            changeSummaryCount(penRequestBatch, originalStatus, true);
+            changeSummaryCount(penRequestBatch, currentStatus, false);
+            penRequestBatch.setUpdateUser(penRequestBatchStudent.getUpdateUser());
+            penRequestBatch.setUpdateDate(penRequestBatchStudent.getUpdateDate());
+            penRequestBatchRepository.save(penRequestBatch);
+          }
+          return savedPrbStudent;
         } else {
           throw new InvalidParameterException(penRequestBatchID.toString(), penRequestBatchStudentID.toString()); // this student does not belong to the specific batch ID.
         }
       } else {
-        throw new EntityNotFoundException(PenRequestBatchStudentEntity.class, penRequestBatchStudentID.toString());
+        throw new EntityNotFoundException(PenRequestBatchStudentEntity.class, "penRequestBatchStudentID", penRequestBatchStudentID.toString());
       }
 
     } else {
-      throw new EntityNotFoundException(PenRequestBatchEntity.class, penRequestBatchID.toString());
+      throw new EntityNotFoundException(PenRequestBatchEntity.class, "penRequestBatchID", penRequestBatchID.toString());
     }
+  }
+
+  private boolean useSameSummaryCounter(PenRequestBatchStudentStatusCodes originalStatus, PenRequestBatchStudentStatusCodes currentStatus) {
+    return originalStatus.equals(currentStatus) ||
+      ((originalStatus.equals(ERROR) || originalStatus.equals(INFOREQ)) && (currentStatus.equals(ERROR) || currentStatus.equals(INFOREQ))) ||
+      ((originalStatus.equals(SYS_MATCHED) || originalStatus.equals(USR_MATCHED)) && (currentStatus.equals(SYS_MATCHED) || currentStatus.equals(USR_MATCHED))) ||
+      ((originalStatus.equals(SYS_NEW_PEN) || originalStatus.equals(USR_NEW_PEN)) && (currentStatus.equals(SYS_NEW_PEN) || currentStatus.equals(USR_NEW_PEN)));
+
+  }
+
+  private PenRequestBatchEntity changeSummaryCount(PenRequestBatchEntity penRequestBatch, PenRequestBatchStudentStatusCodes status, boolean changeFrom) {
+    int count = changeFrom ? -1 : 1;
+    switch (status) {
+      case FIXABLE:
+        penRequestBatch.setFixableCount((penRequestBatch.getFixableCount() != null ? penRequestBatch.getFixableCount() : 0 ) + count);
+        break;
+      case SYS_MATCHED:
+      case USR_MATCHED:
+        penRequestBatch.setMatchedCount((penRequestBatch.getMatchedCount() != null ? penRequestBatch.getMatchedCount() : 0 ) + count);
+        break;
+      case INFOREQ:
+      case ERROR:
+        penRequestBatch.setErrorCount((penRequestBatch.getErrorCount() != null ? penRequestBatch.getErrorCount() : 0 ) + count);
+        break;
+      case REPEAT:
+        penRequestBatch.setRepeatCount((penRequestBatch.getRepeatCount() != null ? penRequestBatch.getRepeatCount() : 0 ) + count);
+        break;
+      case SYS_NEW_PEN:
+      case USR_NEW_PEN:
+        penRequestBatch.setNewPenCount((penRequestBatch.getNewPenCount() != null ? penRequestBatch.getNewPenCount() : 0 ) + count);
+      default:
+        return penRequestBatch;
+    }
+
+    return penRequestBatch;
   }
 
   /**
@@ -214,7 +265,7 @@ public class PenRequestBatchStudentService {
       repeatTimeWindow = getApplicationProperties().getRepeatTimeWindowK12();
     }
     LocalDateTime startDate = LocalDateTime.now().minusDays(repeatTimeWindow);
-    return repository.findAllRepeatsGivenBatchStudent(penRequestBatchStudent.getPenRequestBatchEntity().getMinCode(), PenRequestBatchStatusCodes.ARCHIVED.getCode(), startDate, penRequestBatchStudent.getLocalID(), Arrays.asList(PenRequestBatchStudentStatusCodes.FIXABLE.getCode(), PenRequestBatchStudentStatusCodes.ERROR.getCode(), PenRequestBatchStudentStatusCodes.LOADED.getCode()), penRequestBatchStudent.getSubmittedPen(), penRequestBatchStudent.getLegalFirstName(), penRequestBatchStudent.getLegalMiddleNames(), penRequestBatchStudent.getLegalLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames(), penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getDob(), penRequestBatchStudent.getGenderCode(), penRequestBatchStudent.getGradeCode(), penRequestBatchStudent.getPostalCode());
+    return repository.findAllRepeatsGivenBatchStudent(penRequestBatchStudent.getPenRequestBatchEntity().getMinCode(), PenRequestBatchStatusCodes.ARCHIVED.getCode(), startDate, penRequestBatchStudent.getLocalID(), Arrays.asList(PenRequestBatchStudentStatusCodes.FIXABLE.getCode(), ERROR.getCode(), PenRequestBatchStudentStatusCodes.LOADED.getCode()), penRequestBatchStudent.getSubmittedPen(), penRequestBatchStudent.getLegalFirstName(), penRequestBatchStudent.getLegalMiddleNames(), penRequestBatchStudent.getLegalLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames(), penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getDob(), penRequestBatchStudent.getGenderCode(), penRequestBatchStudent.getGradeCode(), penRequestBatchStudent.getPostalCode());
   }
 
   /**

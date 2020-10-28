@@ -2,18 +2,18 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchStudentSagaDataMapper;
 import ca.bc.gov.educ.penreg.api.batch.processor.PenRegBatchStudentRecordsProcessor;
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
-import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
+import ca.bc.gov.educ.penreg.api.constants.*;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
-import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
+import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -25,16 +25,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper.PEN_REQUEST_BATCH_API;
+import static ca.bc.gov.educ.penreg.api.constants.EventStatus.DB_COMMITTED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REPEATS_CHECKED;
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -74,6 +73,21 @@ public class EventTaskSchedulerAsyncService {
    */
   @Setter
   private List<String> statusFilters;
+  /**
+   * The saga name and orchestrator map.
+   */
+  @Getter(PRIVATE)
+  private final Map<String, BaseOrchestrator<?>> sagaOrchestrators = new HashMap<>();
+  /**
+   * The pen request batch event repository.
+   */
+  @Getter(PRIVATE)
+  private final PenRequestBatchEventRepository penRequestBatchEventRepository;
+  /**
+   * The event handler service.
+   */
+  @Getter(PRIVATE)
+  private final EventPublisherService eventPublisherService;
 
   /**
    * Instantiates a new Event task scheduler async service.
@@ -83,11 +97,26 @@ public class EventTaskSchedulerAsyncService {
    * @param penRequestBatchStudentRepository   the pen request batch student repository
    * @param penRegBatchStudentRecordsProcessor the pen reg batch student records processor
    */
-  public EventTaskSchedulerAsyncService(SagaRepository sagaRepository, PenRequestBatchRepository penRequestBatchRepository, PenRequestBatchStudentRepository penRequestBatchStudentRepository, PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor) {
+  public EventTaskSchedulerAsyncService(SagaRepository sagaRepository, PenRequestBatchRepository penRequestBatchRepository,
+                                        PenRequestBatchStudentRepository penRequestBatchStudentRepository,
+                                        PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor,
+                                        PenRequestBatchEventRepository penRequestBatchEventRepository,
+                                        EventPublisherService eventPublisherService) {
     this.sagaRepository = sagaRepository;
     this.penRequestBatchRepository = penRequestBatchRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
     this.penRegBatchStudentRecordsProcessor = penRegBatchStudentRecordsProcessor;
+    this.penRequestBatchEventRepository = penRequestBatchEventRepository;
+    this.eventPublisherService = eventPublisherService;
+  }
+
+  /**
+   * Register a saga orchestrator to let the scheduler process uncompleted sagas
+   * @param sagaName the name of saga
+   * @param orchestrator the saga orchestrator
+   */
+  public void registerSagaOrchestrators(String sagaName, BaseOrchestrator<?> orchestrator) {
+    getSagaOrchestrators().put(sagaName, orchestrator);
   }
 
   /**
@@ -101,7 +130,7 @@ public class EventTaskSchedulerAsyncService {
     if (!penReqBatches.isEmpty()) {
       var penReqBatchEntities = new ArrayList<PenRequestBatchEntity>();
       for (var penRequestBatchEntity : penReqBatches) {
-        var studentSagaRecords = getSagaRepository().findByPenRequestBatchID(penRequestBatchEntity.getPenRequestBatchID());
+        var studentSagaRecords = getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatchEntity.getPenRequestBatchID(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString());
         var studentEntities = penRequestBatchEntity.getPenRequestBatchStudentEntities();
         var repeatCount = studentEntities.stream().filter(student -> PenRequestBatchStudentStatusCodes.REPEAT.toString().equals(student.getPenRequestBatchStudentStatusCode())).count();
         if (penRequestBatchEntity.getStudentCount() == repeatCount) { // all records are repeats, need to be marked active.
@@ -140,7 +169,7 @@ public class EventTaskSchedulerAsyncService {
       if (PenRequestBatchStudentStatusCodes.ERROR.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
         errorCount++;
       }
-      if (PenRequestBatchStudentStatusCodes.MATCHED_SYS.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
+      if (PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
         matchedCount++;
       }
       if (PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
@@ -156,17 +185,17 @@ public class EventTaskSchedulerAsyncService {
   /**
    * Find and process uncompleted sagas.
    *
-   * @param penReqBatchStudentOrchestrator the pen req batch student orchestrator
    */
   @Async("taskExecutor")
   @Transactional
-  public void findAndProcessUncompletedSagas(PenReqBatchStudentOrchestrator penReqBatchStudentOrchestrator) {
+  public void findAndProcessUncompletedSagas() {
     var sagas = getSagaRepository().findAllByStatusIn(getStatusFilters());
     if (!sagas.isEmpty()) {
       for (val saga : sagas) {
-        if (saga.getCreateDate().isBefore(LocalDateTime.now().minusMinutes(5))) {
+        if (saga.getCreateDate().isBefore(LocalDateTime.now().minusMinutes(5))
+          && getSagaOrchestrators().containsKey(saga.getSagaName())) {
           try {
-            penReqBatchStudentOrchestrator.replaySaga(saga);
+            getSagaOrchestrators().get(saga.getSagaName()).replaySaga(saga);
           } catch (IOException | InterruptedException | TimeoutException e) {
             log.error("Exception while findAndProcessPendingSagaEvents :: for saga :: {} :: {}", saga, e);
           }
@@ -219,7 +248,7 @@ public class EventTaskSchedulerAsyncService {
     Set<PenRequestBatchStudentSagaData> penRequestBatchStudents = new HashSet<>();
     var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
     penReqBatches.forEach(penRequestBatchEntity -> {
-      val studentEntitiesAlreadyInProcess = getSagaRepository().findByPenRequestBatchID(penRequestBatchEntity.getPenRequestBatchID());
+      val studentEntitiesAlreadyInProcess = getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatchEntity.getPenRequestBatchID(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString());
       penRequestBatchStudents.addAll(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().filter(penRequestBatchStudentEntity ->
           studentEntitiesAlreadyInProcess.stream()
               .allMatch(saga -> (!penRequestBatchStudentEntity.getPenRequestBatchStudentID().equals(saga.getPenRequestBatchStudentID()))))
@@ -259,6 +288,25 @@ public class EventTaskSchedulerAsyncService {
       statuses.add(SagaStatusEnum.IN_PROGRESS.toString());
       statuses.add(SagaStatusEnum.STARTED.toString());
       return statuses;
+    }
+  }
+
+  /**
+   * Poll the event table and publish events
+   */
+  @Async("taskExecutor")
+  public void pollEventTableAndPublish() {
+    var events = getPenRequestBatchEventRepository().findByEventStatus(DB_COMMITTED.toString());
+    if (!events.isEmpty()) {
+      for (PenRequestBatchEvent event : events) {
+        try {
+          eventPublisherService.send(event);
+        } catch (JsonProcessingException e) {
+          log.error("Exception while pollEventTableAndPublish :: for event :: {} :: {}", event, e);
+        }
+      }
+    } else {
+      log.trace("no unprocessed records.");
     }
   }
 }

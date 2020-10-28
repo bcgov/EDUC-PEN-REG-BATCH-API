@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.schedulers;
 
 import ca.bc.gov.educ.penreg.api.batch.schedulers.PenRegBatchScheduler;
-import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
 import ca.bc.gov.educ.penreg.api.service.EventTaskSchedulerAsyncService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -21,13 +20,6 @@ import static lombok.AccessLevel.PRIVATE;
 @Slf4j
 @SuppressWarnings("java:S2142")
 public class EventTaskScheduler {
-
-  /**
-   * The Pen req batch student orchestrator.
-   */
-  private final PenReqBatchStudentOrchestrator penReqBatchStudentOrchestrator;
-
-
   /**
    * The Task scheduler async service.
    */
@@ -37,12 +29,10 @@ public class EventTaskScheduler {
   /**
    * Instantiates a new Event task scheduler.
    *
-   * @param penReqBatchStudentOrchestrator the pen req batch student orchestrator
    * @param taskSchedulerAsyncService      the task scheduler async service
    */
   @Autowired
-  public EventTaskScheduler(PenReqBatchStudentOrchestrator penReqBatchStudentOrchestrator, EventTaskSchedulerAsyncService taskSchedulerAsyncService) {
-    this.penReqBatchStudentOrchestrator = penReqBatchStudentOrchestrator;
+  public EventTaskScheduler(EventTaskSchedulerAsyncService taskSchedulerAsyncService) {
     this.taskSchedulerAsyncService = taskSchedulerAsyncService;
   }
 
@@ -56,7 +46,7 @@ public class EventTaskScheduler {
   @Transactional
   public void findAndProcessPendingSagaEvents() {
     LockAssert.assertLocked();
-    getTaskSchedulerAsyncService().findAndProcessUncompletedSagas(penReqBatchStudentOrchestrator);
+    getTaskSchedulerAsyncService().findAndProcessUncompletedSagas();
   }
 
   /**
@@ -95,6 +85,13 @@ public class EventTaskScheduler {
   public void processLoadedPenRequestBatchesForRepeats() {
     LockAssert.assertLocked();
     getTaskSchedulerAsyncService().processLoadedPenRequestBatchesForRepeats();
+  }
+
+  @Scheduled(cron = "0/1 * * * * *")
+  @SchedulerLock(name = "EventTablePoller", lockAtLeastFor = "900ms", lockAtMostFor = "950ms")
+  public void pollEventTableAndPublish() {
+    LockAssert.assertLocked();
+    getTaskSchedulerAsyncService().pollEventTableAndPublish();
   }
 
 }

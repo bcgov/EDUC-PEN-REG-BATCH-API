@@ -13,6 +13,10 @@ public enum EventOutcome {
    */
   INITIATE_SUCCESS,
   /**
+   * Saga completed event outcome.
+   */
+  SAGA_COMPLETED,
+  /**
    * Pen match processed event outcome.
    */
   PEN_MATCH_PROCESSED,
@@ -28,6 +32,10 @@ public enum EventOutcome {
    * Student created event outcome.
    */
   STUDENT_CREATED,
+  /**
+   * Student already exist event outcome.
+   */
+  STUDENT_ALREADY_EXIST,
   /**
    * Student updated event outcome.
    */
@@ -47,5 +55,17 @@ public enum EventOutcome {
   /**
    * Validation success with only warning event outcome.
    */
-  VALIDATION_SUCCESS_WITH_ONLY_WARNING
+  VALIDATION_SUCCESS_WITH_ONLY_WARNING,
+  /**
+   *  Next PEN number retrieved event outcome.
+   */
+  NEXT_PEN_NUMBER_RETRIEVED,
+  /**
+   * PEN request batch student updated event outcome.
+   */
+  PEN_REQUEST_BATCH_STUDENT_UPDATED,
+  /**
+   * PEN request batch student not found event outcome.
+   */
+  PEN_REQUEST_BATCH_STUDENT_NOT_FOUND
 }

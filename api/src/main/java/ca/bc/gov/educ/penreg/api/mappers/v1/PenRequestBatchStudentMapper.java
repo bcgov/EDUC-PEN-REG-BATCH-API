@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.mappers.v1;
 import ca.bc.gov.educ.penreg.api.mappers.LocalDateTimeMapper;
 import ca.bc.gov.educ.penreg.api.mappers.UUIDMapper;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.struct.BasePenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
@@ -40,5 +41,14 @@ public interface PenRequestBatchStudentMapper {
    */
   @InheritInverseConfiguration
   PenRequestBatchStudentEntity toModel(PenRequestBatchStudent penRequestBatchStudent);
+
+
+  /**
+   * To model pen request batch student entity.
+   *
+   * @param basePenRequestBatchStudentSagaData the base pen request batch student saga data
+   * @return the student
+   */
+  PenRequestBatchStudent toPrbStudent(BasePenRequestBatchStudentSagaData basePenRequestBatchStudentSagaData);
 
 }

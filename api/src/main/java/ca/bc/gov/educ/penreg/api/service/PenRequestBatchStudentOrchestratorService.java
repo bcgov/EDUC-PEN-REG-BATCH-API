@@ -255,7 +255,7 @@ public class PenRequestBatchStudentOrchestratorService {
     var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
     if (penMatchRecordOptional.isPresent()) {
       var studentID = penMatchRecordOptional.get().getStudentID();
-      penRequestBatchStudent.setPenRequestBatchStudentStatusCode(MATCHED_SYS.getCode());
+      penRequestBatchStudent.setPenRequestBatchStudentStatusCode(SYS_MATCHED.getCode());
       penRequestBatchStudent.setStudentID(UUID.fromString(studentID));
       penRequestBatchStudent = getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
       var studentFromStudentAPI = getRestUtils().getStudentByStudentID(studentID);

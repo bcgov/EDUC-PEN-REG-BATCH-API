@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.messaging;
 
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
-import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.SagaEventHandler;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.struct.Event;
@@ -12,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +18,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -44,10 +41,6 @@ import static lombok.AccessLevel.PRIVATE;
 public class MessageSubscriber extends MessagePubSub {
 
   /**
-   * The Pen req batch student orchestrator.
-   */
-  private final PenReqBatchStudentOrchestrator penReqBatchStudentOrchestrator;
-  /**
    * The Handlers.
    */
   @Getter(PRIVATE)
@@ -57,13 +50,11 @@ public class MessageSubscriber extends MessagePubSub {
    * Instantiates a new Message subscriber.
    *
    * @param applicationProperties          the application properties
-   * @param penReqBatchStudentOrchestrator the pen req batch student orchestrator
    * @throws IOException          the io exception
    * @throws InterruptedException the interrupted exception
    */
   @Autowired
-  public MessageSubscriber(final ApplicationProperties applicationProperties, PenReqBatchStudentOrchestrator penReqBatchStudentOrchestrator) throws IOException, InterruptedException {
-    this.penReqBatchStudentOrchestrator = penReqBatchStudentOrchestrator;
+  public MessageSubscriber(final ApplicationProperties applicationProperties) throws IOException, InterruptedException {
     var builder = new Options.Builder();
     builder.natsUrl(applicationProperties.getNatsUrl());
     builder.clusterId(applicationProperties.getNatsClusterId());
@@ -77,14 +68,15 @@ public class MessageSubscriber extends MessagePubSub {
    * This subscription will makes sure the messages are required to acknowledge manually to STAN.
    * Subscribe.
    */
-  @PostConstruct
-  public void subscribe() {
+  public void subscribe(String topic, SagaEventHandler eventHandler) {
+    if(!handlers.containsKey(topic)){
+      handlers.put(topic, eventHandler);
+    }
 
-
-    String queue = PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString().replace("_", "-");
+    String queue = topic.replace("_", "-");
     SubscriptionOptions options = new SubscriptionOptions.Builder().durableName(queue + "-consumer").build();// ":" is not allowed in durable name by NATS.
     try {
-      connection.subscribe(PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString(), queue, onMessage(), options);
+      connection.subscribe(topic, queue, onMessage(eventHandler), options);
     } catch (IOException | InterruptedException | TimeoutException e) {
       throw new PenRegAPIRuntimeException(e.getMessage());
     }
@@ -95,14 +87,14 @@ public class MessageSubscriber extends MessagePubSub {
    *
    * @return the message handler
    */
-  private MessageHandler onMessage() {
+  private MessageHandler onMessage(SagaEventHandler eventHandler) {
     return (Message message) -> {
       if (message != null) {
         log.info("Message received is :: {} ", message);
           try {
             var eventString = new String(message.getData());
             var event = JsonUtil.getJsonObjectFromString(Event.class, eventString);
-            penReqBatchStudentOrchestrator.executeSagaEvent(event);
+            eventHandler.onSagaEvent(event);
           } catch (final Exception e) {
             log.error("Exception ", e);
           }
@@ -136,7 +128,9 @@ public class MessageSubscriber extends MessagePubSub {
     while (true) {
       try {
         log.trace("retrying subscription as connection was lost :: retrying ::" + numOfRetries++);
-        this.subscribe();
+        for (Map.Entry<String, SagaEventHandler> entry : handlers.entrySet()) {
+          this.subscribe(entry.getKey(), entry.getValue());
+        }
         log.info("successfully resubscribed after {} attempts", numOfRetries);
         break;
       } catch (PenRegAPIRuntimeException exception) {
