@@ -159,9 +159,9 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
     }
 
     if (eventOptional.isPresent()) {
-      executeSagaEvent(eventOptional.get());
+      handleEvent(eventOptional.get());
     } else {
-      executeSagaEvent(Event.builder().sagaId(saga.getSagaId())
+      handleEvent(Event.builder().sagaId(saga.getSagaId())
           .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
           .build());
     }

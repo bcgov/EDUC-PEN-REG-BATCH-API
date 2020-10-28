@@ -5,6 +5,7 @@ import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
+import ca.bc.gov.educ.penreg.api.orchestrator.base.EventHandler;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
@@ -30,7 +31,7 @@ import static lombok.AccessLevel.PROTECTED;
 
 @Service
 @Slf4j
-public class EventHandlerService {
+public class EventHandlerService implements EventHandler {
 
   public static final String NO_RECORD_SAGA_ID_EVENT_TYPE = "no record found for the saga id and event type combination, processing.";
   public static final String RECORD_FOUND_FOR_SAGA_ID_EVENT_TYPE = "record found for the saga id and event type combination, might be a duplicate or replay," +
@@ -64,7 +65,7 @@ public class EventHandlerService {
     this.sagaService = sagaService;
     this.penReqBatchStudentOrchestrator = penReqBatchStudentOrchestrator;
     this.eventPublisherService = eventPublisherService;
-    messageSubscriber.subscribe(PEN_REQUEST_BATCH_API_TOPIC.toString(), this::handleEvent);
+    messageSubscriber.subscribe(PEN_REQUEST_BATCH_API_TOPIC.toString(), this);
   }
 
   public void handleEvent(Event event) {

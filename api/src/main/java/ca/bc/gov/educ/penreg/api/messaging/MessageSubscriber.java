@@ -1,7 +1,7 @@
 package ca.bc.gov.educ.penreg.api.messaging;
 
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
-import ca.bc.gov.educ.penreg.api.orchestrator.base.SagaEventHandler;
+import ca.bc.gov.educ.penreg.api.orchestrator.base.EventHandler;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -44,7 +44,7 @@ public class MessageSubscriber extends MessagePubSub {
    * The Handlers.
    */
   @Getter(PRIVATE)
-  private final Map<String, SagaEventHandler> handlers = new HashMap<>();
+  private final Map<String, EventHandler> handlers = new HashMap<>();
 
   /**
    * Instantiates a new Message subscriber.
@@ -68,7 +68,7 @@ public class MessageSubscriber extends MessagePubSub {
    * This subscription will makes sure the messages are required to acknowledge manually to STAN.
    * Subscribe.
    */
-  public void subscribe(String topic, SagaEventHandler eventHandler) {
+  public void subscribe(String topic, EventHandler eventHandler) {
     if(!handlers.containsKey(topic)){
       handlers.put(topic, eventHandler);
     }
@@ -87,14 +87,14 @@ public class MessageSubscriber extends MessagePubSub {
    *
    * @return the message handler
    */
-  private MessageHandler onMessage(SagaEventHandler eventHandler) {
+  public MessageHandler onMessage(EventHandler eventHandler) {
     return (Message message) -> {
       if (message != null) {
         log.info("Message received is :: {} ", message);
           try {
             var eventString = new String(message.getData());
             var event = JsonUtil.getJsonObjectFromString(Event.class, eventString);
-            eventHandler.onSagaEvent(event);
+            eventHandler.handleEvent(event);
           } catch (final Exception e) {
             log.error("Exception ", e);
           }
@@ -128,7 +128,7 @@ public class MessageSubscriber extends MessagePubSub {
     while (true) {
       try {
         log.trace("retrying subscription as connection was lost :: retrying ::" + numOfRetries++);
-        for (Map.Entry<String, SagaEventHandler> entry : handlers.entrySet()) {
+        for (Map.Entry<String, EventHandler> entry : handlers.entrySet()) {
           this.subscribe(entry.getKey(), entry.getValue());
         }
         log.info("successfully resubscribed after {} attempts", numOfRetries);

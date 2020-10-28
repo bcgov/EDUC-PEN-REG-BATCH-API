@@ -39,7 +39,7 @@ import static lombok.AccessLevel.PROTECTED;
  * @param <T> the type parameter
  */
 @Slf4j
-public abstract class BaseOrchestrator<T> {
+public abstract class BaseOrchestrator<T> implements EventHandler {
   /**
    * The constant issueMapper.
    */
@@ -108,7 +108,7 @@ public abstract class BaseOrchestrator<T> {
     this.clazz = clazz;
     this.sagaName = sagaName;
     this.topicToSubscribe = topicToSubscribe;
-    messageSubscriber.subscribe(topicToSubscribe, this::executeSagaEvent);
+    messageSubscriber.subscribe(topicToSubscribe, this);
     taskSchedulerService.registerSagaOrchestrators(sagaName, this);
     populateStepsToExecuteMap();
   }
@@ -414,7 +414,7 @@ public abstract class BaseOrchestrator<T> {
    */
   @Async("subscriberExecutor")
   @Transactional
-  public void executeSagaEvent(@NotNull Event event) throws InterruptedException, IOException, TimeoutException {
+  public void handleEvent(@NotNull Event event) throws InterruptedException, IOException, TimeoutException {
     log.info("executing saga event {}", event);
     if (sagaEventExecutionNotRequired(event)) {
       log.trace("Execution is not required for this message returning EVENT is :: {}", event.toString());
@@ -454,7 +454,7 @@ public abstract class BaseOrchestrator<T> {
    */
   public Saga startSaga(@NotNull String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID) throws InterruptedException, TimeoutException, IOException {
     var saga = sagaService.createSagaRecordInDB(sagaName, API_NAME, payload, penRequestBatchStudentID, penRequestBatchID);
-    executeSagaEvent(Event.builder()
+    handleEvent(Event.builder()
       .eventType(EventType.INITIATED)
       .eventOutcome(EventOutcome.INITIATE_SUCCESS)
       .sagaId(saga.getSagaId())

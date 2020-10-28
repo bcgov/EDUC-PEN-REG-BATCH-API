@@ -7,16 +7,16 @@ import java.util.concurrent.TimeoutException;
 
 
 /**
- * The interface Saga event handler.
+ * The interface event handler.
  */
-public interface SagaEventHandler {
+public interface EventHandler {
   /**
-   * On saga event.
+   * On event.
    *
    * @param event the event
    * @throws InterruptedException the interrupted exception
    * @throws IOException          the io exception
    * @throws TimeoutException     the timeout exception
    */
-  void onSagaEvent(Event event) throws InterruptedException, IOException, TimeoutException;
+  void handleEvent(Event event) throws InterruptedException, IOException, TimeoutException;
 }
