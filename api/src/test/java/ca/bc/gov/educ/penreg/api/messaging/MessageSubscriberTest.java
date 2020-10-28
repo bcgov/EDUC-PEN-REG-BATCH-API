@@ -4,25 +4,18 @@ import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchNewPenOrchestrator;
-import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.service.EventTaskSchedulerAsyncService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchNewPenSagaData;
-import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.streaming.Message;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,16 +23,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.UUID;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
-import static ca.bc.gov.educ.penreg.api.constants.TwinReasonCodes.PENCREATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -80,18 +68,11 @@ public class MessageSubscriberTest {
   private PenReqBatchNewPenOrchestrator orchestrator;
 
   private Saga saga;
-  private PenRequestBatchNewPenSagaData sagaData;
-
-  @Captor
-  ArgumentCaptor<byte[]> eventCaptor;
-
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() {
     initMocks(this);
-//    orchestrator = new PenReqBatchNewPenOrchestrator(sagaService, messagePublisher, messageSubscriber, taskSchedulerService);
     var payload = dummyPenRequestBatchNewPenSagaDataJson();
-    sagaData = getPenRequestBatchNewPenSagaDataFromJsonString(payload);
     saga = sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", payload,
       UUID.fromString(penRequestBatchStudentID), UUID.fromString(penRequestBatchID));
   }
@@ -142,13 +123,4 @@ public class MessageSubscriberTest {
       "    \"twinStudentIDs\": [\"" + twinStudentID + "\"]\n" +
       "  }";
   }
-
-  protected PenRequestBatchNewPenSagaData getPenRequestBatchNewPenSagaDataFromJsonString(String json) {
-    try {
-      return JsonUtil.getJsonObjectFromString(PenRequestBatchNewPenSagaData.class, json);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
-
 }
