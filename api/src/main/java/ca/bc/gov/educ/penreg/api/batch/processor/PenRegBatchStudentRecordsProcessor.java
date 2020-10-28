@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
