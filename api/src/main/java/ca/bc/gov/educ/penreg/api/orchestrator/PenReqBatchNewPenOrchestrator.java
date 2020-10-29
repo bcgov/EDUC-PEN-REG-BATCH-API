@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
@@ -58,7 +59,7 @@ public class PenReqBatchNewPenOrchestrator extends BaseOrchestrator<PenRequestBa
       PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC.toString());
   }
 
-  @Autowired
+  @Resource
   public void setPenReqBatchNewPenOrchestrator(final PenReqBatchNewPenOrchestrator orchestrator) {
     this.orchestrator = orchestrator;
   }
