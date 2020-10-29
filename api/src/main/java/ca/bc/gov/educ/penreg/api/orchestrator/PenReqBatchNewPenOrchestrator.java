@@ -15,10 +15,10 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
@@ -41,7 +41,8 @@ public class PenReqBatchNewPenOrchestrator extends BaseOrchestrator<PenRequestBa
    * The constant penRequestBatchStudentMapper.
    */
   private static final PenRequestBatchStudentMapper penRequestBatchStudentMapper = PenRequestBatchStudentMapper.mapper;
-
+  @Lazy
+  @Autowired
   private PenReqBatchNewPenOrchestrator orchestrator;
 
   /**
@@ -57,11 +58,6 @@ public class PenReqBatchNewPenOrchestrator extends BaseOrchestrator<PenRequestBa
                                        MessageSubscriber messageSubscriber, EventTaskSchedulerAsyncService taskSchedulerService) {
     super(sagaService, messagePublisher, messageSubscriber, taskSchedulerService, PenRequestBatchNewPenSagaData.class,
       PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC.toString());
-  }
-
-  @Resource
-  public void setPenReqBatchNewPenOrchestrator(final PenReqBatchNewPenOrchestrator orchestrator) {
-    this.orchestrator = orchestrator;
   }
 
   @PostConstruct
