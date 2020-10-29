@@ -56,7 +56,6 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
   @Getter(PRIVATE)
   private final PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService;
 
-  @Autowired
   private PenReqBatchStudentOrchestrator orchestrator;
 
 
@@ -75,6 +74,11 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
       PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString());
     setShouldSendNotificationEvent(false);
     this.penRequestBatchStudentOrchestratorService = penRequestBatchStudentOrchestratorService;
+  }
+
+  @Autowired
+  public void setPenReqBatchStudentOrchestrator(final PenReqBatchStudentOrchestrator orchestrator) {
+    this.orchestrator = orchestrator;
   }
 
   @PostConstruct
