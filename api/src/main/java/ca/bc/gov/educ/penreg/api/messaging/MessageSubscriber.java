@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -44,17 +45,18 @@ public class MessageSubscriber extends MessagePubSub {
    * The Handlers.
    */
   @Getter(PRIVATE)
-  private final Map<String, EventHandler> handlers = new HashMap<>();
+  private final Map<String, EventHandler> handlerMap = new HashMap<>();
 
   /**
    * Instantiates a new Message subscriber.
    *
    * @param applicationProperties          the application properties
+   * @param eventHandlers                  the event handlers
    * @throws IOException          the io exception
    * @throws InterruptedException the interrupted exception
    */
   @Autowired
-  public MessageSubscriber(final ApplicationProperties applicationProperties) throws IOException, InterruptedException {
+  public MessageSubscriber(final ApplicationProperties applicationProperties, final List<EventHandler> eventHandlers) throws IOException, InterruptedException {
     var builder = new Options.Builder();
     builder.natsUrl(applicationProperties.getNatsUrl());
     builder.clusterId(applicationProperties.getNatsClusterId());
@@ -62,6 +64,10 @@ public class MessageSubscriber extends MessagePubSub {
     builder.connectionLostHandler(this::connectionLostHandler);
     connectionFactory = new StreamingConnectionFactory(builder.build());
     connection = connectionFactory.createConnection();
+    eventHandlers.forEach(handler -> {
+      handlerMap.put(handler.getTopicToSubscribe(), handler);
+      subscribe(handler.getTopicToSubscribe(), handler);
+    });
   }
 
   /**
@@ -69,8 +75,8 @@ public class MessageSubscriber extends MessagePubSub {
    * Subscribe.
    */
   public void subscribe(String topic, EventHandler eventHandler) {
-    if(!handlers.containsKey(topic)){
-      handlers.put(topic, eventHandler);
+    if(!handlerMap.containsKey(topic)){
+      handlerMap.put(topic, eventHandler);
     }
 
     String queue = topic.replace("_", "-");
@@ -128,7 +134,7 @@ public class MessageSubscriber extends MessagePubSub {
     while (true) {
       try {
         log.trace("retrying subscription as connection was lost :: retrying ::" + numOfRetries++);
-        for (Map.Entry<String, EventHandler> entry : handlers.entrySet()) {
+        for (Map.Entry<String, EventHandler> entry : handlerMap.entrySet()) {
           this.subscribe(entry.getKey(), entry.getValue());
         }
         log.info("successfully resubscribed after {} attempts", numOfRetries);

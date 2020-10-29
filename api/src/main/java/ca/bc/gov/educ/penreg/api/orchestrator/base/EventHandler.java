@@ -19,4 +19,10 @@ public interface EventHandler {
    * @throws TimeoutException     the timeout exception
    */
   void handleEvent(Event event) throws InterruptedException, IOException, TimeoutException;
+
+  /**
+   * Get message topic to subscribe the handler to MessageSubscriber
+   *
+   */
+  String getTopicToSubscribe();
 }

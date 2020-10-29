@@ -78,6 +78,7 @@ public class EventTaskSchedulerAsyncService {
    */
   @Getter(PRIVATE)
   private final Map<String, BaseOrchestrator<?>> sagaOrchestrators = new HashMap<>();
+
   /**
    * The pen request batch event repository.
    */
@@ -96,27 +97,23 @@ public class EventTaskSchedulerAsyncService {
    * @param penRequestBatchRepository          the pen request batch repository
    * @param penRequestBatchStudentRepository   the pen request batch student repository
    * @param penRegBatchStudentRecordsProcessor the pen reg batch student records processor
+   * @param penRequestBatchEventRepository     the pen request batch event repository
+   * @param eventPublisherService              the event publisher service
+   * @param orchestrators                      the orchestrators
+   *
    */
   public EventTaskSchedulerAsyncService(SagaRepository sagaRepository, PenRequestBatchRepository penRequestBatchRepository,
                                         PenRequestBatchStudentRepository penRequestBatchStudentRepository,
                                         PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor,
                                         PenRequestBatchEventRepository penRequestBatchEventRepository,
-                                        EventPublisherService eventPublisherService) {
+                                        EventPublisherService eventPublisherService, List<BaseOrchestrator> orchestrators) {
     this.sagaRepository = sagaRepository;
     this.penRequestBatchRepository = penRequestBatchRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
     this.penRegBatchStudentRecordsProcessor = penRegBatchStudentRecordsProcessor;
     this.penRequestBatchEventRepository = penRequestBatchEventRepository;
     this.eventPublisherService = eventPublisherService;
-  }
-
-  /**
-   * Register a saga orchestrator to let the scheduler process uncompleted sagas
-   * @param sagaName the name of saga
-   * @param orchestrator the saga orchestrator
-   */
-  public void registerSagaOrchestrators(String sagaName, BaseOrchestrator<?> orchestrator) {
-    getSagaOrchestrators().put(sagaName, orchestrator);
+    orchestrators.forEach(orchestrator -> sagaOrchestrators.put(orchestrator.getSagaName(), orchestrator));
   }
 
   /**

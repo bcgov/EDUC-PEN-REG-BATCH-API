@@ -4,11 +4,9 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.PenMatchSagaMapper;
 import ca.bc.gov.educ.penreg.api.mappers.PenStudentDemogValidationMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
-import ca.bc.gov.educ.penreg.api.service.EventTaskSchedulerAsyncService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentOrchestratorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.*;
@@ -20,10 +18,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -56,10 +52,6 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    */
   @Getter(PRIVATE)
   private final PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService;
-  @Lazy
-  @Autowired
-  private PenReqBatchStudentOrchestrator orchestrator;
-
 
   /**
    * Instantiates a new Pen req batch student orchestrator.
@@ -70,18 +62,11 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    */
   @Autowired
   public PenReqBatchStudentOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
-                                        MessageSubscriber messageSubscriber, EventTaskSchedulerAsyncService taskSchedulerService,
                                         PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService) {
-    super(sagaService, messagePublisher, messageSubscriber, taskSchedulerService, PenRequestBatchStudentSagaData.class,
+    super(sagaService, messagePublisher, PenRequestBatchStudentSagaData.class,
       PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString());
     setShouldSendNotificationEvent(false);
     this.penRequestBatchStudentOrchestratorService = penRequestBatchStudentOrchestratorService;
-  }
-
-  @PostConstruct
-  private void registerToServices() {
-    getMessageSubscriber().subscribe(PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString(), orchestrator);
-    getTaskSchedulerService().registerSagaOrchestrators(PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), orchestrator);
   }
 
   /**

@@ -4,10 +4,8 @@ import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchStudentValidationIssueMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
-import ca.bc.gov.educ.penreg.api.service.EventTaskSchedulerAsyncService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.NotificationEvent;
@@ -32,6 +30,7 @@ import static ca.bc.gov.educ.penreg.api.constants.EventType.INITIATED;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.MARK_SAGA_COMPLETE;
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
 import static lombok.AccessLevel.PROTECTED;
+import static lombok.AccessLevel.PUBLIC;
 
 /**
  * The type Base orchestrator.
@@ -80,24 +79,14 @@ public abstract class BaseOrchestrator<T> implements EventHandler {
   @Getter(PROTECTED)
   private final MessagePublisher messagePublisher;
   /**
-   * The Message subscriber.
-   */
-  @Getter(PROTECTED)
-  private final MessageSubscriber messageSubscriber;
-  /**
-   * The event task scheduler service.
-   */
-  @Getter(PROTECTED)
-  private final EventTaskSchedulerAsyncService taskSchedulerService;
-  /**
    * The Saga name.
    */
-  @Getter(PROTECTED)
+  @Getter(PUBLIC)
   private final String sagaName;
   /**
    * The Topic to subscribe.
    */
-  @Getter(PROTECTED)
+  @Getter(PUBLIC)
   private final String topicToSubscribe;
 
   /**
@@ -110,7 +99,6 @@ public abstract class BaseOrchestrator<T> implements EventHandler {
    * @param topicToSubscribe the topic to subscribe
    */
   public BaseOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
-                          MessageSubscriber messageSubscriber, EventTaskSchedulerAsyncService taskSchedulerService,
                           Class<T> clazz, String sagaName,
                           String topicToSubscribe) {
     this.sagaService = sagaService;
@@ -118,8 +106,6 @@ public abstract class BaseOrchestrator<T> implements EventHandler {
     this.clazz = clazz;
     this.sagaName = sagaName;
     this.topicToSubscribe = topicToSubscribe;
-    this.messageSubscriber = messageSubscriber;
-    this.taskSchedulerService = taskSchedulerService;
     populateStepsToExecuteMap();
   }
 
