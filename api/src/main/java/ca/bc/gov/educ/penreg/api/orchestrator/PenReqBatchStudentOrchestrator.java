@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -76,7 +77,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
     this.penRequestBatchStudentOrchestratorService = penRequestBatchStudentOrchestratorService;
   }
 
-  @Autowired
+  @Resource
   public void setPenReqBatchStudentOrchestrator(final PenReqBatchStudentOrchestrator orchestrator) {
     this.orchestrator = orchestrator;
   }
