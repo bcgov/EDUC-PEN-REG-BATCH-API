@@ -2,7 +2,6 @@ package ca.bc.gov.educ.penreg.api.service;
 
 
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
-import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.EventHandler;
@@ -15,9 +14,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -56,7 +54,7 @@ public class EventHandlerService implements EventHandler {
   private final EventPublisherService eventPublisherService;
 
   @Autowired
-  public EventHandlerService(final SagaService sagaService, final MessageSubscriber messageSubscriber,
+  public EventHandlerService(final SagaService sagaService,
                              final PenReqBatchStudentOrchestrator penReqBatchStudentOrchestrator,
                              final PenRequestBatchEventRepository penRequestBatchEventRepository,
                              final PenRequestBatchStudentEventService prbStudentEventService, final EventPublisherService eventPublisherService) {
@@ -65,9 +63,9 @@ public class EventHandlerService implements EventHandler {
     this.sagaService = sagaService;
     this.penReqBatchStudentOrchestrator = penReqBatchStudentOrchestrator;
     this.eventPublisherService = eventPublisherService;
-    messageSubscriber.subscribe(PEN_REQUEST_BATCH_API_TOPIC.toString(), this);
   }
 
+  @Async("subscriberExecutor")
   public void handleEvent(Event event) {
     try {
       switch (event.getEventType()) {
@@ -93,6 +91,10 @@ public class EventHandlerService implements EventHandler {
     } catch (final Exception e) {
       log.error("Exception", e);
     }
+  }
+
+  public String getTopicToSubscribe() {
+    return PEN_REQUEST_BATCH_API_TOPIC.toString();
   }
 
   /**

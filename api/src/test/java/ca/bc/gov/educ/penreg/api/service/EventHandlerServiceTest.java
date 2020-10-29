@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
@@ -66,8 +65,6 @@ public class EventHandlerServiceTest {
   @Mock
   private PenReqBatchStudentOrchestrator penReqBatchStudentOrchestrator;
   @Mock
-  private MessageSubscriber messageSubscriber;
-  @Mock
   private MessagePublisher messagePublisher;
 
   private EventPublisherService eventPublisherService;
@@ -88,7 +85,7 @@ public class EventHandlerServiceTest {
   public void setUp() {
     initMocks(this);
     eventPublisherService = new EventPublisherService(messagePublisher);
-    eventHandlerService = new EventHandlerService(sagaService, messageSubscriber, penReqBatchStudentOrchestrator,
+    eventHandlerService = new EventHandlerService(sagaService, penReqBatchStudentOrchestrator,
       penRequestBatchEventRepository, prbStudentEventService, eventPublisherService);
 
     penRequestBatchID = UUID.randomUUID().toString();

@@ -3,7 +3,6 @@ package ca.bc.gov.educ.penreg.api.orchestrator;
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
@@ -56,8 +55,6 @@ public class PenReqBatchNewPenOrchestratorTest {
   @Mock
   private MessagePublisher messagePublisher;
   @Mock
-  private MessageSubscriber messageSubscriber;
-  @Mock
   private EventTaskSchedulerAsyncService taskSchedulerService;
 
   private final String penRequestBatchID = UUID.randomUUID().toString();
@@ -83,7 +80,7 @@ public class PenReqBatchNewPenOrchestratorTest {
   @Before
   public void setUp() {
     initMocks(this);
-    orchestrator = new PenReqBatchNewPenOrchestrator(sagaService, messagePublisher, messageSubscriber, taskSchedulerService);
+    orchestrator = new PenReqBatchNewPenOrchestrator(sagaService, messagePublisher);
     var payload = dummyPenRequestBatchNewPenSagaDataJson();
     sagaData = getPenRequestBatchNewPenSagaDataFromJsonString(payload);
     saga = sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", payload,
