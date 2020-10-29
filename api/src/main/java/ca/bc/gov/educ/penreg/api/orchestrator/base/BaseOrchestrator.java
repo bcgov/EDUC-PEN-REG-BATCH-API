@@ -80,6 +80,16 @@ public abstract class BaseOrchestrator<T> implements EventHandler {
   @Getter(PROTECTED)
   private final MessagePublisher messagePublisher;
   /**
+   * The Message subscriber.
+   */
+  @Getter(PROTECTED)
+  private final MessageSubscriber messageSubscriber;
+  /**
+   * The event task scheduler service.
+   */
+  @Getter(PROTECTED)
+  private final EventTaskSchedulerAsyncService taskSchedulerService;
+  /**
    * The Saga name.
    */
   @Getter(PROTECTED)
@@ -108,8 +118,8 @@ public abstract class BaseOrchestrator<T> implements EventHandler {
     this.clazz = clazz;
     this.sagaName = sagaName;
     this.topicToSubscribe = topicToSubscribe;
-    messageSubscriber.subscribe(topicToSubscribe, this);
-    taskSchedulerService.registerSagaOrchestrators(sagaName, this);
+    this.messageSubscriber = messageSubscriber;
+    this.taskSchedulerService = taskSchedulerService;
     populateStepsToExecuteMap();
   }
 

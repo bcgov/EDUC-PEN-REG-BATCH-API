@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -55,6 +56,9 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
   @Getter(PRIVATE)
   private final PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService;
 
+  @Autowired
+  private PenReqBatchStudentOrchestrator orchestrator;
+
 
   /**
    * Instantiates a new Pen req batch student orchestrator.
@@ -71,6 +75,12 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
       PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString());
     setShouldSendNotificationEvent(false);
     this.penRequestBatchStudentOrchestratorService = penRequestBatchStudentOrchestratorService;
+  }
+
+  @PostConstruct
+  private void registerToServices() {
+    getMessageSubscriber().subscribe(PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString(), orchestrator);
+    getTaskSchedulerService().registerSagaOrchestrators(PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), orchestrator);
   }
 
   /**
