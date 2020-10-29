@@ -20,10 +20,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +56,8 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    */
   @Getter(PRIVATE)
   private final PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService;
-
+  @Lazy
+  @Autowired
   private PenReqBatchStudentOrchestrator orchestrator;
 
 
@@ -75,11 +76,6 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
       PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString());
     setShouldSendNotificationEvent(false);
     this.penRequestBatchStudentOrchestratorService = penRequestBatchStudentOrchestratorService;
-  }
-
-  @Resource
-  public void setPenReqBatchStudentOrchestrator(final PenReqBatchStudentOrchestrator orchestrator) {
-    this.orchestrator = orchestrator;
   }
 
   @PostConstruct
