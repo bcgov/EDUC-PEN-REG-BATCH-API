@@ -17,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
@@ -39,6 +41,8 @@ public class PenReqBatchNewPenOrchestrator extends BaseOrchestrator<PenRequestBa
    */
   private static final PenRequestBatchStudentMapper penRequestBatchStudentMapper = PenRequestBatchStudentMapper.mapper;
 
+  @Autowired
+  private PenReqBatchNewPenOrchestrator orchestrator;
 
   /**
    * Instantiates a new Pen req batch student orchestrator.
@@ -53,6 +57,12 @@ public class PenReqBatchNewPenOrchestrator extends BaseOrchestrator<PenRequestBa
                                        MessageSubscriber messageSubscriber, EventTaskSchedulerAsyncService taskSchedulerService) {
     super(sagaService, messagePublisher, messageSubscriber, taskSchedulerService, PenRequestBatchNewPenSagaData.class,
       PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC.toString());
+  }
+
+  @PostConstruct
+  private void registerToServices() {
+    getMessageSubscriber().subscribe(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC.toString(), orchestrator);
+    getTaskSchedulerService().registerSagaOrchestrators(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), orchestrator);
   }
 
   /**
