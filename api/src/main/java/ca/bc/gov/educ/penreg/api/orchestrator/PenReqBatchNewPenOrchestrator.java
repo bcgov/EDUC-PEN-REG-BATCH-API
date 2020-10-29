@@ -41,7 +41,6 @@ public class PenReqBatchNewPenOrchestrator extends BaseOrchestrator<PenRequestBa
    */
   private static final PenRequestBatchStudentMapper penRequestBatchStudentMapper = PenRequestBatchStudentMapper.mapper;
 
-  @Autowired
   private PenReqBatchNewPenOrchestrator orchestrator;
 
   /**
@@ -57,6 +56,11 @@ public class PenReqBatchNewPenOrchestrator extends BaseOrchestrator<PenRequestBa
                                        MessageSubscriber messageSubscriber, EventTaskSchedulerAsyncService taskSchedulerService) {
     super(sagaService, messagePublisher, messageSubscriber, taskSchedulerService, PenRequestBatchNewPenSagaData.class,
       PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC.toString());
+  }
+
+  @Autowired
+  public void setPenReqBatchNewPenOrchestrator(final PenReqBatchNewPenOrchestrator orchestrator) {
+    this.orchestrator = orchestrator;
   }
 
   @PostConstruct
