@@ -20,9 +20,9 @@
     <maven.compiler.version>3.8.0</maven.compiler.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
-    <org.mapstruct.version>1.4.0.Final</org.mapstruct.version>
-    <shedlock.version>4.14.0</shedlock.version>
-    <springdoc.version>1.4.6</springdoc.version>
+    <org.mapstruct.version>1.4.1.Final</org.mapstruct.version>
+    <shedlock.version>4.15.1</shedlock.version>
+    <springdoc.version>1.4.8</springdoc.version>
   </properties>
 
   <parent>
