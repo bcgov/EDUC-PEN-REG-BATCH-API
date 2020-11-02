@@ -73,6 +73,9 @@ $KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body
 #WRITE_PEN_REQUEST_BATCH_MACRO
 $KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body "{\"description\": \"Write Pen Request Batch Macro Data\",\"id\": \"WRITE_PEN_REQUEST_BATCH_MACRO\",\"name\": \"WRITE_PEN_REQUEST_BATCH_MACRO\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
 
+#PEN_REQUEST_BATCH_NEW_PEN_SAGA
+$KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body "{\"description\": \"Start Issue New Pen Saga\",\"id\": \"PEN_REQUEST_BATCH_NEW_PEN_SAGA\",\"name\": \"PEN_REQUEST_BATCH_NEW_PEN_SAGA\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
+
 ###########################################################
 #Setup for config-map
 ###########################################################
