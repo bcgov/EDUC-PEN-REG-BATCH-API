@@ -448,6 +448,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler {
    * @throws TimeoutException
    * @throws IOException
    */
+  @Transactional
   public Saga startSaga(@NotNull String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID) throws InterruptedException, TimeoutException, IOException {
     var saga = sagaService.createSagaRecordInDB(sagaName, API_NAME, payload, penRequestBatchStudentID, penRequestBatchID);
     handleEvent(Event.builder()
