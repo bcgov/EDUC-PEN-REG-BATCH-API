@@ -66,11 +66,31 @@ public class PenRequestBatchSagaControllerTest {
   }
 
   @Test
+  @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_READ_SAGA")
+  public void testIssueNewPen_GivenInValidID_ShouldReturnStatusNotFound() throws Exception {
+    this.mockMvc.perform(get("/api/v1/pen-request-batch-saga/" + UUID.randomUUID().toString())
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print()).andExpect(status().isNotFound());
+  }
+  @Test
+  @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_READ_SAGA")
+  public void testIssueNewPen_GivenValidID_ShouldReturnStatusOK() throws Exception {
+    var payload = placeholderPenRequestBatchActionsSagaData();
+    var sagaFromDB = sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", payload, UUID.fromString(getPenRequestBatchStudentID),
+        UUID.fromString(penRequestBatchID));
+    this.mockMvc.perform(get("/api/v1/pen-request-batch-saga/" + sagaFromDB.getSagaId().toString())
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON))
+                .andDo(print()).andExpect(status().isOk());
+  }
+  @Test
   @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_NEW_PEN_SAGA")
   public void testIssueNewPen_GivenInValidPayload_ShouldReturnStatusBadRequest() throws Exception {
     this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/new-pen").contentType(MediaType.APPLICATION_JSON)
                                                                        .accept(MediaType.APPLICATION_JSON).content(placeholderInvalidPenRequestBatchActionsSagaData())).andDo(print()).andExpect(status().isBadRequest());
   }
+
 
   @Test
   @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_NEW_PEN_SAGA")
