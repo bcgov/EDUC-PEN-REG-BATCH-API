@@ -82,16 +82,6 @@ public class PenRequestBatchStudentService {
     this.applicationProperties = applicationProperties;
   }
 
-  /**
-   * Save all students iterable.
-   *
-   * @param penRequestBatchStudentEntities the pen request batch student entities
-   * @return the iterable
-   */
-  @Transactional(propagation = Propagation.MANDATORY)
-  public Iterable<PenRequestBatchStudentEntity> saveAllStudents(final List<PenRequestBatchStudentEntity> penRequestBatchStudentEntities) {
-    return getRepository().saveAll(penRequestBatchStudentEntities);
-  }
 
   /**
    * Create student pen request batch student entity.
@@ -158,12 +148,15 @@ public class PenRequestBatchStudentService {
 
           //adjust the summary Count values in the PEN Request Batch
           var currentStatus = PenRequestBatchStudentStatusCodes.valueOfCode(entity.getPenRequestBatchStudentStatusCode());
-          if(!useSameSummaryCounter(originalStatus, currentStatus)) {
+          log.debug("The Original status :: {} and Current status :: {} of Student :: {}", originalStatus, currentStatus, savedPrbStudent);
+          if (!useSameSummaryCounter(originalStatus, currentStatus)) {
+            logCounts(penRequestBatch, "Current");
             changeSummaryCount(penRequestBatch, originalStatus, true);
             changeSummaryCount(penRequestBatch, currentStatus, false);
             penRequestBatch.setUpdateUser(penRequestBatchStudent.getUpdateUser());
             penRequestBatch.setUpdateDate(penRequestBatchStudent.getUpdateDate());
             penRequestBatchRepository.save(penRequestBatch);
+            logCounts(penRequestBatch, "Updated");
           }
           return savedPrbStudent;
         } else {
@@ -178,11 +171,20 @@ public class PenRequestBatchStudentService {
     }
   }
 
+  private void logCounts(PenRequestBatchEntity penRequestBatch, String initialMessage) {
+    log.debug(initialMessage.concat(" counts are  Fixable :: {}, Error :: {}, Repeat :: {}, Matched :: {}, New Pen :: {}"),
+        penRequestBatch.getFixableCount(),
+        penRequestBatch.getErrorCount(),
+        penRequestBatch.getRepeatCount(),
+        penRequestBatch.getMatchedCount(),
+        penRequestBatch.getNewPenCount());
+  }
+
   private boolean useSameSummaryCounter(PenRequestBatchStudentStatusCodes originalStatus, PenRequestBatchStudentStatusCodes currentStatus) {
     return originalStatus.equals(currentStatus) ||
-      ((originalStatus.equals(ERROR) || originalStatus.equals(INFOREQ)) && (currentStatus.equals(ERROR) || currentStatus.equals(INFOREQ))) ||
-      ((originalStatus.equals(SYS_MATCHED) || originalStatus.equals(USR_MATCHED)) && (currentStatus.equals(SYS_MATCHED) || currentStatus.equals(USR_MATCHED))) ||
-      ((originalStatus.equals(SYS_NEW_PEN) || originalStatus.equals(USR_NEW_PEN)) && (currentStatus.equals(SYS_NEW_PEN) || currentStatus.equals(USR_NEW_PEN)));
+        ((originalStatus.equals(ERROR) || originalStatus.equals(INFOREQ)) && (currentStatus.equals(ERROR) || currentStatus.equals(INFOREQ))) ||
+        ((originalStatus.equals(SYS_MATCHED) || originalStatus.equals(USR_MATCHED)) && (currentStatus.equals(SYS_MATCHED) || currentStatus.equals(USR_MATCHED))) ||
+        ((originalStatus.equals(SYS_NEW_PEN) || originalStatus.equals(USR_NEW_PEN)) && (currentStatus.equals(SYS_NEW_PEN) || currentStatus.equals(USR_NEW_PEN)));
 
   }
 
@@ -190,22 +192,22 @@ public class PenRequestBatchStudentService {
     int count = changeFrom ? -1 : 1;
     switch (status) {
       case FIXABLE:
-        penRequestBatch.setFixableCount((penRequestBatch.getFixableCount() != null ? penRequestBatch.getFixableCount() : 0 ) + count);
+        penRequestBatch.setFixableCount((penRequestBatch.getFixableCount() != null ? penRequestBatch.getFixableCount() : 0) + count);
         break;
       case SYS_MATCHED:
       case USR_MATCHED:
-        penRequestBatch.setMatchedCount((penRequestBatch.getMatchedCount() != null ? penRequestBatch.getMatchedCount() : 0 ) + count);
+        penRequestBatch.setMatchedCount((penRequestBatch.getMatchedCount() != null ? penRequestBatch.getMatchedCount() : 0) + count);
         break;
       case INFOREQ:
       case ERROR:
-        penRequestBatch.setErrorCount((penRequestBatch.getErrorCount() != null ? penRequestBatch.getErrorCount() : 0 ) + count);
+        penRequestBatch.setErrorCount((penRequestBatch.getErrorCount() != null ? penRequestBatch.getErrorCount() : 0) + count);
         break;
       case REPEAT:
-        penRequestBatch.setRepeatCount((penRequestBatch.getRepeatCount() != null ? penRequestBatch.getRepeatCount() : 0 ) + count);
+        penRequestBatch.setRepeatCount((penRequestBatch.getRepeatCount() != null ? penRequestBatch.getRepeatCount() : 0) + count);
         break;
       case SYS_NEW_PEN:
       case USR_NEW_PEN:
-        penRequestBatch.setNewPenCount((penRequestBatch.getNewPenCount() != null ? penRequestBatch.getNewPenCount() : 0 ) + count);
+        penRequestBatch.setNewPenCount((penRequestBatch.getNewPenCount() != null ? penRequestBatch.getNewPenCount() : 0) + count);
         break;
       default:
     }
@@ -233,21 +235,6 @@ public class PenRequestBatchStudentService {
     }
   }
 
-  /**
-   * Find all student by pen request batch id list.
-   *
-   * @param penRequestBatchID the pen request batch id
-   * @return the list
-   */
-  public List<PenRequestBatchStudentEntity> findAllStudentByPenRequestBatchID(UUID penRequestBatchID) {
-    var penRequestBatchOptional = getPenRequestBatchRepository().findById(penRequestBatchID);
-    if (penRequestBatchOptional.isPresent()) {
-      return getRepository().findAllByPenRequestBatchEntity(penRequestBatchOptional.get());
-    } else {
-      throw new EntityNotFoundException(PenRequestBatchStudentEntity.class, penRequestBatchID.toString());
-    }
-
-  }
 
   /**
    * Find all students requests that are repeats of the current student request
@@ -257,9 +244,9 @@ public class PenRequestBatchStudentService {
    */
   public List<PenRequestBatchStudentEntity> findAllRepeatsGivenBatchStudent(PenRequestBatchStudentEntity penRequestBatchStudent) {
     int repeatTimeWindow;
-    if(penRequestBatchStudent.getPenRequestBatchEntity().getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())){
+    if (penRequestBatchStudent.getPenRequestBatchEntity().getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())) {
       repeatTimeWindow = getApplicationProperties().getRepeatTimeWindowPSI();
-    }else {
+    } else {
       repeatTimeWindow = getApplicationProperties().getRepeatTimeWindowK12();
     }
     LocalDateTime startDate = LocalDateTime.now().minusDays(repeatTimeWindow);

@@ -2,12 +2,15 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchStudentSagaDataMapper;
 import ca.bc.gov.educ.penreg.api.batch.processor.PenRegBatchStudentRecordsProcessor;
-import ca.bc.gov.educ.penreg.api.constants.*;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
-import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
+import ca.bc.gov.educ.penreg.api.orchestrator.base.Orchestrator;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -77,7 +80,7 @@ public class EventTaskSchedulerAsyncService {
    * The saga name and orchestrator map.
    */
   @Getter(PRIVATE)
-  private final Map<String, BaseOrchestrator<?>> sagaOrchestrators = new HashMap<>();
+  private final Map<String, Orchestrator> sagaOrchestrators = new HashMap<>();
 
   /**
    * The pen request batch event repository.
@@ -106,7 +109,7 @@ public class EventTaskSchedulerAsyncService {
                                         PenRequestBatchStudentRepository penRequestBatchStudentRepository,
                                         PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor,
                                         PenRequestBatchEventRepository penRequestBatchEventRepository,
-                                        EventPublisherService eventPublisherService, List<BaseOrchestrator> orchestrators) {
+                                        EventPublisherService eventPublisherService, List<Orchestrator> orchestrators) {
     this.sagaRepository = sagaRepository;
     this.penRequestBatchRepository = penRequestBatchRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
