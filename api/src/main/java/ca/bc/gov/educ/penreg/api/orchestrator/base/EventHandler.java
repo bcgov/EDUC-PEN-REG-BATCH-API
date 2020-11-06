@@ -23,6 +23,7 @@ public interface EventHandler {
   /**
    * Get message topic to subscribe the handler to MessageSubscriber
    *
+   * @return the topic to subscribe
    */
   String getTopicToSubscribe();
 }

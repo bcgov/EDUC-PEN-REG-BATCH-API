@@ -27,37 +27,61 @@ import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BAT
 import static lombok.AccessLevel.PRIVATE;
 import static lombok.AccessLevel.PROTECTED;
 
+/**
+ * The type Event handler service.
+ */
 @Service
 @Slf4j
 public class EventHandlerService implements EventHandler {
 
-  public static final String NO_RECORD_SAGA_ID_EVENT_TYPE = "no record found for the saga id and event type combination, processing.";
-  public static final String RECORD_FOUND_FOR_SAGA_ID_EVENT_TYPE = "record found for the saga id and event type combination, might be a duplicate or replay," +
-      " just updating the db status so that it will be polled and sent back again.";
+  /**
+   * The constant PAYLOAD_LOG.
+   */
   public static final String PAYLOAD_LOG = "payload is :: {}";
-  public static final String EVENT_PAYLOAD = "event is :: {}";
   /**
    * The Saga service.
    */
   @Getter(PROTECTED)
   private final SagaService sagaService;
+  /**
+   * The Pen req batch student orchestrator.
+   */
   @Getter(PROTECTED)
   private final PenReqBatchStudentOrchestrator penReqBatchStudentOrchestrator;
 
+  /**
+   * The Pen request batch event repository.
+   */
   @Getter(PRIVATE)
   private final PenRequestBatchEventRepository penRequestBatchEventRepository;
 
+  /**
+   * The Prb student event service.
+   */
   @Getter(PRIVATE)
   private final PenRequestBatchStudentEventService prbStudentEventService;
 
+  /**
+   * The Event publisher service.
+   */
   @Getter(PRIVATE)
   private final EventPublisherService eventPublisherService;
 
+  /**
+   * Instantiates a new Event handler service.
+   *
+   * @param sagaService                    the saga service
+   * @param penReqBatchStudentOrchestrator the pen req batch student orchestrator
+   * @param penRequestBatchEventRepository the pen request batch event repository
+   * @param prbStudentEventService         the prb student event service
+   * @param eventPublisherService          the event publisher service
+   */
   @Autowired
   public EventHandlerService(final SagaService sagaService,
                              final PenReqBatchStudentOrchestrator penReqBatchStudentOrchestrator,
                              final PenRequestBatchEventRepository penRequestBatchEventRepository,
-                             final PenRequestBatchStudentEventService prbStudentEventService, final EventPublisherService eventPublisherService) {
+                             final PenRequestBatchStudentEventService prbStudentEventService,
+                             final EventPublisherService eventPublisherService) {
     this.prbStudentEventService = prbStudentEventService;
     this.penRequestBatchEventRepository = penRequestBatchEventRepository;
     this.sagaService = sagaService;
@@ -65,6 +89,11 @@ public class EventHandlerService implements EventHandler {
     this.eventPublisherService = eventPublisherService;
   }
 
+  /**
+   * Handle event.
+   *
+   * @param event the event
+   */
   @Async("subscriberExecutor")
   public void handleEvent(Event event) {
     try {
@@ -93,6 +122,11 @@ public class EventHandlerService implements EventHandler {
     }
   }
 
+  /**
+   * Gets topic to subscribe.
+   *
+   * @return the topic to subscribe
+   */
   public String getTopicToSubscribe() {
     return PEN_REQUEST_BATCH_API_TOPIC.toString();
   }
@@ -101,36 +135,44 @@ public class EventHandlerService implements EventHandler {
    * Saga should never be null for this type of event.
    *
    * @param event containing the student PEN.
+   * @throws InterruptedException the interrupted exception
+   * @throws TimeoutException     the timeout exception
+   * @throws IOException          the io exception
    */
   private void handleReadFromTopicEvent(Event event) throws InterruptedException, TimeoutException, IOException {
     if (event.getEventOutcome() == EventOutcome.READ_FROM_TOPIC_SUCCESS) {
       PenRequestBatchStudentSagaData penRequestBatchStudentSagaData = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, event.getEventPayload());
       var sagaList = getSagaService().findByPenRequestBatchStudentIDAndSagaName(penRequestBatchStudentSagaData.getPenRequestBatchStudentID(),
-        PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString());
+          PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString());
       if (sagaList.size() > 0) { // possible duplicate message.
         log.trace("Execution is not required for this message returning EVENT is :: {}", event.toString());
         return;
       }
 
       getPenReqBatchStudentOrchestrator().startSaga(event.getEventPayload(), penRequestBatchStudentSagaData.getPenRequestBatchStudentID(),
-        penRequestBatchStudentSagaData.getPenRequestBatchID());
+          penRequestBatchStudentSagaData.getPenRequestBatchID());
     }
   }
 
 
   /**
-   *  Send event immediately after update PrbStudent. The scheduler will resend it if failed.
-   *  Make sure that the PrbStudent update and event sending are in different transactions,
-   *  so the failure to send event would not affect PrbStudent update.
+   * Send event immediately after update PrbStudent. The scheduler will resend it if failed.
+   * Make sure that the PrbStudent update and event sending are in different transactions,
+   * so the failure to send event would not affect PrbStudent update.
    *
    * @param event the update PrbStudent event
-   * @throws JsonProcessingException
+   * @throws JsonProcessingException the json processing exception
    */
   private void handleUpdatePrbStudentEvent(Event event) throws JsonProcessingException {
     PenRequestBatchEvent penRequestBatchEvent = getPrbStudentEventService().updatePenRequestBatchStudent(event);
     getEventPublisherService().send(penRequestBatchEvent);
   }
 
+  /**
+   * Handle pen request batch outbox processed event.
+   *
+   * @param eventId the event id
+   */
   private void handlePenRequestBatchOutboxProcessedEvent(String eventId) {
     val eventFromDB = getPenRequestBatchEventRepository().findById(UUID.fromString(eventId));
     if (eventFromDB.isPresent()) {

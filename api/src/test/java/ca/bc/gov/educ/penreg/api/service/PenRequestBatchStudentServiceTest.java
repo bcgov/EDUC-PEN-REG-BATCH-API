@@ -66,8 +66,9 @@ public class PenRequestBatchStudentServiceTest {
     assertThat(updatedPrbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.toString());
 
     var penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
+    assertThat(penRequestBatch).isPresent();
     assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
-    assertThat(penRequestBatch.get().getFixableCount()).isEqualTo(0);
+    assertThat(penRequestBatch.get().getFixableCount()).isZero();
   }
 
   @Test
@@ -83,6 +84,7 @@ public class PenRequestBatchStudentServiceTest {
     assertThat(updatedPrbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.toString());
 
     var penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
+    assertThat(penRequestBatch).isPresent();
     assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
     assertThat(penRequestBatch.get().getMatchedCount()).isEqualTo(1);
   }
@@ -100,6 +102,7 @@ public class PenRequestBatchStudentServiceTest {
     assertThat(updatedPrbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.toString());
 
     var penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
+    assertThat(penRequestBatch).isPresent();
     assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
     assertThat(penRequestBatch.get().getMatchedCount()).isEqualTo(1);
   }
@@ -117,6 +120,7 @@ public class PenRequestBatchStudentServiceTest {
     assertThat(updatedPrbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.toString());
 
     var penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
+    assertThat(penRequestBatch).isPresent();
     assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
     assertThat(penRequestBatch.get().getErrorCount()).isEqualTo(1);
   }
@@ -134,8 +138,9 @@ public class PenRequestBatchStudentServiceTest {
     assertThat(updatedPrbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.toString());
 
     var penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
+    assertThat(penRequestBatch).isPresent();
     assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
-    assertThat(penRequestBatch.get().getRepeatCount()).isEqualTo(0);
+    assertThat(penRequestBatch.get().getRepeatCount()).isZero();
   }
 
   protected String dummyPenRequestBatchStudentDataJson(String status) {
@@ -152,6 +157,6 @@ public class PenRequestBatchStudentServiceTest {
 
   private UUID getFirstPenRequestBatchStudentID(String status) {
     return batchList.get(0).getPenRequestBatchStudentEntities().stream()
-      .filter(student -> student.getPenRequestBatchStudentStatusCode().equals(status)).findFirst().get().getPenRequestBatchStudentID();
+      .filter(student -> student.getPenRequestBatchStudentStatusCode().equals(status)).findFirst().orElseThrow().getPenRequestBatchStudentID();
   }
 }

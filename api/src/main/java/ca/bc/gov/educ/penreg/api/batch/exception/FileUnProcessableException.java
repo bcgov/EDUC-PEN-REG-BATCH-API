@@ -50,7 +50,7 @@ public class FileUnProcessableException extends Exception {
    * @return the formatted message
    */
   private static String getFormattedMessage(String msg, String... substitutions) {
-    final String format = msg.replaceAll("\\Q$?\\E", "%s");
+    final String format = msg.replace("$?", "%s");
     return String.format(format, (Object[]) substitutions);
   }
 }

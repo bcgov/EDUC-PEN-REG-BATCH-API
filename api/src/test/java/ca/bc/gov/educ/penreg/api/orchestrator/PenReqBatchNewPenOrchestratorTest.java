@@ -6,10 +6,9 @@ import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
-import ca.bc.gov.educ.penreg.api.service.EventTaskSchedulerAsyncService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchNewPenSagaData;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -44,49 +43,68 @@ import static org.mockito.MockitoAnnotations.initMocks;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @SpringBootTest
-public class PenReqBatchNewPenOrchestratorTest {
+public class PenReqBatchNewPenOrchestratorTest extends BaseOrchestratorTest {
+  /**
+   * The Repository.
+   */
   @Autowired
   SagaRepository repository;
+  /**
+   * The Saga event repository.
+   */
   @Autowired
   SagaEventRepository sagaEventRepository;
+  /**
+   * The Saga service.
+   */
   @Autowired
   private SagaService sagaService;
 
+  /**
+   * The Message publisher.
+   */
   @Mock
   private MessagePublisher messagePublisher;
-  @Mock
-  private EventTaskSchedulerAsyncService taskSchedulerService;
 
-  private final String penRequestBatchID = UUID.randomUUID().toString();
-
-  private final String penRequestBatchStudentID = UUID.randomUUID().toString();
-
-  private final String twinStudentID = UUID.randomUUID().toString();
-
-  private final String mincode = "01292001";
+ 
 
   /**
    * The issue new pen orchestrator.
    */
   private PenReqBatchNewPenOrchestrator orchestrator;
 
+  /**
+   * The Saga.
+   */
   private Saga saga;
-  private PenRequestBatchNewPenSagaData sagaData;
+  /**
+   * The Saga data.
+   */
+  private PenRequestBatchUserActionsSagaData sagaData;
 
+  /**
+   * The Event captor.
+   */
   @Captor
   ArgumentCaptor<byte[]> eventCaptor;
 
 
+  /**
+   * Sets up.
+   */
   @Before
   public void setUp() {
     initMocks(this);
     orchestrator = new PenReqBatchNewPenOrchestrator(sagaService, messagePublisher);
-    var payload = dummyPenRequestBatchNewPenSagaDataJson();
-    sagaData = getPenRequestBatchNewPenSagaDataFromJsonString(payload);
+    var payload = placeholderPenRequestBatchActionsSagaData();
+    sagaData = getPenRequestBatchUserActionsSagaDataFromJsonString(payload);
     saga = sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", payload,
       UUID.fromString(penRequestBatchStudentID), UUID.fromString(penRequestBatchID));
   }
 
+  /**
+   * After.
+   */
   @After
   public void after() {
     sagaEventRepository.deleteAll();
@@ -96,7 +114,7 @@ public class PenReqBatchNewPenOrchestratorTest {
   /**
    * Test get next pen number.
    *
-   * @throws Exception the exception
+   * @throws JsonProcessingException the json processing exception
    */
   @Test
   public void testGetNextPenNumber_givenEventAndSagaData_shouldPostEventToServicesApi() throws JsonProcessingException {
@@ -110,8 +128,9 @@ public class PenReqBatchNewPenOrchestratorTest {
     var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(GET_NEXT_PEN_NUMBER);
     assertThat(newEvent.getEventPayload()).isEqualTo(saga.getSagaId().toString());
-
-    assertThat(sagaService.findSagaById(saga.getSagaId()).get().getSagaState()).isEqualTo(GET_NEXT_PEN_NUMBER.toString());
+    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    assertThat(sagaFromDB.get().getSagaState()).isEqualTo(GET_NEXT_PEN_NUMBER.toString());
     var sagaStates = sagaService.findAllSagaStates(saga);
     assertThat(sagaStates.size()).isEqualTo(1);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.INITIATED.toString());
@@ -121,7 +140,7 @@ public class PenReqBatchNewPenOrchestratorTest {
   /**
    * Test create student.
    *
-   * @throws Exception the exception
+   * @throws JsonProcessingException the json processing exception
    */
   @Test
   public void testCreateStudent_givenEventAndSagaData_shouldPostEventToStudentApi() throws JsonProcessingException {
@@ -146,10 +165,11 @@ public class PenReqBatchNewPenOrchestratorTest {
     assertThat(student.getStudentTwinAssociations().size()).isEqualTo(1);
     assertThat(student.getStudentTwinAssociations().get(0).getTwinStudentID()).isEqualTo(twinStudentID);
     assertThat(student.getStudentTwinAssociations().get(0).getStudentTwinReasonCode()).isEqualTo(PENCREATE.getCode());
-
-    var currentSaga = sagaService.findSagaById(saga.getSagaId()).get();
+    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    var currentSaga = sagaFromDB.get();
     assertThat(currentSaga.getSagaState()).isEqualTo(CREATE_STUDENT.toString());
-    assertThat(getPenRequestBatchNewPenSagaDataFromJsonString(currentSaga.getPayload()).getAssignedPEN()).isEqualTo(pen);
+    assertThat(getPenRequestBatchUserActionsSagaDataFromJsonString(currentSaga.getPayload()).getAssignedPEN()).isEqualTo(pen);
     var sagaStates = sagaService.findAllSagaStates(saga);
     assertThat(sagaStates.size()).isEqualTo(1);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.GET_NEXT_PEN_NUMBER.toString());
@@ -159,7 +179,7 @@ public class PenReqBatchNewPenOrchestratorTest {
   /**
    * Test update pen request batch student.
    *
-   * @throws Exception the exception
+   * @throws JsonProcessingException the json processing exception
    */
   @Test
   public void testUpdatePenRequestBatchStudent_givenEventAndSagaData_shouldPostEventToBatchApi() throws JsonProcessingException {
@@ -181,8 +201,9 @@ public class PenReqBatchNewPenOrchestratorTest {
     assertThat(prbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.getCode());
     assertThat(prbStudent.getStudentID()).isEqualTo(studentID);
     assertThat(prbStudent.getAssignedPEN()).isEqualTo(pen);
-
-    var currentSaga = sagaService.findSagaById(saga.getSagaId()).get();
+    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    var currentSaga = sagaFromDB.get();
     assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
     var sagaStates = sagaService.findAllSagaStates(saga);
     assertThat(sagaStates.size()).isEqualTo(1);
@@ -190,25 +211,6 @@ public class PenReqBatchNewPenOrchestratorTest {
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_CREATED.toString());
   }
 
-  protected String dummyPenRequestBatchNewPenSagaDataJson() {
-    return " {\n" +
-      "    \"createUser\": \"test\",\n" +
-      "    \"updateUser\": \"test\",\n" +
-      "    \"penRequestBatchID\": \"" + penRequestBatchID + "\",\n" +
-      "    \"penRequestBatchStudentID\": \"" + penRequestBatchStudentID + "\",\n" +
-      "    \"legalFirstName\": \"Jack\",\n" +
-      "    \"mincode\": \""+ mincode + "\",\n" +
-      "    \"genderCode\": \"X\",\n" +
-      "    \"twinStudentIDs\": [\"" + twinStudentID + "\"]\n" +
-      "  }";
-  }
-
-  protected PenRequestBatchNewPenSagaData getPenRequestBatchNewPenSagaDataFromJsonString(String json) {
-    try {
-      return JsonUtil.getJsonObjectFromString(PenRequestBatchNewPenSagaData.class, json);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
+ 
 
 }

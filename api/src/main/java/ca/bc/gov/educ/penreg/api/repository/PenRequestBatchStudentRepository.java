@@ -14,6 +14,7 @@ import java.util.UUID;
 /**
  * The interface Pen request batch student repository.
  */
+@SuppressWarnings("java:S107")
 public interface PenRequestBatchStudentRepository extends CrudRepository<PenRequestBatchStudentEntity, UUID>, JpaSpecificationExecutor<PenRequestBatchStudentEntity> {
 
   /**

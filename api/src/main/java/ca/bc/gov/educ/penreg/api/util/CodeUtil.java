@@ -3,14 +3,6 @@ package ca.bc.gov.educ.penreg.api.util;
 import ca.bc.gov.educ.penreg.api.constants.GenderCodes;
 import ca.bc.gov.educ.penreg.api.constants.SexCodes;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.format.SignStyle;
-import java.util.Optional;
-
-import static java.time.temporal.ChronoField.*;
-
 /**
  * The code util.
  */

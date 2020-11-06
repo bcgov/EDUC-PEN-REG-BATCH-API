@@ -12,6 +12,11 @@ public enum SagaTopicsEnum {
    * Pen request batch issue processing topic saga topics enum.
    */
   PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC,
+
+  /**
+   * Pen request batch user match processing topic saga topics enum.
+   */
+  PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_TOPIC,
   /**
    * Pen match api topic saga topics enum.
    */

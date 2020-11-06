@@ -32,7 +32,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.function.BiFunction;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.*;
 import static lombok.AccessLevel.PRIVATE;
@@ -187,7 +186,7 @@ public class PenRequestBatchStudentService {
 
   }
 
-  private PenRequestBatchEntity changeSummaryCount(PenRequestBatchEntity penRequestBatch, PenRequestBatchStudentStatusCodes status, boolean changeFrom) {
+  private void changeSummaryCount(PenRequestBatchEntity penRequestBatch, PenRequestBatchStudentStatusCodes status, boolean changeFrom) {
     int count = changeFrom ? -1 : 1;
     switch (status) {
       case FIXABLE:
@@ -207,11 +206,10 @@ public class PenRequestBatchStudentService {
       case SYS_NEW_PEN:
       case USR_NEW_PEN:
         penRequestBatch.setNewPenCount((penRequestBatch.getNewPenCount() != null ? penRequestBatch.getNewPenCount() : 0 ) + count);
+        break;
       default:
-        return penRequestBatch;
     }
 
-    return penRequestBatch;
   }
 
   /**

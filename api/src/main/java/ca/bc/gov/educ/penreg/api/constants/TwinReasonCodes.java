@@ -10,7 +10,11 @@ public enum TwinReasonCodes {
   /**
    * Twinned by Creating PEN.
    */
-  PENCREATE("PENCREATE");
+  PENCREATE("PENCREATE"),
+  /**
+   * Twinned by Creating PEN.
+   */
+  PEN_MATCH("PENMATCH");
 
   /**
    * The Code.

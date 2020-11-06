@@ -38,7 +38,7 @@ import static lombok.AccessLevel.PUBLIC;
  * @param <T> the type parameter
  */
 @Slf4j
-public abstract class BaseOrchestrator<T> implements EventHandler {
+public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator {
   /**
    * The constant issueMapper.
    */
@@ -183,8 +183,8 @@ public abstract class BaseOrchestrator<T> implements EventHandler {
   /**
    * End step base orchestrator with complete status.
    *
-   * @param currentEvent  the event that has occurred.
-   * @param outcome       outcome of the event.
+   * @param currentEvent the event that has occurred.
+   * @param outcome      outcome of the event.
    * @return {@link BaseOrchestrator}
    */
   public BaseOrchestrator<T> end(EventType currentEvent, EventOutcome outcome) {
@@ -440,13 +440,13 @@ public abstract class BaseOrchestrator<T> implements EventHandler {
   /**
    * Start to execute saga
    *
-   * @param payload                    the event payload
-   * @param penRequestBatchStudentID   the pen request batch student id
-   * @param penRequestBatchID          the pen request batch id
+   * @param payload                  the event payload
+   * @param penRequestBatchStudentID the pen request batch student id
+   * @param penRequestBatchID        the pen request batch id
    * @return saga record
-   * @throws InterruptedException
-   * @throws TimeoutException
-   * @throws IOException
+   * @throws InterruptedException the interrupted exception
+   * @throws TimeoutException     the timeout exception
+   * @throws IOException          the io exception
    */
   @Transactional
   public Saga startSaga(@NotNull String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID) throws InterruptedException, TimeoutException, IOException {
@@ -462,6 +462,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler {
 
   /**
    * DONT DO ANYTHING the message was broad-casted for the frontend listeners, that a saga process has initiated, completed.
+   *
    * @param event the event object received from queue.
    * @return true if this message need not be processed further.
    */
@@ -472,6 +473,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler {
 
   /**
    * Broadcast the saga initiated message
+   *
    * @param event the event object
    * @throws InterruptedException
    * @throws IOException

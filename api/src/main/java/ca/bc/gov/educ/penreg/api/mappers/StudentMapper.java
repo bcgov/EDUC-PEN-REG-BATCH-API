@@ -2,7 +2,6 @@ package ca.bc.gov.educ.penreg.api.mappers;
 
 import ca.bc.gov.educ.penreg.api.struct.BasePenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.StudentTwinAssociation;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;

@@ -47,6 +47,9 @@ public enum PenRequestBatchStudentStatusCodes {
    */
   INFOREQ("INFOREQ");
 
+  /**
+   * The constant codeMap.
+   */
   private static final Map<String, PenRequestBatchStudentStatusCodes> codeMap = new HashMap<>();
 
   static {
@@ -69,11 +72,22 @@ public enum PenRequestBatchStudentStatusCodes {
     this.code = code;
   }
 
+  /**
+   * To string string.
+   *
+   * @return the string
+   */
   @Override
   public String toString(){
     return this.getCode();
   }
 
+  /**
+   * Value of code pen request batch student status codes.
+   *
+   * @param code the code
+   * @return the pen request batch student status codes
+   */
   public static PenRequestBatchStudentStatusCodes valueOfCode(String code) {
     return codeMap.get(code);
   }

@@ -44,11 +44,17 @@ public interface PenRequestBatchStudentMapper {
 
 
   /**
-   * To model pen request batch student entity.
+   * To prb student pen request batch student.
    *
    * @param basePenRequestBatchStudentSagaData the base pen request batch student saga data
-   * @return the student
+   * @return the pen request batch student
    */
+  @Mapping(target = "submissionNumber", ignore = true)
+  @Mapping(target = "repeatRequestSequenceNumber", ignore = true)
+  @Mapping(target = "repeatRequestOriginalID", ignore = true)
+  @Mapping(target = "recordNumber", ignore = true)
+  @Mapping(target = "minCode", ignore = true)
+  @Mapping(target = "bestMatchPEN", ignore = true)
   PenRequestBatchStudent toPrbStudent(BasePenRequestBatchStudentSagaData basePenRequestBatchStudentSagaData);
 
 }

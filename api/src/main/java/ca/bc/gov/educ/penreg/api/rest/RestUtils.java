@@ -1,17 +1,14 @@
 package ca.bc.gov.educ.penreg.api.rest;
 
-import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.Search;
-import ca.bc.gov.educ.penreg.api.struct.v1.SearchCriteria;
-import ca.bc.gov.educ.penreg.api.struct.v1.ValueType;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.oauth2.client.DefaultOAuth2ClientContext;
@@ -19,10 +16,11 @@ import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * This class is used for REST calls
@@ -121,6 +119,12 @@ public class RestUtils {
     return restTemplate.exchange(props.getStudentApiURL(), HttpMethod.POST, new HttpEntity<>(student, headers), Student.class).getBody();
   }
 
+  /**
+   * Gets student by pen.
+   *
+   * @param pen the pen
+   * @return the student by pen
+   */
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Optional<Student> getStudentByPEN(String pen) {
     RestTemplate restTemplate = getRestTemplate();
@@ -135,10 +139,16 @@ public class RestUtils {
     return Optional.empty();
   }
 
+  /**
+   * Gets next pen number from pen service api.
+   *
+   * @param guid the guid
+   * @return the next pen number from pen service api
+   */
   public String getNextPenNumberFromPenServiceAPI(String guid) {
     RestTemplate restTemplate = getRestTemplate();
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(props.getPenServicesApiURL().concat("/api/v1/pen-services/next-pen-number"))
-        .queryParam("transactionID", guid);
+                                                       .queryParam("transactionID", guid);
     return restTemplate.getForEntity(builder.build().encode().toUri(), String.class).getBody();
   }
 }

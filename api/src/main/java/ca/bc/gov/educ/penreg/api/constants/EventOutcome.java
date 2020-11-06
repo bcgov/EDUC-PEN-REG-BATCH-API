@@ -57,7 +57,7 @@ public enum EventOutcome {
    */
   VALIDATION_SUCCESS_WITH_ONLY_WARNING,
   /**
-   *  Next PEN number retrieved event outcome.
+   * Next PEN number retrieved event outcome.
    */
   NEXT_PEN_NUMBER_RETRIEVED,
   /**
@@ -67,5 +67,10 @@ public enum EventOutcome {
   /**
    * PEN request batch student not found event outcome.
    */
-  PEN_REQUEST_BATCH_STUDENT_NOT_FOUND
+  PEN_REQUEST_BATCH_STUDENT_NOT_FOUND,
+
+  /**
+   * Student twins added event outcome.
+   */
+  STUDENT_TWINS_ADDED
 }

@@ -151,5 +151,5 @@ public class Student implements Serializable {
   /**
    * The Twins
    */
-  List<StudentTwinAssociation> studentTwinAssociations;
+  private List<StudentTwinAssociation> studentTwinAssociations;
 }

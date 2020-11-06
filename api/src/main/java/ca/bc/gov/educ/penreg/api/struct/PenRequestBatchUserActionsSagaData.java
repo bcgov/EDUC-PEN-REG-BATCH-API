@@ -13,7 +13,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class PenRequestBatchNewPenSagaData extends BasePenRequestBatchStudentSagaData {
+public class PenRequestBatchUserActionsSagaData extends BasePenRequestBatchStudentSagaData {
   /**
    * The Twins
    */

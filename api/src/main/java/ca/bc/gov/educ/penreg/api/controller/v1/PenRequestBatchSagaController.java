@@ -4,9 +4,9 @@ import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchSagaEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
 import ca.bc.gov.educ.penreg.api.exception.SagaRuntimeException;
-import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchNewPenOrchestrator;
+import ca.bc.gov.educ.penreg.api.orchestrator.base.Orchestrator;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchNewPenSagaData;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
@@ -19,10 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA;
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA;
 import static lombok.AccessLevel.PRIVATE;
 
 @RestController
@@ -30,42 +33,71 @@ import static lombok.AccessLevel.PRIVATE;
 @Slf4j
 public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoint {
 
-    @Getter(PRIVATE)
-    private final SagaService sagaService;
-    @Getter(PRIVATE)
-    private final PenReqBatchNewPenOrchestrator penReqBatchNewPenOrchestrator;
+  @Getter(PRIVATE)
+  private final SagaService sagaService;
+  /**
+   * The Handlers.
+   */
+  @Getter(PRIVATE)
+  private final Map<String, Orchestrator> orchestratorMap = new HashMap<>();
 
-    @Autowired
-    public PenRequestBatchSagaController(SagaService sagaService, PenReqBatchNewPenOrchestrator penReqBatchNewPenOrchestrator) {
-        this.sagaService = sagaService;
-        this.penReqBatchNewPenOrchestrator = penReqBatchNewPenOrchestrator;
+
+  @Autowired
+  public PenRequestBatchSagaController(SagaService sagaService, List<Orchestrator> orchestrators) {
+    this.sagaService = sagaService;
+
+    orchestrators.forEach(orchestrator -> orchestratorMap.put(orchestrator.getSagaName(), orchestrator));
+    log.info("'{}' Saga Orchestrators are loaded.", String.join(",", orchestratorMap.keySet()));
+  }
+
+  @Override
+  public ResponseEntity<String> issueNewPen(PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
+    try {
+      var penRequestBatchStudentID = penRequestBatchUserActionsSagaData.getPenRequestBatchStudentID();
+      var sagaInProgress = getSagaService().findAllByPenRequestBatchStudentIDAndStatusIn(penRequestBatchStudentID,
+          PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), getStatusesFilter());
+      if (!sagaInProgress.isEmpty()) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+      }
+
+      var saga = getOrchestratorMap()
+          .get(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString())
+          .startSaga(JsonUtil.getJsonStringFromObject(penRequestBatchUserActionsSagaData),
+              penRequestBatchStudentID, penRequestBatchUserActionsSagaData.getPenRequestBatchID());
+      return ResponseEntity.ok(saga.getSagaId().toString());
+    } catch (JsonProcessingException e) {
+      throw new InvalidParameterException(e.getMessage());
+    } catch (InterruptedException | TimeoutException | IOException e) {
+      Thread.currentThread().interrupt();
+      throw new SagaRuntimeException(e.getMessage());
     }
+  }
 
-    @Override
-    public ResponseEntity<String> issueNewPen(PenRequestBatchNewPenSagaData penRequestBatchNewPenSagaData) {
-        try {
-            var penRequestBatchStudentID = penRequestBatchNewPenSagaData.getPenRequestBatchStudentID();
-            var sagaInProgress = getSagaService().findAllByPenRequestBatchStudentIDAndStatusIn(penRequestBatchStudentID,
-              PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), getStatusesFilter());
-            if (!sagaInProgress.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).build();
-            }
-
-            var saga = getPenReqBatchNewPenOrchestrator().startSaga(JsonUtil.getJsonStringFromObject(penRequestBatchNewPenSagaData),
-              penRequestBatchStudentID, penRequestBatchNewPenSagaData.getPenRequestBatchID());
-            return ResponseEntity.ok(saga.getSagaId().toString());
-        } catch (JsonProcessingException e) {
-            throw new InvalidParameterException(e.getMessage());
-        } catch (InterruptedException | TimeoutException | IOException e) {
-            throw new SagaRuntimeException(e.getMessage());
-        }
+  @Override
+  public ResponseEntity<String> processStudentRequestMatchedByUser(final PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
+    var penRequestBatchStudentID = penRequestBatchUserActionsSagaData.getPenRequestBatchStudentID();
+    var sagaInProgress = getSagaService().findAllByPenRequestBatchStudentIDAndStatusIn(penRequestBatchStudentID,
+        PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA.name(), getStatusesFilter());
+    if (!sagaInProgress.isEmpty()) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
-
-    protected List<String> getStatusesFilter() {
-        var statuses = new ArrayList<String>();
-        statuses.add(SagaStatusEnum.IN_PROGRESS.toString());
-        statuses.add(SagaStatusEnum.STARTED.toString());
-        return statuses;
+    try {
+      var saga = getOrchestratorMap()
+          .get(PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA.toString())
+          .startSaga(JsonUtil.getJsonStringFromObject(penRequestBatchUserActionsSagaData),
+              penRequestBatchStudentID, penRequestBatchUserActionsSagaData.getPenRequestBatchID());
+      return ResponseEntity.ok(saga.getSagaId().toString());
+    } catch (InterruptedException | TimeoutException | IOException e) {
+      Thread.currentThread().interrupt();
+      throw new SagaRuntimeException(e.getMessage());
     }
+  }
+
+  protected List<String> getStatusesFilter() {
+    var statuses = new ArrayList<String>();
+    statuses.add(SagaStatusEnum.IN_PROGRESS.toString());
+    statuses.add(SagaStatusEnum.STARTED.toString());
+    return statuses;
+  }
 
 }

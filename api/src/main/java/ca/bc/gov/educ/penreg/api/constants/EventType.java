@@ -51,5 +51,9 @@ public enum EventType {
   /**
    * Pen request batch event outbox processed event type.
    */
-  PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED
+  PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED,
+  /**
+   * Add student twins event type.
+   */
+  ADD_STUDENT_TWINS
 }
