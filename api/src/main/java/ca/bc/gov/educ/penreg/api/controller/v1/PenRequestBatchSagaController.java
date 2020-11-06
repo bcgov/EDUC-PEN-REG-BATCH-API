@@ -4,9 +4,11 @@ import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchSagaEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
 import ca.bc.gov.educ.penreg.api.exception.SagaRuntimeException;
+import ca.bc.gov.educ.penreg.api.mappers.v1.SagaMapper;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.Orchestrator;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.Saga;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
@@ -18,10 +20,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA;
@@ -41,13 +40,21 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
   @Getter(PRIVATE)
   private final Map<String, Orchestrator> orchestratorMap = new HashMap<>();
 
+  private static final SagaMapper sagaMapper = SagaMapper.mapper;
 
   @Autowired
   public PenRequestBatchSagaController(SagaService sagaService, List<Orchestrator> orchestrators) {
     this.sagaService = sagaService;
-
     orchestrators.forEach(orchestrator -> orchestratorMap.put(orchestrator.getSagaName(), orchestrator));
     log.info("'{}' Saga Orchestrators are loaded.", String.join(",", orchestratorMap.keySet()));
+  }
+
+  @Override
+  public ResponseEntity<Saga> readSaga(UUID sagaID) {
+    return getSagaService().findSagaById(sagaID)
+                           .map(sagaMapper::toStruct)
+                           .map(ResponseEntity::ok)
+                           .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
   }
 
   @Override
