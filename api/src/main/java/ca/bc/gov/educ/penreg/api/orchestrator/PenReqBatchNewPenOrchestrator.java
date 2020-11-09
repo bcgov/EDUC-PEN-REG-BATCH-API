@@ -18,6 +18,8 @@ import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_MATCH;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.USER_NEW;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -90,6 +92,7 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
     var student = studentMapper.toStudent(penRequestBatchUserActionsSagaData);
     student.setPen(pen);
     student.setDemogCode("A");
+    student.setHistoryActivityCode(USER_NEW.getCode());
     student.setStudentTwinAssociations(penRequestBatchUserActionsSagaData.getTwinStudentIDs().stream().map(studentID ->
         new StudentTwinAssociation(studentID, TwinReasonCodes.PENCREATE.getCode())).collect(toList()));
 
