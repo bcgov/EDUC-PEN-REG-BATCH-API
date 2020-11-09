@@ -69,6 +69,8 @@ public enum EventOutcome {
    */
   PEN_REQUEST_BATCH_STUDENT_NOT_FOUND,
 
+  STUDENT_TWIN_ADD_REQUIRED,
+  STUDENT_TWIN_ADD_NOT_REQUIRED,
   /**
    * Student twins added event outcome.
    */

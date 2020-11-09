@@ -475,9 +475,6 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * Broadcast the saga initiated message
    *
    * @param event the event object
-   * @throws InterruptedException
-   * @throws IOException
-   * @throws TimeoutException
    */
   private void broadcastSagaInitiatedMessage(@NotNull Event event) {
     // !SELF.equalsIgnoreCase(event.getReplyTo()):- this check makes sure it is not broadcast-ed infinitely.
