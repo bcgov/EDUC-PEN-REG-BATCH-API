@@ -65,6 +65,9 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
   }
 
   private void checkStudentTwinAdditionRequired(Event event, Saga saga, PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) throws InterruptedException, TimeoutException, IOException {
+    SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
+    saga.setSagaState(CHECK_STUDENT_TWIN_ADD.toString()); // set current event as saga state.
+    getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
     handleEvent(Event.builder()
                      .sagaId(saga.getSagaId())
                      .eventType(CHECK_STUDENT_TWIN_ADD)

@@ -202,9 +202,9 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
     assertThat(currentSaga.getSagaState()).isEqualTo(ADD_STUDENT_TWINS.toString());
     assertThat(getPenRequestBatchUserActionsSagaDataFromJsonString(currentSaga.getPayload()).getAssignedPEN()).isEqualTo(TEST_PEN);
     var sagaStates = sagaService.findAllSagaStates(saga);
-    assertThat(sagaStates.size()).isEqualTo(1);
-    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(CHECK_STUDENT_TWIN_ADD.toString());
-    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_TWIN_ADD_REQUIRED.toString());
+    assertThat(sagaStates.size()).isEqualTo(2);
+    assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(CHECK_STUDENT_TWIN_ADD.toString());
+    assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_TWIN_ADD_REQUIRED.toString());
   }
 
   @Test
@@ -240,9 +240,9 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
     assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
     assertThat(getPenRequestBatchUserActionsSagaDataFromJsonString(currentSaga.getPayload()).getAssignedPEN()).isEqualTo(TEST_PEN);
     var sagaStates = sagaService.findAllSagaStates(saga);
-    assertThat(sagaStates.size()).isEqualTo(1);
-    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(CHECK_STUDENT_TWIN_ADD.toString());
-    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_TWIN_ADD_NOT_REQUIRED.toString());
+    assertThat(sagaStates.size()).isEqualTo(2);
+    assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(CHECK_STUDENT_TWIN_ADD.toString());
+    assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_TWIN_ADD_NOT_REQUIRED.toString());
   }
   @Test
   public void testAddStudentTwins_givenEventAndSagaData_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
