@@ -148,6 +148,7 @@ public class Student implements Serializable {
   @Size(max = 32)
   String updateUser;
 
+  String historyActivityCode;
   /**
    * The Twins
    */

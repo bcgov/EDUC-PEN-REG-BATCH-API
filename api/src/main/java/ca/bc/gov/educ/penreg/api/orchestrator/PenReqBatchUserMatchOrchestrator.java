@@ -27,6 +27,7 @@ import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USE
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.IN_PROGRESS;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_TOPIC;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_MATCH;
 
 /**
  * The type Pen req batch user match orchestrator.
@@ -149,6 +150,7 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
     studentDataFromEventResponse.setLocalID(penRequestBatchUserActionsSagaData.getLocalID());
     studentDataFromEventResponse.setGradeCode(penRequestBatchUserActionsSagaData.getGradeCode());
     studentDataFromEventResponse.setPostalCode(penRequestBatchUserActionsSagaData.getPostalCode());
+    studentDataFromEventResponse.setHistoryActivityCode(REQ_MATCH.getCode());
     penRequestBatchUserActionsSagaData.setStudentID(studentDataFromEventResponse.getStudentID());
     getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
