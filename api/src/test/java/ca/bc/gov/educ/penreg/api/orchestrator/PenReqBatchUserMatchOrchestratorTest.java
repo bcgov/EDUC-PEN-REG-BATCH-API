@@ -121,14 +121,14 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
   }
 
   @Test
-  public void testGetStudentByPen_givenEventAndSagaData_shouldPostEventToStudentApi() throws JsonProcessingException {
+  public void testGetStudentByPen_givenEventAndSagaData_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
     var invocations = mockingDetails(messagePublisher).getInvocations().size();
     var event = Event.builder()
                      .eventType(EventType.INITIATED)
                      .eventOutcome(EventOutcome.INITIATE_SUCCESS)
                      .sagaId(saga.getSagaId())
                      .build();
-    orchestrator.getStudentByPen(event, saga, sagaData);
+    orchestrator.handleEvent(event);
     verify(messagePublisher, atMost(invocations+1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), eventCaptor.capture());
     var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(GET_STUDENT);
@@ -280,7 +280,7 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
   }
 
   @Test
-  public void testUpdatePenRequestBatchStudent_givenEventAndSagaData_shouldPostEventToBatchApi() throws JsonProcessingException {
+  public void testUpdatePenRequestBatchStudent_givenEventAndSagaData_shouldPostEventToBatchApi() throws IOException, InterruptedException, TimeoutException {
     var invocations = mockingDetails(messagePublisher).getInvocations().size();
     var student = Student.builder().studentID(studentID).pen(TEST_PEN).legalFirstName("Jack").build();
     var event = Event.builder()
@@ -290,7 +290,7 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
                      .eventPayload(JsonUtil.getJsonStringFromObject(student))
                      .build();
     sagaData.setAssignedPEN(TEST_PEN);
-    orchestrator.updatePenRequestBatchStudent(event, saga, sagaData);
+    orchestrator.handleEvent(event);
     verify(messagePublisher, atMost(invocations+1)).dispatchMessage(eq(PEN_REQUEST_BATCH_API_TOPIC.toString()), eventCaptor.capture());
     var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT);
