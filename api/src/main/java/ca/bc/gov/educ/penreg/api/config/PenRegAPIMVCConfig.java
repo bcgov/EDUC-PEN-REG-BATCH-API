@@ -38,6 +38,6 @@ public class PenRegAPIMVCConfig implements WebMvcConfigurer {
    */
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
-    registry.addInterceptor(penRegAPIInterceptor).addPathPatterns("/**/**/");
+    registry.addInterceptor(penRegAPIInterceptor).addPathPatterns("/**");
   }
 }
