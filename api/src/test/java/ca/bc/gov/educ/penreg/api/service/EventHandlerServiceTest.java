@@ -17,6 +17,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -83,7 +84,7 @@ public class EventHandlerServiceTest {
 
   @Before
   public void setUp() {
-    initMocks(this);
+    MockitoAnnotations.openMocks(this);
     eventPublisherService = new EventPublisherService(messagePublisher);
     eventHandlerService = new EventHandlerService(sagaService, penReqBatchStudentOrchestrator,
       penRequestBatchEventRepository, prbStudentEventService, eventPublisherService);
@@ -100,11 +101,6 @@ public class EventHandlerServiceTest {
     penRequestBatchRepository.deleteAll();
   }
 
-  /**
-   * Test handle STUDENT_EVENT_OUTBOX_PROCESSED event.
-   *
-   * @throws Exception the exception
-   */
   @Test
   public void testHandleEvent_givenEventTypeSTUDENT_EVENT_OUTBOX_PROCESSED_shouldUpdateDBStatus() {
     var prbEvent = PenRequestBatchEvent.builder().eventType(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString())
@@ -119,11 +115,6 @@ public class EventHandlerServiceTest {
     assertThat(prbEventUpdated.get().getEventStatus()).isEqualTo(MESSAGE_PUBLISHED.toString());
   }
 
-  /**
-   * Test handle READ_FROM_TOPIC event.
-   *
-   * @throws Exception the exception
-   */
   @Test
   public void testHandleEvent_givenEventTypeREAD_FROM_TOPIC_shouldStartPenRequestBatchStudentSaga() throws InterruptedException, IOException, TimeoutException {
     var payload = dummyPenRequestBatchStudentSagaDataJson();
@@ -157,7 +148,7 @@ public class EventHandlerServiceTest {
       "mock_pen_req_batch_student_archived.json", 1);
     penRequestBatchID = batchList.get(0).getPenRequestBatchID().toString();
     penRequestBatchStudentID = batchList.get(0).getPenRequestBatchStudentEntities().stream()
-      .filter(student -> student.getPenRequestBatchStudentStatusCode().equals(FIXABLE.getCode())).findFirst().get().getPenRequestBatchStudentID().toString();
+      .filter(student -> student.getPenRequestBatchStudentStatusCode().equals(FIXABLE.getCode())).findFirst().orElseThrow().getPenRequestBatchStudentID().toString();
     var payload = dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString());
     var event = new Event(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_UPDATED, sagaID, PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC.toString(), payload);
 
@@ -175,7 +166,7 @@ public class EventHandlerServiceTest {
     assertThat(outboxEvent.getEventType()).isEqualTo(PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED);
 
     var penRequestBatch = penRequestBatchRepository.findById(UUID.fromString(penRequestBatchID));
-    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
+    assertThat(penRequestBatch.orElseThrow().getNewPenCount()).isEqualTo(3);
   }
 
   /**
@@ -197,7 +188,7 @@ public class EventHandlerServiceTest {
     eventHandlerService.handleEvent(event);
 
     var penRequestBatch = penRequestBatchRepository.findById(UUID.fromString(penRequestBatchID));
-    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
+    assertThat(penRequestBatch.orElseThrow().getNewPenCount()).isEqualTo(3);
   }
 
   protected String dummyPenRequestBatchStudentSagaDataJson() {

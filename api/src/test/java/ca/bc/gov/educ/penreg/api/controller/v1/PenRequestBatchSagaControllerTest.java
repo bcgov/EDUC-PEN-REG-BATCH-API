@@ -22,9 +22,11 @@ import java.util.UUID;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * The type Pen request batch saga controller test.
@@ -54,7 +56,7 @@ public class PenRequestBatchSagaControllerTest {
 
   @Before
   public void setUp() {
-    MockitoAnnotations.initMocks(this);
+    MockitoAnnotations.openMocks(this);
     mockMvc = MockMvcBuilders.standaloneSetup(controller)
                              .setControllerAdvice(new RestExceptionHandler()).build();
   }

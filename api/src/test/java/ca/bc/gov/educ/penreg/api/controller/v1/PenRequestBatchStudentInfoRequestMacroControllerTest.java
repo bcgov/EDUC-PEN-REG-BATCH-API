@@ -23,7 +23,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -51,7 +51,7 @@ public class PenRequestBatchStudentInfoRequestMacroControllerTest {
 
   @Before
   public void setUp() {
-    MockitoAnnotations.initMocks(this);
+    MockitoAnnotations.openMocks(this);
     mockMvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new RestExceptionHandler()).build();
   }
