@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.batch.schedulers;
 
 import ca.bc.gov.educ.penreg.api.batch.processor.PenRegBatchProcessor;
 import ca.bc.gov.educ.penreg.api.batch.service.PenRequestBatchFileService;
+import ca.bc.gov.educ.penreg.api.util.ThreadFactoryBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.io.Closeable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -31,7 +33,7 @@ public class PenRegBatchScheduler implements Closeable {
   /**
    * The Executor service.
    */
-  private final ExecutorService executorService = Executors.newFixedThreadPool(5);
+  private final ExecutorService executorService;
   /**
    * The Pen reg batch processor.
    */
@@ -53,6 +55,8 @@ public class PenRegBatchScheduler implements Closeable {
   public PenRegBatchScheduler(PenRegBatchProcessor penRegBatchProcessor, PenRequestBatchFileService penRequestBatchFileService) {
     this.penRegBatchProcessor = penRegBatchProcessor;
     this.penRequestBatchFileService = penRequestBatchFileService;
+    ThreadFactory namedThreadFactory = new ThreadFactoryBuilder().withNameFormat("pen-web-blob-processor-%d").get();
+    this.executorService = Executors.newSingleThreadExecutor(namedThreadFactory);
   }
 
   /**
