@@ -48,7 +48,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
 
-  public static final String TEST_PEN = "123456789";
+  
   /**
    * The Repository.
    */

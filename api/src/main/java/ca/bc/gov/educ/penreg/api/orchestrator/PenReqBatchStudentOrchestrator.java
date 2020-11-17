@@ -93,7 +93,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    * @param penRequestBatchStudentSagaData the pen request batch student saga data
    * @throws JsonProcessingException the json processing exception
    */
-  private void validateStudentDemographics(Event event, Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) throws JsonProcessingException {
+  protected void validateStudentDemographics(Event event, Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) throws JsonProcessingException {
     var scrubbedSagaData = getPenRequestBatchStudentOrchestratorService()
         .scrubPayload(penRequestBatchStudentSagaData);
     SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
@@ -131,7 +131,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
    */
-  private void processPenMatchResults(Event event, Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) throws IOException, InterruptedException, TimeoutException {
+  protected void processPenMatchResults(Event event, Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) throws IOException, InterruptedException, TimeoutException {
     Optional<Event> eventOptional;
     if (penRequestBatchStudentSagaData.getIsPENMatchResultsProcessed() == null || !penRequestBatchStudentSagaData.getIsPENMatchResultsProcessed()) {
       // this is necessary to check, to avoid duplicate execution during replay process.
@@ -172,7 +172,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    * @param saga                           the saga
    * @param penRequestBatchStudentSagaData the pen request batch student saga data
    */
-  private void processPenMatch(final Event event, final Saga saga, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
+  protected void processPenMatch(final Event event, final Saga saga, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
     SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(PROCESS_PEN_MATCH.toString());
     getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
@@ -210,7 +210,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    * @param event    the event
    * @param sagaData the saga data
    */
-  private void saveDemogValidationResults(Event event, PenRequestBatchStudentSagaData sagaData) {
+  protected void saveDemogValidationResults(Event event, PenRequestBatchStudentSagaData sagaData) {
     if (event.getEventType() == VALIDATE_STUDENT_DEMOGRAPHICS
         && StringUtils.isNotBlank(event.getEventPayload())
         && !StringUtils.equalsIgnoreCase(VALIDATION_SUCCESS_NO_ERROR_WARNING.toString(), event.getEventPayload())) {
