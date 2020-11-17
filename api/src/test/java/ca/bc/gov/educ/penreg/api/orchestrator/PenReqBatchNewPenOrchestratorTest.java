@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -35,7 +36,6 @@ import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 import static ca.bc.gov.educ.penreg.api.constants.TwinReasonCodes.PENCREATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 /**
  * The type Message publisher test.
@@ -94,7 +94,7 @@ public class PenReqBatchNewPenOrchestratorTest extends BaseOrchestratorTest {
    */
   @Before
   public void setUp() {
-    initMocks(this);
+    MockitoAnnotations.openMocks(this);
     orchestrator = new PenReqBatchNewPenOrchestrator(sagaService, messagePublisher);
     var payload = placeholderPenRequestBatchActionsSagaData();
     sagaData = getPenRequestBatchUserActionsSagaDataFromJsonString(payload);

@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -91,7 +92,7 @@ public class PenRequestBatchAPIControllerTest {
    */
   @Before
   public void setUp() {
-    MockitoAnnotations.initMocks(this);
+    MockitoAnnotations.openMocks(this);
     mockMvc = MockMvcBuilders.standaloneSetup(penRequestBatchAPIController)
         .setControllerAdvice(new RestExceptionHandler()).build();
   }
@@ -545,7 +546,7 @@ public class PenRequestBatchAPIControllerTest {
   @WithMockOAuth2Scope(scope = "WRITE_PEN_REQUEST_BATCH")
   public void testUpdatePenRequestBatchStudent_GivenPenRequestBatchStudent_ShouldReturnStatusOk() throws Exception {
     var models = createBatchStudents(1);
-    var student = studentMapper.toStructure(models.get(0).getPenRequestBatchStudentEntities().stream().findFirst().get());
+    var student = studentMapper.toStructure(models.get(0).getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow());
 
     student.setPenRequestBatchStudentStatusCode("FIXABLE");
     student.setInfoRequest("Test Info");
@@ -595,7 +596,7 @@ public class PenRequestBatchAPIControllerTest {
    * @return the list
    * @throws IOException the io exception
    */
-  private List<PenRequestBatchEntity> createBatchStudents(Integer total) throws java.io.IOException {
+  private List<PenRequestBatchEntity> createBatchStudents(Integer total) throws IOException {
     return PenRequestBatchUtils.createBatchStudents(penRequestBatchRepository, "mock_pen_req_batch.json",
       "mock_pen_req_batch_student.json", total);
   }
@@ -607,7 +608,7 @@ public class PenRequestBatchAPIControllerTest {
    * @return the string
    * @throws IOException the io exception
    */
-  private String createBatchStudentRecords(Integer total) throws java.io.IOException {
+  private String createBatchStudentRecords(Integer total) throws IOException {
 
     var models = createBatchStudents(total);
 

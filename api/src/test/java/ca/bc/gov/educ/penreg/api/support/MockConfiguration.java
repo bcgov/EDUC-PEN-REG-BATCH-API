@@ -1,12 +1,14 @@
 package ca.bc.gov.educ.penreg.api.support;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.schedulers.EventTaskScheduler;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * The type Mock configuration.
@@ -47,4 +49,15 @@ public class MockConfiguration {
     return Mockito.mock(EventTaskScheduler.class);
   }
 
+  @Bean
+  @Primary
+  public RestTemplate restTemplate() {
+    return Mockito.mock(RestTemplate.class);
+  }
+
+  @Bean
+  @Primary
+  public RestUtils restUtils() {
+    return Mockito.mock(RestUtils.class);
+  }
 }

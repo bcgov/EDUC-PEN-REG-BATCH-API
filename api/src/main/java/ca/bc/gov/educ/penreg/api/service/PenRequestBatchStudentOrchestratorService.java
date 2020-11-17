@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.MatchAlgorithmStatusCode;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode;
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.mappers.StudentMapper;
 import ca.bc.gov.educ.penreg.api.model.*;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_MATCH_RESULTS_PROCESSED;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.PROCESS_PEN_MATCH_RESULTS;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.*;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_NEW;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -38,6 +40,7 @@ public class PenRequestBatchStudentOrchestratorService {
    * The constant studentMapper.
    */
   private static final StudentMapper studentMapper = StudentMapper.mapper;
+  public static final String ALGORITHM = "ALGORITHM";
   /**
    * The Pen request batch service.
    */
@@ -223,6 +226,9 @@ public class PenRequestBatchStudentOrchestratorService {
       }
       var student = studentMapper.toStudent(penRequestBatchStudentSagaData);
       student.setPen(pen);
+      student.setHistoryActivityCode(REQ_NEW.getCode());
+      student.setCreateUser(ALGORITHM);
+      student.setUpdateUser(ALGORITHM);
       penRequestBatchStudent.setAssignedPEN(pen);
       var studentFromStudentAPIOptional = getRestUtils().getStudentByPEN(pen);
       if (studentFromStudentAPIOptional.isEmpty()) { // create the student only if it does not exist.
@@ -265,8 +271,8 @@ public class PenRequestBatchStudentOrchestratorService {
           .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
           .eventPayload(penMatchResult.getPenStatus()).build();
     } else {
-      log.error("PenMatchRecord in priority queue is empty for status D1, this should not have happened.");
-      throw new PenRegAPIRuntimeException("PenMatchRecord in priority queue is empty for status D1, this should not have happened.");
+      log.error("PenMatchRecord in priority queue is empty for matched status, this should not have happened.");
+      throw new PenRegAPIRuntimeException("PenMatchRecord in priority queue is empty for matched status, this should not have happened.");
     }
   }
 
@@ -303,7 +309,8 @@ public class PenRequestBatchStudentOrchestratorService {
     studentFromStudentAPI.setLocalID(penRequestBatchStudent.getLocalID());
     studentFromStudentAPI.setGradeCode(penRequestBatchStudent.getGradeCode());
     studentFromStudentAPI.setPostalCode(penRequestBatchStudent.getPostalCode());
-    studentFromStudentAPI.setUpdateUser("PEN_REG_BATCH_API");
+    studentFromStudentAPI.setHistoryActivityCode(StudentHistoryActivityCode.REQ_MATCH.getCode());
+    studentFromStudentAPI.setUpdateUser(ALGORITHM);
   }
 
   /**

@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.struct;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -11,6 +12,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PenRequestBatchStudentSagaData extends BasePenRequestBatchStudentSagaData {
   /**
    * The Pen match result.

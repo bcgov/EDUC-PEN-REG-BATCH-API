@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -41,14 +42,13 @@ import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOP
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @SpringBootTest
 public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
 
-  public static final String TEST_PEN = "123456789";
+  
   /**
    * The Repository.
    */
@@ -100,7 +100,7 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
    */
   @Before
   public void setUp() throws JsonProcessingException {
-    initMocks(this);
+    MockitoAnnotations.openMocks(this);
     var payload = placeholderPenRequestBatchActionsSagaData();
     sagaData = getPenRequestBatchUserActionsSagaDataFromJsonString(payload);
     sagaData.setAssignedPEN(TEST_PEN);
