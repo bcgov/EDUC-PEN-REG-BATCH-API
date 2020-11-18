@@ -333,8 +333,7 @@ public class PenRequestBatchStudentOrchestratorService {
         var filteredIssues = validationIssueEntities.stream().filter(el -> {
           boolean isRecordAlreadyPresent = false;
           for (var validationIssue : student.getPenRequestBatchStudentValidationIssueEntities()) {
-            if (StringUtils.equalsIgnoreCase(validationIssue.getAdditionalInfo(), el.getAdditionalInfo())
-                && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationFieldCode(), el.getPenRequestBatchValidationFieldCode())
+            if (StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationFieldCode(), el.getPenRequestBatchValidationFieldCode())
                 && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationIssueSeverityCode(), el.getPenRequestBatchValidationIssueSeverityCode())
                 && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationIssueTypeCode(), el.getPenRequestBatchValidationIssueTypeCode())) {
               isRecordAlreadyPresent = true;

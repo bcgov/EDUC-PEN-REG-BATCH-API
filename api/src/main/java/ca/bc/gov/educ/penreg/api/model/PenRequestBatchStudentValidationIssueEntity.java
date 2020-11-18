@@ -35,12 +35,6 @@ public class PenRequestBatchStudentValidationIssueEntity {
   @JoinColumn(name = "PEN_REQUEST_BATCH_STUDENT_ID", referencedColumnName = "PEN_REQUEST_BATCH_STUDENT_ID", updatable = false)
   PenRequestBatchStudentEntity penRequestBatchStudentEntity;
   /**
-   * The Additional info.
-   */
-  @Basic
-  @Column(name = "ADDITIONAL_INFO")
-  String additionalInfo;
-  /**
    * The Pen request batch validation issue severity code by pen request batch student validation issue severity code.
    */
   @Column(name = "PEN_REQUEST_BATCH_STUDENT_VALIDATION_ISSUE_SEVERITY_CODE", nullable = false)
