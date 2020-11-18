@@ -18,10 +18,6 @@ public class PenRequestBatchStudentValidationIssue {
    */
   String penRequestBatchStudentValidationIssueId;
   /**
-   * The Additional info.
-   */
-  String additionalInfo;
-  /**
    * The Pen request batch validation issue severity code by pen request batch student validation issue severity code.
    */
   String penRequestBatchValidationIssueSeverityCode;
