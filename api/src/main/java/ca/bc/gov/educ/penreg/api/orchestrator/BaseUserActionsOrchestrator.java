@@ -7,8 +7,8 @@ import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
+import ca.bc.gov.educ.penreg.api.struct.BasePenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -86,9 +86,9 @@ public abstract class BaseUserActionsOrchestrator<T> extends BaseOrchestrator<T>
    *
    * @param event                              the event
    * @param saga                               the saga
-   * @param penRequestBatchUserActionsSagaData the pen request batch student saga data
+   * @param basePenRequestBatchStudentSagaData the pen request batch student saga data
    */
-  protected void logPenRequestBatchStudentNotFound(Event event, Saga saga, PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
+  protected void logPenRequestBatchStudentNotFound(Event event, Saga saga, BasePenRequestBatchStudentSagaData basePenRequestBatchStudentSagaData) {
     log.error("Pen request batch student record was not found. This should not happen. Please check the batch api. :: {}", saga.getSagaId());
   }
 }

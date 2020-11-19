@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Predicate;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.INITIATE_SUCCESS;
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.SAGA_COMPLETED;
@@ -117,9 +118,9 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @param stepToExecute the step to execute
    * @return the list
    */
-  protected List<SagaEventState<T>> createSingleCollectionEventState(EventOutcome eventOutcome, EventType nextEventType, SagaStep<T> stepToExecute) {
+  protected List<SagaEventState<T>> createSingleCollectionEventState(EventOutcome eventOutcome, Predicate<T> nextStepPredicate, EventType nextEventType, SagaStep<T> stepToExecute) {
     List<SagaEventState<T>> eventStates = new ArrayList<>();
-    eventStates.add(buildSagaEventState(eventOutcome, nextEventType, stepToExecute));
+    eventStates.add(buildSagaEventState(eventOutcome, nextStepPredicate, nextEventType, stepToExecute));
     return eventStates;
   }
 
@@ -132,8 +133,8 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @param stepToExecute the step to execute
    * @return the saga event state
    */
-  protected SagaEventState<T> buildSagaEventState(EventOutcome eventOutcome, EventType nextEventType, SagaStep<T> stepToExecute) {
-    return SagaEventState.<T>builder().currentEventOutcome(eventOutcome).nextEventType(nextEventType).stepToExecute(stepToExecute).build();
+  protected SagaEventState<T> buildSagaEventState(EventOutcome eventOutcome, Predicate<T> nextStepPredicate, EventType nextEventType, SagaStep<T> stepToExecute) {
+    return SagaEventState.<T>builder().currentEventOutcome(eventOutcome).nextStepPredicate(nextStepPredicate).nextEventType(nextEventType).stepToExecute(stepToExecute).build();
   }
 
 
@@ -146,12 +147,12 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @param stepToExecute the step to execute
    * @return the base orchestrator
    */
-  protected BaseOrchestrator<T> registerStepToExecute(EventType initEvent, EventOutcome outcome, EventType nextEvent, SagaStep<T> stepToExecute) {
+  protected BaseOrchestrator<T> registerStepToExecute(EventType initEvent, EventOutcome outcome, Predicate<T> nextStepPredicate, EventType nextEvent, SagaStep<T> stepToExecute) {
     if (this.nextStepsToExecute.containsKey(initEvent)) {
       List<SagaEventState<T>> states = this.nextStepsToExecute.get(initEvent);
-      states.add(buildSagaEventState(outcome, nextEvent, stepToExecute));
+      states.add(buildSagaEventState(outcome, nextStepPredicate, nextEvent, stepToExecute));
     } else {
-      this.nextStepsToExecute.put(initEvent, createSingleCollectionEventState(outcome, nextEvent, stepToExecute));
+      this.nextStepsToExecute.put(initEvent, createSingleCollectionEventState(outcome, nextStepPredicate, nextEvent, stepToExecute));
     }
     return this;
   }
@@ -166,7 +167,21 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @return {@link BaseOrchestrator}
    */
   public BaseOrchestrator<T> step(EventType currentEvent, EventOutcome outcome, EventType nextEvent, SagaStep<T> stepToExecute) {
-    return registerStepToExecute(currentEvent, outcome, nextEvent, stepToExecute);
+    return registerStepToExecute(currentEvent, outcome, (T sagaData) -> true, nextEvent, stepToExecute);
+  }
+
+  /**
+   * Step base orchestrator.
+   *
+   * @param currentEvent  the event that has occurred.
+   * @param outcome       outcome of the event.
+   * @param nextStepPredicate whether to execute the next step.
+   * @param nextEvent     next event that will occur.
+   * @param stepToExecute which method to execute for the next event. it is a lambda function.
+   * @return {@link BaseOrchestrator}
+   */
+  public BaseOrchestrator<T> step(EventType currentEvent, EventOutcome outcome, Predicate<T> nextStepPredicate, EventType nextEvent, SagaStep<T> stepToExecute) {
+    return registerStepToExecute(currentEvent, outcome, nextStepPredicate, nextEvent, stepToExecute);
   }
 
   /**
@@ -177,7 +192,19 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @return {@link BaseOrchestrator}
    */
   public BaseOrchestrator<T> begin(EventType nextEvent, SagaStep<T> stepToExecute) {
-    return registerStepToExecute(INITIATED, INITIATE_SUCCESS, nextEvent, stepToExecute);
+    return registerStepToExecute(INITIATED, INITIATE_SUCCESS, (T sagaData) -> true, nextEvent, stepToExecute);
+  }
+
+  /**
+   * Beginning step base orchestrator.
+   *
+   * @param nextEvent     next event that will occur.
+   * @param nextStepPredicate whether to execute the next step.
+   * @param stepToExecute which method to execute for the next event. it is a lambda function.
+   * @return {@link BaseOrchestrator}
+   */
+  public BaseOrchestrator<T> begin(Predicate<T> nextStepPredicate, EventType nextEvent, SagaStep<T> stepToExecute) {
+    return registerStepToExecute(INITIATED, INITIATE_SUCCESS, nextStepPredicate, nextEvent, stepToExecute);
   }
 
   /**
@@ -188,7 +215,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @return {@link BaseOrchestrator}
    */
   public BaseOrchestrator<T> end(EventType currentEvent, EventOutcome outcome) {
-    return registerStepToExecute(currentEvent, outcome, MARK_SAGA_COMPLETE, this::markSagaComplete);
+    return registerStepToExecute(currentEvent, outcome, (T sagaData) -> true, MARK_SAGA_COMPLETE, this::markSagaComplete);
   }
 
   /**
@@ -200,7 +227,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @return {@link BaseOrchestrator}
    */
   public BaseOrchestrator<T> end(EventType currentEvent, EventOutcome outcome, SagaStep<T> stepToExecute) {
-    return registerStepToExecute(currentEvent, outcome, MARK_SAGA_COMPLETE, (Event event, Saga saga, T sagaData) -> {
+    return registerStepToExecute(currentEvent, outcome, (T sagaData) -> true, MARK_SAGA_COMPLETE, (Event event, Saga saga, T sagaData) -> {
       stepToExecute.apply(event, saga, sagaData);
       markSagaComplete(event, saga, sagaData);
     });
@@ -371,7 +398,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
           .eventType(currentEvent)
           .eventPayload(sagaEvent.getSagaEventResponse())
           .build();
-      Optional<SagaEventState<T>> sagaEventState = findNextSagaEventState(currentEvent, eventOutcome);
+      Optional<SagaEventState<T>> sagaEventState = findNextSagaEventState(currentEvent, eventOutcome, t);
       if (sagaEventState.isPresent()) {
         log.trace(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.get().getNextEventType(), event.toString(), saga.getSagaId());
         invokeNextEvent(event, saga, t, sagaEventState.get());
@@ -393,7 +420,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
         .eventOutcome(INITIATE_SUCCESS)
         .eventType(INITIATED)
         .build();
-    Optional<SagaEventState<T>> sagaEventState = findNextSagaEventState(INITIATED, INITIATE_SUCCESS);
+    Optional<SagaEventState<T>> sagaEventState = findNextSagaEventState(INITIATED, INITIATE_SUCCESS, t);
     if (sagaEventState.isPresent()) {
       log.trace(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.get().getNextEventType(), event.toString(), saga.getSagaId());
       invokeNextEvent(event, saga, t, sagaEventState.get());
@@ -422,10 +449,11 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
     if (sagaOptional.isPresent()) {
       val saga = sagaOptional.get();
       if (!COMPLETED.toString().equalsIgnoreCase(sagaOptional.get().getStatus())) {//possible duplicate message or force stop scenario check
-        var sagaEventState = findNextSagaEventState(event.getEventType(), event.getEventOutcome());
+        T sagaData = JsonUtil.getJsonObjectFromString(clazz, saga.getPayload());
+        var sagaEventState = findNextSagaEventState(event.getEventType(), event.getEventOutcome(), sagaData);
         log.trace("found next event as {}", sagaEventState);
         if (sagaEventState.isPresent()) {
-          process(event, saga, sagaEventState.get());
+          process(event, saga, sagaData, sagaEventState.get());
         } else {
           log.error("This should not have happened, please check that both the saga api and all the participating apis are in sync in terms of events and their outcomes. {}", event.toString()); // more explicit error message,
         }
@@ -496,9 +524,11 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @param eventOutcome event outcome.
    * @return {@link Optional<SagaEventState>}
    */
-  protected Optional<SagaEventState<T>> findNextSagaEventState(EventType currentEvent, EventOutcome eventOutcome) {
+  protected Optional<SagaEventState<T>> findNextSagaEventState(EventType currentEvent, EventOutcome eventOutcome, T sagaData) {
     val sagaEventStates = nextStepsToExecute.get(currentEvent);
-    return sagaEventStates == null ? Optional.empty() : sagaEventStates.stream().filter(el -> el.getCurrentEventOutcome() == eventOutcome).findFirst();
+    return sagaEventStates == null ? Optional.empty() : sagaEventStates.stream().filter(el ->
+      el.getCurrentEventOutcome() == eventOutcome && el.nextStepPredicate.test(sagaData)
+    ).findFirst();
   }
 
   /**
@@ -511,8 +541,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @throws TimeoutException     if connection to messaging system times out.
    * @throws IOException          if there is connectivity problem
    */
-  protected void process(@NotNull Event event, Saga saga, SagaEventState<T> sagaEventState) throws InterruptedException, TimeoutException, IOException {
-    T sagaData = JsonUtil.getJsonObjectFromString(clazz, saga.getPayload());
+  protected void process(@NotNull Event event, Saga saga, T sagaData, SagaEventState<T> sagaEventState) throws InterruptedException, TimeoutException, IOException {
     if (!saga.getSagaState().equalsIgnoreCase(COMPLETED.toString())
         && isNotProcessedEvent(event.getEventType(), saga, this.nextStepsToExecute.keySet())) {
       log.info(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.getNextEventType(), event.toString(), saga.getSagaId());

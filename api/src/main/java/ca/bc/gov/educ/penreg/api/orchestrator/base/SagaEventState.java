@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.function.Predicate;
+
 /**
  * The type Saga event state.
  *
@@ -21,6 +23,10 @@ public class SagaEventState<T> {
    * The Current event outcome.
    */
   EventOutcome currentEventOutcome;
+  /**
+   * The function to check the next step
+   */
+  Predicate<T> nextStepPredicate;
   /**
    * The Next event type.
    */

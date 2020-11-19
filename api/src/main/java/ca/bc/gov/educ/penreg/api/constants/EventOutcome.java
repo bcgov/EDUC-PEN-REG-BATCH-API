@@ -68,11 +68,12 @@ public enum EventOutcome {
    * PEN request batch student not found event outcome.
    */
   PEN_REQUEST_BATCH_STUDENT_NOT_FOUND,
-
-  STUDENT_TWIN_ADD_REQUIRED,
-  STUDENT_TWIN_ADD_NOT_REQUIRED,
   /**
    * Student twins added event outcome.
    */
-  STUDENT_TWINS_ADDED
+  STUDENT_TWINS_ADDED,
+  /**
+   * Student twins deleted event outcome.
+   */
+  STUDENT_TWINS_DELETED
 }
