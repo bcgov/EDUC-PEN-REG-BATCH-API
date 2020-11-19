@@ -46,7 +46,7 @@ public class MessageSubscriber extends MessagePubSub {
     }
     String queue = topic.replace("_", "-");
     var dispatcher = connection.createDispatcher(onMessage(eventHandler));
-    dispatcher.subscribe(topic, queue, onMessage(eventHandler));
+    dispatcher.subscribe(topic, queue);
   }
 
   /**
