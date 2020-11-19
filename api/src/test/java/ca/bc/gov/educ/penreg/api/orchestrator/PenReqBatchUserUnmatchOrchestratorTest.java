@@ -142,9 +142,9 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     var currentSaga = sagaFromDB.get();
     assertThat(currentSaga.getSagaState()).isEqualTo(DELETE_STUDENT_TWINS.toString());
     var sagaStates = sagaService.findAllSagaStates(saga);
-    assertThat(sagaStates.size()).isEqualTo(2);
-    assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(CHECK_STUDENT_TWIN_DELETE.toString());
-    assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_TWIN_DELETE_REQUIRED.toString());
+    assertThat(sagaStates.size()).isEqualTo(1);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
   }
 
   @Test
@@ -179,9 +179,9 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     var currentSaga = sagaFromDB.get();
     assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
     var sagaStates = sagaService.findAllSagaStates(saga);
-    assertThat(sagaStates.size()).isEqualTo(2);
-    assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(CHECK_STUDENT_TWIN_DELETE.toString());
-    assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_TWIN_DELETE_NOT_REQUIRED.toString());
+    assertThat(sagaStates.size()).isEqualTo(1);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
   }
 
   @Test

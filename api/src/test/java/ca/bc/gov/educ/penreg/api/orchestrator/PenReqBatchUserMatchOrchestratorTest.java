@@ -202,9 +202,9 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
     assertThat(currentSaga.getSagaState()).isEqualTo(ADD_STUDENT_TWINS.toString());
     assertThat(getPenRequestBatchUserActionsSagaDataFromJsonString(currentSaga.getPayload()).getAssignedPEN()).isEqualTo(TEST_PEN);
     var sagaStates = sagaService.findAllSagaStates(saga);
-    assertThat(sagaStates.size()).isEqualTo(2);
-    assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(CHECK_STUDENT_TWIN_ADD.toString());
-    assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_TWIN_ADD_REQUIRED.toString());
+    assertThat(sagaStates.size()).isEqualTo(1);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(UPDATE_STUDENT.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_UPDATED.toString());
   }
 
   @Test
@@ -240,43 +240,9 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
     assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
     assertThat(getPenRequestBatchUserActionsSagaDataFromJsonString(currentSaga.getPayload()).getAssignedPEN()).isEqualTo(TEST_PEN);
     var sagaStates = sagaService.findAllSagaStates(saga);
-    assertThat(sagaStates.size()).isEqualTo(2);
-    assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(CHECK_STUDENT_TWIN_ADD.toString());
-    assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_TWIN_ADD_NOT_REQUIRED.toString());
-  }
-  @Test
-  public void testAddStudentTwins_givenEventAndSagaData_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
-    var invocations = mockingDetails(messagePublisher).getInvocations().size();
-    var studentPayload = Student.builder().studentID(studentID).pen(TEST_PEN).legalFirstName("Jack").build();
-
-    var event = Event.builder()
-                     .eventType(CHECK_STUDENT_TWIN_ADD)
-                     .eventOutcome(EventOutcome.STUDENT_TWIN_ADD_REQUIRED)
-                     .sagaId(saga.getSagaId())
-                     .eventPayload(JsonUtil.getJsonStringFromObject(studentPayload))
-                     .build();
-    orchestrator.handleEvent(event);
-    verify(messagePublisher, atMost(invocations+1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), eventCaptor.capture());
-    var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
-    assertThat(newEvent.getEventType()).isEqualTo(ADD_STUDENT_TWINS);
-    final ObjectMapper objectMapper = new ObjectMapper();
-    CollectionType javaType = objectMapper.getTypeFactory()
-                                          .constructCollectionType(List.class, StudentTwin.class);
-    List<StudentTwin> studentTwins = objectMapper.readValue(newEvent.getEventPayload(), javaType);
-    assertThat(studentTwins).size().isEqualTo(1);
-    assertThat(studentTwins.get(0).getStudentID()).isEqualTo(studentID);
-    assertThat(studentTwins.get(0).getStudentTwinReasonCode()).isEqualTo(TwinReasonCodes.PEN_MATCH.getCode());
-    assertThat(studentTwins.get(0).getCreateUser()).isEqualTo("test");
-    assertThat(studentTwins.get(0).getUpdateUser()).isEqualTo("test");
-    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
-    assertThat(sagaFromDB).isPresent();
-    var currentSaga = sagaFromDB.get();
-    assertThat(currentSaga.getSagaState()).isEqualTo(ADD_STUDENT_TWINS.toString());
-    assertThat(getPenRequestBatchUserActionsSagaDataFromJsonString(currentSaga.getPayload()).getAssignedPEN()).isEqualTo(TEST_PEN);
-    var sagaStates = sagaService.findAllSagaStates(saga);
     assertThat(sagaStates.size()).isEqualTo(1);
-    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.CHECK_STUDENT_TWIN_ADD.toString());
-    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_TWIN_ADD_REQUIRED.toString());
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(UPDATE_STUDENT.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_UPDATED.toString());
   }
 
   @Test

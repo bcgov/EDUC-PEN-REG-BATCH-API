@@ -12,14 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_UNMATCH_PROCESSING_SAGA;
-import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.IN_PROGRESS;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 
 /**
@@ -28,7 +25,6 @@ import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 @Component
 @Slf4j
 public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestrator<PenRequestBatchUnmatchSagaData> {
-
 
   /**
    * Instantiates a new Base orchestrator.
@@ -47,27 +43,22 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
   @Override
   public void populateStepsToExecuteMap() {
     stepBuilder()
-        .begin(CHECK_STUDENT_TWIN_DELETE, this::checkStudentTwinDeletionRequired)
-        .step(CHECK_STUDENT_TWIN_DELETE, STUDENT_TWIN_DELETE_REQUIRED, DELETE_STUDENT_TWINS, this::deleteTwinRecordsFromStudent)
-        .step(CHECK_STUDENT_TWIN_DELETE, STUDENT_TWIN_DELETE_NOT_REQUIRED, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
+        .begin(this::isNotStudentTwinDeleteRequired, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
+        .or()
+        .begin(this::isStudentTwinDeleteRequired, DELETE_STUDENT_TWINS, this::deleteTwinRecordsFromStudent)
         .step(DELETE_STUDENT_TWINS, STUDENT_TWINS_DELETED, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
         .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_UPDATED)
         .or()
         .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_NOT_FOUND, this::logPenRequestBatchStudentNotFound);
   }
 
-  private void checkStudentTwinDeletionRequired(Event event, Saga saga, PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) throws InterruptedException, TimeoutException, IOException {
-    SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
-    saga.setStatus(IN_PROGRESS.toString());
-    saga.setSagaState(CHECK_STUDENT_TWIN_DELETE.toString()); // set current event as saga state.
-    getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-    handleEvent(Event.builder()
-                     .sagaId(saga.getSagaId())
-                     .eventType(CHECK_STUDENT_TWIN_DELETE)
-                     .eventOutcome(CollectionUtils.isEmpty(penRequestBatchUnmatchSagaData.getStudentTwinIDs()) ? STUDENT_TWIN_DELETE_NOT_REQUIRED : STUDENT_TWIN_DELETE_REQUIRED)
-                     .build());
+  private boolean isStudentTwinDeleteRequired(PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
+    return ! isNotStudentTwinDeleteRequired(penRequestBatchUnmatchSagaData);
   }
 
+  private boolean isNotStudentTwinDeleteRequired(PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
+    return CollectionUtils.isEmpty(penRequestBatchUnmatchSagaData.getStudentTwinIDs());
+  }
 
   /**
    * this method expects that the twin ids provided in the payload here is already validated.

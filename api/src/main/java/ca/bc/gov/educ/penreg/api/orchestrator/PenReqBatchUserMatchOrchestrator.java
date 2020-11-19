@@ -5,10 +5,7 @@ import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
-import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
-import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.StudentTwin;
+import ca.bc.gov.educ.penreg.api.struct.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -16,8 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
@@ -56,26 +51,21 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
     stepBuilder()
         .begin(GET_STUDENT, this::getStudentByPen)
         .step(GET_STUDENT, STUDENT_FOUND, UPDATE_STUDENT, this::updateStudent)
-        .step(UPDATE_STUDENT, STUDENT_UPDATED, CHECK_STUDENT_TWIN_ADD, this::checkStudentTwinAdditionRequired)
-        .step(CHECK_STUDENT_TWIN_ADD, STUDENT_TWIN_ADD_REQUIRED, ADD_STUDENT_TWINS, this::addTwinRecordsToStudent)
-        .step(CHECK_STUDENT_TWIN_ADD, STUDENT_TWIN_ADD_NOT_REQUIRED, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
+        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isStudentTwinAddRequired, ADD_STUDENT_TWINS, this::addTwinRecordsToStudent)
+        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isNotStudentTwinAddRequired, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
         .step(ADD_STUDENT_TWINS, STUDENT_TWINS_ADDED, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
         .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_UPDATED)
         .or()
         .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_NOT_FOUND, this::logPenRequestBatchStudentNotFound);
   }
 
-  private void checkStudentTwinAdditionRequired(Event event, Saga saga, PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) throws InterruptedException, TimeoutException, IOException {
-    SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
-    saga.setSagaState(CHECK_STUDENT_TWIN_ADD.toString()); // set current event as saga state.
-    getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-    handleEvent(Event.builder()
-                     .sagaId(saga.getSagaId())
-                     .eventType(CHECK_STUDENT_TWIN_ADD)
-                     .eventOutcome(CollectionUtils.isEmpty(penRequestBatchUserActionsSagaData.getTwinStudentIDs()) ? STUDENT_TWIN_ADD_NOT_REQUIRED : STUDENT_TWIN_ADD_REQUIRED)
-                     .build());
+  private boolean isStudentTwinAddRequired(PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
+    return ! isNotStudentTwinAddRequired(penRequestBatchUserActionsSagaData);
   }
 
+  private boolean isNotStudentTwinAddRequired(PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
+    return CollectionUtils.isEmpty(penRequestBatchUserActionsSagaData.getTwinStudentIDs());
+  }
 
   /**
    * this method expects that the twin ids provided in the payload here is already validated.
