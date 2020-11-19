@@ -16,18 +16,6 @@ import org.springframework.stereotype.Component;
 public class ApplicationProperties {
 
   /**
-   * The Nats url.
-   */
-  @Value("${nats.streaming.server.url}")
-  private String natsUrl;
-
-  /**
-   * The Nats cluster id.
-   */
-  @Value("${nats.streaming.server.clusterId}")
-  private String natsClusterId;
-
-  /**
    * The Client id.
    */
   @Value("${client.id}")

@@ -3,6 +3,7 @@ import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.schedulers.EventTaskScheduler;
+import io.nats.client.Connection;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,5 +60,11 @@ public class MockConfiguration {
   @Primary
   public RestUtils restUtils() {
     return Mockito.mock(RestUtils.class);
+  }
+
+  @Bean
+  @Primary
+  public Connection connection() {
+    return Mockito.mock(Connection.class);
   }
 }
