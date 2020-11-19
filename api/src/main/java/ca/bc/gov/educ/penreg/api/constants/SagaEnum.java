@@ -17,5 +17,10 @@ public enum SagaEnum {
   /**
    * Pen request batch user match processing saga saga enum.
    */
-  PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA
+  PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA,
+
+  /**
+   * Pen request batch user unmatch processing saga saga enum.
+   */
+  PEN_REQUEST_BATCH_USER_UNMATCH_PROCESSING_SAGA
 }

@@ -56,5 +56,10 @@ public enum EventType {
   /**
    * Add student twins event type.
    */
-  ADD_STUDENT_TWINS
+  ADD_STUDENT_TWINS,
+  CHECK_STUDENT_TWIN_DELETE,
+  /**
+   * Delete student twins event type.
+   */
+  DELETE_STUDENT_TWINS
 }

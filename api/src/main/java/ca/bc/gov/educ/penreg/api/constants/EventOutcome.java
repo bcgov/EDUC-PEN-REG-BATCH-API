@@ -74,5 +74,11 @@ public enum EventOutcome {
   /**
    * Student twins added event outcome.
    */
-  STUDENT_TWINS_ADDED
+  STUDENT_TWINS_ADDED,
+  STUDENT_TWIN_DELETE_REQUIRED,
+  STUDENT_TWIN_DELETE_NOT_REQUIRED,
+  /**
+   * Student twins deleted event outcome.
+   */
+  STUDENT_TWINS_DELETED
 }
