@@ -1,4 +1,4 @@
-FROM maven:3-jdk-11 as build
+FROM docker-remote.artifacts.developer.gov.bc.ca/maven:3-jdk-11 as build
 WORKDIR /workspace/app
 
 COPY api/pom.xml .
