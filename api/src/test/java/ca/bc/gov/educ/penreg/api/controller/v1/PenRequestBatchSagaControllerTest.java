@@ -144,6 +144,16 @@ public class PenRequestBatchSagaControllerTest {
         .content(payload)).andDo(print()).andExpect(status().isConflict());
   }
 
+  @Test
+  @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_USER_MATCH_SAGA")
+  public void testProcessStudentRequestUnmatchedByUser_GivenValidPayload_ShouldReturnStatusOk() throws Exception {
+    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/user-unmatch")
+      .contentType(MediaType.APPLICATION_JSON)
+      .accept(MediaType.APPLICATION_JSON)
+      .content(placeholderPenRequestBatchActionsSagaData()))
+      .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$").exists());
+  }
+
 
   protected String placeholderInvalidPenRequestBatchActionsSagaData() {
     return " {\n" +

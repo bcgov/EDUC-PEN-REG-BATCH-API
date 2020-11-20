@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.Saga;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,7 +31,7 @@ public interface PenRequestBatchSagaEndpoint {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK."), @ApiResponse(responseCode = "409", description = "Conflict.")})
   @Transactional
   @Tag(name = "Endpoint to start issue new pen saga.", description = "Endpoint to start issue new pen saga")
-  @Schema(name = "PenRequestBatchNewPenSagaData", implementation = PenRequestBatchUserActionsSagaData.class)
+  @Schema(name = "PenRequestBatchUserActionsSagaData", implementation = PenRequestBatchUserActionsSagaData.class)
   ResponseEntity<String> issueNewPen(@Validated @RequestBody PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData);
 
   @PostMapping("/user-match")
@@ -39,6 +40,15 @@ public interface PenRequestBatchSagaEndpoint {
   @Transactional
   @Tag(name = "Endpoint to start User Match of a student to a pen request.",
       description = "Endpoint to start User Match of a student to a pen request")
-  @Schema(name = "PenRequestBatchNewPenSagaData", implementation = PenRequestBatchUserActionsSagaData.class)
+  @Schema(name = "PenRequestBatchUserActionsSagaData", implementation = PenRequestBatchUserActionsSagaData.class)
   ResponseEntity<String> processStudentRequestMatchedByUser(@Validated @RequestBody PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData);
+
+  @PostMapping("/user-unmatch")
+  @PreAuthorize("#oauth2.hasAnyScope('PEN_REQUEST_BATCH_USER_MATCH_SAGA')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK."), @ApiResponse(responseCode = "409", description = "Conflict.")})
+  @Transactional
+  @Tag(name = "Endpoint to start User Unmatch of a student to a pen request.",
+    description = "Endpoint to start User Unmatch of a student to a pen request")
+  @Schema(name = "PenRequestBatchUnmatchSagaData", implementation = PenRequestBatchUnmatchSagaData.class)
+  ResponseEntity<String> processStudentRequestUnmatchedByUser(@Validated @RequestBody PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData);
 }
