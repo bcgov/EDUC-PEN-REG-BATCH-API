@@ -149,7 +149,7 @@ public class PenRequestBatchStudentOrchestratorService {
       case B1:
       case C1:
       case D1:
-        eventOptional = Optional.of(handleMatchStatus(saga, penMatchResult, penRequestBatchStudent, penRequestBatch));
+        eventOptional = Optional.of(handleSystemMatchedStatus(saga, penMatchResult, penRequestBatchStudent, penRequestBatch));
         break;
       case B0:
       case C0:
@@ -249,7 +249,10 @@ public class PenRequestBatchStudentOrchestratorService {
   }
 
   /**
-   * Handle d 1 status.
+   *       case AA:
+   *       case B1:
+   *       case C1:
+   *       case D1:
    *
    * @param saga                   the saga
    * @param penMatchResult         the pen match result
@@ -257,12 +260,14 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param penRequestBatch        the pen request batch
    * @return the event
    */
-  private Event handleMatchStatus(Saga saga, PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent, PenRequestBatchEntity penRequestBatch) {
+  private Event handleSystemMatchedStatus(Saga saga, PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent, PenRequestBatchEntity penRequestBatch) {
     var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
     if (penMatchRecordOptional.isPresent()) {
-      var studentID = penMatchRecordOptional.get().getStudentID();
+      var penMatchRecord = penMatchRecordOptional.get();
+      var studentID = penMatchRecord.getStudentID();
       penRequestBatchStudent.setPenRequestBatchStudentStatusCode(SYS_MATCHED.getCode());
       penRequestBatchStudent.setStudentID(UUID.fromString(studentID));
+      penRequestBatchStudent.setAssignedPEN(penMatchRecord.getMatchingPEN());
       penRequestBatchStudent = getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
       var studentFromStudentAPI = getRestUtils().getStudentByStudentID(studentID);
       updateStudentData(studentFromStudentAPI, penRequestBatchStudent, penRequestBatch);
