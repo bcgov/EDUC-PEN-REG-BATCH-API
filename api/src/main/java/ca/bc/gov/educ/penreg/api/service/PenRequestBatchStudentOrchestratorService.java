@@ -314,6 +314,16 @@ public class PenRequestBatchStudentOrchestratorService {
     studentFromStudentAPI.setLocalID(penRequestBatchStudent.getLocalID());
     studentFromStudentAPI.setGradeCode(penRequestBatchStudent.getGradeCode());
     studentFromStudentAPI.setPostalCode(penRequestBatchStudent.getPostalCode());
+
+    //Added as part of PEN-1007; Update the usual given & surnames if provided and not blank
+    if(StringUtils.isNotBlank(penRequestBatchStudent.getUsualFirstName())){
+      studentFromStudentAPI.setUsualFirstName(penRequestBatchStudent.getUsualFirstName());
+    }
+
+    if(StringUtils.isNotBlank(penRequestBatchStudent.getUsualLastName())){
+      studentFromStudentAPI.setUsualLastName(penRequestBatchStudent.getUsualLastName());
+    }
+
     studentFromStudentAPI.setHistoryActivityCode(StudentHistoryActivityCode.REQ_MATCH.getCode());
     studentFromStudentAPI.setUpdateUser(ALGORITHM);
   }
