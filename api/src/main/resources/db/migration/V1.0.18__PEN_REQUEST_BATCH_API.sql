@@ -1,0 +1,4 @@
+--Modify Columns in PEN_REQUEST_BATCH_SAGA to lengthen memo field
+ALTER TABLE PEN_REQUEST_BATCH_SAGA MODIFY (
+     PAYLOAD VARCHAR2(32767)
+);
