@@ -18,4 +18,9 @@ public class PenRequestBatchUserActionsSagaData extends BasePenRequestBatchStude
    * The Twins
    */
   List<String> twinStudentIDs;
+
+  /**
+   * The record number.
+   */
+  Integer recordNumber;
 }
