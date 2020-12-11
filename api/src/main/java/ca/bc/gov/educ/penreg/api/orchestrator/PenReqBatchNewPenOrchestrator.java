@@ -127,6 +127,7 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
     prbStudent.setPenRequestBatchStudentStatusCode(USR_NEW_PEN.getCode());
     prbStudent.setStudentID(student.getStudentID());
     prbStudent.setAssignedPEN(penRequestBatchUserActionsSagaData.getAssignedPEN());
+    prbStudent.setRecordNumber(penRequestBatchUserActionsSagaData.getRecordNumber());
 
     penRequestBatchUserActionsSagaData.setStudentID(student.getStudentID());
     return prbStudent;
