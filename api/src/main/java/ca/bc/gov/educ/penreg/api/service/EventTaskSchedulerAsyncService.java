@@ -126,7 +126,7 @@ public class EventTaskSchedulerAsyncService {
   @Transactional
   public void markProcessedBatchesActive() {
     var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
-    log.info("found {} records in repeat checked state", penReqBatches.size());
+    log.debug("found {} records in repeat checked state", penReqBatches.size());
     if (!penReqBatches.isEmpty()) {
       var penReqBatchEntities = new ArrayList<PenRequestBatchEntity>();
       for (var penRequestBatchEntity : penReqBatches) {
@@ -233,7 +233,7 @@ public class EventTaskSchedulerAsyncService {
   @Transactional
   public void publishUnprocessedStudentRecords() {
     Set<PenRequestBatchStudentSagaData> penRequestBatchStudents = findRepeatsCheckedStudentRecordsToBeProcessed();
-    log.info("found :: {}  records to be processed", penRequestBatchStudents.size());
+    log.debug("found :: {}  records to be processed", penRequestBatchStudents.size());
     if (!penRequestBatchStudents.isEmpty()) {
       getPenRegBatchStudentRecordsProcessor().publishUnprocessedStudentRecordsForProcessing(penRequestBatchStudents);
     }
@@ -269,7 +269,7 @@ public class EventTaskSchedulerAsyncService {
   @Transactional
   public void processLoadedPenRequestBatchesForRepeats() {
     var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(LOADED.getCode());
-    log.info("founds :: {}  records to be checked for repeats", penReqBatches.size());
+    log.debug("found :: {}  records to be checked for repeats", penReqBatches.size());
     if (!penReqBatches.isEmpty()) {
       getPenRegBatchStudentRecordsProcessor().checkLoadedStudentRecordsForRepeats(penReqBatches);
     }

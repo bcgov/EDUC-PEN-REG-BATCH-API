@@ -69,7 +69,6 @@ public class PenRegBatchScheduler implements Closeable {
       lockAtMostFor = "${scheduled.jobs.extract.unprocessed.pen.web.blobs.cron.lockAtMostFor}")
   public void extractUnProcessedFilesFromPenWebBlobs() {
     LockAssert.assertLocked();
-    log.info("extraction of batch file from Pen Web Blobs started.");
     var unExtractedRecords = getPenRequestBatchFileService().getAllNotExtractedRecords(FILE_TYPE_PEN); // PEN is the file type based on which records will be filtered.
     if (!unExtractedRecords.isEmpty()) {
       log.info("{} :: records found where extract date is null", unExtractedRecords.size());
@@ -77,7 +76,7 @@ public class PenRegBatchScheduler implements Closeable {
         executorService.execute(() -> getPenRegBatchProcessor().processPenRegBatchFileFromPenWebBlob(penWebBlob));
       }
     } else {
-      log.info("No Records found to be processed.");
+      log.debug("No Records found to be processed.");
     }
   }
 
