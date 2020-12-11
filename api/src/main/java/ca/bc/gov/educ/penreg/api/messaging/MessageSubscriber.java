@@ -57,7 +57,7 @@ public class MessageSubscriber extends MessagePubSub {
   public MessageHandler onMessage(EventHandler eventHandler) {
     return (Message message) -> {
       if (message != null) {
-        log.info("Message received is :: {} ", message);
+        log.info("Message received subject :: {},  replyTo :: {}, subscriptionID :: {}", message.getSubject(), message.getReplyTo(), message.getSID());
         try {
           var eventString = new String(message.getData());
           var event = JsonUtil.getJsonObjectFromString(Event.class, eventString);
