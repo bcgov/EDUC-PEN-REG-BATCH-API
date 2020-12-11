@@ -50,11 +50,7 @@ public interface PenRequestBatchStudentMapper {
    * @return the pen request batch student
    */
   @Mapping(target = "submissionNumber", ignore = true)
-  @Mapping(target = "repeatRequestSequenceNumber", ignore = true)
-  @Mapping(target = "repeatRequestOriginalID", ignore = true)
-  @Mapping(target = "recordNumber", ignore = true)
   @Mapping(target = "minCode", ignore = true)
-  @Mapping(target = "bestMatchPEN", ignore = true)
   PenRequestBatchStudent toPrbStudent(BasePenRequestBatchStudentSagaData basePenRequestBatchStudentSagaData);
 
 }
