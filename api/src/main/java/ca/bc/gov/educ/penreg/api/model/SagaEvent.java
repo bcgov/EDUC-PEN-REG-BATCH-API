@@ -8,6 +8,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PastOrPresent;
 import javax.validation.constraints.Size;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -67,8 +68,9 @@ public class SagaEvent {
   /**
    * The Saga event response.
    */
-  @Column(name = "SAGA_EVENT_RESPONSE", length = 4000)
-  String sagaEventResponse;
+  @Lob
+  @Column(name = "SAGA_EVENT_RESPONSE")
+  byte[] sagaEventResponseBytes;
 
   /**
    * The Create user.
@@ -99,4 +101,21 @@ public class SagaEvent {
   @PastOrPresent
   @Column(name = "UPDATE_DATE")
   LocalDateTime updateDate;
+
+  public String getSagaEventResponse() {
+    return new String(getSagaEventResponseBytes(), StandardCharsets.UTF_8);
+  }
+
+  public void setSagaEventResponse(String sagaEventResponse) {
+    setSagaEventResponseBytes(sagaEventResponse.getBytes(StandardCharsets.UTF_8));
+  }
+
+  public static class SagaEventBuilder {
+    byte[] sagaEventResponseBytes;
+
+    public SagaEvent.SagaEventBuilder sagaEventResponse(String sagaEventResponse) {
+      this.sagaEventResponseBytes = sagaEventResponse.getBytes(StandardCharsets.UTF_8);
+      return this;
+    }
+  }
 }

@@ -8,6 +8,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PastOrPresent;
 import javax.validation.constraints.Size;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -62,8 +63,9 @@ public class Saga {
    * The Payload.
    */
   @NotNull(message = "payload cannot be null")
-  @Column(name = "PAYLOAD", length = 4000)
-  String payload;
+  @Lob
+  @Column(name = "PAYLOAD")
+  byte[] payloadBytes;
 
   /**
    * The Status.
@@ -101,5 +103,22 @@ public class Saga {
   @PastOrPresent
   @Column(name = "UPDATE_DATE")
   LocalDateTime updateDate;
+
+  public String getPayload() {
+    return new String(getPayloadBytes(), StandardCharsets.UTF_8);
+  }
+
+  public void setPayload(String payload) {
+    setPayloadBytes(payload.getBytes(StandardCharsets.UTF_8));
+  }
+
+  public static class SagaBuilder {
+    byte[] payloadBytes;
+
+    public SagaBuilder payload(String payload) {
+      this.payloadBytes = payload.getBytes(StandardCharsets.UTF_8);
+      return this;
+    }
+  }
 
 }
