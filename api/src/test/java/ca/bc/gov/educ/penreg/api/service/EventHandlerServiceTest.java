@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.service;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
+import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
@@ -119,7 +120,7 @@ public class EventHandlerServiceTest {
     var payload = dummyPenRequestBatchStudentSagaDataJson();
     var event = new Event(READ_FROM_TOPIC, null, null, null, payload);
     eventHandlerService.handleEvent(event);
-    verify(penReqBatchStudentOrchestrator, atMostOnce()).startSaga(payload, UUID.fromString(penRequestBatchStudentID), UUID.fromString(penRequestBatchID));
+    verify(penReqBatchStudentOrchestrator, atMostOnce()).startSaga(payload, UUID.fromString(penRequestBatchStudentID), UUID.fromString(penRequestBatchID), ApplicationProperties.API_NAME);
   }
 
   /**

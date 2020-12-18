@@ -17,12 +17,13 @@ public interface Orchestrator {
    * @param payload                  the payload
    * @param penRequestBatchStudentID the pen request batch student id
    * @param penRequestBatchID        the pen request batch id
+   * @param userName                 the user who created the saga
    * @return the saga
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
-  Saga startSaga(String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID) throws InterruptedException, TimeoutException, IOException;
+  Saga startSaga(String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID, String userName) throws InterruptedException, TimeoutException, IOException;
 
   /**
    * Gets saga name.

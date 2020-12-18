@@ -85,7 +85,7 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
       var saga = getOrchestratorMap()
         .get(sagaName.toString())
         .startSaga(JsonUtil.getJsonStringFromObject(penRequestBatchStudentSagaData),
-          penRequestBatchStudentID, penRequestBatchStudentSagaData.getPenRequestBatchID());
+          penRequestBatchStudentID, penRequestBatchStudentSagaData.getPenRequestBatchID(), penRequestBatchStudentSagaData.getCreateUser());
       return ResponseEntity.ok(saga.getSagaId().toString());
     } catch (InterruptedException | TimeoutException | IOException e) {
       Thread.currentThread().interrupt();

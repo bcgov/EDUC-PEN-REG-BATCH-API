@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 @Setter
 public class ApplicationProperties {
 
+  public static final String API_NAME = "PEN_REG_BATCH_API";
   /**
    * The Client id.
    */

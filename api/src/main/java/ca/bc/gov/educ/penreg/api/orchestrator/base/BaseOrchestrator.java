@@ -49,10 +49,6 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    */
   protected static final String SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT = "system is going to execute next event :: {} for current event {} and SAGA ID :: {}";
   /**
-   * The constant API_NAME.
-   */
-  protected static final String API_NAME = "PEN_REG_BATCH_API";
-  /**
    * The constant SELF
    */
   protected static final String SELF = "SELF";
@@ -471,14 +467,15 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @param payload                  the event payload
    * @param penRequestBatchStudentID the pen request batch student id
    * @param penRequestBatchID        the pen request batch id
+   * @param userName                 the user who created the saga
    * @return saga record
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
   @Transactional
-  public Saga startSaga(@NotNull String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID) throws InterruptedException, TimeoutException, IOException {
-    var saga = sagaService.createSagaRecordInDB(sagaName, API_NAME, payload, penRequestBatchStudentID, penRequestBatchID);
+  public Saga startSaga(@NotNull String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID, String userName) throws InterruptedException, TimeoutException, IOException {
+    var saga = sagaService.createSagaRecordInDB(sagaName, userName, payload, penRequestBatchStudentID, penRequestBatchID);
     handleEvent(Event.builder()
       .eventType(EventType.INITIATED)
       .eventOutcome(EventOutcome.INITIATE_SUCCESS)

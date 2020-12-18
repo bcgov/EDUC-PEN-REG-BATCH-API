@@ -5,6 +5,7 @@ import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.EventHandler;
+import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
@@ -150,7 +151,7 @@ public class EventHandlerService implements EventHandler {
       }
 
       getPenReqBatchStudentOrchestrator().startSaga(event.getEventPayload(), penRequestBatchStudentSagaData.getPenRequestBatchStudentID(),
-          penRequestBatchStudentSagaData.getPenRequestBatchID());
+          penRequestBatchStudentSagaData.getPenRequestBatchID(), ApplicationProperties.API_NAME);
     }
   }
 
