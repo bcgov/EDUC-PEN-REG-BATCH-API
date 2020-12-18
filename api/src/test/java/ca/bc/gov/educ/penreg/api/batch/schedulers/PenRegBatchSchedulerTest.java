@@ -72,7 +72,7 @@ public class PenRegBatchSchedulerTest {
    */
   @Before
   public void setUp() throws Exception {
-    List<PENWebBlobEntity> entities = createDummyRecords();
+    List<PENWebBlobEntity> entities = createDummyRecords(1);
     penWebBlobRepository.saveAll(entities);
   }
 
@@ -82,9 +82,9 @@ public class PenRegBatchSchedulerTest {
    * @return the list
    * @throws IOException the io exception
    */
-  private List<PENWebBlobEntity> createDummyRecords() throws IOException {
+  private List<PENWebBlobEntity> createDummyRecords(int count) throws IOException {
     List<PENWebBlobEntity> entities = new ArrayList<>();
-    for (var index = 0; index < 2; index++) {
+    for (var index = 0; index < count; index++) {
       entities.add(createDummyRecord(index));
     }
     return entities;
@@ -131,6 +131,6 @@ public class PenRegBatchSchedulerTest {
     while(studentRepository.findAll().isEmpty()){
       TimeUnit.MILLISECONDS.sleep(100);
     }
-    assertThat(studentRepository.findAll().size()).isEqualTo(10);
+    assertThat(studentRepository.findAll().size()).isEqualTo(5);
   }
 }
