@@ -4,6 +4,7 @@ import ca.bc.gov.educ.penreg.api.model.Saga;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -54,4 +55,6 @@ public interface SagaRepository extends CrudRepository<Saga, UUID> {
    * @return the list
    */
   List<Saga> findAllByPenRequestBatchStudentIDAndSagaNameAndStatusIn(UUID penRequestBatchStudentID, String sagaName, List<String> statuses);
+
+  List<Saga> findAllByCreateDateBefore(LocalDateTime createDate);
 }
