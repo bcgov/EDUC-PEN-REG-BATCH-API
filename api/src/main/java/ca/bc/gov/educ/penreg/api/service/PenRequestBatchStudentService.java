@@ -264,13 +264,14 @@ public class PenRequestBatchStudentService {
    */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
   public CompletableFuture<Page<PenRequestBatchStudentEntity>> findAll(Specification<PenRequestBatchStudentEntity> studentEntitySpecification, Integer pageNumber, Integer pageSize, List<Sort.Order> sorts) {
-    Pageable paging = PageRequest.of(pageNumber, pageSize, Sort.by(sorts));
-    try {
-      var result = getRepository().findAll(studentEntitySpecification, paging);
-      return CompletableFuture.completedFuture(result);
-    } catch (final Exception ex) {
-      throw new CompletionException(ex);
-    }
+    return CompletableFuture.supplyAsync(() -> {
+      Pageable paging = PageRequest.of(pageNumber, pageSize, Sort.by(sorts));
+      try {
+        return getRepository().findAll(studentEntitySpecification, paging);
+      } catch (final Exception ex) {
+        throw new CompletionException(ex);
+      }
+    });
   }
 
 

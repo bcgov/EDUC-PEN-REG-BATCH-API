@@ -70,13 +70,14 @@ public class PenRequestBatchService {
    */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
   public CompletableFuture<Page<PenRequestBatchEntity>> findAll(Specification<PenRequestBatchEntity> penRegBatchSpecs, Integer pageNumber, Integer pageSize, List<Sort.Order> sorts) {
-    Pageable paging = PageRequest.of(pageNumber, pageSize, Sort.by(sorts));
-    try {
-      var result = getRepository().findAll(penRegBatchSpecs, paging);
-      return CompletableFuture.completedFuture(result);
-    } catch (final Exception ex) {
-      throw new CompletionException(ex);
-    }
+    return CompletableFuture.supplyAsync(() -> {
+      Pageable paging = PageRequest.of(pageNumber, pageSize, Sort.by(sorts));
+      try {
+        return getRepository().findAll(penRegBatchSpecs, paging);
+      } catch (final Exception ex) {
+        throw new CompletionException(ex);
+      }
+    });
   }
 
   /**
