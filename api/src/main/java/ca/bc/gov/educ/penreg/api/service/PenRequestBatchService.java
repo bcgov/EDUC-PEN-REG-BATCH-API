@@ -114,7 +114,8 @@ public class PenRequestBatchService {
   public PenRequestBatchEntity updatePenRequestBatch(final PenRequestBatchEntity penRequestBatchEntity, final UUID penRequestBatchID) {
     var penRequestBatchEntityOptional = getRepository().findById(penRequestBatchID);
     return penRequestBatchEntityOptional.map(penRequestBatchEntityDB -> {
-      BeanUtils.copyProperties(penRequestBatchEntity, penRequestBatchEntityDB);
+      BeanUtils.copyProperties(penRequestBatchEntity, penRequestBatchEntityDB,
+        "penRequestBatchStudentEntities", "penRequestBatchHistoryEntities", "createUser", "createDate");
       penRequestBatchEntityDB.setPenRequestBatchID(penRequestBatchID);
       return getRepository().save(penRequestBatchEntityDB);
     }).orElseThrow(EntityNotFoundException::new);

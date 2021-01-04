@@ -590,6 +590,27 @@ public class PenRequestBatchAPIControllerTest {
   }
 
   /**
+   * Test update pen request batch given pen request batch id should return status ok.
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  @WithMockOAuth2Scope(scope = "WRITE_PEN_REQUEST_BATCH")
+  public void testUpdatePenRequestBatch_GivenPenRequestBatchId_ShouldReturnStatusOk() throws Exception {
+    var models = createBatchStudents(1);
+    var batch = mapper.toStructure(models.get(0));
+
+    batch.setPenRequestBatchStatusCode("ARCHIVED");
+    var request = new ObjectMapper().writeValueAsString(batch);
+
+    mockMvc
+      .perform(put(String.format("/api/v1/pen-request-batch/%s", batch.getPenRequestBatchID()))
+        .contentType(APPLICATION_JSON).accept(APPLICATION_JSON).content(request))
+      .andDo(print()).andExpect(status().isOk())
+      .andExpect(jsonPath("$.penRequestBatchStatusCode", is("ARCHIVED")));
+  }
+
+  /**
    * Create batch students list.
    *
    * @param total the total
