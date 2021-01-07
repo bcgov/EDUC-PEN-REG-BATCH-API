@@ -101,7 +101,7 @@ public class RestUtils {
     RestTemplate restTemplate = getRestTemplate();
     HttpHeaders headers = new HttpHeaders();
     headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-    restTemplate.exchange(props.getStudentApiURL(), HttpMethod.PUT, new HttpEntity<>(studentFromStudentAPI, headers), Student.class);
+    restTemplate.exchange(props.getStudentApiURL() + "/" + studentFromStudentAPI.getStudentID(), HttpMethod.PUT, new HttpEntity<>(studentFromStudentAPI, headers), Student.class);
   }
 
 
@@ -148,7 +148,7 @@ public class RestUtils {
   public String getNextPenNumberFromPenServiceAPI(String guid) {
     RestTemplate restTemplate = getRestTemplate();
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(props.getPenServicesApiURL().concat("/api/v1/pen-services/next-pen-number"))
-                                                       .queryParam("transactionID", guid);
+        .queryParam("transactionID", guid);
     return restTemplate.getForEntity(builder.build().encode().toUri(), String.class).getBody();
   }
 }
