@@ -15,7 +15,7 @@ CREATE TABLE PEN_REQUEST_BATCH
     SOURCE_APPLICATION              VARCHAR2(6)   NOT NULL,
     MINISTRY_PRB_SOURCE_CODE        VARCHAR2(10)  NOT NULL,
     TSW_ACCOUNT                     VARCHAR2(8)   NOT NULL,
-    mincode                         VARCHAR2(8),
+    MINCODE                         VARCHAR2(8),
     SCHOOL_NAME                     VARCHAR2(255),
     CONTACT_NAME                    VARCHAR2(255),
     EMAIL                           VARCHAR2(255),
@@ -32,7 +32,7 @@ CREATE TABLE PEN_REQUEST_BATCH
     FIXABLE_COUNT                   NUMBER,
     CONSTRAINT PEN_REQUEST_BATCH_PK PRIMARY KEY (PEN_REQUEST_BATCH_ID)
 );
-COMMENT ON TABLE PEN_REQUEST_BATCH IS 'Contains meta data about the overall batch, such as the submission number, the school mincode, the file name and type, etc.';
+COMMENT ON TABLE PEN_REQUEST_BATCH IS 'Contains meta data about the overall batch, such as the submission number, the school Mincode, the file name and type, etc.';
 
 -- Column Comments
 COMMENT ON COLUMN PEN_REQUEST_BATCH.PEN_REQUEST_BATCH_ID IS 'Unique surrogate key for each PEN Request Batch. GUID value must be provided during insert.';
@@ -48,8 +48,8 @@ COMMENT ON COLUMN PEN_REQUEST_BATCH.EXTRACT_DATE IS 'The date the file was extra
 COMMENT ON COLUMN PEN_REQUEST_BATCH.PROCESS_DATE IS 'The date the file was processed.';
 COMMENT ON COLUMN PEN_REQUEST_BATCH.SOURCE_APPLICATION IS 'A short code identifying the source system at the school. This is defined by the schools and is not constrained by a code table. ';
 COMMENT ON COLUMN PEN_REQUEST_BATCH.MINISTRY_PRB_SOURCE_CODE IS 'A code identifying which ministry system received the file, such as TSW PENWeb. Default "TSWPENWEB"';
-COMMENT ON COLUMN PEN_REQUEST_BATCH.TSW_ACCOUNT IS 'The TSW account used to upload the batch. Should be the same as the mincode.';
-COMMENT ON COLUMN PEN_REQUEST_BATCH.mincode IS 'Ministry code for the school that submitted the batch.';
+COMMENT ON COLUMN PEN_REQUEST_BATCH.TSW_ACCOUNT IS 'The TSW account used to upload the batch. Should be the same as the Mincode.';
+COMMENT ON COLUMN PEN_REQUEST_BATCH.MINCODE IS 'Ministry code for the school that submitted the batch.';
 COMMENT ON COLUMN PEN_REQUEST_BATCH.SCHOOL_NAME IS 'Name of the school as provided in the batch file.';
 COMMENT ON COLUMN PEN_REQUEST_BATCH.CONTACT_NAME IS 'Name of the contact person for the school.';
 COMMENT ON COLUMN PEN_REQUEST_BATCH.EMAIL IS 'Email for the contact person.';
