@@ -11,6 +11,7 @@ import ca.bc.gov.educ.penreg.api.batch.struct.BatchFileTrailer;
 import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
 import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
 import lombok.Getter;
 import lombok.NonNull;
@@ -73,15 +74,22 @@ public class PenRegBatchProcessor {
   private final PenRequestBatchFileService penRequestBatchFileService;
 
   /**
+   * The Rest utils.
+   */
+  private final RestUtils restUtils;
+
+  /**
    * Instantiates a new Pen reg batch processor.
    *
    * @param penRegBatchStudentRecordsProcessor the pen reg batch student records processor
    * @param penRequestBatchFileService         the pen request batch file service
+   * @param restUtils                          the rest utils
    */
   @Autowired
-  public PenRegBatchProcessor(PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService) {
+  public PenRegBatchProcessor(PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService, RestUtils restUtils) {
     this.penRegBatchStudentRecordsProcessor = penRegBatchStudentRecordsProcessor;
     this.penRequestBatchFileService = penRequestBatchFileService;
+    this.restUtils = restUtils;
   }
 
   /**
@@ -323,9 +331,7 @@ public class PenRegBatchProcessor {
   private void setHeaderOrTrailer(final DataSet ds, final BatchFile batchFile, String guid) throws FileUnProcessableException {
     if (ds.isRecordID(HEADER.getName())) {
       var minCode = ds.getString(MIN_CODE.getName());
-      if (!StringUtils.isNumeric(minCode) || minCode.length() != 8) {
-        throw new FileUnProcessableException(INVALID_MINCODE_HEADER, guid);
-      }
+      validateMinCode(guid, minCode);
       batchFile.setBatchFileHeader(BatchFileHeader.builder()
           .transactionCode(ds.getString(TRANSACTION_CODE.getName()))
           .contactName(ds.getString(CONTACT_NAME.getName()))
@@ -348,6 +354,19 @@ public class PenRegBatchProcessor {
           .studentCount(ds.getString(STUDENT_COUNT.getName()))
           .vendorName(ds.getString(VENDOR_NAME.getName()))
           .build());
+    }
+  }
+
+  /**
+   * this method validates the min code. it calls out to school api and if there is no data in school api for the mincode then it fails
+   *
+   * @param guid    the guid
+   * @param minCode the min code
+   * @throws FileUnProcessableException the file un processable exception
+   */
+  private void validateMinCode(String guid, String minCode) throws FileUnProcessableException {
+    if (!StringUtils.isNumeric(minCode) || minCode.length() != 8 || restUtils.getSchoolByMinCode(minCode).isEmpty()) {
+      throw new FileUnProcessableException(INVALID_MINCODE_HEADER, guid);
     }
   }
 }
