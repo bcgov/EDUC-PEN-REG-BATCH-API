@@ -52,4 +52,7 @@ public class ApplicationProperties {
   @Value("${url.api.pen.services}")
   private String penServicesApiURL;
 
+  @Value("${url.api.school}")
+  private String schoolApiURL;
+
 }

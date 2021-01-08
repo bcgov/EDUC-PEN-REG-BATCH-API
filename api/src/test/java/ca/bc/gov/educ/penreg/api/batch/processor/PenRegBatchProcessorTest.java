@@ -8,6 +8,8 @@ import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
+import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.github.javafaker.Faker;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +30,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Comparator;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Random;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
@@ -36,6 +41,8 @@ import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.K12;
 import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.PSI;
 import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils.createBatchStudents;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 /**
  * The type Pen reg batch processor test.
@@ -107,9 +114,12 @@ public class PenRegBatchProcessorTest {
   /**
    * Before.
    */
+  @Autowired
+  RestUtils restUtils;
   @Before
   public void before() {
     faker = new Faker(new Random(0));
+    when(restUtils.getSchoolByMinCode(anyString())).thenReturn(Optional.of(new School()));
   }
 
 
@@ -459,11 +469,36 @@ public class PenRegBatchProcessorTest {
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isEqualTo(5);
     students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
-    log.error("students {}",students);
+    log.error("students {}", students);
     var counter = 1;
     for (PenRequestBatchStudentEntity student : students) {
       assertThat(counter++).isEqualTo(student.getRecordNumber());
     }
+  }
+
+  @Test
+  @Transactional
+  public void testProcessPenRegBatchFileFromTSW_GivenMinCodeInvalid_ShouldCreateRecordLOADFAILInDB() throws IOException {
+    when(restUtils.getSchoolByMinCode(anyString())).thenReturn(Optional.empty());
+    File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
+    byte[] bFile = Files.readAllBytes(file.toPath());
+    var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).minCode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
+    var result = repository.findAll();
+    assertThat(result.size()).isEqualTo(1);
+    var entity = result.get(0);
+    assertThat(entity.getPenRequestBatchID()).isNotNull();
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(entity.getSchoolGroupCode()).isNull();
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isEqualTo("Invalid Mincode in Header record.");
+    var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
+    assertThat(students.size()).isEqualTo(0);
   }
 
   /**

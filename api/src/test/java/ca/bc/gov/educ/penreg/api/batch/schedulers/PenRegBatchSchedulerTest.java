@@ -4,6 +4,8 @@ import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
+import ca.bc.gov.educ.penreg.api.struct.School;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -18,13 +20,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 /**
  * The type Pen reg batch scheduler test.
@@ -65,6 +66,9 @@ public class PenRegBatchSchedulerTest {
   @Autowired
   private PenWebBlobRepository penWebBlobRepository;
 
+  @Autowired
+  RestUtils restUtils;
+
   /**
    * Sets up.
    *
@@ -74,6 +78,7 @@ public class PenRegBatchSchedulerTest {
   public void setUp() throws Exception {
     List<PENWebBlobEntity> entities = createDummyRecords(1);
     penWebBlobRepository.saveAll(entities);
+    when(restUtils.getSchoolByMinCode(anyString())).thenReturn(Optional.of(new School()));
   }
 
   /**
@@ -128,7 +133,7 @@ public class PenRegBatchSchedulerTest {
   @Test
   public void testExtractUnProcessedFilesFromTSW_GivenRowsInTSWithExtractDateNull_ShouldBeProcessed() throws InterruptedException {
     penRegBatchScheduler.extractUnProcessedFilesFromPenWebBlobs();
-    while(studentRepository.findAll().isEmpty()){
+    while (studentRepository.findAll().isEmpty()) {
       TimeUnit.MILLISECONDS.sleep(100);
     }
     assertThat(studentRepository.findAll().size()).isEqualTo(5);

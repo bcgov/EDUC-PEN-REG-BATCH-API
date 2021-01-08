@@ -1,20 +1,19 @@
 package ca.bc.gov.educ.penreg.api.rest;
 
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
+import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.oauth2.client.DefaultOAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -150,5 +149,28 @@ public class RestUtils {
     UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(props.getPenServicesApiURL().concat("/api/v1/pen-services/next-pen-number"))
         .queryParam("transactionID", guid);
     return restTemplate.getForEntity(builder.build().encode().toUri(), String.class).getBody();
+  }
+
+  /**
+   * Gets school by min code.
+   *
+   * @param mincode the mincode
+   * @return the school by min code
+   */
+  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
+  public Optional<School> getSchoolByMinCode(String mincode) {
+    Optional<School> school = Optional.empty();
+    try {
+      var response = getRestTemplate().getForEntity(props.getSchoolApiURL().concat("/").concat(mincode), School.class);
+      if (response.hasBody()) {
+        school = Optional.ofNullable(response.getBody());
+      }
+    } catch (final HttpClientErrorException ex) {
+      if (ex.getStatusCode().value() == HttpStatus.NOT_FOUND.value()) {
+        return Optional.empty();
+      }
+    }
+
+    return school;
   }
 }
