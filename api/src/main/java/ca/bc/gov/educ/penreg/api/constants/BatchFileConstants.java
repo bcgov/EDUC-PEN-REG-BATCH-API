@@ -15,7 +15,7 @@ public enum BatchFileConstants {
   /**
    * Min code batch file constants.
    */
-  MIN_CODE("minCode"),
+  MIN_CODE("mincode"),
   /**
    * School name batch file constants.
    */

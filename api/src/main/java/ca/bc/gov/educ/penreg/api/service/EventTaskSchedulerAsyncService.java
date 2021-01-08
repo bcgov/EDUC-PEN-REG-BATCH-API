@@ -254,7 +254,7 @@ public class EventTaskSchedulerAsyncService {
               .allMatch(saga -> (!penRequestBatchStudentEntity.getPenRequestBatchStudentID().equals(saga.getPenRequestBatchStudentID()))))
           .map(mapper::toPenReqBatchStudentSagaData)
           .peek(penRequestBatchStudentSagaData -> {
-            penRequestBatchStudentSagaData.setMincode(penRequestBatchEntity.getMinCode());
+            penRequestBatchStudentSagaData.setMincode(penRequestBatchEntity.getMincode());
             penRequestBatchStudentSagaData.setPenRequestBatchID(penRequestBatchEntity.getPenRequestBatchID());
           })
           .collect(Collectors.toSet()));

@@ -5,7 +5,10 @@ import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
-import ca.bc.gov.educ.penreg.api.struct.*;
+import ca.bc.gov.educ.penreg.api.struct.Event;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
+import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.StudentTwin;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -121,7 +124,7 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
 
   /**
    * the following attributes on the matched student record get updated based on the incoming PEN Request
-   * Mincode
+   * mincode
    * Local ID
    * Student Grade Code
    * Postal Code

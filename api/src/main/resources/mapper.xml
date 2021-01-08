@@ -3,7 +3,7 @@
 <PZMAP>
   <RECORD id="header" indicator="FFI" endPosition="3">
     <COLUMN name="transactionCode" length="3" />
-    <COLUMN name="minCode" length="8" />
+    <COLUMN name="mincode" length="8"/>
     <COLUMN name="schoolName" length="40" />
     <COLUMN name="requestDate" length="8" />
     <COLUMN name="emailID" length="100" />

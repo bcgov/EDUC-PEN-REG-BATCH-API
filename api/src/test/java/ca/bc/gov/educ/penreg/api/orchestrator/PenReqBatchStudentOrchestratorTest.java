@@ -143,7 +143,7 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
     entity.setUnarchivedBatchChangedFlag("N");
     entity.setFileName("test");
     entity.setFileType("PEN");
-    entity.setMinCode("10200000");
+    entity.setMincode("10200000");
     entity.setMinistryPRBSourceCode("PEN_WEB");
     entity.setInsertDate(LocalDateTime.now());
     entity.setExtractDate(LocalDateTime.now());

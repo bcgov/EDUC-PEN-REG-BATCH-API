@@ -22,7 +22,7 @@ public class PENWebBlob {
   /**
    * The Min code.
    */
-  private String minCode;
+  private String mincode;
   /**
    * The File name.
    */

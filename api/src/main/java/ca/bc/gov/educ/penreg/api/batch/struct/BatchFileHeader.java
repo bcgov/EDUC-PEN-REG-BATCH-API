@@ -22,7 +22,7 @@ public class BatchFileHeader {
   /**
    * The Min code.
    */
-  private String minCode; // MINISTRY_SCHOOL_CODE	8	3	An 8 digit number that uniquely identifies a school.  The number is assigned by the Ministry.
+  private String mincode; // MINISTRY_SCHOOL_CODE	8	3	An 8 digit number that uniquely identifies a school.  The number is assigned by the Ministry.
   /**
    * The School name.
    */

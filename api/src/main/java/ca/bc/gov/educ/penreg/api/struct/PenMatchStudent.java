@@ -50,7 +50,7 @@ public class PenMatchStudent {
    */
   protected String usualMiddleName;
   /**
-   * The Mincode.
+   * The mincode.
    */
   protected String mincode;
   /**

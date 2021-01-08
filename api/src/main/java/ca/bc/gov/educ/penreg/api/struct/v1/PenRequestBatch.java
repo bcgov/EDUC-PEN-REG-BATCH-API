@@ -71,7 +71,7 @@ public class PenRequestBatch {
   /**
    * The Min code.
    */
-  String minCode;
+  String mincode;
   /**
    * The School name.
    */

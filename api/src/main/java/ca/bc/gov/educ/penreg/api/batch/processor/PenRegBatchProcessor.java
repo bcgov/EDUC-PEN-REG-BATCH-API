@@ -105,9 +105,7 @@ public class PenRegBatchProcessor {
     log.info("Started processing row from Pen Web Blobs with submission Number :: {} and guid :: {}", penWebBlobEntity.getSubmissionNumber(), guid);
     BatchFile batchFile = new BatchFile();
     Optional<Reader> batchFileReaderOptional = Optional.empty();
-    try (Reader mapperReader = new FileReader(new File(
-        Objects.requireNonNull(getClass().getClassLoader().getResource("mapper.xml")).getFile()))) {
-
+    try (Reader mapperReader = new FileReader(Objects.requireNonNull(getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
       batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents())));
       final Parser pzParser = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get());
       final DataSet ds = pzParser.setNullEmptyStrings(true).parse();
@@ -252,7 +250,7 @@ public class PenRegBatchProcessor {
         return noRepeatsEntity.stream()
             .map(studentSagaDataMapper::toPenReqBatchStudentSagaData)
             .peek(element -> {
-              element.setMincode(entity.getMinCode());
+              element.setMincode(entity.getMincode());
               element.setPenRequestBatchID(entity.getPenRequestBatchID());
             }).collect(Collectors.toSet());
       } else {
@@ -330,14 +328,14 @@ public class PenRegBatchProcessor {
    */
   private void setHeaderOrTrailer(final DataSet ds, final BatchFile batchFile, String guid) throws FileUnProcessableException {
     if (ds.isRecordID(HEADER.getName())) {
-      var minCode = ds.getString(MIN_CODE.getName());
-      validateMinCode(guid, minCode);
+      var mincode = ds.getString(MIN_CODE.getName());
+      validateMincode(guid, mincode);
       batchFile.setBatchFileHeader(BatchFileHeader.builder()
           .transactionCode(ds.getString(TRANSACTION_CODE.getName()))
           .contactName(ds.getString(CONTACT_NAME.getName()))
           .emailID(ds.getString(EMAIL.getName()))
           .faxNumber(ds.getString(FAX_NUMBER.getName()))
-          .minCode(minCode)
+          .mincode(mincode)
           .officeNumber(ds.getString(OFFICE_NUMBER.getName()))
           .requestDate(ds.getString(REQUEST_DATE.getName()))
           .schoolName(ds.getString(SCHOOL_NAME.getName()))
@@ -361,11 +359,11 @@ public class PenRegBatchProcessor {
    * this method validates the min code. it calls out to school api and if there is no data in school api for the mincode then it fails
    *
    * @param guid    the guid
-   * @param minCode the min code
+   * @param mincode the min code
    * @throws FileUnProcessableException the file un processable exception
    */
-  private void validateMinCode(String guid, String minCode) throws FileUnProcessableException {
-    if (!StringUtils.isNumeric(minCode) || minCode.length() != 8 || restUtils.getSchoolByMinCode(minCode).isEmpty()) {
+  private void validateMincode(String guid, String mincode) throws FileUnProcessableException {
+    if (!StringUtils.isNumeric(mincode) || mincode.length() != 8 || restUtils.getSchoolBymincode(mincode).isEmpty()) {
       throw new FileUnProcessableException(INVALID_MINCODE_HEADER, guid);
     }
   }

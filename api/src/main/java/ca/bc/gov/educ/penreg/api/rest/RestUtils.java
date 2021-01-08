@@ -158,7 +158,7 @@ public class RestUtils {
    * @return the school by min code
    */
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
-  public Optional<School> getSchoolByMinCode(String mincode) {
+  public Optional<School> getSchoolBymincode(String mincode) {
     Optional<School> school = Optional.empty();
     try {
       var response = getRestTemplate().getForEntity(props.getSchoolApiURL().concat("/").concat(mincode), School.class);

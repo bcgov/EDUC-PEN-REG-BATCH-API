@@ -9,7 +9,10 @@ import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
-import ca.bc.gov.educ.penreg.api.struct.v1.*;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
+import ca.bc.gov.educ.penreg.api.struct.v1.Search;
+import ca.bc.gov.educ.penreg.api.struct.v1.SearchCriteria;
+import ca.bc.gov.educ.penreg.api.struct.v1.ValueType;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import ca.bc.gov.educ.penreg.api.support.WithMockOAuth2Scope;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,9 +42,7 @@ import static ca.bc.gov.educ.penreg.api.struct.v1.Condition.OR;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -361,7 +362,7 @@ public class PenRequestBatchAPIControllerTest {
     criteriaList1.add(criteria6);
     SearchCriteria criteria7 = SearchCriteria.builder().key("studentCount").operation(FilterOperation.GREATER_THAN).value("0").valueType(ValueType.LONG).build();
     SearchCriteria criteria8 = SearchCriteria.builder().key("sisVendorName").condition(OR).operation(FilterOperation.EQUAL).value("Follett Software").valueType(ValueType.STRING).build();
-    SearchCriteria criteria9 = SearchCriteria.builder().key("minCode").condition(OR).operation(FilterOperation.EQUAL).value("09898027").valueType(ValueType.STRING).build();
+    SearchCriteria criteria9 = SearchCriteria.builder().key("mincode").condition(OR).operation(FilterOperation.EQUAL).value("09898027").valueType(ValueType.STRING).build();
     List<SearchCriteria> criteriaList2 = new LinkedList<>();
     criteriaList1.add(criteria7);
     criteriaList1.add(criteria8);
@@ -468,7 +469,7 @@ public class PenRequestBatchAPIControllerTest {
     criteriaList.add(criteria);
 
     SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStudentStatusCode").operation(FilterOperation.NOT_EQUAL).value("FIXABLE").valueType(ValueType.STRING).build();
-    SearchCriteria criteria3 = SearchCriteria.builder().key("penRequestBatchEntity.minCode").condition(AND).operation(FilterOperation.STARTS_WITH_IGNORE_CASE).value("1").valueType(ValueType.STRING).build();
+    SearchCriteria criteria3 = SearchCriteria.builder().key("penRequestBatchEntity.mincode").condition(AND).operation(FilterOperation.STARTS_WITH_IGNORE_CASE).value("1").valueType(ValueType.STRING).build();
     SearchCriteria criteria4 = SearchCriteria.builder().key("legalLastName").condition(AND).operation(FilterOperation.STARTS_WITH_IGNORE_CASE).value("j").valueType(ValueType.STRING).build();
 
     List<SearchCriteria> criteriaList1 = new LinkedList<>();
@@ -644,7 +645,7 @@ public class PenRequestBatchAPIControllerTest {
    */
   private String createSortParam() throws JsonProcessingException {
     Map<String, String> sortMap = new LinkedHashMap<>();
-    sortMap.put("penRequestBatchEntity.minCode", "DESC");
+    sortMap.put("penRequestBatchEntity.mincode", "DESC");
     sortMap.put("legalLastName", "ASC");
     sortMap.put("legalFirstName", "DESC");
     return new ObjectMapper().writeValueAsString(sortMap);

@@ -26,7 +26,7 @@ public interface PenStudentDemogValidationMapper {
   @Mapping(target = "transactionID", ignore = true)
   @Mapping(target = "submissionNumber", ignore = true)
   @Mapping(target = "recordNumber", ignore = true)
-  @Mapping(target = "minCode", ignore = true)
+  @Mapping(target = "mincode", ignore = true)
   @Mapping(target = "issueList", ignore = true)
   @Mapping(target = "isInteractive", constant = "false")
   @Mapping(target = "bestMatchPEN", ignore = true)
