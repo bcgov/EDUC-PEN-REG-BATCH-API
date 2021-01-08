@@ -496,9 +496,9 @@ public class PenRegBatchProcessorTest {
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isEqualTo("Invalid mincode in Header record.");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isEqualTo("Invalid Mincode in Header record.");
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
-    assertThat(students.size()).isEqualTo(0);
+    assertThat(students.size()).isZero();
   }
 
   /**
