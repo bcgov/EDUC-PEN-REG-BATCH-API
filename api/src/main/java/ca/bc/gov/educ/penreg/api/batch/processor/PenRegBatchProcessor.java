@@ -363,7 +363,7 @@ public class PenRegBatchProcessor {
    * @throws FileUnProcessableException the file un processable exception
    */
   private void validateMincode(String guid, String mincode) throws FileUnProcessableException {
-    if (!StringUtils.isNumeric(mincode) || mincode.length() != 8 || restUtils.getSchoolBymincode(mincode).isEmpty()) {
+    if (!StringUtils.isNumeric(mincode) || mincode.length() != 8 || restUtils.getSchoolByMincode(mincode).isEmpty()) {
       throw new FileUnProcessableException(INVALID_MINCODE_HEADER, guid);
     }
   }

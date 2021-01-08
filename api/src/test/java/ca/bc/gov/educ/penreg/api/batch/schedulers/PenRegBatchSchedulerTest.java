@@ -78,7 +78,7 @@ public class PenRegBatchSchedulerTest {
   public void setUp() throws Exception {
     List<PENWebBlobEntity> entities = createDummyRecords(1);
     penWebBlobRepository.saveAll(entities);
-    when(restUtils.getSchoolBymincode(anyString())).thenReturn(Optional.of(new School()));
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(new School()));
   }
 
   /**

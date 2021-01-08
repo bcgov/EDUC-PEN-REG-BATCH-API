@@ -119,7 +119,7 @@ public class PenRegBatchProcessorTest {
   @Before
   public void before() {
     faker = new Faker(new Random(0));
-    when(restUtils.getSchoolBymincode(anyString())).thenReturn(Optional.of(new School()));
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(new School()));
   }
 
 
@@ -479,7 +479,7 @@ public class PenRegBatchProcessorTest {
   @Test
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenmincodeInvalid_ShouldCreateRecordLOADFAILInDB() throws IOException {
-    when(restUtils.getSchoolBymincode(anyString())).thenReturn(Optional.empty());
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.empty());
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
