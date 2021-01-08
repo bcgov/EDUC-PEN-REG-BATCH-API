@@ -64,7 +64,7 @@ public interface PenRequestBatchFileMapper {
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getFileType() ))", target = "fileType")
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getFileName() ))", target = "fileName")
   @Mapping(source = "penWebBlobEntity.studentCount", target = "sourceStudentCount")
-  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileHeader().getMinCode() ))", target = "minCode")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileHeader().getMincode() ))", target = "mincode")
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileHeader().getSchoolName() ))", target = "schoolName")
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileHeader().getEmailID() ))", target = "email")
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileHeader().getContactName() ))", target = "contactName")
@@ -115,7 +115,7 @@ public interface PenRequestBatchFileMapper {
    */
   @Mapping(target = "penRequestBatchHistoryEntities", ignore = true)
   @Mapping(target = "studentCount", ignore = true)
-  @Mapping(target = "minCode", ignore = true)
+  @Mapping(target = "mincode", ignore = true)
   @Mapping(target = "unarchivedUser", ignore = true)
   @Mapping(target = "unarchivedBatchStatusCode", ignore = true)
   @Mapping(target = "unarchivedBatchChangedFlag", ignore = true)

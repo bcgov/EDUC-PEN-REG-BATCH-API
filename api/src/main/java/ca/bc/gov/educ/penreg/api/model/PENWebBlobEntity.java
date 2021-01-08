@@ -12,7 +12,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.time.LocalDateTime;
 
 /**
@@ -38,7 +41,7 @@ public class PENWebBlobEntity {
    * The Min code.
    */
   @Column(name = "MINCODE", length = 8, nullable = false, updatable = false)
-  private String minCode;
+  private String mincode;
 
   /**
    * The File name.

@@ -1,10 +1,10 @@
 package ca.bc.gov.educ.penreg.api.batch.mappers;
 
+import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
+import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
 import ca.bc.gov.educ.penreg.api.constants.MinistryPRBSourceCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.constants.UnarchivedBatchStatusCodes;
-import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
-import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
 import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchHistoryEntity;
@@ -56,7 +56,7 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
     setDefaults(entity);
     entity.setPenRequestBatchStatusCode(LOADED.getCode());
     entity.setStudentCount((long) file.getStudentDetails().size());
-    entity.setSchoolGroupCode(computeSchoolGroupCode(file.getBatchFileHeader().getMinCode()));
+    entity.setSchoolGroupCode(computeSchoolGroupCode(file.getBatchFileHeader().getMincode()));
     PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(entity, LOADED.getCode(),STATUS_CHANGED.getCode(), null);
     entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     return entity;
@@ -122,14 +122,14 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
   /**
    * Compute school group code string.
    *
-   * @param minCode the min code
+   * @param mincode the min code
    * @return the string
    */
-  private String computeSchoolGroupCode(final String minCode) {
-    if (minCode == null) {
+  private String computeSchoolGroupCode(final String mincode) {
+    if (mincode == null) {
       return null;
     }
-    if (minCode.startsWith(MINCODE_STARTS_WITH_102)) {
+    if (mincode.startsWith(MINCODE_STARTS_WITH_102)) {
       return SchoolGroupCodes.PSI.getCode();
     } else {
       return SchoolGroupCodes.K12.getCode();

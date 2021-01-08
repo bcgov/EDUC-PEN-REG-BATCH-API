@@ -1,6 +1,9 @@
 package ca.bc.gov.educ.penreg.api.struct;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -131,7 +134,7 @@ public class PenRequestBatchStudentValidationPayload {
   /**
    * The Min code from PenRequestBatch
    */
-  String minCode;
+  String mincode;
 
   /**
    * The Submission number from PenRequestBatch

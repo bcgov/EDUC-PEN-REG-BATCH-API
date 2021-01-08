@@ -29,7 +29,7 @@ public interface PenRequestBatchStudentMapper {
    * @return the pen request batch student
    */
   @Mapping(source = "penRequestBatchStudentEntity.penRequestBatchEntity.penRequestBatchID", target = "penRequestBatchID")
-  @Mapping(source = "penRequestBatchStudentEntity.penRequestBatchEntity.minCode", target = "minCode")
+  @Mapping(source = "penRequestBatchStudentEntity.penRequestBatchEntity.mincode", target = "mincode")
   @Mapping(source = "penRequestBatchStudentEntity.penRequestBatchEntity.submissionNumber", target = "submissionNumber")
   PenRequestBatchStudent  toStructure(PenRequestBatchStudentEntity penRequestBatchStudentEntity);
 
@@ -49,8 +49,12 @@ public interface PenRequestBatchStudentMapper {
    * @param basePenRequestBatchStudentSagaData the base pen request batch student saga data
    * @return the pen request batch student
    */
+  @Mapping(target = "repeatRequestSequenceNumber", ignore = true)
+  @Mapping(target = "repeatRequestOriginalID", ignore = true)
+  @Mapping(target = "recordNumber", ignore = true)
+  @Mapping(target = "bestMatchPEN", ignore = true)
   @Mapping(target = "submissionNumber", ignore = true)
-  @Mapping(target = "minCode", ignore = true)
+  @Mapping(target = "mincode", ignore = true)
   PenRequestBatchStudent toPrbStudent(BasePenRequestBatchStudentSagaData basePenRequestBatchStudentSagaData);
 
 }

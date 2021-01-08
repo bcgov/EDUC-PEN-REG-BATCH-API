@@ -3,7 +3,7 @@ package ca.bc.gov.educ.penreg.api.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.AsyncHandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author Om
  */
 @Component
-public class PenRegAPIInterceptor extends HandlerInterceptorAdapter {
+public class PenRegAPIInterceptor implements AsyncHandlerInterceptor {
 
   /**
    * The constant log.

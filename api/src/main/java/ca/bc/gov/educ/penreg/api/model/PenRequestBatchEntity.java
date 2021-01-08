@@ -133,7 +133,7 @@ public class PenRequestBatchEntity {
    * The Min code.
    */
   @Column(name = "MINCODE", length = 8)
-  String minCode;
+  String mincode;
 
   /**
    * The School name.

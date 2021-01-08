@@ -23,7 +23,7 @@ public abstract class BaseOrchestratorTest {
   protected final String twinStudentID = UUID.randomUUID().toString();
 
   /**
-   * The Mincode.
+   * The mincode.
    */
   protected final String mincode = "01292001";
   /**

@@ -322,7 +322,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   }
 
   /**
-   * Get association names from search criterias, like penRequestBatchEntity.minCode
+   * Get association names from search criterias, like penRequestBatchEntity.mincode
    *
    * @param associationNames the associations
    * @param searches         the search criterias

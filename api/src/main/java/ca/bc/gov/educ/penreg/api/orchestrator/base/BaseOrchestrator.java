@@ -95,9 +95,9 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @param sagaName         the saga name
    * @param topicToSubscribe the topic to subscribe
    */
-  public BaseOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
-                          Class<T> clazz, String sagaName,
-                          String topicToSubscribe) {
+  protected BaseOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
+                             Class<T> clazz, String sagaName,
+                             String topicToSubscribe) {
     this.sagaService = sagaService;
     this.messagePublisher = messagePublisher;
     this.clazz = clazz;

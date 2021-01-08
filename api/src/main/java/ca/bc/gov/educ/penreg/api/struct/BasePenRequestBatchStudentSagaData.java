@@ -32,7 +32,7 @@ public class BasePenRequestBatchStudentSagaData {
   String penRequestBatchStudentStatusCode;
 
   /**
-   * The Mincode.
+   * The mincode.
    */
   String mincode;
   /**
