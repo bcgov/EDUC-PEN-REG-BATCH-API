@@ -1,9 +1,13 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -19,9 +23,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -48,15 +51,29 @@ public class PenRequestBatchService {
   private final PenWebBlobRepository penWebBlobRepository;
 
   /**
+   * the pen request batch student repository
+   */
+  @Getter(PRIVATE)
+  private final PenRequestBatchStudentRepository penRequestBatchStudentRepository;
+
+  /**
+   * The Rest utils.
+   */
+  @Getter(PRIVATE)
+  private final RestUtils restUtils;
+
+  /**
    * Instantiates a new Pen reg batch service.
    *
    * @param repository           the repository
    * @param penWebBlobRepository the pen web blob repository
    */
   @Autowired
-  public PenRequestBatchService(PenRequestBatchRepository repository, PenWebBlobRepository penWebBlobRepository) {
+  public PenRequestBatchService(PenRequestBatchRepository repository, PenWebBlobRepository penWebBlobRepository, PenRequestBatchStudentRepository penRequestBatchStudentRepository, RestUtils restUtils) {
     this.repository = repository;
     this.penWebBlobRepository = penWebBlobRepository;
+    this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
+    this.restUtils = restUtils;
   }
 
   /**
@@ -189,5 +206,38 @@ public class PenRequestBatchService {
    */
   public Optional<PenRequestBatchEntity> findById(UUID penRequestBatchID) {
     return repository.findById(penRequestBatchID);
+  }
+
+  /**
+   * Create an IDS file for a pen request batch entity
+   *
+   * @param penRequestBatchEntity the pen request batch entity
+   * @return the pen web blob entity
+   */
+  @Transactional(propagation = Propagation.MANDATORY)
+  public PENWebBlobEntity createIDSFile(final PenRequestBatchEntity penRequestBatchEntity) {
+    var penRequestBatchStudentEntities = getPenRequestBatchStudentRepository().findAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIsInAndLocalIDNotNull(penRequestBatchEntity, Arrays.asList(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), PenRequestBatchStudentStatusCodes.USR_NEW_PEN.getCode(), PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode(), PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode()));
+
+    if(penRequestBatchStudentEntities.isEmpty()) {
+      return null;
+    }
+
+    StringBuilder idsFile = new StringBuilder();
+
+    for(PenRequestBatchStudentEntity entity: penRequestBatchStudentEntities) {
+      var student = getRestUtils().getStudentByPEN(entity.getAssignedPEN());
+      if(student.isPresent()) {
+//        Uncomment and update this logic once trueNumber is added to student table
+//        if(student.get().getTrueNumber()) {
+//          student = getRestUtils().getStudentByStudentID(student.get().getTrueNumber());
+//        }
+//        if(student.isPresent()) {
+          idsFile.append("E03").append(student.get().getMincode()).append(String.format("%-12s", student.get().getLocalID()).replace(' ', '0')).append(student.get().getPen()).append(" ").append(student.get().getLegalLastName()).append("\n");
+//        }
+      }
+    }
+    byte [] bFile = idsFile.toString().getBytes();
+
+    return getPenWebBlobRepository().save(PENWebBlobEntity.builder().mincode(penRequestBatchEntity.getMincode()).sourceApplication("PENWEB").fileName(penRequestBatchEntity.getMincode() + ".IDS").fileType("IDS").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(penRequestBatchEntity.getSubmissionNumber()).build());
   }
 }

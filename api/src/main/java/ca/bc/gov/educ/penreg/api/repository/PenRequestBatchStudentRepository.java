@@ -66,4 +66,12 @@ public interface PenRequestBatchStudentRepository extends CrudRepository<PenRequ
   List<PenRequestBatchStudentEntity> findAllRepeatsGivenBatchStudent(@Param("mincode") String mincode, @Param("penRequestBatchStatusCode") String penRequestBatchStatusCode, @Param("startDate") LocalDateTime startDate, @Param("localID") String localID, List<String> penRequestBatchStudentStatusCodes, String submittedPen, String legalFirstName, String legalMiddleNames, String legalLastName, String usualFirstName, String usualMiddleNames, String usualLastName, String dob, String genderCode, String gradeCode, String postalCode);
 
 
+  /**
+   * Finds all pen request batch student entities given a pen request batch entity, local id is not null, and pen request batch student status code is in list
+   *
+   * @param penRequestBatchEntity - the pen request batch entity
+   * @param penRequestBatchStudentStatusCodes - the list of pen request batch student status codes
+   * @return - the list
+   */
+  List<PenRequestBatchStudentEntity> findAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIsInAndLocalIDNotNull(PenRequestBatchEntity penRequestBatchEntity, List<String> penRequestBatchStudentStatusCodes);
 }
