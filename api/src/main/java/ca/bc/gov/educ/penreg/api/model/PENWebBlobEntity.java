@@ -12,10 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 /**
@@ -34,6 +31,7 @@ public class PENWebBlobEntity {
    * The Pen web blob id.
    */
   @Id
+  @GeneratedValue(strategy=GenerationType.IDENTITY)
   @Column(name = "PENWEB_BLOBS_IDX", length = 18, unique = true, nullable = false, updatable = false)
   private Long penWebBlobId;
 
