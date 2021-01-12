@@ -53,7 +53,6 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    */
   public static final String PEN_REQUEST_BATCH_API = "PEN_REQUEST_BATCH_API";
 
-  private static final PenRequestBatchStudentPossibleMatchMapper possibleMatchMapper = PenRequestBatchStudentPossibleMatchMapper.mapper;
   /**
    * The constant mapper.
    */
@@ -345,11 +344,6 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   @Override
   public List<PenRequestBatchStudentStatusCode> getAllPenRequestBatchStudentStatusCodes() {
     return getStudentService().getAllStudentStatusCodes().stream().map(studentStatusCodeMapper::toStruct).collect(Collectors.toList());
-  }
-
-  @Override
-  public List<PenRequestBatchStudentPossibleMatch> getAllPossibleMatches(UUID penRequestBatchID, UUID penRequestBatchStudentID) {
-    return getStudentService().getAllPossibleMatches(penRequestBatchID, penRequestBatchStudentID).stream().map(possibleMatchMapper::toStruct).collect(Collectors.toList());
   }
 
   /**
