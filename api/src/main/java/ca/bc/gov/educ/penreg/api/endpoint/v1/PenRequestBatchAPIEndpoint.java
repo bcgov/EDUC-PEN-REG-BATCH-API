@@ -240,11 +240,4 @@ public interface PenRequestBatchAPIEndpoint {
   @Tag(name = "Endpoint to get all the PenRequestBatchStudentStatusCode.")
   List<PenRequestBatchStudentStatusCode> getAllPenRequestBatchStudentStatusCodes();
 
-  @GetMapping("/{penRequestBatchID}/student/{penRequestBatchStudentID}/possible-match")
-  @PreAuthorize("#oauth2.hasAnyScope('READ_PEN_REQUEST_BATCH')")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
-  @Transactional(readOnly = true)
-  @Tag(name = "Endpoint to get all the PenRequestBatchStudentPossibleMatch.")
-  List<PenRequestBatchStudentPossibleMatch> getAllPossibleMatches(@PathVariable UUID penRequestBatchID, @PathVariable UUID penRequestBatchStudentID);
-
 }

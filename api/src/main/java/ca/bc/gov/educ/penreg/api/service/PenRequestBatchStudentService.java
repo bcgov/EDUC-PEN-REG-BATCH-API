@@ -7,7 +7,6 @@ import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentPossibleMatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentStatusCodeEntity;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
@@ -295,24 +294,4 @@ public class PenRequestBatchStudentService {
     return getRepository().findById(penRequestBatchStudentID);
   }
 
-  /**
-   * Gets all possible matches.
-   *
-   * @param penRequestBatchID        the pen request batch id
-   * @param penRequestBatchStudentID the pen request batch student id
-   * @return the all possible matches
-   */
-  @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-  public Set<PenRequestBatchStudentPossibleMatchEntity> getAllPossibleMatches(UUID penRequestBatchID, UUID penRequestBatchStudentID) {
-    var penRequestBatchStudentOptional = getRepository().findById(penRequestBatchStudentID);
-    if (penRequestBatchStudentOptional.isPresent()) {
-      var student = penRequestBatchStudentOptional.get();
-      if (!student.getPenRequestBatchEntity().getPenRequestBatchID().equals(penRequestBatchID)) {
-        throw new EntityNotFoundException(PenRequestBatchStudentEntity.class);
-      }
-      return student.getPenRequestBatchStudentPossibleMatchEntities();
-    } else {
-      throw new EntityNotFoundException(PenRequestBatchStudentEntity.class);
-    }
-  }
 }

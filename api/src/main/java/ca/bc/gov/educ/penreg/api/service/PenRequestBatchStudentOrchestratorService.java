@@ -13,8 +13,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +22,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_MATCH_RESULTS_PROCESSED;
@@ -472,63 +469,4 @@ public class PenRequestBatchStudentOrchestratorService {
   protected String scrubNameField(String nameFieldValue) {
     return nameFieldValue.trim().toUpperCase().replace("\t", " ").replace(".", "").replaceAll("\\s{2,}", " ");
   }
-
-  /**
-   * Persist possible matches.
-   *
-   * @param penRequestBatchStudentID the pen request batch student id
-   * @param penMatchRecords          the pen match records
-   */
-  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void persistPossibleMatches(UUID penRequestBatchStudentID, List<PenMatchRecord> penMatchRecords) {
-    log.debug("going to persist possible matches , records size is :: {}", penMatchRecords.size());
-    var studentOptional = getPenRequestBatchStudentService().findByID(penRequestBatchStudentID);
-    if (studentOptional.isPresent()) {
-
-      var student = studentOptional.get();
-      int priority = 1;
-      List<PenMatchRecord> filteredPenMatchRecords;
-      if (!student.getPenRequestBatchStudentPossibleMatchEntities().isEmpty()) { // check if match records are already present, possible when replay process.
-        filteredPenMatchRecords = penMatchRecords.stream().filter(getPenMatchRecordPredicate(student)).collect(Collectors.toList()); // update the data so that only new data will be persisted.
-      }else {
-        filteredPenMatchRecords = penMatchRecords;
-      }
-      if (!filteredPenMatchRecords.isEmpty()) {
-        log.debug("found {} new match records that needs to be stored ",filteredPenMatchRecords.size());
-        for (var penMatchRecord : filteredPenMatchRecords) {
-          PenRequestBatchStudentPossibleMatchEntity entity = new PenRequestBatchStudentPossibleMatchEntity();
-          //remove the question mark from pen before saving...
-          entity.setMatchedPen(penMatchRecord.getMatchingPEN().length() < 10 ? penMatchRecord.getMatchingPEN() : penMatchRecord.getMatchingPEN().substring(0, 9));
-          entity.setMatchedPriority(priority++);
-          entity.setMatchedStudentId(UUID.fromString(penMatchRecord.getStudentID()));
-          entity.setPenRequestBatchStudentEntity(student); // PK/FK relationship.
-          student.getPenRequestBatchStudentPossibleMatchEntities().add(entity);
-        }
-        getPenRequestBatchStudentService().saveAttachedEntityWithChildEntities(student);
-      }
-    }
-  }
-
-  /**
-   * Gets pen match record predicate.
-   * Collect only records which are not present in the db already.
-   *
-   * @param student the student
-   * @return pen match record predicate
-   */
-  private Predicate<PenMatchRecord> getPenMatchRecordPredicate(PenRequestBatchStudentEntity student) {
-    return el -> {
-      boolean isRecordAlreadyPresent = false;
-      for (var possibleMatchEntity : student.getPenRequestBatchStudentPossibleMatchEntities()) {
-        if (StringUtils.equalsIgnoreCase(possibleMatchEntity.getMatchedPen(), el.getMatchingPEN().substring(0, 9))
-            && StringUtils.equalsIgnoreCase(possibleMatchEntity.getMatchedStudentId().toString(), el.getStudentID())) {
-          isRecordAlreadyPresent = true;
-          break;
-        }
-      }
-      return !isRecordAlreadyPresent;
-    };
-  }
-
 }
