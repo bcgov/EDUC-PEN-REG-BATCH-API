@@ -1,13 +1,13 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
-import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
-import ca.bc.gov.educ.penreg.api.struct.*;
+import ca.bc.gov.educ.penreg.api.struct.Event;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -130,7 +130,7 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     orchestrator.handleEvent(event);
     verify(messagePublisher, atMost(invocations+1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), eventCaptor.capture());
     var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
-    assertThat(newEvent.getEventType()).isEqualTo(DELETE_STUDENT_TWINS);
+    assertThat(newEvent.getEventType()).isEqualTo(DELETE_POSSIBLE_MATCH);
     final ObjectMapper objectMapper = new ObjectMapper();
     CollectionType javaType = objectMapper.getTypeFactory()
                                           .constructCollectionType(List.class, UUID.class);
@@ -140,7 +140,7 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     var currentSaga = sagaFromDB.get();
-    assertThat(currentSaga.getSagaState()).isEqualTo(DELETE_STUDENT_TWINS.toString());
+    assertThat(currentSaga.getSagaState()).isEqualTo(DELETE_POSSIBLE_MATCH.toString());
     var sagaStates = sagaService.findAllSagaStates(saga);
     assertThat(sagaStates.size()).isEqualTo(1);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
@@ -153,7 +153,7 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     if(sagaFromDBtoUpdateOptional.isPresent()){
       var sagaFromDBtoUpdate = sagaFromDBtoUpdateOptional.get();
       var payload = JsonUtil.getJsonObjectFromString(PenRequestBatchUnmatchSagaData.class, sagaFromDBtoUpdate.getPayload());
-      payload.setStudentTwinIDs(null);
+      payload.setMatchedStudentIDList(null);
       sagaFromDBtoUpdate.setPayload(JsonUtil.getJsonStringFromObject(payload));
       sagaService.updateAttachedEntityDuringSagaProcess(sagaFromDBtoUpdate);
       saga = sagaService.findSagaById(saga.getSagaId()).orElseThrow();
@@ -189,8 +189,8 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     var invocations = mockingDetails(messagePublisher).getInvocations().size();
     var studentTwinIDs = List.of(studentTwinID);
     var event = Event.builder()
-                     .eventType(DELETE_STUDENT_TWINS)
-                     .eventOutcome(EventOutcome.STUDENT_TWINS_DELETED)
+        .eventType(DELETE_POSSIBLE_MATCH)
+        .eventOutcome(EventOutcome.POSSIBLE_MATCH_DELETED)
                      .sagaId(saga.getSagaId())
                      .eventPayload(JsonUtil.getJsonStringFromObject(studentTwinIDs))
                      .build();
@@ -208,8 +208,8 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
     var sagaStates = sagaService.findAllSagaStates(saga);
     assertThat(sagaStates.size()).isEqualTo(1);
-    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.DELETE_STUDENT_TWINS.toString());
-    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_TWINS_DELETED.toString());
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(DELETE_POSSIBLE_MATCH.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.POSSIBLE_MATCH_DELETED.toString());
   }
 
   /**
@@ -219,15 +219,15 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
    */
   protected String placeholderPenRequestBatchUnmatchSagaData(Optional<String> studentTwinID) {
     return " {\n" +
-      "    \"createUser\": \"test\",\n" +
-      "    \"updateUser\": \"test\",\n" +
-      "    \"penRequestBatchID\": \"" + penRequestBatchID + "\",\n" +
-      "    \"penRequestBatchStudentID\": \"" + penRequestBatchStudentID + "\",\n" +
-      "    \"legalFirstName\": \"Jack\",\n" +
-      "    \"mincode\": \""+ mincode + "\",\n" +
-      "    \"genderCode\": \"X\",\n" +
-      (studentTwinID.map(s -> "    \"studentTwinIDs\": [\"" + s + "\"]\n").orElse("")) +
-      "  }";
+        "    \"createUser\": \"test\",\n" +
+        "    \"updateUser\": \"test\",\n" +
+        "    \"penRequestBatchID\": \"" + penRequestBatchID + "\",\n" +
+        "    \"penRequestBatchStudentID\": \"" + penRequestBatchStudentID + "\",\n" +
+        "    \"legalFirstName\": \"Jack\",\n" +
+        "    \"mincode\": \"" + mincode + "\",\n" +
+        "    \"genderCode\": \"X\",\n" +
+        (studentTwinID.map(s -> "    \"matchedStudentIDList\": [\"" + s + "\"]\n").orElse("")) +
+        "  }";
   }
 
   /**

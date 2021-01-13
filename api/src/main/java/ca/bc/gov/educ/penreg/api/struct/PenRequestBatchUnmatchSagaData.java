@@ -20,5 +20,5 @@ public class PenRequestBatchUnmatchSagaData extends BasePenRequestBatchStudentSa
   /**
    * The Twins
    */
-  List<String> studentTwinIDs;
+  List<String> matchedStudentIDList;
 }

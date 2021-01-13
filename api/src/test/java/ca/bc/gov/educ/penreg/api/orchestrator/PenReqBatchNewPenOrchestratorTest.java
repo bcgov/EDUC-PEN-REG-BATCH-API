@@ -33,7 +33,6 @@ import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
-import static ca.bc.gov.educ.penreg.api.constants.TwinReasonCodes.PENCREATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -162,9 +161,6 @@ public class PenReqBatchNewPenOrchestratorTest extends BaseOrchestratorTest {
     assertThat(student.getMincode()).isEqualTo(mincode);
     assertThat(student.getGenderCode()).isEqualTo("X");
     assertThat(student.getSexCode()).isEqualTo("U");
-    assertThat(student.getStudentTwinAssociations().size()).isEqualTo(1);
-    assertThat(student.getStudentTwinAssociations().get(0).getTwinStudentID()).isEqualTo(twinStudentID);
-    assertThat(student.getStudentTwinAssociations().get(0).getStudentTwinReasonCode()).isEqualTo(PENCREATE.getCode());
     var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     var currentSaga = sagaFromDB.get();
