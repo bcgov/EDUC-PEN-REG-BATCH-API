@@ -8,8 +8,8 @@ import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.StudentTwin;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.PossibleMatch;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +23,7 @@ import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_MATCHED;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.IN_PROGRESS;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_MATCH;
 
 /**
@@ -54,20 +53,20 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
     stepBuilder()
         .begin(GET_STUDENT, this::getStudentByPen)
         .step(GET_STUDENT, STUDENT_FOUND, UPDATE_STUDENT, this::updateStudent)
-        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isStudentTwinAddRequired, ADD_STUDENT_TWINS, this::addTwinRecordsToStudent)
-        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isNotStudentTwinAddRequired, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
-        .step(ADD_STUDENT_TWINS, STUDENT_TWINS_ADDED, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
+        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isPossibleMatchAddRequired, ADD_POSSIBLE_MATCH, this::addPossibleMatchToStudent)
+        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isPossibleMatchAddNotRequired, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
+        .step(ADD_POSSIBLE_MATCH, POSSIBLE_MATCH_ADDED, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
         .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_UPDATED)
         .or()
         .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_NOT_FOUND, this::logPenRequestBatchStudentNotFound);
   }
 
-  private boolean isStudentTwinAddRequired(PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
-    return ! isNotStudentTwinAddRequired(penRequestBatchUserActionsSagaData);
+  private boolean isPossibleMatchAddRequired(PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
+    return !isPossibleMatchAddNotRequired(penRequestBatchUserActionsSagaData);
   }
 
-  private boolean isNotStudentTwinAddRequired(PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
-    return CollectionUtils.isEmpty(penRequestBatchUserActionsSagaData.getTwinStudentIDs());
+  private boolean isPossibleMatchAddNotRequired(PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
+    return CollectionUtils.isEmpty(penRequestBatchUserActionsSagaData.getMatchedStudentIDList());
   }
 
   /**
@@ -79,26 +78,26 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
    * @param penRequestBatchUserActionsSagaData the pen request batch user actions saga data
    * @throws JsonProcessingException the json processing exception
    */
-  protected void addTwinRecordsToStudent(Event event, Saga saga, PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) throws JsonProcessingException {
+  protected void addPossibleMatchToStudent(Event event, Saga saga, PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) throws JsonProcessingException {
     SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
-    saga.setSagaState(ADD_STUDENT_TWINS.toString()); // set current event as saga state.
+    saga.setSagaState(ADD_POSSIBLE_MATCH.toString()); // set current event as saga state.
     getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-    var studentTwins = penRequestBatchUserActionsSagaData
-        .getTwinStudentIDs().stream()
-        .map(twinStudentID -> StudentTwin.builder()
-                                         .createUser(penRequestBatchUserActionsSagaData.getCreateUser())
-                                         .updateUser(penRequestBatchUserActionsSagaData.getUpdateUser())
-                                         .studentID(penRequestBatchUserActionsSagaData.getStudentID())
-                                         .twinStudentID(twinStudentID)
-                                         .studentTwinReasonCode(TwinReasonCodes.PEN_MATCH.getCode())
-                                         .build()).collect(Collectors.toList());
+    var possibleMatches = penRequestBatchUserActionsSagaData
+        .getMatchedStudentIDList().stream()
+        .map(matchedStudentID -> PossibleMatch.builder()
+            .createUser(penRequestBatchUserActionsSagaData.getCreateUser())
+            .updateUser(penRequestBatchUserActionsSagaData.getUpdateUser())
+            .studentID(penRequestBatchUserActionsSagaData.getStudentID())
+            .matchedStudentID(matchedStudentID)
+            .matchReasonCode(TwinReasonCodes.PEN_MATCH.getCode())
+            .build()).collect(Collectors.toList());
     Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-                           .eventType(ADD_STUDENT_TWINS)
-                           .replyTo(getTopicToSubscribe())
-                           .eventPayload(JsonUtil.getJsonStringFromObject(studentTwins))
-                           .build();
-    postMessageToTopic(STUDENT_API_TOPIC.toString(), nextEvent);
-    log.info("message sent to STUDENT_API_TOPIC for ADD_STUDENT_TWINS Event.");
+        .eventType(ADD_POSSIBLE_MATCH)
+        .replyTo(getTopicToSubscribe())
+        .eventPayload(JsonUtil.getJsonStringFromObject(possibleMatches))
+        .build();
+    postMessageToTopic(PEN_MATCH_API_TOPIC.toString(), nextEvent);
+    log.info("message sent to PEN_MATCH_API_TOPIC for ADD_POSSIBLE_MATCH Event.");
   }
 
   /**

@@ -5,21 +5,26 @@ import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.Saga;
 import ca.bc.gov.educ.penreg.api.model.SagaEvent;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
-import ca.bc.gov.educ.penreg.api.struct.*;
+import ca.bc.gov.educ.penreg.api.struct.Event;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
+import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.PossibleMatch;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+
+import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
-import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.*;
-import static java.util.stream.Collectors.toList;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_NEW;
 
 /**
  * The type Pen req batch student orchestrator.
@@ -48,11 +53,53 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
     stepBuilder()
         .begin(GET_NEXT_PEN_NUMBER, this::getNextPenNumber)
         .step(GET_NEXT_PEN_NUMBER, NEXT_PEN_NUMBER_RETRIEVED, CREATE_STUDENT, this::createStudent)
-        .step(CREATE_STUDENT, STUDENT_ALREADY_EXIST, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
-        .step(CREATE_STUDENT, STUDENT_CREATED, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
+        .step(CREATE_STUDENT, STUDENT_ALREADY_EXIST, this::isStudentPossibleMatchAddRequired, ADD_POSSIBLE_MATCH, this::addPossibleMatchesToStudent)
+        .step(CREATE_STUDENT, STUDENT_CREATED, this::isStudentPossibleMatchAddRequired, ADD_POSSIBLE_MATCH, this::addPossibleMatchesToStudent)
+        .step(CREATE_STUDENT, STUDENT_ALREADY_EXIST, this::isStudentPossibleMatchAddNotRequired, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
+        .step(CREATE_STUDENT, STUDENT_CREATED, this::isStudentPossibleMatchAddNotRequired, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
+        .step(ADD_POSSIBLE_MATCH, POSSIBLE_MATCH_ADDED, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
         .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_UPDATED)
         .or()
         .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_NOT_FOUND, this::logPenRequestBatchStudentNotFound);
+  }
+
+  private void addPossibleMatchesToStudent(Event event, Saga saga, PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) throws JsonProcessingException {
+    final String studentID;
+    // if PEN number is already existing then student-api will return the student-id
+    // this scenario might occur during replay when message could not reach batch api from student-api and batch api retried the same flow.
+    if (event.getEventOutcome() == STUDENT_ALREADY_EXIST) {
+      studentID = event.getEventPayload();
+    } else {
+      Student student = JsonUtil.getJsonObjectFromString(Student.class, event.getEventPayload());
+      studentID = student.getStudentID();
+    }
+    SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
+    saga.setSagaState(ADD_POSSIBLE_MATCH.toString()); // set current event as saga state.
+    getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
+    var possibleMatches = penRequestBatchUserActionsSagaData
+        .getMatchedStudentIDList().stream()
+        .map(matchedStudentID -> PossibleMatch.builder()
+            .createUser(penRequestBatchUserActionsSagaData.getCreateUser())
+            .updateUser(penRequestBatchUserActionsSagaData.getUpdateUser())
+            .studentID(studentID)
+            .matchedStudentID(matchedStudentID)
+            .matchReasonCode(TwinReasonCodes.PENCREATE.getCode())
+            .build()).collect(Collectors.toList());
+    Event nextEvent = Event.builder().sagaId(saga.getSagaId())
+        .eventType(ADD_POSSIBLE_MATCH)
+        .replyTo(getTopicToSubscribe())
+        .eventPayload(JsonUtil.getJsonStringFromObject(possibleMatches))
+        .build();
+    postMessageToTopic(PEN_MATCH_API_TOPIC.toString(), nextEvent);
+    log.info("message sent to PEN_MATCH_API_TOPIC for ADD_POSSIBLE_MATCH Event.");
+  }
+
+  private boolean isStudentPossibleMatchAddRequired(PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
+    return !CollectionUtils.isEmpty(penRequestBatchUserActionsSagaData.getMatchedStudentIDList());
+  }
+
+  private boolean isStudentPossibleMatchAddNotRequired(PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
+    return CollectionUtils.isEmpty(penRequestBatchUserActionsSagaData.getMatchedStudentIDList());
   }
 
   /**
@@ -69,10 +116,10 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
 
     var transactionID = saga.getSagaId().toString();
     Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-                           .eventType(GET_NEXT_PEN_NUMBER)
-                           .replyTo(getTopicToSubscribe())
-                           .eventPayload(transactionID)
-                           .build();
+        .eventType(GET_NEXT_PEN_NUMBER)
+        .replyTo(getTopicToSubscribe())
+        .eventPayload(transactionID)
+        .build();
     postMessageToTopic(PEN_SERVICES_API_TOPIC.toString(), nextEvent);
     log.info("message sent to PEN_SERVICES_API_TOPIC for GET_NEXT_PEN_NUMBER Event. :: {}", saga.getSagaId());
   }
@@ -87,14 +134,10 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
    */
   public void createStudent(Event event, Saga saga, PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) throws JsonProcessingException {
     var pen = event.getEventPayload();
-
     var student = studentMapper.toStudent(penRequestBatchUserActionsSagaData);
     student.setPen(pen);
     student.setDemogCode("A");
     student.setHistoryActivityCode(REQ_NEW.getCode());
-    student.setStudentTwinAssociations(penRequestBatchUserActionsSagaData.getTwinStudentIDs().stream().map(studentID ->
-        new StudentTwinAssociation(studentID, TwinReasonCodes.PENCREATE.getCode())).collect(toList()));
-
     penRequestBatchUserActionsSagaData.setAssignedPEN(pen);
     saga.setSagaState(CREATE_STUDENT.toString());
     saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchUserActionsSagaData));
@@ -102,10 +145,10 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
     getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
     Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-                           .eventType(CREATE_STUDENT)
-                           .replyTo(getTopicToSubscribe())
-                           .eventPayload(JsonUtil.getJsonStringFromObject(student))
-                           .build();
+        .eventType(CREATE_STUDENT)
+        .replyTo(getTopicToSubscribe())
+        .eventPayload(JsonUtil.getJsonStringFromObject(student))
+        .build();
     postMessageToTopic(STUDENT_API_TOPIC.toString(), nextEvent);
     log.info("message sent to STUDENT_API_TOPIC for CREATE_STUDENT Event. :: {}", saga.getSagaId());
   }
@@ -132,7 +175,6 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
     penRequestBatchUserActionsSagaData.setStudentID(student.getStudentID());
     return prbStudent;
   }
-
 
 
 }

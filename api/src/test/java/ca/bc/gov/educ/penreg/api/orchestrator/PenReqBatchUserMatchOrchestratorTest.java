@@ -11,12 +11,12 @@ import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.StudentTwin;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.PossibleMatch;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,8 +37,7 @@ import java.util.concurrent.TimeoutException;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_MATCHED;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -48,7 +47,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
 
-  
+
   /**
    * The Repository.
    */
@@ -124,12 +123,12 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
   public void testGetStudentByPen_givenEventAndSagaData_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
     var invocations = mockingDetails(messagePublisher).getInvocations().size();
     var event = Event.builder()
-                     .eventType(EventType.INITIATED)
-                     .eventOutcome(EventOutcome.INITIATE_SUCCESS)
-                     .sagaId(saga.getSagaId())
-                     .build();
+        .eventType(EventType.INITIATED)
+        .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+        .sagaId(saga.getSagaId())
+        .build();
     orchestrator.handleEvent(event);
-    verify(messagePublisher, atMost(invocations+1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), eventCaptor.capture());
+    verify(messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), eventCaptor.capture());
     var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(GET_STUDENT);
     assertThat(newEvent.getEventPayload()).isEqualTo(TEST_PEN);
@@ -147,13 +146,13 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
     var studentPayload = Student.builder().studentID(studentID).pen(TEST_PEN).legalFirstName("Jack").build();
     var invocations = mockingDetails(messagePublisher).getInvocations().size();
     var event = Event.builder()
-                     .eventType(GET_STUDENT)
-                     .eventOutcome(EventOutcome.STUDENT_FOUND)
-                     .sagaId(saga.getSagaId())
-                     .eventPayload(JsonUtil.getJsonStringFromObject(studentPayload))
-                     .build();
+        .eventType(GET_STUDENT)
+        .eventOutcome(EventOutcome.STUDENT_FOUND)
+        .sagaId(saga.getSagaId())
+        .eventPayload(JsonUtil.getJsonStringFromObject(studentPayload))
+        .build();
     orchestrator.handleEvent(event);
-    verify(messagePublisher, atMost(invocations+1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), eventCaptor.capture());
+    verify(messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), eventCaptor.capture());
     var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(UPDATE_STUDENT);
     var student = JsonUtil.getJsonObjectFromString(Student.class, newEvent.getEventPayload());
@@ -174,32 +173,31 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
   }
 
   @Test
-  public void testHandleEvent_givenEventAndSagaDataWithTwins_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
+  public void testHandleEvent_givenEventAndSagaDataWithTwins_shouldPostEventToMatchApi() throws IOException, InterruptedException, TimeoutException {
     var studentPayload = Student.builder().studentID(studentID).pen(TEST_PEN).legalFirstName("Jack").build();
     var invocations = mockingDetails(messagePublisher).getInvocations().size();
     var event = Event.builder()
-                     .eventType(UPDATE_STUDENT)
-                     .eventOutcome(EventOutcome.STUDENT_UPDATED)
-                     .sagaId(saga.getSagaId())
-                     .eventPayload(JsonUtil.getJsonStringFromObject(studentPayload))
-                     .build();
+        .eventType(UPDATE_STUDENT)
+        .eventOutcome(EventOutcome.STUDENT_UPDATED)
+        .sagaId(saga.getSagaId())
+        .eventPayload(JsonUtil.getJsonStringFromObject(studentPayload))
+        .build();
     orchestrator.handleEvent(event);
-    verify(messagePublisher, atMost(invocations+1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), eventCaptor.capture());
+    verify(messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(PEN_MATCH_API_TOPIC.toString()), eventCaptor.capture());
     var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
-    assertThat(newEvent.getEventType()).isEqualTo(ADD_STUDENT_TWINS);
+    assertThat(newEvent.getEventType()).isEqualTo(ADD_POSSIBLE_MATCH);
     final ObjectMapper objectMapper = new ObjectMapper();
-    CollectionType javaType = objectMapper.getTypeFactory()
-                                          .constructCollectionType(List.class, StudentTwin.class);
-    List<StudentTwin> studentTwins = objectMapper.readValue(newEvent.getEventPayload(), javaType);
-    assertThat(studentTwins).size().isEqualTo(1);
-    assertThat(studentTwins.get(0).getStudentID()).isEqualTo(studentID);
-    assertThat(studentTwins.get(0).getStudentTwinReasonCode()).isEqualTo(TwinReasonCodes.PEN_MATCH.getCode());
-    assertThat(studentTwins.get(0).getCreateUser()).isEqualTo("test");
-    assertThat(studentTwins.get(0).getUpdateUser()).isEqualTo("test");
+    List<PossibleMatch> possibleMatches = objectMapper.readValue(newEvent.getEventPayload(), new TypeReference<>() {
+    });
+    assertThat(possibleMatches).size().isEqualTo(1);
+    assertThat(possibleMatches.get(0).getStudentID()).isEqualTo(studentID);
+    assertThat(possibleMatches.get(0).getMatchReasonCode()).isEqualTo(TwinReasonCodes.PEN_MATCH.getCode());
+    assertThat(possibleMatches.get(0).getCreateUser()).isEqualTo("test");
+    assertThat(possibleMatches.get(0).getUpdateUser()).isEqualTo("test");
     var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     var currentSaga = sagaFromDB.get();
-    assertThat(currentSaga.getSagaState()).isEqualTo(ADD_STUDENT_TWINS.toString());
+    assertThat(currentSaga.getSagaState()).isEqualTo(ADD_POSSIBLE_MATCH.toString());
     assertThat(getPenRequestBatchUserActionsSagaDataFromJsonString(currentSaga.getPayload()).getAssignedPEN()).isEqualTo(TEST_PEN);
     var sagaStates = sagaService.findAllSagaStates(saga);
     assertThat(sagaStates.size()).isEqualTo(1);
@@ -210,10 +208,10 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
   @Test
   public void testHandleEvent_givenEventAndSagaDataWithoutTwins_shouldPostEventToBatchApi() throws IOException, InterruptedException, TimeoutException {
     var sagaFromDBtoUpdateOptional = sagaService.findSagaById(saga.getSagaId());
-    if(sagaFromDBtoUpdateOptional.isPresent()){
+    if (sagaFromDBtoUpdateOptional.isPresent()) {
       var sagaFromDBtoUpdate = sagaFromDBtoUpdateOptional.get();
       var payload = JsonUtil.getJsonObjectFromString(PenRequestBatchUserActionsSagaData.class, sagaFromDBtoUpdate.getPayload());
-      payload.setTwinStudentIDs(null);
+      payload.setMatchedStudentIDList(null);
       sagaFromDBtoUpdate.setPayload(JsonUtil.getJsonStringFromObject(payload));
       sagaService.updateAttachedEntityDuringSagaProcess(sagaFromDBtoUpdate);
       saga = sagaService.findSagaById(saga.getSagaId()).orElseThrow();
@@ -221,13 +219,13 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
     var studentPayload = Student.builder().studentID(studentID).pen(TEST_PEN).legalFirstName("Jack").build();
     var invocations = mockingDetails(messagePublisher).getInvocations().size();
     var event = Event.builder()
-                     .eventType(UPDATE_STUDENT)
-                     .eventOutcome(EventOutcome.STUDENT_UPDATED)
-                     .sagaId(saga.getSagaId())
-                     .eventPayload(JsonUtil.getJsonStringFromObject(studentPayload))
-                     .build();
+        .eventType(UPDATE_STUDENT)
+        .eventOutcome(EventOutcome.STUDENT_UPDATED)
+        .sagaId(saga.getSagaId())
+        .eventPayload(JsonUtil.getJsonStringFromObject(studentPayload))
+        .build();
     orchestrator.handleEvent(event);
-    verify(messagePublisher, atMost(invocations+1)).dispatchMessage(eq(PEN_REQUEST_BATCH_API_TOPIC.toString()), eventCaptor.capture());
+    verify(messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(PEN_REQUEST_BATCH_API_TOPIC.toString()), eventCaptor.capture());
     var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT);
     var prbStudent = new ObjectMapper().readValue(newEvent.getEventPayload(), PenRequestBatchStudent.class);
@@ -250,14 +248,14 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
     var invocations = mockingDetails(messagePublisher).getInvocations().size();
     var student = Student.builder().studentID(studentID).pen(TEST_PEN).legalFirstName("Jack").build();
     var event = Event.builder()
-                     .eventType(ADD_STUDENT_TWINS)
-                     .eventOutcome(EventOutcome.STUDENT_TWINS_ADDED)
-                     .sagaId(saga.getSagaId())
-                     .eventPayload(JsonUtil.getJsonStringFromObject(student))
-                     .build();
+        .eventType(ADD_POSSIBLE_MATCH)
+        .eventOutcome(EventOutcome.POSSIBLE_MATCH_ADDED)
+        .sagaId(saga.getSagaId())
+        .eventPayload(JsonUtil.getJsonStringFromObject(student))
+        .build();
     sagaData.setAssignedPEN(TEST_PEN);
     orchestrator.handleEvent(event);
-    verify(messagePublisher, atMost(invocations+1)).dispatchMessage(eq(PEN_REQUEST_BATCH_API_TOPIC.toString()), eventCaptor.capture());
+    verify(messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(PEN_REQUEST_BATCH_API_TOPIC.toString()), eventCaptor.capture());
     var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT);
     var prbStudent = new ObjectMapper().readValue(newEvent.getEventPayload(), PenRequestBatchStudent.class);
@@ -270,7 +268,7 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
     assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
     var sagaStates = sagaService.findAllSagaStates(saga);
     assertThat(sagaStates.size()).isEqualTo(1);
-    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.ADD_STUDENT_TWINS.toString());
-    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_TWINS_ADDED.toString());
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(ADD_POSSIBLE_MATCH.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.POSSIBLE_MATCH_ADDED.toString());
   }
 }

@@ -38,9 +38,9 @@ public abstract class BaseOrchestratorTest {
         "    \"penRequestBatchID\": \"" + penRequestBatchID + "\",\n" +
         "    \"penRequestBatchStudentID\": \"" + penRequestBatchStudentID + "\",\n" +
         "    \"legalFirstName\": \"Jack\",\n" +
-        "    \"mincode\": \""+ mincode + "\",\n" +
+        "    \"mincode\": \"" + mincode + "\",\n" +
         "    \"genderCode\": \"X\",\n" +
-        "    \"twinStudentIDs\": [\"" + twinStudentID + "\"]\n" +
+        "    \"matchedStudentIDList\": [\"" + twinStudentID + "\"]\n" +
         "  }";
   }
 
