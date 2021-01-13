@@ -11,8 +11,8 @@ import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,6 +27,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
@@ -34,8 +35,8 @@ import java.util.concurrent.TimeoutException;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_UNMATCH_PROCESSING_SAGA;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_MATCH_API_TOPIC;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -119,24 +120,22 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
   }
 
   @Test
-  public void testHandleEvent_givenEventAndSagaDataWithTwins_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
+  public void testHandleEvent_givenEventAndSagaDataWithTwins_shouldPostEventToPenMatchApi() throws IOException, InterruptedException, TimeoutException {
     var invocations = mockingDetails(messagePublisher).getInvocations().size();
     var event = Event.builder()
-                     .eventType(INITIATED)
-                     .eventOutcome(EventOutcome.INITIATE_SUCCESS)
-                     .sagaId(saga.getSagaId())
-                     .eventPayload(JsonUtil.getJsonStringFromObject(sagaData))
-                     .build();
+        .eventType(INITIATED)
+        .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+        .sagaId(saga.getSagaId())
+        .eventPayload(JsonUtil.getJsonStringFromObject(sagaData))
+        .build();
     orchestrator.handleEvent(event);
-    verify(messagePublisher, atMost(invocations+1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), eventCaptor.capture());
+    verify(messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(PEN_MATCH_API_TOPIC.toString()), eventCaptor.capture());
     var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(DELETE_POSSIBLE_MATCH);
-    final ObjectMapper objectMapper = new ObjectMapper();
-    CollectionType javaType = objectMapper.getTypeFactory()
-                                          .constructCollectionType(List.class, UUID.class);
-    List<UUID> studentTwinIDs = objectMapper.readValue(newEvent.getEventPayload(), javaType);
-    assertThat(studentTwinIDs).size().isEqualTo(1);
-    assertThat(studentTwinIDs.get(0)).isEqualTo(UUID.fromString(studentTwinID));
+    List<Map<String, UUID>> payload = new ObjectMapper().readValue(newEvent.getEventPayload(), new TypeReference<>() {
+    });
+    assertThat(payload).size().isEqualTo(1);
+    assertThat(payload.get(0)).containsKey("matchedStudentID").containsValue(UUID.fromString(studentTwinID));
     var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     var currentSaga = sagaFromDB.get();
@@ -222,6 +221,7 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
         "    \"createUser\": \"test\",\n" +
         "    \"updateUser\": \"test\",\n" +
         "    \"penRequestBatchID\": \"" + penRequestBatchID + "\",\n" +
+        "    \"studentID\": \"" + UUID.randomUUID().toString() + "\",\n" +
         "    \"penRequestBatchStudentID\": \"" + penRequestBatchStudentID + "\",\n" +
         "    \"legalFirstName\": \"Jack\",\n" +
         "    \"mincode\": \"" + mincode + "\",\n" +

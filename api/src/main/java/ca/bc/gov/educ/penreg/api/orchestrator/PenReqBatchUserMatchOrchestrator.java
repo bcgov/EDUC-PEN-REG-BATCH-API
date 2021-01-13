@@ -53,19 +53,19 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
     stepBuilder()
         .begin(GET_STUDENT, this::getStudentByPen)
         .step(GET_STUDENT, STUDENT_FOUND, UPDATE_STUDENT, this::updateStudent)
-        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isStudentTwinAddRequired, ADD_POSSIBLE_MATCH, this::addPossibleMatchToStudent)
-        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isNotStudentTwinAddRequired, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
+        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isPossibleMatchAddRequired, ADD_POSSIBLE_MATCH, this::addPossibleMatchToStudent)
+        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isPossibleMatchAddNotRequired, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
         .step(ADD_POSSIBLE_MATCH, POSSIBLE_MATCH_ADDED, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
         .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_UPDATED)
         .or()
         .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_NOT_FOUND, this::logPenRequestBatchStudentNotFound);
   }
 
-  private boolean isStudentTwinAddRequired(PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
-    return ! isNotStudentTwinAddRequired(penRequestBatchUserActionsSagaData);
+  private boolean isPossibleMatchAddRequired(PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
+    return !isPossibleMatchAddNotRequired(penRequestBatchUserActionsSagaData);
   }
 
-  private boolean isNotStudentTwinAddRequired(PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
+  private boolean isPossibleMatchAddNotRequired(PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
     return CollectionUtils.isEmpty(penRequestBatchUserActionsSagaData.getMatchedStudentIDList());
   }
 
