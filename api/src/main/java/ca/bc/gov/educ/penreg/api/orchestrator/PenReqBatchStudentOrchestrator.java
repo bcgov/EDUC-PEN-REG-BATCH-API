@@ -9,7 +9,10 @@ import ca.bc.gov.educ.penreg.api.model.SagaEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentOrchestratorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
-import ca.bc.gov.educ.penreg.api.struct.*;
+import ca.bc.gov.educ.penreg.api.struct.Event;
+import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -141,7 +144,9 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
       penRequestBatchStudentSagaData.setPenMatchResult(penMatchResult); // update the original payload with response from PEN_MATCH_API
       saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchStudentSagaData)); // save the updated payload to DB...
       getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
+
       eventOptional = getPenRequestBatchStudentOrchestratorService().processPenMatchResult(saga, penRequestBatchStudentSagaData, penMatchResult);
+
       penRequestBatchStudentSagaData.setIsPENMatchResultsProcessed(true);
       saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchStudentSagaData)); // save the updated payload to DB...
       getSagaService().updateAttachedEntityDuringSagaProcess(saga);
