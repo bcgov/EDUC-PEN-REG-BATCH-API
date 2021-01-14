@@ -160,7 +160,6 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
     assertThat(student.getMincode()).isEqualTo(mincode);
     assertThat(student.getLocalID()).isEqualTo("20345678");
     assertThat(student.getGradeCode()).isEqualTo("01");
-    assertThat(student.getStudentTwinAssociations()).isNull();
     var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     var currentSaga = sagaFromDB.get();
