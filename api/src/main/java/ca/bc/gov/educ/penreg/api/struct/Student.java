@@ -11,7 +11,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * The type Student.
@@ -152,8 +151,6 @@ public class Student implements Serializable {
   String updateUser;
 
   String historyActivityCode;
-  /**
-   * The Twins
-   */
-  private List<StudentTwinAssociation> studentTwinAssociations;
+
+  String trueStudentID;
 }
