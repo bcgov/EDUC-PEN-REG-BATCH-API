@@ -84,7 +84,7 @@ public class EventTaskScheduler {
   @Transactional
   public void processLoadedPenRequestBatchesForRepeats() {
     LockAssert.assertLocked();
-    getTaskSchedulerAsyncService().processLoadedPenRequestBatchesForRepeats();
+    getTaskSchedulerAsyncService().processLoadedPenRequestBatchesForDuplicatesAndRepeats();
   }
 
   @Scheduled(cron = "0/1 * * * * *")

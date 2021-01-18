@@ -45,7 +45,12 @@ public enum PenRequestBatchStudentStatusCodes {
   /**
    * Info requested request batch student status codes.
    */
-  INFOREQ("INFOREQ");
+  INFOREQ("INFOREQ"),
+
+  /**
+   * Duplicate request batch student status codes.
+   */
+  DUPLICATE("DUPLICATE");
 
   /**
    * The constant codeMap.

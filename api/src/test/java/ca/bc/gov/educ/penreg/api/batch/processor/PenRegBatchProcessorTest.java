@@ -37,6 +37,7 @@ import java.util.Random;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.DUPLICATE;
 import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.K12;
 import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.PSI;
 import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils.createBatchStudents;
@@ -277,6 +278,44 @@ public class PenRegBatchProcessorTest {
     for (PenRequestBatchStudentEntity student : students) {
       assertThat(counter++).isEqualTo(student.getRecordNumber());
     }
+  }
+
+  @Test
+  @Transactional
+  public void testCheckBatchForDuplicateRequests_Given6RowFileWithOneDuplicate_ShouldShowDuplicate() throws IOException {
+    File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_Duplicate.txt")).getFile());
+    byte[] bFile = Files.readAllBytes(file.toPath());
+    var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_Duplicate").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
+    var result = repository.findAll();
+    assertThat(result.size()).isEqualTo(1);
+    var entity = result.get(0);
+    assertThat(entity.getPenRequestBatchID()).isNotNull();
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
+    assertThat(entity.getPenRequestBatchStatusReason()).isNull();
+    assertThat(entity.getRepeatCount()).isZero();
+    var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
+    assertThat(students.size()).isEqualTo(6);
+
+    students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
+    log.error("students {}",students);
+    var counter = 1;
+    var dupCount = 0;
+    for (PenRequestBatchStudentEntity student : students) {
+      assertThat(counter++).isEqualTo(student.getRecordNumber());
+      if(student.getPenRequestBatchStudentStatusCode().equals(DUPLICATE.getCode())) {
+        dupCount++;
+      }
+    }
+    assertThat(dupCount).isEqualTo(1);
   }
 
   /**

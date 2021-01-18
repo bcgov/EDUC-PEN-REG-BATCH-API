@@ -98,15 +98,42 @@ public class PenRequestBatchFileService {
   }
 
   /**
+   * Check a set of pen request batch student entities for duplicates
+   * @param studentEntities - the set of entities to check
+   */
+  private void checkBatchForDuplicateRequests(Set<PenRequestBatchStudentEntity> studentEntities) {
+    Map<String, PenRequestBatchStudentEntity> entityMap = new HashMap<>();
+    studentEntities.forEach(entity -> {
+      var hashKey = constructKeyForDuplicateEntity(entity);
+      if(entityMap.containsKey(hashKey)) {
+        entity.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.DUPLICATE.getCode());
+        getPenRequestBatchStudentService().saveAttachedEntity(entity);
+      } else {
+        entityMap.put(hashKey, entity);
+      }
+    });
+  }
+
+  /**
+   * Uses the logic for when a student request is a duplicate to construct a key for using in hash map
+   * @param entity - the entity
+   * @return - the key
+   */
+  private String constructKeyForDuplicateEntity(PenRequestBatchStudentEntity entity) {
+    return entity.getLegalLastName() + entity.getLegalFirstName() + entity.getDob();
+  }
+  /**
    * Filter out repeat requests
    *
    * @param penRequestBatchEntity the pen request batch entity
    * @return the list of filtered requests
    */
-  public Set<PenRequestBatchStudentEntity> filterRepeatRequests(@NonNull String guid, PenRequestBatchEntity penRequestBatchEntity) {
+  public Set<PenRequestBatchStudentEntity> filterDuplicatesAndRepeatRequests(@NonNull String guid, PenRequestBatchEntity penRequestBatchEntity) {
     Set<PenRequestBatchStudentEntity> studentEntities = penRequestBatchEntity.getPenRequestBatchStudentEntities();
     long numRepeats = 0;
     var filteredStudentEntities = new HashSet<PenRequestBatchStudentEntity>();
+
+    checkBatchForDuplicateRequests(studentEntities);
 
     for(PenRequestBatchStudentEntity penRequestBatchStudent : studentEntities) {
       List<PenRequestBatchStudentEntity> repeatRequests = penRequestBatchStudentService.findAllRepeatsGivenBatchStudent(penRequestBatchStudent);
