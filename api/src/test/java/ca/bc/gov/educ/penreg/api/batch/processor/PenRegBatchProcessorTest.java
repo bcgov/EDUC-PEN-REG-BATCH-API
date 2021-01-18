@@ -308,12 +308,14 @@ public class PenRegBatchProcessorTest {
     students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
     log.error("students {}",students);
     var counter = 1;
+    var dupCount = 0;
     for (PenRequestBatchStudentEntity student : students) {
       assertThat(counter++).isEqualTo(student.getRecordNumber());
-      if(counter == 6) {
-        assertThat(student.getPenRequestBatchStudentStatusCode()).isEqualTo(DUPLICATE.getCode());
+      if(student.getPenRequestBatchStudentStatusCode().equals(DUPLICATE.getCode())) {
+        dupCount++;
       }
     }
+    assertThat(dupCount).isEqualTo(1);
   }
 
   /**
