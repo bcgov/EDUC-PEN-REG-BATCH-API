@@ -98,15 +98,45 @@ public class PenRequestBatchFileService {
   }
 
   /**
+   * Check a set of pen request batch student entities for duplicates
+   * @param studentEntities - the set of entities to check
+   */
+  private void checkBatchForDuplicateRequests(Set<PenRequestBatchStudentEntity> studentEntities) {
+    studentEntities.forEach(entity -> studentEntities.forEach(secondEntity -> {
+      if (duplicates(entity, secondEntity)) {
+        entity.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.DUPLICATE.getCode());
+        getPenRequestBatchStudentService().saveAttachedEntity(entity);
+      }
+    }));
+  }
+
+  /**
+   * Compare two pen request batch student request entities to see if they match the duplicate criteria
+   * @param firstStudent - first entity to compare
+   * @param secondStudent - second entity to compare
+   * @return - the boolean result
+   */
+  private boolean duplicates(PenRequestBatchStudentEntity firstStudent, PenRequestBatchStudentEntity secondStudent) {
+    if(firstStudent == null || secondStudent == null) {
+      return false;
+    }
+    return firstStudent.getLegalLastName().equals(secondStudent.getLegalLastName())
+            && firstStudent.getLegalFirstName().equals(secondStudent.getLegalFirstName())
+            && firstStudent.getDob().equals(secondStudent.getDob())
+            && firstStudent.getPenRequestBatchStudentID() != secondStudent.getPenRequestBatchStudentID();
+  }
+  /**
    * Filter out repeat requests
    *
    * @param penRequestBatchEntity the pen request batch entity
    * @return the list of filtered requests
    */
-  public Set<PenRequestBatchStudentEntity> filterRepeatRequests(@NonNull String guid, PenRequestBatchEntity penRequestBatchEntity) {
+  public Set<PenRequestBatchStudentEntity> filterDuplicatesAndRepeatRequests(@NonNull String guid, PenRequestBatchEntity penRequestBatchEntity) {
     Set<PenRequestBatchStudentEntity> studentEntities = penRequestBatchEntity.getPenRequestBatchStudentEntities();
     long numRepeats = 0;
     var filteredStudentEntities = new HashSet<PenRequestBatchStudentEntity>();
+
+    checkBatchForDuplicateRequests(studentEntities);
 
     for(PenRequestBatchStudentEntity penRequestBatchStudent : studentEntities) {
       List<PenRequestBatchStudentEntity> repeatRequests = penRequestBatchStudentService.findAllRepeatsGivenBatchStudent(penRequestBatchStudent);
