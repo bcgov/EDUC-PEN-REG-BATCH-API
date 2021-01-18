@@ -267,11 +267,11 @@ public class EventTaskSchedulerAsyncService {
    */
   @Async("taskExecutor")
   @Transactional
-  public void processLoadedPenRequestBatchesForRepeats() {
+  public void processLoadedPenRequestBatchesForDuplicatesAndRepeats() {
     var penReqBatches = getPenRequestBatchRepository().findByPenRequestBatchStatusCode(LOADED.getCode());
     log.debug("found :: {}  records to be checked for repeats", penReqBatches.size());
     if (!penReqBatches.isEmpty()) {
-      getPenRegBatchStudentRecordsProcessor().checkLoadedStudentRecordsForRepeats(penReqBatches);
+      getPenRegBatchStudentRecordsProcessor().checkLoadedStudentRecordsForDuplicatesAndRepeats(penReqBatches);
     }
   }
 

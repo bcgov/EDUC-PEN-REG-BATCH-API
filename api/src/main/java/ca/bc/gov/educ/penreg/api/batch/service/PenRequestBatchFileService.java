@@ -102,28 +102,16 @@ public class PenRequestBatchFileService {
    * @param studentEntities - the set of entities to check
    */
   private void checkBatchForDuplicateRequests(Set<PenRequestBatchStudentEntity> studentEntities) {
-    studentEntities.forEach(entity -> studentEntities.forEach(secondEntity -> {
-      if (duplicates(entity, secondEntity)) {
+    Map<String, PenRequestBatchStudentEntity> entityMap = new HashMap<>();
+    studentEntities.forEach(entity -> {
+      var hashKey = entity.getLegalLastName() + entity.getLegalFirstName() + entity.getDob();
+      if(entityMap.containsKey(hashKey)) {
         entity.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.DUPLICATE.getCode());
         getPenRequestBatchStudentService().saveAttachedEntity(entity);
+      } else {
+        entityMap.put(hashKey, entity);
       }
-    }));
-  }
-
-  /**
-   * Compare two pen request batch student request entities to see if they match the duplicate criteria
-   * @param firstStudent - first entity to compare
-   * @param secondStudent - second entity to compare
-   * @return - the boolean result
-   */
-  private boolean duplicates(PenRequestBatchStudentEntity firstStudent, PenRequestBatchStudentEntity secondStudent) {
-    if(firstStudent == null || secondStudent == null) {
-      return false;
-    }
-    return firstStudent.getLegalLastName().equals(secondStudent.getLegalLastName())
-            && firstStudent.getLegalFirstName().equals(secondStudent.getLegalFirstName())
-            && firstStudent.getDob().equals(secondStudent.getDob())
-            && firstStudent.getPenRequestBatchStudentID() != secondStudent.getPenRequestBatchStudentID();
+    });
   }
   /**
    * Filter out repeat requests

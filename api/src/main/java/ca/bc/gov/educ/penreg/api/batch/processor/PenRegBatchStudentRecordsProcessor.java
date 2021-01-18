@@ -88,7 +88,7 @@ public class PenRegBatchStudentRecordsProcessor {
    *
    * @param penRequestBatchEntities the list of pen request batch entities
    */
-  public void checkLoadedStudentRecordsForRepeats(List<PenRequestBatchEntity> penRequestBatchEntities) {
+  public void checkLoadedStudentRecordsForDuplicatesAndRepeats(List<PenRequestBatchEntity> penRequestBatchEntities) {
     penRequestBatchEntities.forEach(penRequestBatchEntity -> getPenRequestBatchFileService().filterDuplicatesAndRepeatRequests(penRequestBatchEntity.getPenRequestBatchID().toString(), penRequestBatchEntity));
   }
 
