@@ -104,7 +104,7 @@ public class PenRequestBatchFileService {
   private void checkBatchForDuplicateRequests(Set<PenRequestBatchStudentEntity> studentEntities) {
     Map<String, PenRequestBatchStudentEntity> entityMap = new HashMap<>();
     studentEntities.forEach(entity -> {
-      var hashKey = entity.getLegalLastName() + entity.getLegalFirstName() + entity.getDob();
+      var hashKey = constructKeyForDuplicateEntity(entity);
       if(entityMap.containsKey(hashKey)) {
         entity.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.DUPLICATE.getCode());
         getPenRequestBatchStudentService().saveAttachedEntity(entity);
@@ -112,6 +112,15 @@ public class PenRequestBatchFileService {
         entityMap.put(hashKey, entity);
       }
     });
+  }
+
+  /**
+   * Uses the logic for when a student request is a duplicate to construct a key for using in hash map
+   * @param entity - the entity
+   * @return - the key
+   */
+  private String constructKeyForDuplicateEntity(PenRequestBatchStudentEntity entity) {
+    return entity.getLegalLastName() + entity.getLegalFirstName() + entity.getDob();
   }
   /**
    * Filter out repeat requests
