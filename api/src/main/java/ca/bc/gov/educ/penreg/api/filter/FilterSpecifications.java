@@ -51,7 +51,13 @@ public class FilterSpecifications<E, T extends Comparable<T>> {
   private Path<T> getFieldValue(FilterCriteria<T> filterCriteria, Root<E> root, CriteriaQuery criteriaQuery,Associations associationNames) {
 
   	//fetch all associations in the orderBy statement, execute fetch only once for one association
-		associationNames.getSortAssociations().forEach(association -> root.fetch(association, JoinType.INNER));
+		associationNames.getSortAssociations().forEach(association -> {
+			if (isOneToManyRelation(association)) {
+				root.join(association, JoinType.INNER);
+			} else {
+				root.fetch(association, JoinType.INNER);
+			}
+		});
 		associationNames.getSortAssociations().clear();
 
 		var names = filterCriteria.getFieldName().split("\\.");
@@ -61,7 +67,7 @@ public class FilterSpecifications<E, T extends Comparable<T>> {
 			if(join == null) {
 				//Hibernate may run a count query to determine the number of results, and this can cause the 'the owner of the fetched association was not present in the select list' error.
 				//To avoid this error by checking the return type of the query before using the fetch.
-				if (criteriaQuery.getResultType().equals(Long.class)) {
+				if (criteriaQuery.getResultType().equals(Long.class) || isOneToManyRelation(names[0])) {
 					join = root.join(names[0], JoinType.INNER);
 				} else {
 					join = (Join<Object, Object>) root.fetch(names[0], JoinType.INNER);
@@ -73,6 +79,10 @@ public class FilterSpecifications<E, T extends Comparable<T>> {
 		}
 
 		return root.get(filterCriteria.getFieldName());
+	}
+
+	private boolean isOneToManyRelation(String association) {
+		return association.endsWith("s");
 	}
 
   /**

@@ -13,7 +13,7 @@ import java.util.UUID;
  * The interface Pen request batch repository.
  */
 @Repository
-public interface PenRequestBatchRepository extends CrudRepository<PenRequestBatchEntity, UUID>, JpaSpecificationExecutor<PenRequestBatchEntity> {
+public interface PenRequestBatchRepository extends CrudRepository<PenRequestBatchEntity, UUID>, JpaSpecificationExecutor<PenRequestBatchEntity>, PenRequestBatchSearchRepository {
 
   /**
    * Find all list.

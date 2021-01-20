@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.*;
+import javax.persistence.Tuple;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -86,11 +87,11 @@ public class PenRequestBatchService {
    * @return the completable future
    */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-  public CompletableFuture<Page<PenRequestBatchEntity>> findAll(Specification<PenRequestBatchEntity> penRegBatchSpecs, Integer pageNumber, Integer pageSize, List<Sort.Order> sorts) {
+  public CompletableFuture<Page<Tuple>> findAll(Specification<PenRequestBatchEntity> penRegBatchSpecs, Integer pageNumber, Integer pageSize, List<Sort.Order> sorts) {
     return CompletableFuture.supplyAsync(() -> {
       Pageable paging = PageRequest.of(pageNumber, pageSize, Sort.by(sorts));
       try {
-        return getRepository().findAll(penRegBatchSpecs, paging);
+        return getRepository().findByAttributesAndPenRequestBatchStudent(penRegBatchSpecs, paging);
       } catch (final Exception ex) {
         throw new CompletionException(ex);
       }

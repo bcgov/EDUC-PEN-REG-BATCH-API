@@ -91,7 +91,7 @@ public interface PenRequestBatchAPIEndpoint {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR.")})
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to support data table view in frontend, with sort, filter and pagination.", description = "This API endpoint exposes flexible way to query the entity by leveraging JPA specifications.")
-  CompletableFuture<Page<PenRequestBatch>> findAll(@RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
+  CompletableFuture<Page<PenRequestBatchSearch>> findAll(@RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
                                                    @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
                                                    @RequestParam(name = "sort", defaultValue = "") String sortCriteriaJson,
                                                    @ArraySchema(schema = @Schema(name = "searchCriteriaList",
