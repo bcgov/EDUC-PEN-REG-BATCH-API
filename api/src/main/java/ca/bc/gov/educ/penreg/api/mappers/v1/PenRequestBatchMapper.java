@@ -5,6 +5,7 @@ import ca.bc.gov.educ.penreg.api.mappers.LocalDateTimeMapper;
 import ca.bc.gov.educ.penreg.api.mappers.UUIDMapper;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchSearch;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
@@ -29,6 +30,13 @@ public interface PenRequestBatchMapper {
    */
   PenRequestBatch toStructure(PenRequestBatchEntity penRequestBatchEntity);
 
+  /**
+   * To structure pen request batch search.
+   *
+   * @param penRequestBatchEntity the pen request batch entity
+   * @return the pen request batch search
+   */
+  PenRequestBatchSearch toSearchStructure(PenRequestBatchEntity penRequestBatchEntity);
 
   /**
    * To model pen request batch entity.
