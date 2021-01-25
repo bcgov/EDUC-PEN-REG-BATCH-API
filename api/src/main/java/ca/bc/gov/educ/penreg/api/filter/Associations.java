@@ -74,4 +74,8 @@ public class Associations {
     joinedCount = 0;
     joinedSearchAssociations.clear();
   }
+
+  public boolean hasSearchAssociations() {
+    return searchAssociations.size() > 0;
+  }
 }

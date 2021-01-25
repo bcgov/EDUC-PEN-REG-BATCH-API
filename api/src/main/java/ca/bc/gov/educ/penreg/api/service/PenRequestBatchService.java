@@ -18,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.*;
-import javax.persistence.Tuple;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -87,11 +87,32 @@ public class PenRequestBatchService {
    * @return the completable future
    */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-  public CompletableFuture<Page<Tuple>> findAll(Specification<PenRequestBatchEntity> penRegBatchSpecs, Integer pageNumber, Integer pageSize, List<Sort.Order> sorts) {
+  public CompletableFuture<Page<PenRequestBatchEntity>> findAll(Specification<PenRequestBatchEntity> penRegBatchSpecs, Integer pageNumber, Integer pageSize, List<Sort.Order> sorts) {
     return CompletableFuture.supplyAsync(() -> {
       Pageable paging = PageRequest.of(pageNumber, pageSize, Sort.by(sorts));
       try {
-        return getRepository().findByAttributesAndPenRequestBatchStudent(penRegBatchSpecs, paging);
+        return getRepository().findAll(penRegBatchSpecs, paging);
+      } catch (final Exception ex) {
+        throw new CompletionException(ex);
+      }
+    });
+  }
+
+  /**
+   * Find all by PenRequestBatchStudent completable future.
+   *
+   * @param penRegBatchSpecs the pen reg batch specs
+   * @param pageNumber       the page number
+   * @param pageSize         the page size
+   * @param sorts            the sorts
+   * @return the completable future
+   */
+  @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+  public CompletableFuture<Page<Pair<PenRequestBatchEntity, Long>>> findAllByPenRequestBatchStudent(@NonNull Specification<PenRequestBatchEntity> penRegBatchSpecs, Integer pageNumber, Integer pageSize, List<Sort.Order> sorts) {
+    return CompletableFuture.supplyAsync(() -> {
+      Pageable paging = PageRequest.of(pageNumber, pageSize, Sort.by(sorts));
+      try {
+        return getRepository().findByPenRequestBatchStudent(penRegBatchSpecs, paging);
       } catch (final Exception ex) {
         throw new CompletionException(ex);
       }

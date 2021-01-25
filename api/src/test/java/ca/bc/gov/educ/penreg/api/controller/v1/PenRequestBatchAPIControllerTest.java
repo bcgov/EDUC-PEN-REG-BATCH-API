@@ -400,13 +400,49 @@ public class PenRequestBatchAPIControllerTest {
     searches.add(Search.builder().searchCriteriaList(criteriaList).build());
     ObjectMapper objectMapper = new ObjectMapper();
     String criteriaJSON = objectMapper.writeValueAsString(searches);
+
+    Map<String, String> sortMap = Map.of(
+      "mincode", "ASC",
+      "submissionNumber", "ASC"
+    );
+    String sorts = objectMapper.writeValueAsString(sortMap);
+
+    MvcResult result = mockMvc
+      .perform(get("/api/v1/pen-request-batch/paginated").param("searchCriteriaList", criteriaJSON)
+        .param("pageNumber", "1")
+        .param("pageSize", "1")
+        .param("sort", sorts)
+        .contentType(APPLICATION_JSON))
+      .andReturn();
+    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)));
+  }
+
+  /**
+   * Test read pen request batch paginated given school name and student name should return status ok.
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
+  public void testReadPenRequestBatchPaginated_GivenSchoolNameAndStudentName_WithoutPageAndSortCriteria_ShouldReturnStatusOk() throws Exception {
+    String batchIDs = createBatchStudentRecords(2);
+
+    SearchCriteria criteria = SearchCriteria.builder().key("schoolName").operation(FilterOperation.STARTS_WITH).value("Brae").valueType(ValueType.STRING).build();
+    SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStudentEntities.legalLastName").condition(AND).operation(FilterOperation.STARTS_WITH).value("JO").valueType(ValueType.STRING).build();
+    List<SearchCriteria> criteriaList = new ArrayList<>();
+    criteriaList.add(criteria);
+    criteriaList.add(criteria2);
+    List<Search> searches = new LinkedList<>();
+    searches.add(Search.builder().searchCriteriaList(criteriaList).build());
+    ObjectMapper objectMapper = new ObjectMapper();
+    String criteriaJSON = objectMapper.writeValueAsString(searches);
+
     MvcResult result = mockMvc
       .perform(get("/api/v1/pen-request-batch/paginated").param("searchCriteriaList", criteriaJSON)
         .contentType(APPLICATION_JSON))
       .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(2)));
   }
-
 
   /**
    * Test read pen request batch paginated given school name and invalid student name should return empty list.

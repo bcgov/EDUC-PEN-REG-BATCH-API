@@ -160,8 +160,9 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     final ObjectMapper objectMapper = new ObjectMapper();
     final List<Sort.Order> sorts = new ArrayList<>();
     Specification<PenRequestBatchEntity> penRegBatchSpecs = null;
+    Associations associationNames;
     try {
-      var associationNames = getSortCriteria(sortCriteriaJson, objectMapper, sorts);
+      associationNames = getSortCriteria(sortCriteriaJson, objectMapper, sorts);
       if (StringUtils.isNotBlank(searchList)) {
         List<Search> searches = objectMapper.readValue(searchList, new TypeReference<>() {
         });
@@ -176,13 +177,17 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     } catch (JsonProcessingException e) {
       throw new InvalidParameterException(e.getMessage());
     }
-    return getService().findAll(penRegBatchSpecs, pageNumber, pageSize, sorts).thenApplyAsync(page -> page.map((tuple) -> {
-        var batch = mapper.toSearchStructure(tuple.get(0, PenRequestBatchEntity.class));
-        if(tuple.getElements().size() > 1) {
-          batch.setSearchedCount(tuple.get(1, Long.class));
-        }
+
+    if(associationNames.hasSearchAssociations()) {
+      return getService().findAllByPenRequestBatchStudent(penRegBatchSpecs, pageNumber, pageSize, sorts).thenApplyAsync(page -> page.map((pair) -> {
+        var batch = mapper.toSearchStructure(pair.getFirst());
+        batch.setSearchedCount(pair.getSecond());
         return batch;
       }));
+    } else {
+      return getService().findAll(penRegBatchSpecs, pageNumber, pageSize, sorts).thenApplyAsync(page ->
+        page.map(mapper::toSearchStructure));
+    }
   }
 
   /**
