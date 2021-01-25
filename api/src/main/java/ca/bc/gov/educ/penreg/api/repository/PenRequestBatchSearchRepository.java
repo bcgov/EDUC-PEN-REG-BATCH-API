@@ -1,11 +1,11 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-
-import javax.persistence.Tuple;
+import org.springframework.data.util.Pair;
 
 /**
  * The interface Pen request batch search repository.
@@ -19,6 +19,6 @@ public interface PenRequestBatchSearchRepository {
    * @param pageable   the page and sort criteria
    * @return the page
    */
-  Page<Tuple> findByAttributesAndPenRequestBatchStudent(Specification<PenRequestBatchEntity> specification, Pageable pageable);
+  Page<Pair<PenRequestBatchEntity, Long>> findByPenRequestBatchStudent(@NonNull Specification<PenRequestBatchEntity> specification, Pageable pageable);
 
 }
