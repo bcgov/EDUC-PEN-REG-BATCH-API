@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.support;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
+import ca.bc.gov.educ.penreg.api.messaging.NatsConnection;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.schedulers.EventTaskScheduler;
 import io.nats.client.Connection;
@@ -66,5 +67,11 @@ public class MockConfiguration {
   @Primary
   public Connection connection() {
     return Mockito.mock(Connection.class);
+  }
+
+  @Bean
+  @Primary
+  public NatsConnection natsConnection() {
+    return Mockito.mock(NatsConnection.class);
   }
 }
