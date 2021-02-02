@@ -55,4 +55,13 @@ public class ApplicationProperties {
   @Value("${url.api.school}")
   private String schoolApiURL;
 
+  @Value("${nats.server}")
+  private String server;
+
+  @Value("${nats.maxReconnect}")
+  private int maxReconnect;
+
+  @Value("${nats.connectionName}")
+  private String connectionName;
+
 }
