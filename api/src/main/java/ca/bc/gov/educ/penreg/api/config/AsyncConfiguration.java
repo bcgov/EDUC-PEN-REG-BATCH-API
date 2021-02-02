@@ -1,14 +1,14 @@
 package ca.bc.gov.educ.penreg.api.config;
 
 import ca.bc.gov.educ.penreg.api.util.ThreadFactoryBuilder;
+import org.jboss.threads.EnhancedQueueExecutor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableAsync;
 
+import java.time.Duration;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 @Configuration
 @EnableAsync
@@ -21,9 +21,9 @@ public class AsyncConfiguration {
    */
   @Bean(name = "subscriberExecutor")
   public Executor threadPoolTaskExecutor() {
-    ThreadFactory namedThreadFactory =
-      new ThreadFactoryBuilder().withNameFormat("message-subscriber-%d").get();
-    return Executors.newFixedThreadPool(10, namedThreadFactory);
+    return new EnhancedQueueExecutor.Builder()
+      .setThreadFactory(new ThreadFactoryBuilder().withNameFormat("message-subscriber-%d").get())
+      .setCorePoolSize(2).setMaximumPoolSize(10).setKeepAliveTime(Duration.ofSeconds(60)).build();
   }
 
   /**
@@ -33,8 +33,8 @@ public class AsyncConfiguration {
    */
   @Bean(name = "taskExecutor")
   public Executor controllerTaskExecutor() {
-    ThreadFactory namedThreadFactory =
-      new ThreadFactoryBuilder().withNameFormat("async-executor-%d").get();
-    return Executors.newFixedThreadPool(8, namedThreadFactory);
+    return new EnhancedQueueExecutor.Builder()
+      .setThreadFactory(new ThreadFactoryBuilder().withNameFormat("async-executor-%d").get())
+      .setCorePoolSize(2).setMaximumPoolSize(10).setKeepAliveTime(Duration.ofSeconds(60)).build();
   }
 }
