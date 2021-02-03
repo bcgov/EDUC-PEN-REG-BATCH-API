@@ -19,17 +19,18 @@ import static lombok.AccessLevel.PRIVATE;
 
 @Component
 @Slf4j
-public class MessageSubscriber extends MessagePubSub {
+public class MessageSubscriber {
 
   /**
    * The Handlers.
    */
   @Getter(PRIVATE)
   private final Map<String, EventHandler> handlerMap = new HashMap<>();
+  private final Connection connection;
 
   @Autowired
   public MessageSubscriber(final Connection con, final List<EventHandler> eventHandlers) {
-    super.connection = con;
+    this.connection = con;
     eventHandlers.forEach(handler -> {
       handlerMap.put(handler.getTopicToSubscribe(), handler);
       subscribe(handler.getTopicToSubscribe(), handler);
