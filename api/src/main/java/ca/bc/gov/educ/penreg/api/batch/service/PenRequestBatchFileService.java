@@ -101,15 +101,17 @@ public class PenRequestBatchFileService {
    * Check a set of pen request batch student entities for duplicates
    * @param studentEntities - the set of entities to check
    */
-  private void checkBatchForDuplicateRequests(Set<PenRequestBatchStudentEntity> studentEntities) {
+  private void checkBatchForDuplicateRequests(Set<PenRequestBatchStudentEntity> studentEntities, Set<PenRequestBatchStudentEntity> filteredStudentEntities) {
     Map<String, PenRequestBatchStudentEntity> entityMap = new HashMap<>();
     studentEntities.forEach(entity -> {
       var hashKey = constructKeyForDuplicateEntity(entity);
       if(entityMap.containsKey(hashKey)) {
         entity.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.DUPLICATE.getCode());
         getPenRequestBatchStudentService().saveAttachedEntity(entity);
+        studentEntities.remove(entity);
       } else {
         entityMap.put(hashKey, entity);
+        filteredStudentEntities.add(entity);
       }
     });
   }
@@ -133,7 +135,7 @@ public class PenRequestBatchFileService {
     long numRepeats = 0;
     var filteredStudentEntities = new HashSet<PenRequestBatchStudentEntity>();
 
-    checkBatchForDuplicateRequests(studentEntities);
+    checkBatchForDuplicateRequests(studentEntities, filteredStudentEntities);
 
     for(PenRequestBatchStudentEntity penRequestBatchStudent : studentEntities) {
       List<PenRequestBatchStudentEntity> repeatRequests = penRequestBatchStudentService.findAllRepeatsGivenBatchStudent(penRequestBatchStudent);
@@ -141,6 +143,7 @@ public class PenRequestBatchFileService {
       log.debug("{} :: Found {} repeat records for prb student record :: {}", guid, repeatRequests.size(), penRequestBatchStudent.getPenRequestBatchStudentID());
       if(!repeatRequests.isEmpty()) {
         updatePenRequestBatchStudentRequest(repeatRequests, penRequestBatchStudent);
+        filteredStudentEntities.remove(penRequestBatchStudent);
         numRepeats++;
       } else {
         filteredStudentEntities.add(penRequestBatchStudent);
