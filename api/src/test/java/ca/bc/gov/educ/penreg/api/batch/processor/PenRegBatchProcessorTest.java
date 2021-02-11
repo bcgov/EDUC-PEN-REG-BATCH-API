@@ -416,6 +416,35 @@ public class PenRegBatchProcessorTest {
     assertThat(students.size()).isZero();
   }
 
+
+  /**
+   * Test process pen reg batch file from tsw given record count does not match actual count should create record loadfail in db.
+   *
+   * @throws IOException the io exception
+   */
+  @Test
+  @Transactional
+  public void testProcessPenRegBatchFileFromTSW_BatchToBeHeldBackForSize_ShouldCreateRecordLOADHELDSIZEInDB() throws IOException {
+    File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5000_records_OK.txt")).getFile());
+    byte[] bFile = Files.readAllBytes(file.toPath());
+    var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5000_records_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
+    var result = repository.findAll();
+    assertThat(result.size()).isEqualTo(1);
+    var entity = result.get(0);
+    assertThat(entity.getPenRequestBatchID()).isNotNull();
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
+    assertThat(entity.getPenRequestBatchStatusReason()).isNull();
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(HOLD_SIZE.getCode());
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(HOLD_SIZE.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
+  }
+
   /**
    * Test process pen reg batch file from tsw given student record does not start with srm should create record loadfail in db.
    *
@@ -622,3 +651,4 @@ public class PenRegBatchProcessorTest {
         .concat(randomPostalCode);
   }
 }
+
