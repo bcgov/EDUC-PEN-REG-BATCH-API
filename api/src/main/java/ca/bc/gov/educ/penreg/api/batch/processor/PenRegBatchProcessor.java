@@ -11,6 +11,7 @@ import ca.bc.gov.educ.penreg.api.batch.struct.BatchFileTrailer;
 import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
 import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
 import lombok.Getter;
@@ -74,6 +75,12 @@ public class PenRegBatchProcessor {
   private final PenRequestBatchFileService penRequestBatchFileService;
 
   /**
+   * The Application properties.
+   */
+  @Getter
+  private final ApplicationProperties applicationProperties;
+
+  /**
    * The Rest utils.
    */
   private final RestUtils restUtils;
@@ -86,10 +93,11 @@ public class PenRegBatchProcessor {
    * @param restUtils                          the rest utils
    */
   @Autowired
-  public PenRegBatchProcessor(PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService, RestUtils restUtils) {
+  public PenRegBatchProcessor(PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService, RestUtils restUtils, ApplicationProperties applicationProperties) {
     this.penRegBatchStudentRecordsProcessor = penRegBatchStudentRecordsProcessor;
     this.penRequestBatchFileService = penRequestBatchFileService;
     this.restUtils = restUtils;
+    this.applicationProperties = applicationProperties;
   }
 
   /**
@@ -115,9 +123,14 @@ public class PenRegBatchProcessor {
       if (!StringUtils.isNumeric(studentCount) || Integer.parseInt(studentCount) != batchFile.getStudentDetails().size()) {
         throw new FileUnProcessableException(STUDENT_COUNT_MISMATCH, guid, studentCount, String.valueOf(batchFile.getStudentDetails().size()));
       }
-      var studentSagaDataSet = processLoadedRecordsInBatchFile(guid, batchFile, penWebBlobEntity);
-      getPenRegBatchStudentRecordsProcessor().publishUnprocessedStudentRecordsForProcessing(studentSagaDataSet);
 
+      //Running check for large batch file
+      if (batchFile.getStudentDetails().size() >= getApplicationProperties().getNumRecordsForBatchHold()) {
+        persistDataForHeldBackBatchOnSize(guid, penWebBlobEntity, batchFile);
+      }else {
+        var studentSagaDataSet = processLoadedRecordsInBatchFile(guid, batchFile, penWebBlobEntity);
+        getPenRegBatchStudentRecordsProcessor().publishUnprocessedStudentRecordsForProcessing(studentSagaDataSet);
+      }
     } catch (FileUnProcessableException fileUnProcessableException) { // system needs to persist the data in this case.
       persistDataWithException(guid, penWebBlobEntity, fileUnProcessableException);
     } catch (final Exception e) { // need to check what to do in case of general exception.
@@ -133,6 +146,17 @@ public class PenRegBatchProcessor {
     }
   }
 
+  /**
+   * Set batch to LOAD_HELD_SIZE status.
+   *
+   * @param guid                       the guid
+   * @param penWebBlobEntity           the pen web blob entity
+   */
+  private void persistDataForHeldBackBatchOnSize(@NonNull String guid, @NonNull PENWebBlobEntity penWebBlobEntity, BatchFile file) {
+    log.info("going to persist data for a batch held back for size :: {}", guid);
+    PenRequestBatchEntity entity = mapper.toPenReqBatchEntityLoadHeldForSize(penWebBlobEntity, file); // batch file can be processed further and persisted.
+    getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
+  }
 
   /**
    * Persist data with exception.

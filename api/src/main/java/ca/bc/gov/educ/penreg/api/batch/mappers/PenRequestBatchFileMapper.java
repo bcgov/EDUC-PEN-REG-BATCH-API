@@ -151,4 +151,49 @@ public interface PenRequestBatchFileMapper {
   @Mapping(target = "createUser", constant = PEN_REQUEST_BATCH_API)
   @Mapping(target = "createDate",expression = "java(java.time.LocalDateTime.now() )")
   PenRequestBatchEntity toPenReqBatchEntityLoadFail(PENWebBlobEntity penWebBlobEntity, String reason);
+
+  /**
+   * To pen req batch entity load held for size pen request batch entity.
+   *
+   * @param penWebBlobEntity the pen web blob entity
+   * @return the pen request batch entity
+   */
+  @Mapping(target = "penRequestBatchHistoryEntities", ignore = true)
+  @Mapping(target = "studentCount", ignore = true)
+  @Mapping(target = "mincode", ignore = true)
+  @Mapping(target = "unarchivedUser", ignore = true)
+  @Mapping(target = "unarchivedBatchStatusCode", ignore = true)
+  @Mapping(target = "unarchivedBatchChangedFlag", ignore = true)
+  @Mapping(target = "sisVendorName", ignore = true)
+  @Mapping(target = "sisProductName", ignore = true)
+  @Mapping(target = "sisProductID", ignore = true)
+  @Mapping(target = "schoolName", ignore = true)
+  @Mapping(target = "schoolGroupCode", ignore = true)
+  @Mapping(target = "repeatCount", ignore = true)
+  @Mapping(target = "processDate", ignore = true)
+  @Mapping(target = "penRequestBatchTypeCode", ignore = true)
+  @Mapping(target = "penRequestBatchStudentEntities", ignore = true)
+  @Mapping(target = "penRequestBatchStatusReason", ignore = true)
+  @Mapping(target = "penRequestBatchStatusCode", ignore = true)
+  @Mapping(target = "penRequestBatchID", ignore = true)
+  @Mapping(target = "officeNumber", ignore = true)
+  @Mapping(target = "ministryPRBSourceCode", ignore = true)
+  @Mapping(target = "matchedCount", ignore = true)
+  @Mapping(target = "newPenCount", ignore = true)
+  @Mapping(target = "fixableCount", ignore = true)
+  @Mapping(target = "extractDate", ignore = true)
+  @Mapping(target = "errorCount", ignore = true)
+  @Mapping(target = "email", ignore = true)
+  @Mapping(target = "contactName", ignore = true)
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getSubmissionNumber() ))", target = "submissionNumber")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getSourceApplication() ))", target = "sourceApplication")
+  @Mapping(source = "penWebBlobEntity.insertDateTime", target = "insertDate")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getFileType() ))", target = "fileType")
+  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getFileName() ))", target = "fileName")
+  @Mapping(source = "penWebBlobEntity.studentCount", target = "sourceStudentCount")
+  @Mapping(target = "updateUser", constant = PEN_REQUEST_BATCH_API)
+  @Mapping(target = "updateDate", expression = "java(java.time.LocalDateTime.now() )")
+  @Mapping(target = "createUser", constant = PEN_REQUEST_BATCH_API)
+  @Mapping(target = "createDate",expression = "java(java.time.LocalDateTime.now() )")
+  PenRequestBatchEntity toPenReqBatchEntityLoadHeldForSize(PENWebBlobEntity penWebBlobEntity, BatchFile file);
 }

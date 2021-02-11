@@ -15,8 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOAD_FAIL;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchTypeCode.SCHOOL;
 
 /**
@@ -100,6 +99,24 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
     entity.setPenRequestBatchStatusCode(LOAD_FAIL.getCode());
     entity.setPenRequestBatchStatusReason(reason);
     PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(entity, LOAD_FAIL.getCode(),STATUS_CHANGED.getCode(), reason);
+    entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
+    return entity;
+  }
+
+  /**
+   * To pen req batch entity load held back for size pen request batch entity.
+   *
+   * @param penWebBlobEntity the pen web blob entity
+   * @return the pen request batch entity
+   */
+  @Override
+  public PenRequestBatchEntity toPenReqBatchEntityLoadHeldForSize(PENWebBlobEntity penWebBlobEntity, BatchFile file) {
+    var entity = delegate.toPenReqBatchEntityLoadHeldForSize(penWebBlobEntity, file);
+    setDefaults(entity);
+    entity.setPenRequestBatchStatusCode(HOLD_SIZE.getCode());
+    entity.setStudentCount((long) file.getStudentDetails().size());
+    entity.setSchoolGroupCode(computeSchoolGroupCode(file.getBatchFileHeader().getMincode()));
+    PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(entity, HOLD_SIZE.getCode(),STATUS_CHANGED.getCode(), null);
     entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     return entity;
   }
