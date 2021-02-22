@@ -250,6 +250,7 @@ public class PenRegBatchProcessorTest {
   @Test
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given30RowValidFile_ShouldCreateRecordsInDB() throws IOException {
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(createMockSchool()));
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_30_records_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
@@ -283,6 +284,7 @@ public class PenRegBatchProcessorTest {
   @Test
   @Transactional
   public void testCheckBatchForDuplicateRequests_Given6RowFileWithOneDuplicate_ShouldShowDuplicate() throws IOException {
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(createMockSchool()));
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_Duplicate.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
@@ -326,6 +328,7 @@ public class PenRegBatchProcessorTest {
   @Test
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given30RowValidFileAndExistingRecords_ShouldShowRepeats() throws IOException {
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(createMockSchool()));
     createBatchStudents(repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
       (batch) -> batch.setProcessDate(LocalDateTime.now().minusDays(3)));
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
@@ -365,6 +368,7 @@ public class PenRegBatchProcessorTest {
   @Test
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given1000RowFile_ShouldCreateRecordsInDB() throws IOException {
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(createMockSchool()));
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_1000_records_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
@@ -395,6 +399,7 @@ public class PenRegBatchProcessorTest {
   @Test
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenRecordCountDoesNotMatchActualCount_ShouldCreateRecordLOADFAILInDB() throws IOException {
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(createMockSchool()));
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_10_records_student_count_mismatch.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
@@ -425,6 +430,7 @@ public class PenRegBatchProcessorTest {
   @Test
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_BatchToBeHeldBackForSize_ShouldCreateRecordLOADHELDSIZEInDB() throws IOException {
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(createMockSchool()));
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5000_records_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
@@ -453,6 +459,7 @@ public class PenRegBatchProcessorTest {
   @Test
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenStudentRecordDoesNotStartWithSRM_ShouldCreateRecordLOADFAILInDB() throws IOException {
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(createMockSchool()));
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_10_records_student_does_not_start_with_SRM_mismatch.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
@@ -482,6 +489,7 @@ public class PenRegBatchProcessorTest {
   @Test
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenmincodeStartsWith102_ShouldCreateRecordLOADEDInDB() throws IOException {
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(createMockSchool()));
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_PSI_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
@@ -517,6 +525,7 @@ public class PenRegBatchProcessorTest {
   @Test
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenmincodeDoesNotStartsWith102_ShouldCreateRecordLOADEDInDB() throws IOException {
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(createMockSchool()));
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
     var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
@@ -567,6 +576,95 @@ public class PenRegBatchProcessorTest {
     assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isEqualTo("Invalid Mincode in Header record.");
     var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
+  }
+
+  @Test
+  @Transactional
+  public void testProcessPenRegBatchFileFromTSW_GivenmincodeInvalidSchoolCloseDate_ShouldCreateRecordLOADFAILInDB() throws IOException {
+    School school = createMockSchool();
+    school.setDateClosed("19960601");
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(school));
+    File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
+    byte[] bFile = Files.readAllBytes(file.toPath());
+    var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
+    var result = repository.findAll();
+    assertThat(result.size()).isEqualTo(1);
+    var entity = result.get(0);
+    assertThat(entity.getPenRequestBatchID()).isNotNull();
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(entity.getSchoolGroupCode()).isNull();
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isEqualTo("Invalid Mincode in Header record - school is closed.");
+    var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
+    assertThat(students.size()).isZero();
+  }
+
+  @Test
+  @Transactional
+  public void testProcessPenRegBatchFileFromTSW_GivenmincodeInvalidSchoolOpenDate_ShouldCreateRecordLOADFAILInDB() throws IOException {
+    School school = createMockSchool();
+    school.setDateOpened("20240101");
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(school));
+    File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
+    byte[] bFile = Files.readAllBytes(file.toPath());
+    var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
+    var result = repository.findAll();
+    assertThat(result.size()).isEqualTo(1);
+    var entity = result.get(0);
+    assertThat(entity.getPenRequestBatchID()).isNotNull();
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(entity.getSchoolGroupCode()).isNull();
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isEqualTo("Invalid Mincode in Header record - school is closed.");
+    var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
+    assertThat(students.size()).isZero();
+  }
+
+  @Test
+  @Transactional
+  public void testProcessPenRegBatchFileFromTSW_GivenmincodeInvalidSchoolOpenDateFormat_ShouldCreateRecordLOADFAILInDB() throws IOException {
+    School school = createMockSchool();
+    school.setDateOpened("88888888");
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(school));
+    File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
+    byte[] bFile = Files.readAllBytes(file.toPath());
+    var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
+    var result = repository.findAll();
+    assertThat(result.size()).isEqualTo(1);
+    var entity = result.get(0);
+    assertThat(entity.getPenRequestBatchID()).isNotNull();
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(entity.getSchoolGroupCode()).isNull();
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isEqualTo("Invalid Mincode in Header record - school is closed.");
+    var students = studentRepository.findAllByPenRequestBatchEntity(result.get(0));
+    assertThat(students.size()).isZero();
+  }
+
+  private School createMockSchool() {
+    School school = new School();
+    school.setSchoolName("Marco's school");
+    school.setMincode("66510518");
+    school.setDateOpened("19530901");
+    return school;
   }
 
   /**

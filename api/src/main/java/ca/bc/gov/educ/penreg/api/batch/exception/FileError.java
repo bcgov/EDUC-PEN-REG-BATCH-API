@@ -33,8 +33,11 @@ public enum FileError {
    * Invalid row length file error.
    * This will be thrown when any row in the given file is longer or shorter than expected.
    */
-  INVALID_ROW_LENGTH("$?");
-
+  INVALID_ROW_LENGTH("$?"),
+  /**
+   * The mincode school is currently closed
+   */
+  INVALID_MINCODE_SCHOOL_CLOSED("Invalid Mincode in Header record - school is closed.");
   /**
    * The Message.
    */
