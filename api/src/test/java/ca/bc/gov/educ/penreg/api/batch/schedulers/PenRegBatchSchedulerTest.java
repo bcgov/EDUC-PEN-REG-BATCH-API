@@ -79,7 +79,7 @@ public class PenRegBatchSchedulerTest {
   public void setUp() throws Exception {
     List<PENWebBlobEntity> entities = createDummyRecords();
     penWebBlobRepository.saveAll(entities);
-    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(new School()));
+    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(createMockSchool()));
   }
 
   /**
@@ -145,11 +145,19 @@ public class PenRegBatchSchedulerTest {
         break; // break out after trying for 5 seconds.
       }
       val isStudentRecordPresent = studentRepository.findAll().isEmpty();
-      if (isStudentRecordPresent) {
+      if (!isStudentRecordPresent) {
         break;
       }
       TimeUnit.MILLISECONDS.sleep(50);
       i++;
     }
+  }
+
+  private School createMockSchool() {
+    School school = new School();
+    school.setSchoolName("Marco's school");
+    school.setMincode("66510518");
+    school.setDateOpened("19530901");
+    return school;
   }
 }
