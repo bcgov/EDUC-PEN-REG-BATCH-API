@@ -582,7 +582,7 @@ public class PenRegBatchProcessorTest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenmincodeInvalidSchoolCloseDate_ShouldCreateRecordLOADFAILInDB() throws IOException {
     School school = createMockSchool();
-    school.setClosedDate("19960601");
+    school.setDateClosed("1996-09-01T00:00:00");
     when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(school));
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
@@ -609,7 +609,7 @@ public class PenRegBatchProcessorTest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenmincodeInvalidSchoolOpenDate_ShouldCreateRecordLOADFAILInDB() throws IOException {
     School school = createMockSchool();
-    school.setOpenedDate("20240101");
+    school.setDateOpened("2024-09-01T00:00:00");
     when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(school));
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
@@ -636,7 +636,7 @@ public class PenRegBatchProcessorTest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenmincodeInvalidSchoolOpenDateFormat_ShouldCreateRecordLOADFAILInDB() throws IOException {
     School school = createMockSchool();
-    school.setOpenedDate("88888888");
+    school.setDateOpened("88888888");
     when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(school));
     File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     byte[] bFile = Files.readAllBytes(file.toPath());
@@ -663,7 +663,7 @@ public class PenRegBatchProcessorTest {
     School school = new School();
     school.setSchoolName("Marco's school");
     school.setMincode("66510518");
-    school.setOpenedDate("19530901");
+    school.setDateOpened("1964-09-01T00:00:00");
     return school;
   }
 

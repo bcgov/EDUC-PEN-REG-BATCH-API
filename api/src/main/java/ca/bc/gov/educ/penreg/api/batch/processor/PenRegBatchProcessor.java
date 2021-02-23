@@ -91,11 +91,6 @@ public class PenRegBatchProcessor {
    */
   private final RestUtils restUtils;
 
-  private final DateTimeFormatter dateTimeFormatter = new DateTimeFormatterBuilder()
-          .appendValue(YEAR, 4)
-          .appendValue(MONTH_OF_YEAR, 2)
-          .appendValue(DAY_OF_MONTH, 2).toFormatter();
-
   /**
    * Instantiates a new Pen reg batch processor.
    *
@@ -409,10 +404,10 @@ public class PenRegBatchProcessor {
         throw new FileUnProcessableException(INVALID_MINCODE_HEADER, guid);
       }
 
-      String openedDate = school.get().getOpenedDate();
-      String closedDate = school.get().getClosedDate();
+      String openedDate = school.get().getDateOpened();
+      String closedDate = school.get().getDateClosed();
 
-      if(openedDate == null || LocalDate.parse(openedDate,dateTimeFormatter).isAfter(LocalDate.now()) || (closedDate != null && LocalDate.parse(closedDate, dateTimeFormatter).isBefore(LocalDate.now()))){
+      if(openedDate == null || LocalDate.parse(openedDate,DateTimeFormatter.ISO_LOCAL_DATE_TIME).isAfter(LocalDate.now()) || (closedDate != null && LocalDate.parse(closedDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME).isBefore(LocalDate.now()))){
         throw new FileUnProcessableException(INVALID_MINCODE_SCHOOL_CLOSED, guid);
       }
     } catch (DateTimeParseException e) {
