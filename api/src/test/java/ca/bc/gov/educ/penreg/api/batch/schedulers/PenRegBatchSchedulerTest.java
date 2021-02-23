@@ -157,7 +157,7 @@ public class PenRegBatchSchedulerTest {
     School school = new School();
     school.setSchoolName("Marco's school");
     school.setMincode("66510518");
-    school.setDateOpened("19530901");
+    school.setDateOpened("1953-09-01T00:00:00");
     return school;
   }
 }
