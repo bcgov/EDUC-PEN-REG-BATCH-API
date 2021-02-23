@@ -14,4 +14,7 @@ import lombok.NoArgsConstructor;
 public class School {
   private String mincode;
   private String schoolName;
+
+  private String dateOpened;
+  private String dateClosed;
 }

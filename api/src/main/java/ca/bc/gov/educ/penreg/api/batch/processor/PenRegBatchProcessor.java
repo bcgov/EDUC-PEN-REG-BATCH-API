@@ -14,6 +14,7 @@ import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
+import ca.bc.gov.educ.penreg.api.struct.School;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -27,11 +28,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.*;
 import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.*;
+import static java.time.temporal.ChronoField.*;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -84,6 +90,11 @@ public class PenRegBatchProcessor {
    * The Rest utils.
    */
   private final RestUtils restUtils;
+
+  private final DateTimeFormatter dateTimeFormatter = new DateTimeFormatterBuilder()
+          .appendValue(YEAR, 4)
+          .appendValue(MONTH_OF_YEAR, 2)
+          .appendValue(DAY_OF_MONTH, 2).toFormatter();
 
   /**
    * Instantiates a new Pen reg batch processor.
@@ -387,8 +398,26 @@ public class PenRegBatchProcessor {
    * @throws FileUnProcessableException the file un processable exception
    */
   private void validateMincode(String guid, String mincode) throws FileUnProcessableException {
-    if (!StringUtils.isNumeric(mincode) || mincode.length() != 8 || restUtils.getSchoolByMincode(mincode).isEmpty()) {
+    if (!StringUtils.isNumeric(mincode) || mincode.length() != 8) {
       throw new FileUnProcessableException(INVALID_MINCODE_HEADER, guid);
+    }
+
+    try {
+      Optional<School> school = restUtils.getSchoolByMincode(mincode);
+
+      if(school.isEmpty()) {
+        throw new FileUnProcessableException(INVALID_MINCODE_HEADER, guid);
+      }
+
+      String openedDate = school.get().getDateOpened();
+      String closedDate = school.get().getDateClosed();
+
+      if(openedDate == null || LocalDate.parse(openedDate,dateTimeFormatter).isAfter(LocalDate.now()) || (closedDate != null && LocalDate.parse(closedDate, dateTimeFormatter).isBefore(LocalDate.now()))){
+        throw new FileUnProcessableException(INVALID_MINCODE_SCHOOL_CLOSED, guid);
+      }
+    } catch (DateTimeParseException e) {
+      log.error("Date time parse exception trying to parse School's open or closed date: {}", guid, e);
+      throw new FileUnProcessableException(INVALID_MINCODE_SCHOOL_CLOSED, guid);
     }
   }
 }
