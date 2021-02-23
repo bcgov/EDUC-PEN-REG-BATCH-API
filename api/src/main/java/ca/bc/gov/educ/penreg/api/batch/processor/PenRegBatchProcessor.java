@@ -409,8 +409,8 @@ public class PenRegBatchProcessor {
         throw new FileUnProcessableException(INVALID_MINCODE_HEADER, guid);
       }
 
-      String openedDate = school.get().getDateOpened();
-      String closedDate = school.get().getDateClosed();
+      String openedDate = school.get().getOpenedDate();
+      String closedDate = school.get().getClosedDate();
 
       if(openedDate == null || LocalDate.parse(openedDate,dateTimeFormatter).isAfter(LocalDate.now()) || (closedDate != null && LocalDate.parse(closedDate, dateTimeFormatter).isBefore(LocalDate.now()))){
         throw new FileUnProcessableException(INVALID_MINCODE_SCHOOL_CLOSED, guid);
