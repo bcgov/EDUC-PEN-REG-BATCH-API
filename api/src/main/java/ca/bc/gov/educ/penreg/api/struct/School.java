@@ -15,6 +15,6 @@ public class School {
   private String mincode;
   private String schoolName;
 
-  private String dateOpened;
-  private String dateClosed;
+  private String openedDate;
+  private String closedDate;
 }
