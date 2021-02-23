@@ -7,6 +7,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,7 +77,7 @@ public class PenRegBatchSchedulerTest {
    */
   @Before
   public void setUp() throws Exception {
-    List<PENWebBlobEntity> entities = createDummyRecords(1);
+    List<PENWebBlobEntity> entities = createDummyRecords();
     penWebBlobRepository.saveAll(entities);
     when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(new School()));
   }
@@ -87,9 +88,9 @@ public class PenRegBatchSchedulerTest {
    * @return the list
    * @throws IOException the io exception
    */
-  private List<PENWebBlobEntity> createDummyRecords(int count) throws IOException {
+  private List<PENWebBlobEntity> createDummyRecords() throws IOException {
     List<PENWebBlobEntity> entities = new ArrayList<>();
-    for (var index = 0; index < count; index++) {
+    for (var index = 0; index < 1; index++) {
       entities.add(createDummyRecord(index));
     }
     return entities;
@@ -133,9 +134,22 @@ public class PenRegBatchSchedulerTest {
   @Test
   public void testExtractUnProcessedFilesFromTSW_GivenRowsInTSWithExtractDateNull_ShouldBeProcessed() throws InterruptedException {
     penRegBatchScheduler.extractUnProcessedFilesFromPenWebBlobs();
-    while (studentRepository.findAll().isEmpty()) {
-      TimeUnit.MILLISECONDS.sleep(100);
-    }
+    waitForAsyncToFinish();
     assertThat(studentRepository.findAll().size()).isEqualTo(5);
+  }
+
+  private void waitForAsyncToFinish() throws InterruptedException {
+    int i = 0;
+    while (true) {
+      if (i >= 100) {
+        break; // break out after trying for 5 seconds.
+      }
+      val isStudentRecordPresent = studentRepository.findAll().isEmpty();
+      if (isStudentRecordPresent) {
+        break;
+      }
+      TimeUnit.MILLISECONDS.sleep(50);
+      i++;
+    }
   }
 }
