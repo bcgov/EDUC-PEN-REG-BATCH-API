@@ -45,7 +45,7 @@ public class PenRequestBatchEntity {
   /**
    * The Pen request batch status code.
    */
-  @Column(name = "PEN_REQUEST_BATCH_STATUS_CODE", length = 10, nullable = false)
+  @Column(name = "PEN_REQUEST_BATCH_STATUS_CODE", length = 20, nullable = false)
   String penRequestBatchStatusCode;
 
   /**
@@ -60,13 +60,6 @@ public class PenRequestBatchEntity {
   @Column(name = "PEN_REQUEST_BATCH_TYPE_CODE", nullable = false, length = 10)
   String penRequestBatchTypeCode;
 
-
-  /**
-   * The Unarchived batch status code.
-   */
-  @Column(name = "UNARCHIVED_BATCH_STATUS_CODE", nullable = false, length = 10)
-  String unarchivedBatchStatusCode;
-
   /**
    * The Ministry prb source code.
    */
@@ -78,20 +71,6 @@ public class PenRequestBatchEntity {
    */
   @Column(name = "SCHOOL_GROUP_CODE", length = 10)
   String schoolGroupCode;
-
-
-  /**
-   * The Unarchived user.
-   */
-  @Column(name = "UNARCHIVED_USER")
-  String unarchivedUser;
-
-
-  /**
-   * The Unarchived batch changed flag.
-   */
-  @Column(name = "UNARCHIVED_BATCH_CHANGED_FLAG", length = 1, nullable = false)
-  String unarchivedBatchChangedFlag;
 
   /**
    * The File name.

@@ -4,8 +4,6 @@
     "penRequestBatchStatusCode": "ARCHIVED",
     "penRequestBatchStatusReason": null,
     "penRequestBatchTypeCode": "SCHOOL",
-    "unarchivedBatchStatusCode": "NA",
-    "unarchivedBatchChangedFlag": "N",
     "fileName": "sample_5_PSI_OK",
     "fileType": "txt",
     "insertDate": "2020-08-04T12:19:29",
@@ -28,7 +26,6 @@
     "errorCount": 2,
     "repeatCount": 1,
     "fixableCount": 1,
-    "schoolGroupCode": "PSI",
-    "unarchivedUser": null
+    "schoolGroupCode": "PSI"
   }
 ]

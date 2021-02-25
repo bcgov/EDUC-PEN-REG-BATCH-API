@@ -14,6 +14,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentStatusCodeRepository;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -144,7 +145,12 @@ public class PenRequestBatchStudentService {
           var originalStatus = PenRequestBatchStudentStatusCodes.valueOfCode(penRequestBatchStudent.getPenRequestBatchStudentStatusCode());
           BeanUtils.copyProperties(entity, penRequestBatchStudent, "penRequestBatchStudentValidationIssueEntities", "penRequestBatchEntity", "penRequestBatchStudentID", "penRequestBatchStudentPossibleMatchEntities");
           var savedPrbStudent = repository.save(penRequestBatchStudent);
-
+          // prb student is updated while unarchived
+          boolean isUnArchivedChanged = false;
+          if (StringUtils.equals(penRequestBatch.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED.getCode())) {
+            penRequestBatch.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode());
+            isUnArchivedChanged = true;
+          }
           //adjust the summary Count values in the PEN Request Batch
           var currentStatus = PenRequestBatchStudentStatusCodes.valueOfCode(entity.getPenRequestBatchStudentStatusCode());
           log.debug("The Original status :: {} and Current status :: {} of Student :: {}", originalStatus, currentStatus, savedPrbStudent);
@@ -156,6 +162,8 @@ public class PenRequestBatchStudentService {
             penRequestBatch.setUpdateDate(penRequestBatchStudent.getUpdateDate());
             penRequestBatchRepository.save(penRequestBatch);
             logCounts(penRequestBatch, "Updated");
+          } else if (isUnArchivedChanged) {
+            penRequestBatchRepository.save(penRequestBatch);
           }
           return savedPrbStudent;
         } else {
