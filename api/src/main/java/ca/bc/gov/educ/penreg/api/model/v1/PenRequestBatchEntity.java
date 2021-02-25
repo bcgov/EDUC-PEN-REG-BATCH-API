@@ -45,7 +45,7 @@ public class PenRequestBatchEntity {
   /**
    * The Pen request batch status code.
    */
-  @Column(name = "PEN_REQUEST_BATCH_STATUS_CODE", length = 20, nullable = false)
+  @Column(name = "PEN_REQUEST_BATCH_STATUS_CODE", length = 10, nullable = false)
   String penRequestBatchStatusCode;
 
   /**

@@ -33,7 +33,7 @@ public enum PenRequestBatchStatusCodes {
   /**
    * Changed pen request batch status codes while unarchived.
    */
-  UNARCHIVED_CHANGED("UNARCHIVED_CHANGED"),
+  UNARCHIVED_CHANGED("UNARCH_CHG"),
   /**
    * Archived pen request batch status codes.
    */
