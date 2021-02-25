@@ -2,7 +2,7 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
@@ -65,14 +65,14 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
   @Before
   public void setup() throws IOException {
     final File mockPenReqBatch = new File("src/test/resources/mock_pen_req_batch.json");
-    List<PenRequestBatch> penRequestBatches = new ObjectMapper().readValue(mockPenReqBatch, new TypeReference<>() {
+    final List<PenRequestBatch> penRequestBatches = new ObjectMapper().readValue(mockPenReqBatch, new TypeReference<>() {
     });
     final File mockPenReqBatchStudent = new File("src/test/resources/mock_pen_req_batch_student.json");
-    List<PenRequestBatchStudent> penRequestBatchStudents = new ObjectMapper().readValue(mockPenReqBatchStudent, new TypeReference<>() {
+    final List<PenRequestBatchStudent> penRequestBatchStudents = new ObjectMapper().readValue(mockPenReqBatchStudent, new TypeReference<>() {
     });
-    PenRequestBatchEntity entity = PenRequestBatchMapper.mapper.toModel(penRequestBatches.get(0));
-    for(var prbStudent: penRequestBatchStudents){
-      var studentEntity = PenRequestBatchStudentMapper.mapper.toModel(prbStudent);
+    final PenRequestBatchEntity entity = PenRequestBatchMapper.mapper.toModel(penRequestBatches.get(0));
+    for (final var prbStudent : penRequestBatchStudents) {
+      final var studentEntity = PenRequestBatchStudentMapper.mapper.toModel(prbStudent);
       studentEntity.setCreateDate(LocalDateTime.now());
       studentEntity.setCreateUser("TEST");
       studentEntity.setUpdateUser("TEST");
@@ -84,13 +84,13 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
     entity.setUpdateDate(LocalDateTime.now());
     entity.setCreateUser("TEST");
     entity.setUpdateUser("TEST");
-    penRequestBatchRepository.save(entity);
+    this.penRequestBatchRepository.save(entity);
   }
 
   @After
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void tearDown(){
-    penRequestBatchRepository.deleteAll();
+    this.penRequestBatchRepository.deleteAll();
   }
   /**
    * Test are both field value equal.
@@ -108,14 +108,14 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
       "hello,Hello, false",
       "hello,hi, false",
   })
-  public void testAreBothFieldValueEqual(String field1, String field2, boolean res) {
+  public void testAreBothFieldValueEqual(String field1, String field2, final boolean res) {
     if ("null".equals(field1)) {
       field1 = null;
     }
     if ("null".equals(field2)) {
       field2 = null;
     }
-    var result = orchestratorService.areBothFieldValueEqual(field1, field2);
+    final var result = this.orchestratorService.areBothFieldValueEqual(field1, field2);
     assertThat(result).isEqualTo(res);
 
   }
@@ -134,8 +134,8 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
       "hello.,HELLO",
       "  he    llo      ,HE LLO",
   })
-  public void scrubNameField(String fieldValue, String scrubbedValue) {
-    var result = orchestratorService.scrubNameField(fieldValue);
+  public void scrubNameField(final String fieldValue, final String scrubbedValue) {
+    final var result = this.orchestratorService.scrubNameField(fieldValue);
     assertThat(result).isEqualTo(scrubbedValue);
   }
 }

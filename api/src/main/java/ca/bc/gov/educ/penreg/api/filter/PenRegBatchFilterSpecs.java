@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.filter;
 
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -57,7 +57,7 @@ public class PenRegBatchFilterSpecs {
    * @param uuidFilterSpecifications     the uuid filter specifications
    * @param converters                   the converters
    */
-  public PenRegBatchFilterSpecs(FilterSpecifications<PenRequestBatchEntity, ChronoLocalDate> dateFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, ChronoLocalDateTime<?>> dateTimeFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, Integer> integerFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, String> stringFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, Long> longFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, UUID> uuidFilterSpecifications, Converters converters) {
+  public PenRegBatchFilterSpecs(final FilterSpecifications<PenRequestBatchEntity, ChronoLocalDate> dateFilterSpecifications, final FilterSpecifications<PenRequestBatchEntity, ChronoLocalDateTime<?>> dateTimeFilterSpecifications, final FilterSpecifications<PenRequestBatchEntity, Integer> integerFilterSpecifications, final FilterSpecifications<PenRequestBatchEntity, String> stringFilterSpecifications, final FilterSpecifications<PenRequestBatchEntity, Long> longFilterSpecifications, final FilterSpecifications<PenRequestBatchEntity, UUID> uuidFilterSpecifications, final Converters converters) {
     this.dateFilterSpecifications = dateFilterSpecifications;
     this.dateTimeFilterSpecifications = dateTimeFilterSpecifications;
     this.integerFilterSpecifications = integerFilterSpecifications;
@@ -76,8 +76,8 @@ public class PenRegBatchFilterSpecs {
    * @param associationNames the association names
    * @return the date type specification
    */
-  public Specification<PenRequestBatchEntity> getDateTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation, Associations associationNames) {
-    return getSpecification(fieldName, filterValue, filterOperation, converters.getFunction(ChronoLocalDate.class), dateFilterSpecifications, associationNames);
+  public Specification<PenRequestBatchEntity> getDateTypeSpecification(final String fieldName, final String filterValue, final FilterOperation filterOperation, final Associations associationNames) {
+    return this.getSpecification(fieldName, filterValue, filterOperation, this.converters.getFunction(ChronoLocalDate.class), this.dateFilterSpecifications, associationNames);
   }
 
   /**
@@ -89,8 +89,8 @@ public class PenRegBatchFilterSpecs {
    * @param associationNames the association names
    * @return the date time type specification
    */
-  public Specification<PenRequestBatchEntity> getDateTimeTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation, Associations associationNames) {
-    return getSpecification(fieldName, filterValue, filterOperation, converters.getFunction(ChronoLocalDateTime.class), dateTimeFilterSpecifications, associationNames);
+  public Specification<PenRequestBatchEntity> getDateTimeTypeSpecification(final String fieldName, final String filterValue, final FilterOperation filterOperation, final Associations associationNames) {
+    return this.getSpecification(fieldName, filterValue, filterOperation, this.converters.getFunction(ChronoLocalDateTime.class), this.dateTimeFilterSpecifications, associationNames);
   }
 
   /**
@@ -102,8 +102,8 @@ public class PenRegBatchFilterSpecs {
    * @param associationNames the association names
    * @return the integer type specification
    */
-  public Specification<PenRequestBatchEntity> getIntegerTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation, Associations associationNames) {
-    return getSpecification(fieldName, filterValue, filterOperation, converters.getFunction(Integer.class), integerFilterSpecifications, associationNames);
+  public Specification<PenRequestBatchEntity> getIntegerTypeSpecification(final String fieldName, final String filterValue, final FilterOperation filterOperation, final Associations associationNames) {
+    return this.getSpecification(fieldName, filterValue, filterOperation, this.converters.getFunction(Integer.class), this.integerFilterSpecifications, associationNames);
   }
 
   /**
@@ -115,8 +115,8 @@ public class PenRegBatchFilterSpecs {
    * @param associationNames the association names
    * @return the long type specification
    */
-  public Specification<PenRequestBatchEntity> getLongTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation, Associations associationNames) {
-    return getSpecification(fieldName, filterValue, filterOperation, converters.getFunction(Long.class), longFilterSpecifications, associationNames);
+  public Specification<PenRequestBatchEntity> getLongTypeSpecification(final String fieldName, final String filterValue, final FilterOperation filterOperation, final Associations associationNames) {
+    return this.getSpecification(fieldName, filterValue, filterOperation, this.converters.getFunction(Long.class), this.longFilterSpecifications, associationNames);
   }
 
   /**
@@ -128,8 +128,8 @@ public class PenRegBatchFilterSpecs {
    * @param associationNames the association names
    * @return the string type specification
    */
-  public Specification<PenRequestBatchEntity> getStringTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation, Associations associationNames) {
-    return getSpecification(fieldName, filterValue, filterOperation, converters.getFunction(String.class), stringFilterSpecifications, associationNames);
+  public Specification<PenRequestBatchEntity> getStringTypeSpecification(final String fieldName, final String filterValue, final FilterOperation filterOperation, final Associations associationNames) {
+    return this.getSpecification(fieldName, filterValue, filterOperation, this.converters.getFunction(String.class), this.stringFilterSpecifications, associationNames);
   }
 
   /**
@@ -141,8 +141,8 @@ public class PenRegBatchFilterSpecs {
    * @param associationNames the association names
    * @return the uuid type specification
    */
-  public Specification<PenRequestBatchEntity> getUUIDTypeSpecification(String fieldName, String filterValue, FilterOperation filterOperation, Associations associationNames) {
-    return getSpecification(fieldName, filterValue, filterOperation, converters.getFunction(UUID.class), uuidFilterSpecifications, associationNames);
+  public Specification<PenRequestBatchEntity> getUUIDTypeSpecification(final String fieldName, final String filterValue, final FilterOperation filterOperation, final Associations associationNames) {
+    return this.getSpecification(fieldName, filterValue, filterOperation, this.converters.getFunction(UUID.class), this.uuidFilterSpecifications, associationNames);
   }
 
   /**
@@ -157,13 +157,13 @@ public class PenRegBatchFilterSpecs {
    * @param associationNames the association names
    * @return the specification
    */
-  private <T extends Comparable<T>> Specification<PenRequestBatchEntity> getSpecification(String fieldName,
-                                                                                          String filterValue,
-                                                                                          FilterOperation filterOperation,
-                                                                                          Function<String, T> converter,
-                                                                                          FilterSpecifications<PenRequestBatchEntity, T> specifications,
-                                                                                          Associations associationNames) {
-    FilterCriteria<T> criteria = new FilterCriteria<>(fieldName, filterValue, filterOperation, converter);
+  private <T extends Comparable<T>> Specification<PenRequestBatchEntity> getSpecification(final String fieldName,
+                                                                                          final String filterValue,
+                                                                                          final FilterOperation filterOperation,
+                                                                                          final Function<String, T> converter,
+                                                                                          final FilterSpecifications<PenRequestBatchEntity, T> specifications,
+                                                                                          final Associations associationNames) {
+    final FilterCriteria<T> criteria = new FilterCriteria<>(fieldName, filterValue, filterOperation, converter);
     return specifications.getSpecification(criteria.getOperation()).apply(criteria, associationNames);
   }
 }

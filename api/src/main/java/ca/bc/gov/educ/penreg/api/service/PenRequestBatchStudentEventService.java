@@ -4,8 +4,8 @@ package ca.bc.gov.educ.penreg.api.service;
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEvent;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEvent;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
@@ -53,25 +53,25 @@ public class PenRequestBatchStudentEventService {
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public PenRequestBatchEvent updatePenRequestBatchStudent(Event event) throws JsonProcessingException {
-    val penRequestBatchEventOptional = getPenRequestBatchEventRepository().findBySagaIdAndEventType(event.getSagaId(), event.getEventType().toString());
-    PenRequestBatchEvent penRequestBatchEvent;
+  public PenRequestBatchEvent updatePenRequestBatchStudent(final Event event) throws JsonProcessingException {
+    val penRequestBatchEventOptional = this.getPenRequestBatchEventRepository().findBySagaIdAndEventType(event.getSagaId(), event.getEventType().toString());
+    final PenRequestBatchEvent penRequestBatchEvent;
     if (penRequestBatchEventOptional.isEmpty()) {
       log.info(NO_RECORD_SAGA_ID_EVENT_TYPE);
       log.trace(EVENT_PAYLOAD, event);
-      var prbStudent = JsonUtil.getJsonObjectFromString(PenRequestBatchStudent.class, event.getEventPayload());
-      PenRequestBatchStudentEntity entity = mapper.toModel(prbStudent);
-      populateAuditColumnsForUpdateStudent(entity);
+      final var prbStudent = JsonUtil.getJsonObjectFromString(PenRequestBatchStudent.class, event.getEventPayload());
+      final PenRequestBatchStudentEntity entity = mapper.toModel(prbStudent);
+      this.populateAuditColumnsForUpdateStudent(entity);
 
       try {
-        prbStudentService.updateStudent(entity, UUID.fromString(prbStudent.getPenRequestBatchID()), UUID.fromString(prbStudent.getPenRequestBatchStudentID()));
+        this.prbStudentService.updateStudent(entity, UUID.fromString(prbStudent.getPenRequestBatchID()), UUID.fromString(prbStudent.getPenRequestBatchStudentID()));
         event.setEventPayload(JsonUtil.getJsonStringFromObject(mapper.toStructure(entity)));// need to convert to structure MANDATORY otherwise jackson will break.
         event.setEventOutcome(EventOutcome.PEN_REQUEST_BATCH_STUDENT_UPDATED);
-      } catch (EntityNotFoundException ex) {
+      } catch (final EntityNotFoundException ex) {
         log.error("PenRequestBatchStudent not found while trying to update it", ex);
         event.setEventOutcome(EventOutcome.PEN_REQUEST_BATCH_STUDENT_NOT_FOUND);
       }
-      penRequestBatchEvent = createPenRequestBatchEventRecord(event);
+      penRequestBatchEvent = this.createPenRequestBatchEventRecord(event);
     } else {
       log.info(RECORD_FOUND_FOR_SAGA_ID_EVENT_TYPE);
       log.trace(EVENT_PAYLOAD, event);
@@ -79,11 +79,11 @@ public class PenRequestBatchStudentEventService {
       penRequestBatchEvent.setEventStatus(DB_COMMITTED.toString());
     }
 
-    getPenRequestBatchEventRepository().save(penRequestBatchEvent);
+    this.getPenRequestBatchEventRepository().save(penRequestBatchEvent);
     return penRequestBatchEvent;
   }
 
-  private PenRequestBatchEvent createPenRequestBatchEventRecord(Event event) {
+  private PenRequestBatchEvent createPenRequestBatchEventRecord(final Event event) {
     return PenRequestBatchEvent.builder()
         .createDate(LocalDateTime.now())
         .updateDate(LocalDateTime.now())
@@ -103,7 +103,7 @@ public class PenRequestBatchStudentEventService {
    *
    * @param model the model
    */
-  private void populateAuditColumnsForUpdateStudent(PenRequestBatchStudentEntity model) {
+  private void populateAuditColumnsForUpdateStudent(final PenRequestBatchStudentEntity model) {
     if (model.getUpdateUser() == null) {
       model.setUpdateUser(PEN_REQUEST_BATCH_API);
     }

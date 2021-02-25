@@ -2,7 +2,7 @@ package ca.bc.gov.educ.penreg.api.service;
 
 
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEvent;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.EventHandler;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
@@ -95,24 +95,25 @@ public class EventHandlerService implements EventHandler {
    *
    * @param event the event
    */
+  @Override
   @Async("subscriberExecutor")
-  public void handleEvent(Event event) {
+  public void handleEvent(final Event event) {
     try {
       switch (event.getEventType()) {
         case PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED:
           log.info("received outbox processed event :: ");
           log.trace(PAYLOAD_LOG, event.getEventPayload());
-          handlePenRequestBatchOutboxProcessedEvent(event.getEventPayload());
+          this.handlePenRequestBatchOutboxProcessedEvent(event.getEventPayload());
           break;
         case READ_FROM_TOPIC:
           log.info("received read from topic event :: ");
           log.trace(PAYLOAD_LOG, event.getEventPayload());
-          handleReadFromTopicEvent(event);
+          this.handleReadFromTopicEvent(event);
           break;
         case UPDATE_PEN_REQUEST_BATCH_STUDENT:
           log.info("received update pen request batch student event :: ");
           log.trace(PAYLOAD_LOG, event.getEventPayload());
-          handleUpdatePrbStudentEvent(event);
+          this.handleUpdatePrbStudentEvent(event);
           break;
         default:
           log.info("silently ignoring other events.");
@@ -128,6 +129,7 @@ public class EventHandlerService implements EventHandler {
    *
    * @return the topic to subscribe
    */
+  @Override
   public String getTopicToSubscribe() {
     return PEN_REQUEST_BATCH_API_TOPIC.toString();
   }
@@ -140,17 +142,17 @@ public class EventHandlerService implements EventHandler {
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
-  private void handleReadFromTopicEvent(Event event) throws InterruptedException, TimeoutException, IOException {
+  private void handleReadFromTopicEvent(final Event event) throws InterruptedException, TimeoutException, IOException {
     if (event.getEventOutcome() == EventOutcome.READ_FROM_TOPIC_SUCCESS) {
-      PenRequestBatchStudentSagaData penRequestBatchStudentSagaData = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, event.getEventPayload());
-      var sagaList = getSagaService().findByPenRequestBatchStudentIDAndSagaName(penRequestBatchStudentSagaData.getPenRequestBatchStudentID(),
+      final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, event.getEventPayload());
+      final var sagaList = this.getSagaService().findByPenRequestBatchStudentIDAndSagaName(penRequestBatchStudentSagaData.getPenRequestBatchStudentID(),
           PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString());
       if (sagaList.size() > 0) { // possible duplicate message.
         log.trace("Execution is not required for this message returning EVENT is :: {}", event.toString());
         return;
       }
 
-      getPenReqBatchStudentOrchestrator().startSaga(event.getEventPayload(), penRequestBatchStudentSagaData.getPenRequestBatchStudentID(),
+      this.getPenReqBatchStudentOrchestrator().startSaga(event.getEventPayload(), penRequestBatchStudentSagaData.getPenRequestBatchStudentID(),
           penRequestBatchStudentSagaData.getPenRequestBatchID(), ApplicationProperties.API_NAME);
     }
   }
@@ -164,9 +166,9 @@ public class EventHandlerService implements EventHandler {
    * @param event the update PrbStudent event
    * @throws JsonProcessingException the json processing exception
    */
-  private void handleUpdatePrbStudentEvent(Event event) throws JsonProcessingException {
-    PenRequestBatchEvent penRequestBatchEvent = getPrbStudentEventService().updatePenRequestBatchStudent(event);
-    getEventPublisherService().send(penRequestBatchEvent);
+  private void handleUpdatePrbStudentEvent(final Event event) throws JsonProcessingException {
+    final PenRequestBatchEvent penRequestBatchEvent = this.getPrbStudentEventService().updatePenRequestBatchStudent(event);
+    this.getEventPublisherService().send(penRequestBatchEvent);
   }
 
   /**
@@ -174,12 +176,12 @@ public class EventHandlerService implements EventHandler {
    *
    * @param eventId the event id
    */
-  private void handlePenRequestBatchOutboxProcessedEvent(String eventId) {
-    val eventFromDB = getPenRequestBatchEventRepository().findById(UUID.fromString(eventId));
+  private void handlePenRequestBatchOutboxProcessedEvent(final String eventId) {
+    val eventFromDB = this.getPenRequestBatchEventRepository().findById(UUID.fromString(eventId));
     if (eventFromDB.isPresent()) {
       val studEvent = eventFromDB.get();
       studEvent.setEventStatus(MESSAGE_PUBLISHED.toString());
-      getPenRequestBatchEventRepository().save(studEvent);
+      this.getPenRequestBatchEventRepository().save(studEvent);
     }
   }
 

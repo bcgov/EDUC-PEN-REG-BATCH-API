@@ -4,10 +4,10 @@ import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
 import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
 import ca.bc.gov.educ.penreg.api.constants.MinistryPRBSourceCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
-import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchHistoryEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,7 +20,6 @@ import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchTypeCode.SCHOOL
 /**
  * The type Pen request batch file decorator.
  */
-@SuppressWarnings("java:S2140")
 @Slf4j
 public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFileMapper {
   /**
@@ -37,7 +36,7 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
    *
    * @param mapper the mapper
    */
-  protected PenRequestBatchFileDecorator(PenRequestBatchFileMapper mapper) {
+  protected PenRequestBatchFileDecorator(final PenRequestBatchFileMapper mapper) {
     this.delegate = mapper;
   }
 
@@ -49,13 +48,13 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
    * @return the pen request batch entity
    */
   @Override
-  public PenRequestBatchEntity toPenReqBatchEntityLoaded(PENWebBlobEntity penWebBlobEntity, BatchFile file) {
-    var entity = delegate.toPenReqBatchEntityLoaded(penWebBlobEntity, file);
-    setDefaults(entity);
+  public PenRequestBatchEntity toPenReqBatchEntityLoaded(final PENWebBlobEntity penWebBlobEntity, final BatchFile file) {
+    final var entity = this.delegate.toPenReqBatchEntityLoaded(penWebBlobEntity, file);
+    this.setDefaults(entity);
     entity.setPenRequestBatchStatusCode(LOADED.getCode());
     entity.setStudentCount((long) file.getStudentDetails().size());
-    entity.setSchoolGroupCode(computeSchoolGroupCode(file.getBatchFileHeader().getMincode()));
-    PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(entity, LOADED.getCode(),STATUS_CHANGED.getCode(), null);
+    entity.setSchoolGroupCode(this.computeSchoolGroupCode(file.getBatchFileHeader().getMincode()));
+    final PenRequestBatchHistoryEntity penRequestBatchHistory = this.createPenReqBatchHistory(entity, LOADED.getCode(), STATUS_CHANGED.getCode(), null);
     entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     return entity;
   }
@@ -69,8 +68,8 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
    * @param reason     the reason
    * @return the pen request batch history entity
    */
-  private PenRequestBatchHistoryEntity createPenReqBatchHistory(@NonNull PenRequestBatchEntity entity, String statusCode, String eventCode, String reason) {
-    var penRequestBatchHistory = new PenRequestBatchHistoryEntity();
+  private PenRequestBatchHistoryEntity createPenReqBatchHistory(@NonNull final PenRequestBatchEntity entity, final String statusCode, final String eventCode, final String reason) {
+    final var penRequestBatchHistory = new PenRequestBatchHistoryEntity();
     penRequestBatchHistory.setCreateDate(LocalDateTime.now());
     penRequestBatchHistory.setUpdateDate(LocalDateTime.now());
     penRequestBatchHistory.setPenRequestBatchEntity(entity);
@@ -92,12 +91,12 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
    * @return the pen request batch entity
    */
   @Override
-  public PenRequestBatchEntity toPenReqBatchEntityLoadFail(PENWebBlobEntity penWebBlobEntity, String reason) {
-    var entity = delegate.toPenReqBatchEntityLoadFail(penWebBlobEntity, reason);
-    setDefaults(entity);
+  public PenRequestBatchEntity toPenReqBatchEntityLoadFail(final PENWebBlobEntity penWebBlobEntity, final String reason) {
+    final var entity = this.delegate.toPenReqBatchEntityLoadFail(penWebBlobEntity, reason);
+    this.setDefaults(entity);
     entity.setPenRequestBatchStatusCode(LOAD_FAIL.getCode());
     entity.setPenRequestBatchStatusReason(reason);
-    PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(entity, LOAD_FAIL.getCode(),STATUS_CHANGED.getCode(), reason);
+    final PenRequestBatchHistoryEntity penRequestBatchHistory = this.createPenReqBatchHistory(entity, LOAD_FAIL.getCode(), STATUS_CHANGED.getCode(), reason);
     entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     return entity;
   }
@@ -109,13 +108,13 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
    * @return the pen request batch entity
    */
   @Override
-  public PenRequestBatchEntity toPenReqBatchEntityLoadHeldForSize(PENWebBlobEntity penWebBlobEntity, BatchFile file) {
-    var entity = delegate.toPenReqBatchEntityLoadHeldForSize(penWebBlobEntity, file);
-    setDefaults(entity);
+  public PenRequestBatchEntity toPenReqBatchEntityLoadHeldForSize(final PENWebBlobEntity penWebBlobEntity, final BatchFile file) {
+    final var entity = this.delegate.toPenReqBatchEntityLoadHeldForSize(penWebBlobEntity, file);
+    this.setDefaults(entity);
     entity.setPenRequestBatchStatusCode(HOLD_SIZE.getCode());
     entity.setStudentCount((long) file.getStudentDetails().size());
-    entity.setSchoolGroupCode(computeSchoolGroupCode(file.getBatchFileHeader().getMincode()));
-    PenRequestBatchHistoryEntity penRequestBatchHistory = createPenReqBatchHistory(entity, HOLD_SIZE.getCode(),STATUS_CHANGED.getCode(), null);
+    entity.setSchoolGroupCode(this.computeSchoolGroupCode(file.getBatchFileHeader().getMincode()));
+    final PenRequestBatchHistoryEntity penRequestBatchHistory = this.createPenReqBatchHistory(entity, HOLD_SIZE.getCode(), STATUS_CHANGED.getCode(), null);
     entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     return entity;
   }
@@ -128,8 +127,8 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
    * @return the pen request batch student entity
    */
   @Override
-  public PenRequestBatchStudentEntity toPenRequestBatchStudentEntity(StudentDetails studentDetails, PenRequestBatchEntity penRequestBatchEntity){
-    var entity = delegate.toPenRequestBatchStudentEntity(studentDetails,penRequestBatchEntity);
+  public PenRequestBatchStudentEntity toPenRequestBatchStudentEntity(final StudentDetails studentDetails, final PenRequestBatchEntity penRequestBatchEntity) {
+    final var entity = this.delegate.toPenRequestBatchStudentEntity(studentDetails, penRequestBatchEntity);
     entity.setPenRequestBatchEntity(penRequestBatchEntity); // add thePK/FK relationship
     entity.setPenRequestBatchStudentStatusCode(LOADED.getCode());
     return entity;
@@ -157,7 +156,7 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
    *
    * @param entity the entity
    */
-  private void setDefaults(PenRequestBatchEntity entity) {
+  private void setDefaults(final PenRequestBatchEntity entity) {
     entity.setMinistryPRBSourceCode(MinistryPRBSourceCodes.TSW_PEN_WEB.getCode());
     entity.setPenRequestBatchTypeCode(SCHOOL.getCode()); // it will be always school for this process.
     entity.setExtractDate(LocalDateTime.now());

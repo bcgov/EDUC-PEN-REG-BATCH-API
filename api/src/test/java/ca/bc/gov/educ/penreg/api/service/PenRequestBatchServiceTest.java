@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
@@ -20,6 +20,7 @@ import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -72,18 +73,18 @@ public class PenRequestBatchServiceTest {
 
   @After
   public void after() {
-    prbRepository.deleteAll();
-    prbStudentRepository.deleteAll();
+    this.prbRepository.deleteAll();
+    this.prbStudentRepository.deleteAll();
   }
 
   @Test
   @Transactional
   public void testCreateIDSFile_givenBatchFileHasCorrectStudents_shouldCreateIDSFile() throws IOException {
-    batchList = PenRequestBatchUtils.createBatchStudents(prbRepository, "mock_pen_req_batch_ids.json",
-            "mock_pen_req_batch_student_ids.json", 1);
-    when(restUtils.getStudentByPEN("123456789")).thenReturn(Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[0])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[1])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[2])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[3])));
+    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+        "mock_pen_req_batch_student_ids.json", 1);
+    when(this.restUtils.getStudentByPEN("123456789")).thenReturn(Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[0])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[1])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[2])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[3])));
 
-    var penWebBlob = prbService.createIDSFile(batchList.get(0));
+    final var penWebBlob = this.prbService.createIDSFile(this.batchList.get(0));
 
     assertThat(penWebBlob).isNotNull();
 //    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
@@ -93,9 +94,9 @@ public class PenRequestBatchServiceTest {
   @Test
   @Transactional
   public void testCreateIDSFile_givenBatchFileHasBadStudents_shouldReturnNull() throws IOException {
-    batchList = PenRequestBatchUtils.createBatchStudents(prbRepository, "mock_pen_req_batch_ids.json",
-            "mock_pen_req_batch_student_ids_null.json", 1);
-    var penWebBlob = prbService.createIDSFile(batchList.get(0));
+    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+        "mock_pen_req_batch_student_ids_null.json", 1);
+    final var penWebBlob = this.prbService.createIDSFile(this.batchList.get(0));
 
     assertThat(penWebBlob).isNull();
 //    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);

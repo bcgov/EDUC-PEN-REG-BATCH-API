@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentStatusCodeEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentStatusCodeEntity;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,5 +17,6 @@ public interface PenRequestBatchStudentStatusCodeRepository extends CrudReposito
    *
    * @return the list
    */
+  @Override
   List<PenRequestBatchStudentStatusCodeEntity> findAll();
 }

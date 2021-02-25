@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEvent;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEvent;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;

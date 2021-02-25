@@ -4,7 +4,7 @@ package ca.bc.gov.educ.penreg.api.service;
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEvent;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -32,24 +32,24 @@ public class EventPublisherService {
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void send(PenRequestBatchEvent event) throws JsonProcessingException {
+  public void send(final PenRequestBatchEvent event) throws JsonProcessingException {
     if (event.getReplyChannel() != null) {
-      getMessagePublisher().dispatchMessage(event.getReplyChannel(), penRequestBatchEventProcessed(event));
+      this.getMessagePublisher().dispatchMessage(event.getReplyChannel(), this.penRequestBatchEventProcessed(event));
     }
-    getMessagePublisher().dispatchMessage(PEN_REQUEST_BATCH_API_TOPIC.toString(), createOutboxEvent(event));
+    this.getMessagePublisher().dispatchMessage(PEN_REQUEST_BATCH_API_TOPIC.toString(), this.createOutboxEvent(event));
   }
 
-  private byte[] penRequestBatchEventProcessed(PenRequestBatchEvent penRequestBatchEvent) throws JsonProcessingException {
-    Event event = Event.builder()
-      .sagaId(penRequestBatchEvent.getSagaId())
-      .eventType(EventType.valueOf(penRequestBatchEvent.getEventType()))
-      .eventOutcome(EventOutcome.valueOf(penRequestBatchEvent.getEventOutcome()))
-      .eventPayload(penRequestBatchEvent.getEventPayload()).build();
+  private byte[] penRequestBatchEventProcessed(final PenRequestBatchEvent penRequestBatchEvent) throws JsonProcessingException {
+    final Event event = Event.builder()
+        .sagaId(penRequestBatchEvent.getSagaId())
+        .eventType(EventType.valueOf(penRequestBatchEvent.getEventType()))
+        .eventOutcome(EventOutcome.valueOf(penRequestBatchEvent.getEventOutcome()))
+        .eventPayload(penRequestBatchEvent.getEventPayload()).build();
     return JsonUtil.getJsonStringFromObject(event).getBytes();
   }
 
-  private byte[] createOutboxEvent(PenRequestBatchEvent penRequestBatchEvent) throws JsonProcessingException {
-    Event event = Event.builder().eventType(PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED).eventPayload(penRequestBatchEvent.getEventId().toString()).build();
+  private byte[] createOutboxEvent(final PenRequestBatchEvent penRequestBatchEvent) throws JsonProcessingException {
+    final Event event = Event.builder().eventType(PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED).eventPayload(penRequestBatchEvent.getEventId().toString()).build();
     return JsonUtil.getJsonStringFromObject(event).getBytes();
   }
 }

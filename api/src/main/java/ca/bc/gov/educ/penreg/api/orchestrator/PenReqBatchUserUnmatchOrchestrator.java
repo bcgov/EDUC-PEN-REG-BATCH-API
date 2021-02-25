@@ -1,8 +1,8 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.model.Saga;
-import ca.bc.gov.educ.penreg.api.model.SagaEvent;
+import ca.bc.gov.educ.penreg.api.model.v1.Saga;
+import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
@@ -36,7 +36,7 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
    * @param sagaService      the saga service
    * @param messagePublisher the message publisher
    */
-  public PenReqBatchUserUnmatchOrchestrator(SagaService sagaService, MessagePublisher messagePublisher) {
+  public PenReqBatchUserUnmatchOrchestrator(final SagaService sagaService, final MessagePublisher messagePublisher) {
     super(sagaService, messagePublisher, PenRequestBatchUnmatchSagaData.class,
         PEN_REQUEST_BATCH_USER_UNMATCH_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_USER_UNMATCH_PROCESSING_TOPIC.toString());
   }
@@ -46,7 +46,7 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
    */
   @Override
   public void populateStepsToExecuteMap() {
-    stepBuilder()
+    this.stepBuilder()
         .begin(this::isPossibleMatchDeleteNotRequired, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
         .or()
         .begin(this::isPossibleMatchDeleteRequired, DELETE_POSSIBLE_MATCH, this::deletePossibleMatchesFromStudent)
@@ -56,11 +56,11 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
         .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_NOT_FOUND, this::logPenRequestBatchStudentNotFound);
   }
 
-  private boolean isPossibleMatchDeleteRequired(PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
-    return !isPossibleMatchDeleteNotRequired(penRequestBatchUnmatchSagaData);
+  private boolean isPossibleMatchDeleteRequired(final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
+    return !this.isPossibleMatchDeleteNotRequired(penRequestBatchUnmatchSagaData);
   }
 
-  private boolean isPossibleMatchDeleteNotRequired(PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
+  private boolean isPossibleMatchDeleteNotRequired(final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
     return CollectionUtils.isEmpty(penRequestBatchUnmatchSagaData.getMatchedStudentIDList());
   }
 
@@ -73,10 +73,10 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
    * @param penRequestBatchUnmatchSagaData the pen request batch user actions saga data
    * @throws JsonProcessingException the json processing exception
    */
-  protected void deletePossibleMatchesFromStudent(Event event, Saga saga, PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) throws JsonProcessingException {
-    SagaEvent eventStates = createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
+  protected void deletePossibleMatchesFromStudent(final Event event, final Saga saga, final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) throws JsonProcessingException {
+    final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(DELETE_POSSIBLE_MATCH.toString()); // set current event as saga state.
-    getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
+    this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
     final List<Map<String, UUID>> payload = new ArrayList<>();
     penRequestBatchUnmatchSagaData
         .getMatchedStudentIDList().forEach(element -> {
@@ -85,12 +85,12 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
       deletePossibleMatchMap.put("matchedStudentID", UUID.fromString(element));
       payload.add(deletePossibleMatchMap);
     });
-    Event nextEvent = Event.builder().sagaId(saga.getSagaId())
+    final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
         .eventType(DELETE_POSSIBLE_MATCH)
-        .replyTo(getTopicToSubscribe())
+        .replyTo(this.getTopicToSubscribe())
         .eventPayload(JsonUtil.getJsonStringFromObject(payload))
         .build();
-    postMessageToTopic(PEN_MATCH_API_TOPIC.toString(), nextEvent);
+    this.postMessageToTopic(PEN_MATCH_API_TOPIC.toString(), nextEvent);
     log.info("message sent to PEN_MATCH_API_TOPIC for DELETE_POSSIBLE_MATCH Event.");
   }
 
@@ -102,8 +102,8 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
    * @return the pen request batch student
    */
   @Override
-  protected PenRequestBatchStudent updateSagaDataAndCreatePRBStudent(Event event, PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
-    var prbStudent = penRequestBatchStudentMapper.toPrbStudent(penRequestBatchUnmatchSagaData);
+  protected PenRequestBatchStudent updateSagaDataAndCreatePRBStudent(final Event event, final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
+    final var prbStudent = penRequestBatchStudentMapper.toPrbStudent(penRequestBatchUnmatchSagaData);
     prbStudent.setPenRequestBatchStudentStatusCode(FIXABLE.getCode());
     prbStudent.setAssignedPEN(null);
     prbStudent.setStudentID(null);

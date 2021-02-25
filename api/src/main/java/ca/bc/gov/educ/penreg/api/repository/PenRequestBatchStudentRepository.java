@@ -1,7 +1,7 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -14,7 +14,6 @@ import java.util.UUID;
 /**
  * The interface Pen request batch student repository.
  */
-@SuppressWarnings("java:S107")
 public interface PenRequestBatchStudentRepository extends CrudRepository<PenRequestBatchStudentEntity, UUID>, JpaSpecificationExecutor<PenRequestBatchStudentEntity> {
 
   /**
@@ -22,6 +21,7 @@ public interface PenRequestBatchStudentRepository extends CrudRepository<PenRequ
    *
    * @return the list
    */
+  @Override
   List<PenRequestBatchStudentEntity> findAll();
 
   /**

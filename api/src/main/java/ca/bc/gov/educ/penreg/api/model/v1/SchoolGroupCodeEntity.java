@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.model;
+package ca.bc.gov.educ.penreg.api.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
@@ -16,17 +16,17 @@ import java.time.LocalDateTime;
  * @author OM
  */
 @Entity
-@Table(name = "PEN_REQUEST_BATCH_STUDENT_STATUS_CODE")
+@Table(name = "SCHOOL_GROUP_CODE")
 @Data
 @DynamicUpdate
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PenRequestBatchStudentStatusCodeEntity {
+public class SchoolGroupCodeEntity {
   /**
    * The Status code.
    */
   @Id
-  @Column(name = "PEN_REQUEST_BATCH_STUDENT_STATUS_CODE", unique = true, length = 10)
-  String penRequestBatchStudentStatusCode;
+  @Column(name = "SCHOOL_GROUP_CODE", unique = true, length = 10)
+  String schoolGroupCode;
 
   /**
    * The Label.

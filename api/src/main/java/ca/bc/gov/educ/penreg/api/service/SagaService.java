@@ -1,7 +1,7 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.model.Saga;
-import ca.bc.gov.educ.penreg.api.model.SagaEvent;
+import ca.bc.gov.educ.penreg.api.model.v1.Saga;
+import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import lombok.AccessLevel;
@@ -48,7 +48,7 @@ public class SagaService {
    * @param sagaEventRepository the saga event repository
    */
   @Autowired
-  public SagaService(final SagaRepository sagaRepository, SagaEventRepository sagaEventRepository) {
+  public SagaService(final SagaRepository sagaRepository, final SagaEventRepository sagaEventRepository) {
     this.sagaRepository = sagaRepository;
     this.sagaEventRepository = sagaEventRepository;
   }
@@ -60,8 +60,8 @@ public class SagaService {
    * @param saga the saga
    * @return the saga
    */
-  public Saga createSagaRecord(Saga saga) {
-    return getSagaRepository().save(saga);
+  public Saga createSagaRecord(final Saga saga) {
+    return this.getSagaRepository().save(saga);
   }
 
   /**
@@ -74,13 +74,13 @@ public class SagaService {
    */
   @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void updateAttachedSagaWithEvents(Saga saga, SagaEvent sagaEvent) {
+  public void updateAttachedSagaWithEvents(final Saga saga, final SagaEvent sagaEvent) {
     saga.setUpdateDate(LocalDateTime.now());
-    getSagaRepository().save(saga);
-    val result = getSagaEventRepository()
+    this.getSagaRepository().save(saga);
+    val result = this.getSagaEventRepository()
         .findBySagaAndSagaEventOutcomeAndSagaEventStateAndSagaStepNumber(saga, sagaEvent.getSagaEventOutcome(), sagaEvent.getSagaEventState(), sagaEvent.getSagaStepNumber() - 1); //check if the previous step was same and had same outcome, and it is due to replay.
     if (result.isEmpty()) {
-      getSagaEventRepository().save(sagaEvent);
+      this.getSagaEventRepository().save(sagaEvent);
     }
   }
 
@@ -90,8 +90,8 @@ public class SagaService {
    * @param sagaId the saga id
    * @return the optional
    */
-  public Optional<Saga> findSagaById(UUID sagaId) {
-    return getSagaRepository().findById(sagaId);
+  public Optional<Saga> findSagaById(final UUID sagaId) {
+    return this.getSagaRepository().findById(sagaId);
   }
 
   /**
@@ -100,8 +100,8 @@ public class SagaService {
    * @param saga the saga
    * @return the list
    */
-  public List<SagaEvent> findAllSagaStates(Saga saga) {
-    return getSagaEventRepository().findBySaga(saga);
+  public List<SagaEvent> findAllSagaStates(final Saga saga) {
+    return this.getSagaEventRepository().findBySaga(saga);
   }
 
 
@@ -111,8 +111,8 @@ public class SagaService {
    * @param saga the saga
    */
   @Transactional(propagation = Propagation.MANDATORY)
-  public void updateSagaRecord(Saga saga) { // saga here MUST be an attached entity
-    getSagaRepository().save(saga);
+  public void updateSagaRecord(final Saga saga) { // saga here MUST be an attached entity
+    this.getSagaRepository().save(saga);
   }
 
   /**
@@ -121,18 +121,18 @@ public class SagaService {
    * @param penRequestBatchStudentID the pen request batch student id
    * @return the list
    */
-  public List<Saga> findByPenRequestBatchStudentIDAndSagaName(UUID penRequestBatchStudentID, String sagaName){
-    return getSagaRepository().findByPenRequestBatchStudentIDAndSagaName(penRequestBatchStudentID, sagaName);
+  public List<Saga> findByPenRequestBatchStudentIDAndSagaName(final UUID penRequestBatchStudentID, final String sagaName) {
+    return this.getSagaRepository().findByPenRequestBatchStudentIDAndSagaName(penRequestBatchStudentID, sagaName);
   }
 
-  public List<Saga> findAllByPenRequestBatchStudentIDAndStatusIn(UUID penRequestBatchStudentID, String sagaName, List<String> statuses){
-    return getSagaRepository().findAllByPenRequestBatchStudentIDAndSagaNameAndStatusIn(penRequestBatchStudentID, sagaName, statuses);
+  public List<Saga> findAllByPenRequestBatchStudentIDAndStatusIn(final UUID penRequestBatchStudentID, final String sagaName, final List<String> statuses) {
+    return this.getSagaRepository().findAllByPenRequestBatchStudentIDAndSagaNameAndStatusIn(penRequestBatchStudentID, sagaName, statuses);
   }
-  
+
   @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void updateAttachedEntityDuringSagaProcess(Saga saga){
-    getSagaRepository().save(saga);
+  public void updateAttachedEntityDuringSagaProcess(final Saga saga) {
+    this.getSagaRepository().save(saga);
   }
 
 
@@ -147,20 +147,20 @@ public class SagaService {
    * @return the saga
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public Saga createSagaRecordInDB(String sagaName, String userName, String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID) {
-    var saga = Saga
-      .builder()
-      .payload(payload)
-      .penRequestBatchStudentID(penRequestBatchStudentID)
-      .penRequestBatchID(penRequestBatchID)
-      .sagaName(sagaName)
-      .status(STARTED.toString())
-      .sagaState(INITIATED.toString())
-      .createDate(LocalDateTime.now())
-      .createUser(userName)
-      .updateUser(userName)
-      .updateDate(LocalDateTime.now())
-      .build();
-    return createSagaRecord(saga);
+  public Saga createSagaRecordInDB(final String sagaName, final String userName, final String payload, final UUID penRequestBatchStudentID, final UUID penRequestBatchID) {
+    final var saga = Saga
+        .builder()
+        .payload(payload)
+        .penRequestBatchStudentID(penRequestBatchStudentID)
+        .penRequestBatchID(penRequestBatchID)
+        .sagaName(sagaName)
+        .status(STARTED.toString())
+        .sagaState(INITIATED.toString())
+        .createDate(LocalDateTime.now())
+        .createUser(userName)
+        .updateUser(userName)
+        .updateDate(LocalDateTime.now())
+        .build();
+    return this.createSagaRecord(saga);
   }
 }

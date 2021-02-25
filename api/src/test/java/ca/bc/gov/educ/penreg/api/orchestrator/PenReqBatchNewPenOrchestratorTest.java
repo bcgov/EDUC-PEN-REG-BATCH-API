@@ -3,7 +3,7 @@ package ca.bc.gov.educ.penreg.api.orchestrator;
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.model.Saga;
+import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
@@ -65,7 +65,7 @@ public class PenReqBatchNewPenOrchestratorTest extends BaseOrchestratorTest {
   @Mock
   private MessagePublisher messagePublisher;
 
- 
+
 
   /**
    * The issue new pen orchestrator.
@@ -94,11 +94,11 @@ public class PenReqBatchNewPenOrchestratorTest extends BaseOrchestratorTest {
   @Before
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    orchestrator = new PenReqBatchNewPenOrchestrator(sagaService, messagePublisher);
-    var payload = placeholderPenRequestBatchActionsSagaData();
-    sagaData = getPenRequestBatchUserActionsSagaDataFromJsonString(payload);
-    saga = sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", payload,
-      UUID.fromString(penRequestBatchStudentID), UUID.fromString(penRequestBatchID));
+    this.orchestrator = new PenReqBatchNewPenOrchestrator(this.sagaService, this.messagePublisher);
+    final var payload = this.placeholderPenRequestBatchActionsSagaData();
+    this.sagaData = this.getPenRequestBatchUserActionsSagaDataFromJsonString(payload);
+    this.saga = this.sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", payload,
+        UUID.fromString(this.penRequestBatchStudentID), UUID.fromString(this.penRequestBatchID));
   }
 
   /**
@@ -106,8 +106,8 @@ public class PenReqBatchNewPenOrchestratorTest extends BaseOrchestratorTest {
    */
   @After
   public void after() {
-    sagaEventRepository.deleteAll();
-    repository.deleteAll();
+    this.sagaEventRepository.deleteAll();
+    this.repository.deleteAll();
   }
 
   /**
@@ -117,20 +117,20 @@ public class PenReqBatchNewPenOrchestratorTest extends BaseOrchestratorTest {
    */
   @Test
   public void testGetNextPenNumber_givenEventAndSagaData_shouldPostEventToServicesApi() throws JsonProcessingException {
-    var event = Event.builder()
-      .eventType(EventType.INITIATED)
-      .eventOutcome(EventOutcome.INITIATE_SUCCESS)
-      .sagaId(saga.getSagaId())
-      .build();
-    orchestrator.getNextPenNumber(event, saga, sagaData);
-    verify(messagePublisher, atMostOnce()).dispatchMessage(eq(PEN_SERVICES_API_TOPIC.toString()), eventCaptor.capture());
-    var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
+    final var event = Event.builder()
+        .eventType(EventType.INITIATED)
+        .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+        .sagaId(this.saga.getSagaId())
+        .build();
+    this.orchestrator.getNextPenNumber(event, this.saga, this.sagaData);
+    verify(this.messagePublisher, atMostOnce()).dispatchMessage(eq(PEN_SERVICES_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(GET_NEXT_PEN_NUMBER);
-    assertThat(newEvent.getEventPayload()).isEqualTo(saga.getSagaId().toString());
-    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
+    assertThat(newEvent.getEventPayload()).isEqualTo(this.saga.getSagaId().toString());
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     assertThat(sagaFromDB.get().getSagaState()).isEqualTo(GET_NEXT_PEN_NUMBER.toString());
-    var sagaStates = sagaService.findAllSagaStates(saga);
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(1);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.INITIATED.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
@@ -143,30 +143,30 @@ public class PenReqBatchNewPenOrchestratorTest extends BaseOrchestratorTest {
    */
   @Test
   public void testCreateStudent_givenEventAndSagaData_shouldPostEventToStudentApi() throws JsonProcessingException {
-    var pen = "123456789";
-    var event = Event.builder()
-      .eventType(GET_NEXT_PEN_NUMBER)
-      .eventOutcome(EventOutcome.NEXT_PEN_NUMBER_RETRIEVED)
-      .sagaId(saga.getSagaId())
-      .eventPayload(pen)
-      .build();
-    orchestrator.createStudent(event, saga, sagaData);
-    verify(messagePublisher, atMostOnce()).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), eventCaptor.capture());
-    var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
+    final var pen = "123456789";
+    final var event = Event.builder()
+        .eventType(GET_NEXT_PEN_NUMBER)
+        .eventOutcome(EventOutcome.NEXT_PEN_NUMBER_RETRIEVED)
+        .sagaId(this.saga.getSagaId())
+        .eventPayload(pen)
+        .build();
+    this.orchestrator.createStudent(event, this.saga, this.sagaData);
+    verify(this.messagePublisher, atMostOnce()).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(CREATE_STUDENT);
-    var student = JsonUtil.getJsonObjectFromString(Student.class, newEvent.getEventPayload());
+    final var student = JsonUtil.getJsonObjectFromString(Student.class, newEvent.getEventPayload());
     assertThat(student.getPen()).isEqualTo(pen);
     assertThat(student.getDemogCode()).isEqualTo("A");
     assertThat(student.getStatusCode()).isEqualTo("A");
-    assertThat(student.getMincode()).isEqualTo(mincode);
+    assertThat(student.getMincode()).isEqualTo(this.mincode);
     assertThat(student.getGenderCode()).isEqualTo("X");
     assertThat(student.getSexCode()).isEqualTo("U");
-    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
-    var currentSaga = sagaFromDB.get();
+    final var currentSaga = sagaFromDB.get();
     assertThat(currentSaga.getSagaState()).isEqualTo(CREATE_STUDENT.toString());
-    assertThat(getPenRequestBatchUserActionsSagaDataFromJsonString(currentSaga.getPayload()).getAssignedPEN()).isEqualTo(pen);
-    var sagaStates = sagaService.findAllSagaStates(saga);
+    assertThat(this.getPenRequestBatchUserActionsSagaDataFromJsonString(currentSaga.getPayload()).getAssignedPEN()).isEqualTo(pen);
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(1);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.GET_NEXT_PEN_NUMBER.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.NEXT_PEN_NUMBER_RETRIEVED.toString());
@@ -179,34 +179,33 @@ public class PenReqBatchNewPenOrchestratorTest extends BaseOrchestratorTest {
    */
   @Test
   public void testUpdatePenRequestBatchStudent_givenEventAndSagaData_shouldPostEventToBatchApi() throws JsonProcessingException {
-    var pen = "123456789";
-    var studentID = UUID.randomUUID().toString();
-    var student = Student.builder().studentID(studentID).pen(pen).legalFirstName("Jack").build();
-    var event = Event.builder()
-      .eventType(CREATE_STUDENT)
-      .eventOutcome(EventOutcome.STUDENT_CREATED)
-      .sagaId(saga.getSagaId())
-      .eventPayload(JsonUtil.getJsonStringFromObject(student))
-      .build();
-    sagaData.setAssignedPEN(pen);
-    orchestrator.updatePenRequestBatchStudent(event, saga, sagaData);
-    verify(messagePublisher, atMostOnce()).dispatchMessage(eq(PEN_REQUEST_BATCH_API_TOPIC.toString()), eventCaptor.capture());
-    var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
+    final var pen = "123456789";
+    final var studentID = UUID.randomUUID().toString();
+    final var student = Student.builder().studentID(studentID).pen(pen).legalFirstName("Jack").build();
+    final var event = Event.builder()
+        .eventType(CREATE_STUDENT)
+        .eventOutcome(EventOutcome.STUDENT_CREATED)
+        .sagaId(this.saga.getSagaId())
+        .eventPayload(JsonUtil.getJsonStringFromObject(student))
+        .build();
+    this.sagaData.setAssignedPEN(pen);
+    this.orchestrator.updatePenRequestBatchStudent(event, this.saga, this.sagaData);
+    verify(this.messagePublisher, atMostOnce()).dispatchMessage(eq(PEN_REQUEST_BATCH_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT);
-    var prbStudent = new ObjectMapper().readValue(newEvent.getEventPayload(), PenRequestBatchStudent.class);
+    final var prbStudent = new ObjectMapper().readValue(newEvent.getEventPayload(), PenRequestBatchStudent.class);
     assertThat(prbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.getCode());
     assertThat(prbStudent.getStudentID()).isEqualTo(studentID);
     assertThat(prbStudent.getAssignedPEN()).isEqualTo(pen);
-    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
-    var currentSaga = sagaFromDB.get();
+    final var currentSaga = sagaFromDB.get();
     assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
-    var sagaStates = sagaService.findAllSagaStates(saga);
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(1);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.CREATE_STUDENT.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_CREATED.toString());
   }
 
- 
 
 }

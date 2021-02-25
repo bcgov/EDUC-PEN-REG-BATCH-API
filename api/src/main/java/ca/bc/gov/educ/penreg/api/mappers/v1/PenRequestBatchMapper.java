@@ -3,7 +3,7 @@ package ca.bc.gov.educ.penreg.api.mappers.v1;
 
 import ca.bc.gov.educ.penreg.api.mappers.LocalDateTimeMapper;
 import ca.bc.gov.educ.penreg.api.mappers.UUIDMapper;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchSearch;
 import org.mapstruct.InheritInverseConfiguration;
@@ -14,7 +14,6 @@ import org.mapstruct.factory.Mappers;
  * The interface Pen request batch mapper.
  */
 @Mapper(uses = {UUIDMapper.class, LocalDateTimeMapper.class})
-@SuppressWarnings("squid:S1214")
 public interface PenRequestBatchMapper {
 
   /**

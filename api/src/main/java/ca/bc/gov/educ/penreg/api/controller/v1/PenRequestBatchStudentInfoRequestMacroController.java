@@ -5,7 +5,7 @@ import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidPayloadException;
 import ca.bc.gov.educ.penreg.api.exception.errors.ApiError;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentInfoRequestMacroMapper;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentInfoRequestMacroEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentInfoRequestMacroEntity;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentInfoRequestMacroService;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentInfoRequestMacro;
 import ca.bc.gov.educ.penreg.api.validator.PenRequestBatchStudentInfoRequestMacroPayloadValidator;
@@ -29,76 +29,76 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 @Slf4j
 public class PenRequestBatchStudentInfoRequestMacroController implements PenRequestBatchStudentInfoRequestMacroEndpoint {
 
-    /**
-     * The constant PEN_REQUEST_BATCH_API.
-     */
-    public static final String PEN_REQUEST_BATCH_API = "PEN_REQUEST_BATCH_API";
+  /**
+   * The constant PEN_REQUEST_BATCH_API.
+   */
+  public static final String PEN_REQUEST_BATCH_API = "PEN_REQUEST_BATCH_API";
 
-    private static final PenRequestBatchStudentInfoRequestMacroMapper mapper = PenRequestBatchStudentInfoRequestMacroMapper.mapper;
-    @Getter(PRIVATE)
-    private final PenRequestBatchStudentInfoRequestMacroService penRequestBatchMacroService;
-    @Getter(PRIVATE)
-    private final PenRequestBatchStudentInfoRequestMacroPayloadValidator penRequestBatchMacroPayloadValidator;
+  private static final PenRequestBatchStudentInfoRequestMacroMapper mapper = PenRequestBatchStudentInfoRequestMacroMapper.mapper;
+  @Getter(PRIVATE)
+  private final PenRequestBatchStudentInfoRequestMacroService penRequestBatchMacroService;
+  @Getter(PRIVATE)
+  private final PenRequestBatchStudentInfoRequestMacroPayloadValidator penRequestBatchMacroPayloadValidator;
 
-    @Autowired
-    public PenRequestBatchStudentInfoRequestMacroController(PenRequestBatchStudentInfoRequestMacroService penRequestMacroService, PenRequestBatchStudentInfoRequestMacroPayloadValidator penRequestBatchMacroPayloadValidator) {
-        this.penRequestBatchMacroService = penRequestMacroService;
-        this.penRequestBatchMacroPayloadValidator = penRequestBatchMacroPayloadValidator;
+  @Autowired
+  public PenRequestBatchStudentInfoRequestMacroController(final PenRequestBatchStudentInfoRequestMacroService penRequestMacroService, final PenRequestBatchStudentInfoRequestMacroPayloadValidator penRequestBatchMacroPayloadValidator) {
+    this.penRequestBatchMacroService = penRequestMacroService;
+    this.penRequestBatchMacroPayloadValidator = penRequestBatchMacroPayloadValidator;
+  }
+
+  @Override
+  public List<PenRequestBatchStudentInfoRequestMacro> findPenReqMacros() {
+    return this.getPenRequestBatchMacroService().findAllMacros().stream().map(mapper::toStructure).collect(Collectors.toList());
+  }
+
+  @Override
+  public PenRequestBatchStudentInfoRequestMacro findPenReqMacroById(final UUID macroId) {
+    val result = this.getPenRequestBatchMacroService().getMacro(macroId);
+    if (result.isPresent()) {
+      return mapper.toStructure(result.get());
     }
+    throw new EntityNotFoundException(PenRequestBatchStudentInfoRequestMacro.class, "macroId", macroId.toString());
+  }
 
-    @Override
-    public List<PenRequestBatchStudentInfoRequestMacro> findPenReqMacros() {
-        return getPenRequestBatchMacroService().findAllMacros().stream().map(mapper::toStructure).collect(Collectors.toList());
-    }
+  @Override
+  public PenRequestBatchStudentInfoRequestMacro createPenReqMacro(final PenRequestBatchStudentInfoRequestMacro penRequestBatchMacro) {
+    this.validatePayload(penRequestBatchMacro, true);
+    final var model = mapper.toModel(penRequestBatchMacro);
+    this.populateAuditColumns(model);
+    return mapper.toStructure(this.getPenRequestBatchMacroService().createMacro(model));
+  }
 
-    @Override
-    public PenRequestBatchStudentInfoRequestMacro findPenReqMacroById(UUID macroId) {
-        val result = getPenRequestBatchMacroService().getMacro(macroId);
-        if (result.isPresent()) {
-            return mapper.toStructure(result.get());
-        }
-        throw new EntityNotFoundException(PenRequestBatchStudentInfoRequestMacro.class, "macroId", macroId.toString());
-    }
+  @Override
+  public PenRequestBatchStudentInfoRequestMacro updatePenReqMacro(final UUID macroId, final PenRequestBatchStudentInfoRequestMacro penRequestBatchMacro) {
+    this.validatePayload(penRequestBatchMacro, false);
+    final var model = mapper.toModel(penRequestBatchMacro);
+    this.populateAuditColumns(model);
+    return mapper.toStructure(this.getPenRequestBatchMacroService().updateMacro(macroId, model));
+  }
 
-    @Override
-    public PenRequestBatchStudentInfoRequestMacro createPenReqMacro(PenRequestBatchStudentInfoRequestMacro penRequestBatchMacro) {
-        validatePayload(penRequestBatchMacro, true);
-        var model = mapper.toModel(penRequestBatchMacro);
-        populateAuditColumns(model);
-        return mapper.toStructure(getPenRequestBatchMacroService().createMacro(model));
+  private void validatePayload(final PenRequestBatchStudentInfoRequestMacro penRequestMacro, final boolean isCreateOperation) {
+    val validationResult = this.getPenRequestBatchMacroPayloadValidator().validatePayload(penRequestMacro, isCreateOperation);
+    this.penRequestBatchMacroPayloadValidator.validatePayload(penRequestMacro, isCreateOperation);
+    if (!validationResult.isEmpty()) {
+      final ApiError error = ApiError.builder().timestamp(LocalDateTime.now()).message("Payload contains invalid data.").status(BAD_REQUEST).build();
+      error.addValidationErrors(validationResult);
+      throw new InvalidPayloadException(error);
     }
+  }
 
-    @Override
-    public PenRequestBatchStudentInfoRequestMacro updatePenReqMacro(UUID macroId, PenRequestBatchStudentInfoRequestMacro penRequestBatchMacro) {
-        validatePayload(penRequestBatchMacro, false);
-        var model = mapper.toModel(penRequestBatchMacro);
-        populateAuditColumns(model);
-        return mapper.toStructure(getPenRequestBatchMacroService().updateMacro(macroId, model));
+  /**
+   * Populate audit columns.
+   *
+   * @param model the model
+   */
+  private void populateAuditColumns(final PenRequestBatchStudentInfoRequestMacroEntity model) {
+    if (model.getCreateUser() == null) {
+      model.setCreateUser(PEN_REQUEST_BATCH_API);
     }
-
-    private void validatePayload(PenRequestBatchStudentInfoRequestMacro penRequestMacro, boolean isCreateOperation) {
-        val validationResult = getPenRequestBatchMacroPayloadValidator().validatePayload(penRequestMacro, isCreateOperation);
-        penRequestBatchMacroPayloadValidator.validatePayload(penRequestMacro, isCreateOperation);
-        if (!validationResult.isEmpty()) {
-            ApiError error = ApiError.builder().timestamp(LocalDateTime.now()).message("Payload contains invalid data.").status(BAD_REQUEST).build();
-            error.addValidationErrors(validationResult);
-            throw new InvalidPayloadException(error);
-        }
+    if (model.getUpdateUser() == null) {
+      model.setUpdateUser(PEN_REQUEST_BATCH_API);
     }
-
-    /**
-     * Populate audit columns.
-     *
-     * @param model the model
-     */
-    private void populateAuditColumns(PenRequestBatchStudentInfoRequestMacroEntity model) {
-        if (model.getCreateUser() == null) {
-            model.setCreateUser(PEN_REQUEST_BATCH_API);
-        }
-        if (model.getUpdateUser() == null) {
-            model.setUpdateUser(PEN_REQUEST_BATCH_API);
-        }
-        model.setCreateDate(LocalDateTime.now());
-        model.setUpdateDate(LocalDateTime.now());
-    }
+    model.setCreateDate(LocalDateTime.now());
+    model.setUpdateDate(LocalDateTime.now());
+  }
 }
