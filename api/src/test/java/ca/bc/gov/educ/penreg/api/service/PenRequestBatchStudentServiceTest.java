@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
@@ -141,6 +142,30 @@ public class PenRequestBatchStudentServiceTest {
     assertThat(penRequestBatch).isPresent();
     assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
     assertThat(penRequestBatch.get().getRepeatCount()).isZero();
+  }
+
+  @Test
+  @Transactional
+  public void testUpdatePenRequestBatchStudent_givenStatusChangeFromRepeatToUserMatched_shouldUpdatePrbStudentAndPrbWithUnarchivedChangedStatus() throws IOException {
+    var penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
+    var penRequestBatchEntity = penRequestBatch.get();
+    penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.UNARCHIVED.getCode());
+    penRequestBatchRepository.save(penRequestBatchEntity);
+
+    penRequestBatchStudentID = getFirstPenRequestBatchStudentID(REPEAT.getCode());
+
+    var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, dummyPenRequestBatchStudentDataJson(USR_MATCHED.toString()));
+    prbStudentEntity.setUpdateDate(LocalDateTime.now());
+
+    var updatedPrbStudent = prbStudentService.updateStudent(prbStudentEntity, penRequestBatchID, penRequestBatchStudentID);
+
+    assertThat(updatedPrbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_MATCHED.toString());
+
+    penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
+    assertThat(penRequestBatch).isPresent();
+    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(2);
+    assertThat(penRequestBatch.get().getRepeatCount()).isZero();
+    assertThat(penRequestBatch.get().getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode());
   }
 
   protected String dummyPenRequestBatchStudentDataJson(String status) {

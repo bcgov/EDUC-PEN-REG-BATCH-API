@@ -4,8 +4,6 @@
     "penRequestBatchStatusCode": "LOADED",
     "penRequestBatchStatusReason": null,
     "penRequestBatchTypeCode": "SCHOOL",
-    "unarchivedBatchStatusCode": "NA",
-    "unarchivedBatchChangedFlag": "N",
     "fileName": "sample_5_PSI_OK",
     "fileType": "txt",
     "insertDate": "2020-08-04T12:19:29",
@@ -28,16 +26,13 @@
     "errorCount": null,
     "repeatCount": null,
     "fixableCount": null,
-    "schoolGroupCode": "PSI",
-    "unarchivedUser": null
+    "schoolGroupCode": "PSI"
   },
   {
     "submissionNumber": "T-428469",
     "penRequestBatchStatusCode": "LOADED",
     "penRequestBatchStatusReason": null,
     "penRequestBatchTypeCode": "SCHOOL",
-    "unarchivedBatchStatusCode": "NA",
-    "unarchivedBatchChangedFlag": "N",
     "fileName": "sample_5_K12_OK",
     "fileType": "txt",
     "insertDate": "2020-08-04T12:19:29",
@@ -60,7 +55,6 @@
     "errorCount": null,
     "repeatCount": null,
     "fixableCount": null,
-    "schoolGroupCode": "K12",
-    "unarchivedUser": null
+    "schoolGroupCode": "K12"
   }
 ]

@@ -4,7 +4,6 @@ import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
 import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
 import ca.bc.gov.educ.penreg.api.constants.MinistryPRBSourceCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
-import ca.bc.gov.educ.penreg.api.constants.UnarchivedBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.PenRequestBatchHistoryEntity;
@@ -159,8 +158,6 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
    * @param entity the entity
    */
   private void setDefaults(PenRequestBatchEntity entity) {
-    entity.setUnarchivedBatchChangedFlag("N");
-    entity.setUnarchivedBatchStatusCode(UnarchivedBatchStatusCodes.NA.getCode());
     entity.setMinistryPRBSourceCode(MinistryPRBSourceCodes.TSW_PEN_WEB.getCode());
     entity.setPenRequestBatchTypeCode(SCHOOL.getCode()); // it will be always school for this process.
     entity.setExtractDate(LocalDateTime.now());

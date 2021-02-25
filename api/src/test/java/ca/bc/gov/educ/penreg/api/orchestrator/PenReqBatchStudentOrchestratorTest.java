@@ -138,9 +138,6 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
     entity.setSubmissionNumber("12345678");
     entity.setPenRequestBatchTypeCode(PenRequestBatchTypeCode.SCHOOL.getCode());
     entity.setSchoolGroupCode("K12");
-    entity.setUnarchivedBatchStatusCode("N");
-    entity.setUnarchivedUser("TEST");
-    entity.setUnarchivedBatchChangedFlag("N");
     entity.setFileName("test");
     entity.setFileType("PEN");
     entity.setMincode("10200000");

@@ -35,10 +35,6 @@ public abstract class BasePenRequestBatch {
    */
   String penRequestBatchTypeCode;
   /**
-   * The Unarchived batch changed flag.
-   */
-  String unarchivedBatchChangedFlag;
-  /**
    * The File name.
    */
   String fileName;
@@ -132,16 +128,6 @@ public abstract class BasePenRequestBatch {
    * The School group code.
    */
   String schoolGroupCode;
-
-  /**
-   * The Unarchived user.
-   */
-  String unarchivedUser;
-
-  /**
-   * The Unarchived batch status code.
-   */
-  String unarchivedBatchStatusCode;
 
   /**
    * The Create user.
