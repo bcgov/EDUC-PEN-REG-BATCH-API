@@ -60,4 +60,8 @@ public enum EventType {
    * Delete possible match event type.
    */
   DELETE_POSSIBLE_MATCH,
+  /**
+   * Pen request batch notify school file format error event type.
+   */
+  PEN_REQUEST_BATCH_NOTIFY_SCHOOL_FILE_FORMAT_ERROR
 }

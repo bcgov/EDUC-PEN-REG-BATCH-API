@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.batch.schedulers;
 
-import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
@@ -77,9 +77,9 @@ public class PenRegBatchSchedulerTest {
    */
   @Before
   public void setUp() throws Exception {
-    List<PENWebBlobEntity> entities = createDummyRecords();
-    penWebBlobRepository.saveAll(entities);
-    when(restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(createMockSchool()));
+    final List<PENWebBlobEntity> entities = this.createDummyRecords();
+    this.penWebBlobRepository.saveAll(entities);
+    when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
   }
 
   /**
@@ -89,9 +89,9 @@ public class PenRegBatchSchedulerTest {
    * @throws IOException the io exception
    */
   private List<PENWebBlobEntity> createDummyRecords() throws IOException {
-    List<PENWebBlobEntity> entities = new ArrayList<>();
+    final List<PENWebBlobEntity> entities = new ArrayList<>();
     for (var index = 0; index < 1; index++) {
-      entities.add(createDummyRecord(index));
+      entities.add(this.createDummyRecord(index));
     }
     return entities;
   }
@@ -103,16 +103,16 @@ public class PenRegBatchSchedulerTest {
    * @return the pen web blob entity
    * @throws IOException the io exception
    */
-  private PENWebBlobEntity createDummyRecord(int index) throws IOException {
+  private PENWebBlobEntity createDummyRecord(final int index) throws IOException {
     if (index == 0) {
-      var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-      File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
-      byte[] bFile = Files.readAllBytes(file.toPath());
+      final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+      final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
+      final byte[] bFile = Files.readAllBytes(file.toPath());
       return PENWebBlobEntity.builder().penWebBlobId(1L).studentCount(5L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
     } else {
-      var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-      File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("sample_5_PSI_OK.txt")).getFile());
-      byte[] bFile = Files.readAllBytes(file.toPath());
+      final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+      final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_PSI_OK.txt")).getFile());
+      final byte[] bFile = Files.readAllBytes(file.toPath());
       return PENWebBlobEntity.builder().penWebBlobId(2L).mincode("10210518").studentCount(5L).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_PSI_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
     }
   }
@@ -122,8 +122,8 @@ public class PenRegBatchSchedulerTest {
    */
   @After
   public void tearDown() {
-    penWebBlobRepository.deleteAll();
-    repository.deleteAll();
+    this.penWebBlobRepository.deleteAll();
+    this.repository.deleteAll();
   }
 
   /**
@@ -133,9 +133,9 @@ public class PenRegBatchSchedulerTest {
    */
   @Test
   public void testExtractUnProcessedFilesFromTSW_GivenRowsInTSWithExtractDateNull_ShouldBeProcessed() throws InterruptedException {
-    penRegBatchScheduler.extractUnProcessedFilesFromPenWebBlobs();
-    waitForAsyncToFinish();
-    assertThat(studentRepository.findAll().size()).isEqualTo(5);
+    this.penRegBatchScheduler.extractUnProcessedFilesFromPenWebBlobs();
+    this.waitForAsyncToFinish();
+    assertThat(this.studentRepository.findAll().size()).isEqualTo(5);
   }
 
   private void waitForAsyncToFinish() throws InterruptedException {
@@ -144,7 +144,7 @@ public class PenRegBatchSchedulerTest {
       if (i >= 100) {
         break; // break out after trying for 5 seconds.
       }
-      val isStudentRecordPresent = studentRepository.findAll().isEmpty();
+      val isStudentRecordPresent = this.studentRepository.findAll().isEmpty();
       if (!isStudentRecordPresent) {
         break;
       }
@@ -154,7 +154,7 @@ public class PenRegBatchSchedulerTest {
   }
 
   private School createMockSchool() {
-    School school = new School();
+    final School school = new School();
     school.setSchoolName("Marco's school");
     school.setMincode("66510518");
     school.setDateOpened("1953-09-01T00:00:00");

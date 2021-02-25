@@ -4,9 +4,9 @@ import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchTypeCode;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
-import ca.bc.gov.educ.penreg.api.model.Saga;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
@@ -118,7 +118,7 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.openMocks(this);
-    PenRequestBatchStudentEntity penRequestBatchStudentEntity = new PenRequestBatchStudentEntity();
+    final PenRequestBatchStudentEntity penRequestBatchStudentEntity = new PenRequestBatchStudentEntity();
     penRequestBatchStudentEntity.setPenRequestBatchStudentStatusCode(LOADED.getCode());
     penRequestBatchStudentEntity.setCreateDate(LocalDateTime.now());
     penRequestBatchStudentEntity.setUpdateDate(LocalDateTime.now());
@@ -129,7 +129,7 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
     penRequestBatchStudentEntity.setGenderCode("M");
     penRequestBatchStudentEntity.setLocalID("20345678");
     penRequestBatchStudentEntity.setGradeCode("01");
-    PenRequestBatchEntity entity = new PenRequestBatchEntity();
+    final PenRequestBatchEntity entity = new PenRequestBatchEntity();
     entity.setCreateDate(LocalDateTime.now());
     entity.setUpdateDate(LocalDateTime.now());
     entity.setCreateUser("TEST");
@@ -149,47 +149,47 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
     entity.setSourceApplication("PEN");
     penRequestBatchStudentEntity.setPenRequestBatchEntity(entity);
     entity.getPenRequestBatchStudentEntities().add(penRequestBatchStudentEntity);
-    penRequestBatchRepository.save(entity);
+    this.penRequestBatchRepository.save(entity);
 
-    var payload = placeholderPenRequestBatchActionsSagaData();
-    sagaData = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, payload);
-    sagaData.setDob("19650101");
-    sagaData.setAssignedPEN(TEST_PEN);
-    sagaData.setLocalID("20345678");
-    sagaData.setGradeCode("01");
-    sagaData.setStudentID(studentID);
-    sagaData.setPenRequestBatchID(entity.getPenRequestBatchID());
-    sagaData.setPenRequestBatchStudentID(entity.getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow().getPenRequestBatchStudentID());
-    saga = sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), "Test", JsonUtil.getJsonStringFromObject(sagaData),
-        UUID.fromString(penRequestBatchStudentID), UUID.fromString(penRequestBatchID));
+    final var payload = this.placeholderPenRequestBatchActionsSagaData();
+    this.sagaData = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, payload);
+    this.sagaData.setDob("19650101");
+    this.sagaData.setAssignedPEN(TEST_PEN);
+    this.sagaData.setLocalID("20345678");
+    this.sagaData.setGradeCode("01");
+    this.sagaData.setStudentID(this.studentID);
+    this.sagaData.setPenRequestBatchID(entity.getPenRequestBatchID());
+    this.sagaData.setPenRequestBatchStudentID(entity.getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow().getPenRequestBatchStudentID());
+    this.saga = this.sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), "Test", JsonUtil.getJsonStringFromObject(this.sagaData),
+        UUID.fromString(this.penRequestBatchStudentID), UUID.fromString(this.penRequestBatchID));
 
   }
 
   @After
   public void tearDown() {
-    sagaEventRepository.deleteAll();
-    repository.deleteAll();
-    penRequestBatchRepository.deleteAll();
+    this.sagaEventRepository.deleteAll();
+    this.repository.deleteAll();
+    this.penRequestBatchRepository.deleteAll();
   }
 
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenType_shouldExecuteNextEventVALIDATE_STUDENT_DEMOGRAPHICS() throws InterruptedException, TimeoutException, IOException {
-    var invocations = mockingDetails(messagePublisher).getInvocations().size();
-    var event = Event.builder()
-                     .eventType(EventType.INITIATED)
-                     .eventOutcome(EventOutcome.INITIATE_SUCCESS)
-                     .sagaId(saga.getSagaId())
-                     .build();
-    orchestrator.handleEvent(event);
-    verify(messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(PEN_SERVICES_API_TOPIC.toString()), eventCaptor.capture());
-    var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
+    final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
+    final var event = Event.builder()
+        .eventType(EventType.INITIATED)
+        .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+        .sagaId(this.saga.getSagaId())
+        .build();
+    this.orchestrator.handleEvent(event);
+    verify(this.messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(PEN_SERVICES_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(VALIDATE_STUDENT_DEMOGRAPHICS);
     assertThat(newEvent.getEventPayload()).isNotEmpty();
-    assertThat(newEvent.getEventPayload()).contains(saga.getSagaId().toString());
-    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
+    assertThat(newEvent.getEventPayload()).contains(this.saga.getSagaId().toString());
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     assertThat(sagaFromDB.get().getSagaState()).isEqualTo(VALIDATE_STUDENT_DEMOGRAPHICS.toString());
-    var sagaStates = sagaService.findAllSagaStates(saga);
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(1);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.INITIATED.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
@@ -197,22 +197,22 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
 
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndValidationWithoutErrorWarning_shouldExecuteNextEventPROCESS_PEN_MATCH() throws InterruptedException, TimeoutException, IOException {
-    var invocations = mockingDetails(messagePublisher).getInvocations().size();
-    var event = Event.builder()
-                     .eventType(VALIDATE_STUDENT_DEMOGRAPHICS)
-                     .eventOutcome(EventOutcome.VALIDATION_SUCCESS_NO_ERROR_WARNING)
-                     .sagaId(saga.getSagaId())
-                     .build();
-    orchestrator.handleEvent(event);
-    verify(messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(PEN_MATCH_API_TOPIC.toString()), eventCaptor.capture());
-    var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
+    final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
+    final var event = Event.builder()
+        .eventType(VALIDATE_STUDENT_DEMOGRAPHICS)
+        .eventOutcome(EventOutcome.VALIDATION_SUCCESS_NO_ERROR_WARNING)
+        .sagaId(this.saga.getSagaId())
+        .build();
+    this.orchestrator.handleEvent(event);
+    verify(this.messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(PEN_MATCH_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(PROCESS_PEN_MATCH);
     assertThat(newEvent.getEventPayload()).isNotEmpty();
-    assertThat(newEvent.getEventPayload()).contains(sagaData.getDob());
-    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
+    assertThat(newEvent.getEventPayload()).contains(this.sagaData.getDob());
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     assertThat(sagaFromDB.get().getSagaState()).isEqualTo(PROCESS_PEN_MATCH.toString());
-    var sagaStates = sagaService.findAllSagaStates(saga);
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(1);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.VALIDATE_STUDENT_DEMOGRAPHICS.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.VALIDATION_SUCCESS_NO_ERROR_WARNING.toString());
@@ -220,22 +220,22 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
 
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndValidationWithWarning_shouldExecuteNextEventPROCESS_PEN_MATCH() throws InterruptedException, TimeoutException, IOException {
-    var invocations = mockingDetails(messagePublisher).getInvocations().size();
-    var event = Event.builder()
-                     .eventType(VALIDATE_STUDENT_DEMOGRAPHICS)
-                     .eventOutcome(EventOutcome.VALIDATION_SUCCESS_WITH_ONLY_WARNING)
-                     .sagaId(saga.getSagaId())
-                     .build();
-    orchestrator.handleEvent(event);
-    verify(messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(PEN_MATCH_API_TOPIC.toString()), eventCaptor.capture());
-    var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(eventCaptor.getValue()));
+    final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
+    final var event = Event.builder()
+        .eventType(VALIDATE_STUDENT_DEMOGRAPHICS)
+        .eventOutcome(EventOutcome.VALIDATION_SUCCESS_WITH_ONLY_WARNING)
+        .sagaId(this.saga.getSagaId())
+        .build();
+    this.orchestrator.handleEvent(event);
+    verify(this.messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(PEN_MATCH_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(PROCESS_PEN_MATCH);
     assertThat(newEvent.getEventPayload()).isNotEmpty();
-    assertThat(newEvent.getEventPayload()).contains(sagaData.getDob());
-    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
+    assertThat(newEvent.getEventPayload()).contains(this.sagaData.getDob());
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     assertThat(sagaFromDB.get().getSagaState()).isEqualTo(PROCESS_PEN_MATCH.toString());
-    var sagaStates = sagaService.findAllSagaStates(saga);
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(1);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.VALIDATE_STUDENT_DEMOGRAPHICS.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.VALIDATION_SUCCESS_WITH_ONLY_WARNING.toString());
@@ -243,16 +243,16 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
 
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndValidationWithError_shouldExecuteNextEventMARK_SAGA_COMPLETE() throws InterruptedException, TimeoutException, IOException {
-    var event = Event.builder()
-                     .eventType(VALIDATE_STUDENT_DEMOGRAPHICS)
-                     .eventOutcome(EventOutcome.VALIDATION_SUCCESS_WITH_ERROR)
-                     .sagaId(saga.getSagaId())
-                     .build();
-    orchestrator.handleEvent(event);
-    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
+    final var event = Event.builder()
+        .eventType(VALIDATE_STUDENT_DEMOGRAPHICS)
+        .eventOutcome(EventOutcome.VALIDATION_SUCCESS_WITH_ERROR)
+        .sagaId(this.saga.getSagaId())
+        .build();
+    this.orchestrator.handleEvent(event);
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     assertThat(sagaFromDB.get().getSagaState()).isEqualTo(COMPLETED.toString());
-    var sagaStates = sagaService.findAllSagaStates(saga);
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(1);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.VALIDATE_STUDENT_DEMOGRAPHICS.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.VALIDATION_SUCCESS_WITH_ERROR.toString());
@@ -260,78 +260,78 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
 
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndPenMatchResultD0_shouldMarkSagaCompleteAfterCreatingNewStudent() throws InterruptedException, TimeoutException, IOException {
-    runCreateNewStudentTestBasedOnArgument("D0");
+    this.runCreateNewStudentTestBasedOnArgument("D0");
   }
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndPenMatchResultC0_shouldMarkSagaCompleteAfterCreatingNewStudent() throws InterruptedException, TimeoutException, IOException {
-    runCreateNewStudentTestBasedOnArgument("C0");
+    this.runCreateNewStudentTestBasedOnArgument("C0");
   }
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndPenMatchResultB0_shouldMarkSagaCompleteAfterCreatingNewStudent() throws InterruptedException, TimeoutException, IOException {
-    runCreateNewStudentTestBasedOnArgument("B0");
+    this.runCreateNewStudentTestBasedOnArgument("B0");
   }
 
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndPenMatchResultAA_shouldMarkSagaCompleteAfterUpdatingStudent() throws InterruptedException, TimeoutException, IOException {
-    runMatchStudentTestBasedOnArgument("AA");
+    this.runMatchStudentTestBasedOnArgument("AA");
   }
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndPenMatchResultB1_shouldMarkSagaCompleteAfterUpdatingStudent() throws InterruptedException, TimeoutException, IOException {
-    runMatchStudentTestBasedOnArgument("B1");
+    this.runMatchStudentTestBasedOnArgument("B1");
   }
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndPenMatchResultC1_shouldMarkSagaCompleteAfterUpdatingStudent() throws InterruptedException, TimeoutException, IOException {
-    runMatchStudentTestBasedOnArgument("C1");
+    this.runMatchStudentTestBasedOnArgument("C1");
   }
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndPenMatchResultD1_shouldMarkSagaCompleteAfterUpdatingStudent() throws InterruptedException, TimeoutException, IOException {
-    runMatchStudentTestBasedOnArgument("D1");
+    this.runMatchStudentTestBasedOnArgument("D1");
   }
 
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndPenMatchResultBM_shouldMarkSagaComplete() throws InterruptedException, TimeoutException, IOException {
-    runFixableStudentTestBasedOnArgument("BM");
+    this.runFixableStudentTestBasedOnArgument("BM");
   }
 
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndPenMatchResultCM_shouldMarkSagaComplete() throws InterruptedException, TimeoutException, IOException {
-    runFixableStudentTestBasedOnArgument("CM");
+    this.runFixableStudentTestBasedOnArgument("CM");
   }
 
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndPenMatchResultDM_shouldMarkSagaComplete() throws InterruptedException, TimeoutException, IOException {
-    runFixableStudentTestBasedOnArgument("DM");
+    this.runFixableStudentTestBasedOnArgument("DM");
   }
 
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndPenMatchResultG0_shouldMarkSagaComplete() throws InterruptedException, TimeoutException, IOException {
-    runFixableStudentTestBasedOnArgument("G0");
+    this.runFixableStudentTestBasedOnArgument("G0");
   }
 
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndPenMatchResultF1_shouldMarkSagaComplete() throws InterruptedException, TimeoutException, IOException {
-    runFixableStudentTestBasedOnArgument("F1");
+    this.runFixableStudentTestBasedOnArgument("F1");
   }
 
 
-  private void runFixableStudentTestBasedOnArgument(String penStatus) throws IOException, InterruptedException, TimeoutException {
-    var eventPayload = new PenMatchResult();
+  private void runFixableStudentTestBasedOnArgument(final String penStatus) throws IOException, InterruptedException, TimeoutException {
+    final var eventPayload = new PenMatchResult();
     eventPayload.setPenStatus(penStatus);
     eventPayload.setMatchingRecords(new ArrayList<>());
-    var event = Event.builder()
-                     .eventType(PROCESS_PEN_MATCH)
-                     .eventOutcome(EventOutcome.PEN_MATCH_PROCESSED)
-                     .eventPayload(JsonUtil.getJsonStringFromObject(eventPayload))
-                     .sagaId(saga.getSagaId())
-                     .build();
-    orchestrator.handleEvent(event);
-    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
+    final var event = Event.builder()
+        .eventType(PROCESS_PEN_MATCH)
+        .eventOutcome(EventOutcome.PEN_MATCH_PROCESSED)
+        .eventPayload(JsonUtil.getJsonStringFromObject(eventPayload))
+        .sagaId(this.saga.getSagaId())
+        .build();
+    this.orchestrator.handleEvent(event);
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     assertThat(sagaFromDB.get().getSagaState()).isEqualTo(COMPLETED.toString());
-    var prb = penRequestBatchRepository.findAll().get(0);
-    var prbStudent = penRequestBatchStudentRepository.findAllByPenRequestBatchEntity(prb).stream().findFirst().orElseThrow();
+    final var prb = this.penRequestBatchRepository.findAll().get(0);
+    final var prbStudent = this.penRequestBatchStudentRepository.findAllByPenRequestBatchEntity(prb).stream().findFirst().orElseThrow();
     assertThat(prbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(FIXABLE.getCode());
-    var sagaStates = sagaService.findAllSagaStates(saga);
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(2);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.PROCESS_PEN_MATCH.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_MATCH_PROCESSED.toString());
@@ -339,34 +339,34 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
     assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_MATCH_RESULTS_PROCESSED.toString());
   }
 
-  private void runMatchStudentTestBasedOnArgument(String penStatus) throws IOException, InterruptedException, TimeoutException {
-    when(restUtils.getRestTemplate()).thenReturn(restTemplate);
-    when(restUtils.getStudentByStudentID(studentID)).thenReturn(Student.builder().studentID(studentID).pen(TEST_PEN).build());
-    doNothing().when(restUtils).updateStudent(createStudentCaptor.capture());
-    List<PenMatchRecord> matchRecords = new ArrayList<>();
-    PenMatchRecord record = new PenMatchRecord();
+  private void runMatchStudentTestBasedOnArgument(final String penStatus) throws IOException, InterruptedException, TimeoutException {
+    when(this.restUtils.getRestTemplate()).thenReturn(this.restTemplate);
+    when(this.restUtils.getStudentByStudentID(this.studentID)).thenReturn(Student.builder().studentID(this.studentID).pen(TEST_PEN).build());
+    doNothing().when(this.restUtils).updateStudent(this.createStudentCaptor.capture());
+    final List<PenMatchRecord> matchRecords = new ArrayList<>();
+    final PenMatchRecord record = new PenMatchRecord();
     record.setMatchingPEN(TEST_PEN);
-    record.setStudentID(studentID);
+    record.setStudentID(this.studentID);
     matchRecords.add(record);
-    var eventPayload = new PenMatchResult();
+    final var eventPayload = new PenMatchResult();
     eventPayload.setPenStatus(penStatus);
     eventPayload.setMatchingRecords(matchRecords);
-    var event = Event.builder()
-                     .eventType(PROCESS_PEN_MATCH)
-                     .eventOutcome(EventOutcome.PEN_MATCH_PROCESSED)
-                     .eventPayload(JsonUtil.getJsonStringFromObject(eventPayload))
-                     .sagaId(saga.getSagaId())
-                     .build();
-    orchestrator.handleEvent(event);
-    var studentPayload = createStudentCaptor.getValue();
+    final var event = Event.builder()
+        .eventType(PROCESS_PEN_MATCH)
+        .eventOutcome(EventOutcome.PEN_MATCH_PROCESSED)
+        .eventPayload(JsonUtil.getJsonStringFromObject(eventPayload))
+        .sagaId(this.saga.getSagaId())
+        .build();
+    this.orchestrator.handleEvent(event);
+    final var studentPayload = this.createStudentCaptor.getValue();
     assertThat(studentPayload.getMincode()).isEqualTo("10200000");
     assertThat(studentPayload.getHistoryActivityCode()).isNotEmpty();
     assertThat(studentPayload.getHistoryActivityCode()).isEqualTo(REQ_MATCH.getCode());
     assertThat(studentPayload.getUpdateUser()).isEqualTo("ALGORITHM");
-    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     assertThat(sagaFromDB.get().getSagaState()).isEqualTo(COMPLETED.toString());
-    var sagaStates = sagaService.findAllSagaStates(saga);
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(2);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.PROCESS_PEN_MATCH.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_MATCH_PROCESSED.toString());
@@ -374,31 +374,31 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
     assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_MATCH_RESULTS_PROCESSED.toString());
   }
 
-  private void runCreateNewStudentTestBasedOnArgument(String penStatus) throws IOException, InterruptedException, TimeoutException {
-    when(restUtils.getRestTemplate()).thenReturn(restTemplate);
-    when(restUtils.getNextPenNumberFromPenServiceAPI(saga.getSagaId().toString())).thenReturn(TEST_PEN);
-    when(restUtils.getStudentByPEN(TEST_PEN)).thenReturn(Optional.empty());
-    when(restUtils.createStudent(createStudentCaptor.capture())).thenReturn(Student.builder().studentID(studentID).pen(TEST_PEN).build());
+  private void runCreateNewStudentTestBasedOnArgument(final String penStatus) throws IOException, InterruptedException, TimeoutException {
+    when(this.restUtils.getRestTemplate()).thenReturn(this.restTemplate);
+    when(this.restUtils.getNextPenNumberFromPenServiceAPI(this.saga.getSagaId().toString())).thenReturn(TEST_PEN);
+    when(this.restUtils.getStudentByPEN(TEST_PEN)).thenReturn(Optional.empty());
+    when(this.restUtils.createStudent(this.createStudentCaptor.capture())).thenReturn(Student.builder().studentID(this.studentID).pen(TEST_PEN).build());
 
-    var eventPayload = new PenMatchResult();
+    final var eventPayload = new PenMatchResult();
     eventPayload.setPenStatus(penStatus);
     eventPayload.setMatchingRecords(new ArrayList<>());
-    var event = Event.builder()
-                     .eventType(PROCESS_PEN_MATCH)
-                     .eventOutcome(EventOutcome.PEN_MATCH_PROCESSED)
-                     .eventPayload(JsonUtil.getJsonStringFromObject(eventPayload))
-                     .sagaId(saga.getSagaId())
-                     .build();
-    orchestrator.handleEvent(event);
-    var studentPayload = createStudentCaptor.getValue();
+    final var event = Event.builder()
+        .eventType(PROCESS_PEN_MATCH)
+        .eventOutcome(EventOutcome.PEN_MATCH_PROCESSED)
+        .eventPayload(JsonUtil.getJsonStringFromObject(eventPayload))
+        .sagaId(this.saga.getSagaId())
+        .build();
+    this.orchestrator.handleEvent(event);
+    final var studentPayload = this.createStudentCaptor.getValue();
     assertThat(studentPayload.getDob()).isEqualTo("1965-01-01");
     assertThat(studentPayload.getHistoryActivityCode()).isNotEmpty();
     assertThat(studentPayload.getHistoryActivityCode()).isEqualTo(REQ_NEW.getCode());
     assertThat(studentPayload.getCreateUser()).isEqualTo("ALGORITHM");
-    var sagaFromDB = sagaService.findSagaById(saga.getSagaId());
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     assertThat(sagaFromDB.get().getSagaState()).isEqualTo(COMPLETED.toString());
-    var sagaStates = sagaService.findAllSagaStates(saga);
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(2);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.PROCESS_PEN_MATCH.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_MATCH_PROCESSED.toString());

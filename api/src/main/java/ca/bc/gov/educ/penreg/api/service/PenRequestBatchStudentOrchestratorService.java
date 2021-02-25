@@ -5,9 +5,15 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode;
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.mappers.StudentMapper;
-import ca.bc.gov.educ.penreg.api.model.*;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentValidationIssueEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
-import ca.bc.gov.educ.penreg.api.struct.*;
+import ca.bc.gov.educ.penreg.api.struct.Event;
+import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
+import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
@@ -80,7 +86,7 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param penService                    the pen service
    * @param sagaService                   the saga service
    */
-  public PenRequestBatchStudentOrchestratorService(PenRequestBatchService penRequestBatchService, PenRequestBatchStudentService penRequestBatchStudentService, RestUtils restUtils, PenService penService, SagaService sagaService) {
+  public PenRequestBatchStudentOrchestratorService(final PenRequestBatchService penRequestBatchService, final PenRequestBatchStudentService penRequestBatchStudentService, final RestUtils restUtils, final PenService penService, final SagaService sagaService) {
     this.penRequestBatchService = penRequestBatchService;
     this.penRequestBatchStudentService = penRequestBatchStudentService;
     this.restUtils = restUtils;
@@ -136,35 +142,35 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param penMatchResult                 the pen match result
    * @return the optional
    */
-  public Optional<Event> processPenMatchResult(Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, PenMatchResult penMatchResult) throws JsonProcessingException {
-    var algorithmStatusCode = MatchAlgorithmStatusCode.valueOf(penMatchResult.getPenStatus());
-    var penRequestBatchStudent = getPenRequestBatchStudentService()
+  public Optional<Event> processPenMatchResult(final Saga saga, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, final PenMatchResult penMatchResult) throws JsonProcessingException {
+    final var algorithmStatusCode = MatchAlgorithmStatusCode.valueOf(penMatchResult.getPenStatus());
+    final var penRequestBatchStudent = this.getPenRequestBatchStudentService()
         .getStudentById(penRequestBatchStudentSagaData.getPenRequestBatchID(), penRequestBatchStudentSagaData.getPenRequestBatchStudentID());
 
-    var penRequestBatch = penRequestBatchStudent.getPenRequestBatchEntity();
+    final var penRequestBatch = penRequestBatchStudent.getPenRequestBatchEntity();
     penRequestBatchStudent.setMatchAlgorithmStatusCode(algorithmStatusCode.toString());
-    Optional<Event> eventOptional;
+    final Optional<Event> eventOptional;
     switch (algorithmStatusCode) {
       case AA:
       case B1:
       case C1:
       case D1:
-        eventOptional = Optional.of(handleSystemMatchedStatus(saga, penMatchResult, penRequestBatchStudent, penRequestBatch));
+        eventOptional = Optional.of(this.handleSystemMatchedStatus(saga, penMatchResult, penRequestBatchStudent, penRequestBatch));
         break;
       case B0:
       case C0:
       case D0:
-        eventOptional = Optional.of(handleCreateNewStudentStatus(saga, penRequestBatchStudentSagaData, penRequestBatchStudent, penMatchResult));
+        eventOptional = Optional.of(this.handleCreateNewStudentStatus(saga, penRequestBatchStudentSagaData, penRequestBatchStudent, penMatchResult));
         break;
       case F1:
-        eventOptional = Optional.of(handleF1Status(saga, penMatchResult, penRequestBatchStudent)); // FIXABLE
+        eventOptional = Optional.of(this.handleF1Status(saga, penMatchResult, penRequestBatchStudent)); // FIXABLE
         break;
       case BM:
       case CM:
       case DM:
       case G0:
       default:
-        eventOptional = Optional.of(handleDefault(saga, penRequestBatchStudent, penMatchResult));
+        eventOptional = Optional.of(this.handleDefault(saga, penRequestBatchStudent, penMatchResult));
         break;
     }
     return eventOptional;
@@ -178,11 +184,11 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param penRequestBatchStudent the pen request batch student
    * @return the event
    */
-  private Event handleF1Status(Saga saga, PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent) {
-    var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
+  private Event handleF1Status(final Saga saga, final PenMatchResult penMatchResult, final PenRequestBatchStudentEntity penRequestBatchStudent) {
+    final var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
     penMatchRecordOptional.ifPresent(penMatchRecord -> penRequestBatchStudent.setQuestionableMatchStudentId(UUID.fromString(penMatchRecord.getStudentID())));
     penRequestBatchStudent.setPenRequestBatchStudentStatusCode(FIXABLE.getCode());
-    getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
+    this.getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
     return Event.builder().sagaId(saga.getSagaId())
         .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
         .eventPayload(penMatchResult.getPenStatus()).build();
@@ -196,9 +202,9 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param penMatchResult         the pen match result
    * @return the event
    */
-  private Event handleDefault(Saga saga, PenRequestBatchStudentEntity penRequestBatchStudent, PenMatchResult penMatchResult) {
+  private Event handleDefault(final Saga saga, final PenRequestBatchStudentEntity penRequestBatchStudent, final PenMatchResult penMatchResult) {
     penRequestBatchStudent.setPenRequestBatchStudentStatusCode(FIXABLE.getCode());
-    getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
+    this.getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
     return Event.builder().sagaId(saga.getSagaId())
         .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
         .eventPayload(penMatchResult.getPenStatus()).build();
@@ -213,32 +219,32 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param penMatchResult                 the pen match result
    * @return the event
    */
-  private Event handleCreateNewStudentStatus(Saga saga, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, PenRequestBatchStudentEntity penRequestBatchStudent, PenMatchResult penMatchResult) throws JsonProcessingException {
-    String pen;
+  private Event handleCreateNewStudentStatus(final Saga saga, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, final PenRequestBatchStudentEntity penRequestBatchStudent, final PenMatchResult penMatchResult) throws JsonProcessingException {
+    final String pen;
     if (penRequestBatchStudent.getStudentID() == null) {
       if (StringUtils.isBlank(penRequestBatchStudentSagaData.getGeneratedPEN())) {
-        pen = generateNewPen(saga.getSagaId().toString());
+        pen = this.generateNewPen(saga.getSagaId().toString());
         penRequestBatchStudentSagaData.setGeneratedPEN(pen); // store it in payload, will be used in case of replay.
         saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchStudentSagaData));
-        getSagaService().updateAttachedEntityDuringSagaProcess(saga); // update the payload withe generated PEN and  save the updated payload to DB...
+        this.getSagaService().updateAttachedEntityDuringSagaProcess(saga); // update the payload withe generated PEN and  save the updated payload to DB...
       } else {
         pen = penRequestBatchStudentSagaData.getGeneratedPEN();
       }
-      var student = studentMapper.toStudent(penRequestBatchStudentSagaData);
+      final var student = studentMapper.toStudent(penRequestBatchStudentSagaData);
       student.setPen(pen);
       student.setHistoryActivityCode(REQ_NEW.getCode());
       student.setCreateUser(ALGORITHM);
       student.setUpdateUser(ALGORITHM);
       penRequestBatchStudent.setAssignedPEN(pen);
-      var studentFromStudentAPIOptional = getRestUtils().getStudentByPEN(pen);
+      final var studentFromStudentAPIOptional = this.getRestUtils().getStudentByPEN(pen);
       if (studentFromStudentAPIOptional.isEmpty()) { // create the student only if it does not exist.
-        var studentFromAPIResponse = getRestUtils().createStudent(student);
+        final var studentFromAPIResponse = this.getRestUtils().createStudent(student);
         penRequestBatchStudent.setStudentID(UUID.fromString(studentFromAPIResponse.getStudentID()));
       } else {
         penRequestBatchStudent.setStudentID(UUID.fromString(studentFromStudentAPIOptional.get().getStudentID()));
       }
       penRequestBatchStudent.setPenRequestBatchStudentStatusCode(SYS_NEW_PEN.getCode());
-      getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
+      this.getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
     } else {
       log.info("Student ID is already present for PRBStudent, replay process..., student ID :: {} , PRBStudent ID:: {}", penRequestBatchStudent.getStudentID(), penRequestBatchStudent.getPenRequestBatchStudentID());
     }
@@ -260,18 +266,18 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param penRequestBatch        the pen request batch
    * @return the event
    */
-  private Event handleSystemMatchedStatus(Saga saga, PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent, PenRequestBatchEntity penRequestBatch) {
-    var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
+  private Event handleSystemMatchedStatus(final Saga saga, final PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent, final PenRequestBatchEntity penRequestBatch) {
+    final var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
     if (penMatchRecordOptional.isPresent()) {
-      var penMatchRecord = penMatchRecordOptional.get();
-      var studentID = penMatchRecord.getStudentID();
+      final var penMatchRecord = penMatchRecordOptional.get();
+      final var studentID = penMatchRecord.getStudentID();
       penRequestBatchStudent.setPenRequestBatchStudentStatusCode(SYS_MATCHED.getCode());
       penRequestBatchStudent.setStudentID(UUID.fromString(studentID));
       penRequestBatchStudent.setAssignedPEN(penMatchRecord.getMatchingPEN());
-      penRequestBatchStudent = getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
-      var studentFromStudentAPI = getRestUtils().getStudentByStudentID(studentID);
-      updateStudentData(studentFromStudentAPI, penRequestBatchStudent, penRequestBatch);
-      getRestUtils().updateStudent(studentFromStudentAPI);
+      penRequestBatchStudent = this.getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
+      final var studentFromStudentAPI = this.getRestUtils().getStudentByStudentID(studentID);
+      this.updateStudentData(studentFromStudentAPI, penRequestBatchStudent, penRequestBatch);
+      this.getRestUtils().updateStudent(studentFromStudentAPI);
       return Event.builder().sagaId(saga.getSagaId())
           .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
           .eventPayload(penMatchResult.getPenStatus()).build();
@@ -288,9 +294,9 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param guid the guid to identify the transaction.
    * @return the string
    */
-  private String generateNewPen(String guid) {
+  private String generateNewPen(final String guid) {
     log.info("generate new pen called for guid :: {}", guid);
-    String pen = getPenService().getNextPenNumber(guid);
+    final String pen = this.getPenService().getNextPenNumber(guid);
     log.info("got new pen :: {} for guid :: {}", pen, guid);
     return pen;
   }
@@ -309,14 +315,14 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param penRequestBatchStudent the pen request batch student
    * @param penRequestBatchEntity  the pen request batch entity
    */
-  private void updateStudentData(Student studentFromStudentAPI, PenRequestBatchStudentEntity penRequestBatchStudent, PenRequestBatchEntity penRequestBatchEntity) {
+  private void updateStudentData(final Student studentFromStudentAPI, final PenRequestBatchStudentEntity penRequestBatchStudent, final PenRequestBatchEntity penRequestBatchEntity) {
     studentFromStudentAPI.setMincode(penRequestBatchEntity.getMincode());
     studentFromStudentAPI.setLocalID(penRequestBatchStudent.getLocalID());
     studentFromStudentAPI.setGradeCode(penRequestBatchStudent.getGradeCode());
     studentFromStudentAPI.setPostalCode(penRequestBatchStudent.getPostalCode());
 
     //Added as part of PEN-1007; Update the usual given & surnames if provided and not blank
-    if(StringUtils.isNotBlank(penRequestBatchStudent.getUsualFirstName())){
+    if (StringUtils.isNotBlank(penRequestBatchStudent.getUsualFirstName())) {
       studentFromStudentAPI.setUsualFirstName(penRequestBatchStudent.getUsualFirstName());
     }
 
@@ -336,18 +342,18 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param penRequestBatchStudentID the pen request batch student id
    */
   @Transactional(propagation = Propagation.MANDATORY)
-  public void saveDemogValidationResultsAndUpdateStudentStatus(List<PenRequestBatchStudentValidationIssueEntity> validationIssueEntities, PenRequestBatchStudentStatusCodes statusCode, UUID penRequestBatchStudentID) {
-    var studentOptional = getPenRequestBatchStudentService().findByID(penRequestBatchStudentID);
+  public void saveDemogValidationResultsAndUpdateStudentStatus(final List<PenRequestBatchStudentValidationIssueEntity> validationIssueEntities, final PenRequestBatchStudentStatusCodes statusCode, final UUID penRequestBatchStudentID) {
+    final var studentOptional = this.getPenRequestBatchStudentService().findByID(penRequestBatchStudentID);
     if (studentOptional.isPresent()) {
-      var student = studentOptional.get();
+      final var student = studentOptional.get();
       student.setPenRequestBatchStudentStatusCode(statusCode.getCode());
       student.setUpdateDate(LocalDateTime.now());
       student.setUpdateUser("PEN_REQUEST_BATCH_API");
       log.info("current validation issue entities size {} for Student :: {}", student.getPenRequestBatchStudentValidationIssueEntities().size(), student.getPenRequestBatchStudentID());
       if (!student.getPenRequestBatchStudentValidationIssueEntities().isEmpty()) {
-        var filteredIssues = validationIssueEntities.stream().filter(el -> {
+        final var filteredIssues = validationIssueEntities.stream().filter(el -> {
           boolean isRecordAlreadyPresent = false;
-          for (var validationIssue : student.getPenRequestBatchStudentValidationIssueEntities()) {
+          for (final var validationIssue : student.getPenRequestBatchStudentValidationIssueEntities()) {
             if (StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationFieldCode(), el.getPenRequestBatchValidationFieldCode())
                 && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationIssueSeverityCode(), el.getPenRequestBatchValidationIssueSeverityCode())
                 && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationIssueTypeCode(), el.getPenRequestBatchValidationIssueTypeCode())) {
@@ -357,19 +363,19 @@ public class PenRequestBatchStudentOrchestratorService {
           }
           return !isRecordAlreadyPresent;
         }).collect(Collectors.toSet());
-        addValidationIssueEntitiesToStudent(filteredIssues, student);
+        this.addValidationIssueEntitiesToStudent(filteredIssues, student);
       } else {
-        addValidationIssueEntitiesToStudent(validationIssueEntities, student);
+        this.addValidationIssueEntitiesToStudent(validationIssueEntities, student);
       }
-      getPenRequestBatchStudentService().saveAttachedEntityWithChildEntities(student);
+      this.getPenRequestBatchStudentService().saveAttachedEntityWithChildEntities(student);
 
     } else {
       log.error("Student request record could not be found for :: {}", penRequestBatchStudentID);
     }
   }
 
-  private void addValidationIssueEntitiesToStudent(Collection<PenRequestBatchStudentValidationIssueEntity> validationIssueEntities, PenRequestBatchStudentEntity student) {
-    for (var issue : validationIssueEntities) {
+  private void addValidationIssueEntitiesToStudent(final Collection<PenRequestBatchStudentValidationIssueEntity> validationIssueEntities, final PenRequestBatchStudentEntity student) {
+    for (final var issue : validationIssueEntities) {
       issue.setPenRequestBatchStudentEntity(student);
       student.getPenRequestBatchStudentValidationIssueEntities().add(issue);
     }
@@ -395,30 +401,30 @@ public class PenRequestBatchStudentOrchestratorService {
    * @return the updated sagaData.
    * @throws JsonProcessingException the json processing exception
    */
-  public PenRequestBatchStudentSagaData scrubPayload(PenRequestBatchStudentSagaData sagaData) throws JsonProcessingException {
-    PenRequestBatchStudentSagaData updatedPayload = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, JsonUtil.getJsonStringFromObject(sagaData));
+  public PenRequestBatchStudentSagaData scrubPayload(final PenRequestBatchStudentSagaData sagaData) throws JsonProcessingException {
+    final PenRequestBatchStudentSagaData updatedPayload = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, JsonUtil.getJsonStringFromObject(sagaData));
     if (StringUtils.isNotBlank(sagaData.getLegalLastName())) {
-      updatedPayload.setLegalLastName(scrubNameField(sagaData.getLegalLastName()));
+      updatedPayload.setLegalLastName(this.scrubNameField(sagaData.getLegalLastName()));
     }
     if (StringUtils.isNotBlank(sagaData.getLegalFirstName())) {
-      updatedPayload.setLegalFirstName(scrubNameField(sagaData.getLegalFirstName()));
+      updatedPayload.setLegalFirstName(this.scrubNameField(sagaData.getLegalFirstName()));
     }
     if (StringUtils.isNotBlank(sagaData.getLegalMiddleNames())) {
-      updatedPayload.setLegalMiddleNames(scrubNameField(sagaData.getLegalMiddleNames()));
+      updatedPayload.setLegalMiddleNames(this.scrubNameField(sagaData.getLegalMiddleNames()));
     }
-    var usualFirstName = sagaData.getUsualFirstName();
+    final var usualFirstName = sagaData.getUsualFirstName();
     if (StringUtils.isNotEmpty(usualFirstName)
         && (StringUtils.length(StringUtils.trim(usualFirstName)) == 1 || StringUtils.equals(usualFirstName, sagaData.getLegalFirstName()))) {
       updatedPayload.setUsualFirstName("");
     }
 
-    var usualLastName = sagaData.getUsualLastName();
+    final var usualLastName = sagaData.getUsualLastName();
     if (StringUtils.isNotEmpty(usualLastName)
         && (StringUtils.length(StringUtils.trim(usualLastName)) == 1 || StringUtils.equals(usualLastName, sagaData.getLegalLastName()))) {
       updatedPayload.setUsualLastName("");
     }
-    var usualMiddleName = sagaData.getUsualMiddleNames();
-    if (doesMiddleNameNeedsToBeBlank(usualMiddleName, sagaData)) {
+    final var usualMiddleName = sagaData.getUsualMiddleNames();
+    if (this.doesMiddleNameNeedsToBeBlank(usualMiddleName, sagaData)) {
       updatedPayload.setUsualMiddleNames("");
     }
 
@@ -435,11 +441,11 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param sagaData        the sagaData
    * @return boolean boolean
    */
-  private boolean doesMiddleNameNeedsToBeBlank(String usualMiddleName, PenRequestBatchStudentSagaData sagaData) {
+  private boolean doesMiddleNameNeedsToBeBlank(final String usualMiddleName, final PenRequestBatchStudentSagaData sagaData) {
     return StringUtils.isNotEmpty(usualMiddleName)
         && (usualMiddleName.trim().length() == 1
-        || areBothFieldValueEqual(usualMiddleName, sagaData.getLegalMiddleNames())
-        || areBothFieldValueEqual(usualMiddleName, sagaData.getLegalFirstName())
+        || this.areBothFieldValueEqual(usualMiddleName, sagaData.getLegalMiddleNames())
+        || this.areBothFieldValueEqual(usualMiddleName, sagaData.getLegalFirstName())
         || (StringUtils.isNotBlank(sagaData.getLegalMiddleNames()) && sagaData.getLegalMiddleNames().contains(usualMiddleName))
         || (usualMiddleName.trim().equals(sagaData.getLegalFirstName() + " " + sagaData.getLegalMiddleNames())));
   }
@@ -451,7 +457,7 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param field2 the field 2
    * @return the boolean
    */
-  protected boolean areBothFieldValueEqual(String field1, String field2) {
+  protected boolean areBothFieldValueEqual(final String field1, final String field2) {
     return StringUtils.equals(StringUtils.trim(field1), StringUtils.trim(field2));
   }
 
@@ -466,7 +472,7 @@ public class PenRequestBatchStudentOrchestratorService {
    * @param nameFieldValue the value of the name field
    * @return modified string value.
    */
-  protected String scrubNameField(String nameFieldValue) {
+  protected String scrubNameField(final String nameFieldValue) {
     return nameFieldValue.trim().toUpperCase().replace("\t", " ").replace(".", "").replaceAll("\\s{2,}", " ");
   }
 }

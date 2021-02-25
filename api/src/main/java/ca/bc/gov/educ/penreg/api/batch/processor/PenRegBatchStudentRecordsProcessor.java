@@ -4,7 +4,7 @@ import ca.bc.gov.educ.penreg.api.batch.service.PenRequestBatchFileService;
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -25,7 +25,6 @@ import static lombok.AccessLevel.PRIVATE;
  */
 @Component
 @Slf4j
-@SuppressWarnings("java:S2142")
 public class PenRegBatchStudentRecordsProcessor {
   /**
    * The Message publisher.
@@ -45,7 +44,7 @@ public class PenRegBatchStudentRecordsProcessor {
    * @param penRequestBatchFileService the pen request batch file service
    */
   @Autowired
-  public PenRegBatchStudentRecordsProcessor(MessagePublisher messagePublisher, PenRequestBatchFileService penRequestBatchFileService) {
+  public PenRegBatchStudentRecordsProcessor(final MessagePublisher messagePublisher, final PenRequestBatchFileService penRequestBatchFileService) {
     this.messagePublisher = messagePublisher;
     this.penRequestBatchFileService = penRequestBatchFileService;
   }
@@ -58,7 +57,7 @@ public class PenRegBatchStudentRecordsProcessor {
    * @param batchStudentSagaDataSet the student entities
    */
   public void publishUnprocessedStudentRecordsForProcessing(final Set<PenRequestBatchStudentSagaData> batchStudentSagaDataSet) {
-    batchStudentSagaDataSet.forEach(sendIndividualStudentAsMessageToTopic());
+    batchStudentSagaDataSet.forEach(this.sendIndividualStudentAsMessageToTopic());
   }
 
   /**
@@ -68,12 +67,12 @@ public class PenRegBatchStudentRecordsProcessor {
    */
   private Consumer<PenRequestBatchStudentSagaData> sendIndividualStudentAsMessageToTopic() {
     return penRequestBatchStudentSagaData -> {
-      var eventPayload = JsonUtil.getJsonString(penRequestBatchStudentSagaData);
+      final var eventPayload = JsonUtil.getJsonString(penRequestBatchStudentSagaData);
       if (eventPayload.isPresent()) {
-        Event event = Event.builder().eventType(EventType.READ_FROM_TOPIC).eventOutcome(EventOutcome.READ_FROM_TOPIC_SUCCESS).eventPayload(eventPayload.get()).build();
-        var eventString = JsonUtil.getJsonString(event);
+        final Event event = Event.builder().eventType(EventType.READ_FROM_TOPIC).eventOutcome(EventOutcome.READ_FROM_TOPIC_SUCCESS).eventPayload(eventPayload.get()).build();
+        final var eventString = JsonUtil.getJsonString(event);
         if (eventString.isPresent()) {
-          messagePublisher.dispatchMessage(PEN_REQUEST_BATCH_API_TOPIC.toString(), eventString.get().getBytes());
+          this.messagePublisher.dispatchMessage(PEN_REQUEST_BATCH_API_TOPIC.toString(), eventString.get().getBytes());
         } else {
           log.error("Event Sting is empty, skipping the publish to topic :: {}", penRequestBatchStudentSagaData);
         }
@@ -88,8 +87,8 @@ public class PenRegBatchStudentRecordsProcessor {
    *
    * @param penRequestBatchEntities the list of pen request batch entities
    */
-  public void checkLoadedStudentRecordsForDuplicatesAndRepeats(List<PenRequestBatchEntity> penRequestBatchEntities) {
-    penRequestBatchEntities.forEach(penRequestBatchEntity -> getPenRequestBatchFileService().filterDuplicatesAndRepeatRequests(penRequestBatchEntity.getPenRequestBatchID().toString(), penRequestBatchEntity));
+  public void checkLoadedStudentRecordsForDuplicatesAndRepeats(final List<PenRequestBatchEntity> penRequestBatchEntities) {
+    penRequestBatchEntities.forEach(penRequestBatchEntity -> this.getPenRequestBatchFileService().filterDuplicatesAndRepeatRequests(penRequestBatchEntity.getPenRequestBatchID().toString(), penRequestBatchEntity));
   }
 
 }

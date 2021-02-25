@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.orchestrator.base;
 
-import ca.bc.gov.educ.penreg.api.model.Saga;
+import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 
 import java.io.IOException;
 import java.util.UUID;

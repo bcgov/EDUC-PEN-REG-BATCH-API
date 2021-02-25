@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.model;
+package ca.bc.gov.educ.penreg.api.model.v1;
 
 import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
@@ -103,17 +103,17 @@ public class SagaEvent {
   LocalDateTime updateDate;
 
   public String getSagaEventResponse() {
-    return new String(getSagaEventResponseBytes(), StandardCharsets.UTF_8);
+    return new String(this.getSagaEventResponseBytes(), StandardCharsets.UTF_8);
   }
 
-  public void setSagaEventResponse(String sagaEventResponse) {
-    setSagaEventResponseBytes(sagaEventResponse.getBytes(StandardCharsets.UTF_8));
+  public void setSagaEventResponse(final String sagaEventResponse) {
+    this.setSagaEventResponseBytes(sagaEventResponse.getBytes(StandardCharsets.UTF_8));
   }
 
   public static class SagaEventBuilder {
     byte[] sagaEventResponseBytes;
 
-    public SagaEvent.SagaEventBuilder sagaEventResponse(String sagaEventResponse) {
+    public SagaEvent.SagaEventBuilder sagaEventResponse(final String sagaEventResponse) {
       this.sagaEventResponseBytes = sagaEventResponse.getBytes(StandardCharsets.UTF_8);
       return this;
     }

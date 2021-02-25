@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

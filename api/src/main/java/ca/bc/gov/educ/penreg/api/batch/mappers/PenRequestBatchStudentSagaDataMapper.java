@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.batch.mappers;
 
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -10,7 +10,6 @@ import org.mapstruct.factory.Mappers;
  * The interface Pen request batch student saga data mapper.
  */
 @Mapper(uses = UUIDMapper.class)
-@SuppressWarnings("squid:S1214")
 public interface PenRequestBatchStudentSagaDataMapper {
   /**
    * The constant mapper.

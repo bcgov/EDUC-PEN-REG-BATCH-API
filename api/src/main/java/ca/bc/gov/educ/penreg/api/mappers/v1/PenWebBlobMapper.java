@@ -2,7 +2,7 @@ package ca.bc.gov.educ.penreg.api.mappers.v1;
 
 import ca.bc.gov.educ.penreg.api.mappers.LocalDateTimeMapper;
 import ca.bc.gov.educ.penreg.api.mappers.UUIDMapper;
-import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.struct.v1.PENWebBlob;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
@@ -13,7 +13,6 @@ import org.mapstruct.factory.Mappers;
  * The interface Pen web blob mapper.
  */
 @Mapper(uses = {UUIDMapper.class, LocalDateTimeMapper.class})
-@SuppressWarnings("squid:S1214")
 public interface PenWebBlobMapper {
   /**
    * The constant mapper.

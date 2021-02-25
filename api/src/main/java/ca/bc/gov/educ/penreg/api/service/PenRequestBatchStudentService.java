@@ -5,9 +5,9 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentStatusCodeEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentStatusCodeEntity;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -29,7 +29,10 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -75,7 +78,7 @@ public class PenRequestBatchStudentService {
    * @param applicationProperties       the application properties
    */
   @Autowired
-  public PenRequestBatchStudentService(PenRequestBatchStudentRepository repository, PenRequestBatchRepository penRequestBatchRepository, PenRequestBatchStudentStatusCodeRepository studentStatusCodeRepository, ApplicationProperties applicationProperties) {
+  public PenRequestBatchStudentService(final PenRequestBatchStudentRepository repository, final PenRequestBatchRepository penRequestBatchRepository, final PenRequestBatchStudentStatusCodeRepository studentStatusCodeRepository, final ApplicationProperties applicationProperties) {
     this.repository = repository;
     this.penRequestBatchRepository = penRequestBatchRepository;
     this.studentStatusCodeRepository = studentStatusCodeRepository;
@@ -92,10 +95,10 @@ public class PenRequestBatchStudentService {
    */
   @Transactional(propagation = Propagation.MANDATORY)
   public PenRequestBatchStudentEntity createStudent(final PenRequestBatchStudentEntity entity, final UUID penRequestBatchID) {
-    var penRequestBatchOptional = getPenRequestBatchRepository().findById(penRequestBatchID);
+    final var penRequestBatchOptional = this.getPenRequestBatchRepository().findById(penRequestBatchID);
     if (penRequestBatchOptional.isPresent()) {
       entity.setPenRequestBatchEntity(penRequestBatchOptional.get());
-      return repository.save(entity);
+      return this.repository.save(entity);
     } else {
       throw new EntityNotFoundException(PenRequestBatchEntity.class, penRequestBatchID.toString());
     }
@@ -110,7 +113,7 @@ public class PenRequestBatchStudentService {
   @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public PenRequestBatchStudentEntity saveAttachedEntity(final PenRequestBatchStudentEntity entity) {
-    return repository.save(entity);
+    return this.repository.save(entity);
   }
 
   /**
@@ -121,7 +124,7 @@ public class PenRequestBatchStudentService {
   @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
   @Transactional(propagation = Propagation.MANDATORY)
   public void saveAttachedEntityWithChildEntities(final PenRequestBatchStudentEntity entity) {
-    repository.save(entity);
+    this.repository.save(entity);
   }
 
   /**
@@ -134,17 +137,17 @@ public class PenRequestBatchStudentService {
    * @return the pen request batch student entity
    */
   @Transactional(propagation = Propagation.MANDATORY, noRollbackFor = {EntityNotFoundException.class})
-  public PenRequestBatchStudentEntity updateStudent(PenRequestBatchStudentEntity entity, UUID penRequestBatchID, UUID penRequestBatchStudentID) {
-    var penRequestBatchOptional = getPenRequestBatchRepository().findById(penRequestBatchID);
+  public PenRequestBatchStudentEntity updateStudent(final PenRequestBatchStudentEntity entity, final UUID penRequestBatchID, final UUID penRequestBatchStudentID) {
+    final var penRequestBatchOptional = this.getPenRequestBatchRepository().findById(penRequestBatchID);
     if (penRequestBatchOptional.isPresent()) {
-      var penRequestBatch = penRequestBatchOptional.get();
-      var penRequestBatchStudentOptional = getRepository().findById(penRequestBatchStudentID);
+      final var penRequestBatch = penRequestBatchOptional.get();
+      final var penRequestBatchStudentOptional = this.getRepository().findById(penRequestBatchStudentID);
       if (penRequestBatchStudentOptional.isPresent()) {
-        var penRequestBatchStudent = penRequestBatchStudentOptional.get();
+        final var penRequestBatchStudent = penRequestBatchStudentOptional.get();
         if (penRequestBatchStudent.getPenRequestBatchEntity().getPenRequestBatchID().equals(penRequestBatch.getPenRequestBatchID())) {
-          var originalStatus = PenRequestBatchStudentStatusCodes.valueOfCode(penRequestBatchStudent.getPenRequestBatchStudentStatusCode());
+          final var originalStatus = PenRequestBatchStudentStatusCodes.valueOfCode(penRequestBatchStudent.getPenRequestBatchStudentStatusCode());
           BeanUtils.copyProperties(entity, penRequestBatchStudent, "penRequestBatchStudentValidationIssueEntities", "penRequestBatchEntity", "penRequestBatchStudentID", "penRequestBatchStudentPossibleMatchEntities");
-          var savedPrbStudent = repository.save(penRequestBatchStudent);
+          final var savedPrbStudent = this.repository.save(penRequestBatchStudent);
           // prb student is updated while unarchived
           boolean isUnArchivedChanged = false;
           if (StringUtils.equals(penRequestBatch.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED.getCode())) {
@@ -152,18 +155,18 @@ public class PenRequestBatchStudentService {
             isUnArchivedChanged = true;
           }
           //adjust the summary Count values in the PEN Request Batch
-          var currentStatus = PenRequestBatchStudentStatusCodes.valueOfCode(entity.getPenRequestBatchStudentStatusCode());
+          final var currentStatus = PenRequestBatchStudentStatusCodes.valueOfCode(entity.getPenRequestBatchStudentStatusCode());
           log.debug("The Original status :: {} and Current status :: {} of Student :: {}", originalStatus, currentStatus, savedPrbStudent);
-          if (!useSameSummaryCounter(originalStatus, currentStatus)) {
-            logCounts(penRequestBatch, "Current");
-            changeSummaryCount(penRequestBatch, originalStatus, true);
-            changeSummaryCount(penRequestBatch, currentStatus, false);
+          if (!this.useSameSummaryCounter(originalStatus, currentStatus)) {
+            this.logCounts(penRequestBatch, "Current");
+            this.changeSummaryCount(penRequestBatch, originalStatus, true);
+            this.changeSummaryCount(penRequestBatch, currentStatus, false);
             penRequestBatch.setUpdateUser(penRequestBatchStudent.getUpdateUser());
             penRequestBatch.setUpdateDate(penRequestBatchStudent.getUpdateDate());
-            penRequestBatchRepository.save(penRequestBatch);
-            logCounts(penRequestBatch, "Updated");
+            this.penRequestBatchRepository.save(penRequestBatch);
+            this.logCounts(penRequestBatch, "Updated");
           } else if (isUnArchivedChanged) {
-            penRequestBatchRepository.save(penRequestBatch);
+            this.penRequestBatchRepository.save(penRequestBatch);
           }
           return savedPrbStudent;
         } else {
@@ -178,7 +181,7 @@ public class PenRequestBatchStudentService {
     }
   }
 
-  private void logCounts(PenRequestBatchEntity penRequestBatch, String initialMessage) {
+  private void logCounts(final PenRequestBatchEntity penRequestBatch, final String initialMessage) {
     log.debug(initialMessage.concat(" counts are  Fixable :: {}, Error :: {}, Repeat :: {}, Matched :: {}, New Pen :: {}"),
         penRequestBatch.getFixableCount(),
         penRequestBatch.getErrorCount(),
@@ -187,7 +190,7 @@ public class PenRequestBatchStudentService {
         penRequestBatch.getNewPenCount());
   }
 
-  private boolean useSameSummaryCounter(PenRequestBatchStudentStatusCodes originalStatus, PenRequestBatchStudentStatusCodes currentStatus) {
+  private boolean useSameSummaryCounter(final PenRequestBatchStudentStatusCodes originalStatus, final PenRequestBatchStudentStatusCodes currentStatus) {
     return originalStatus.equals(currentStatus) ||
         ((originalStatus.equals(ERROR) || originalStatus.equals(INFOREQ)) && (currentStatus.equals(ERROR) || currentStatus.equals(INFOREQ))) ||
         ((originalStatus.equals(SYS_MATCHED) || originalStatus.equals(USR_MATCHED)) && (currentStatus.equals(SYS_MATCHED) || currentStatus.equals(USR_MATCHED))) ||
@@ -195,8 +198,8 @@ public class PenRequestBatchStudentService {
 
   }
 
-  private void changeSummaryCount(PenRequestBatchEntity penRequestBatch, PenRequestBatchStudentStatusCodes status, boolean changeFrom) {
-    int count = changeFrom ? -1 : 1;
+  private void changeSummaryCount(final PenRequestBatchEntity penRequestBatch, final PenRequestBatchStudentStatusCodes status, final boolean changeFrom) {
+    final int count = changeFrom ? -1 : 1;
     switch (status) {
       case FIXABLE:
         penRequestBatch.setFixableCount((penRequestBatch.getFixableCount() != null ? penRequestBatch.getFixableCount() : 0) + count);
@@ -228,10 +231,10 @@ public class PenRequestBatchStudentService {
    * @param penRequestBatchStudentID the pen request batch student id
    * @return the student by id
    */
-  public PenRequestBatchStudentEntity getStudentById(UUID penRequestBatchID, UUID penRequestBatchStudentID) {
-    var penRequestBatchStudentOptional = getRepository().findById(penRequestBatchStudentID);
+  public PenRequestBatchStudentEntity getStudentById(final UUID penRequestBatchID, final UUID penRequestBatchStudentID) {
+    final var penRequestBatchStudentOptional = this.getRepository().findById(penRequestBatchStudentID);
     if (penRequestBatchStudentOptional.isPresent()) {
-      var penRequestBatchStudent = penRequestBatchStudentOptional.get();
+      final var penRequestBatchStudent = penRequestBatchStudentOptional.get();
       if (penRequestBatchStudent.getPenRequestBatchEntity().getPenRequestBatchID().equals(penRequestBatchID)) {
         return penRequestBatchStudent;
       } else {
@@ -249,15 +252,15 @@ public class PenRequestBatchStudentService {
    * @param penRequestBatchStudent the student request
    * @return the list
    */
-  public List<PenRequestBatchStudentEntity> findAllRepeatsGivenBatchStudent(PenRequestBatchStudentEntity penRequestBatchStudent) {
-    int repeatTimeWindow;
+  public List<PenRequestBatchStudentEntity> findAllRepeatsGivenBatchStudent(final PenRequestBatchStudentEntity penRequestBatchStudent) {
+    final int repeatTimeWindow;
     if (penRequestBatchStudent.getPenRequestBatchEntity().getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())) {
-      repeatTimeWindow = getApplicationProperties().getRepeatTimeWindowPSI();
+      repeatTimeWindow = this.getApplicationProperties().getRepeatTimeWindowPSI();
     } else {
-      repeatTimeWindow = getApplicationProperties().getRepeatTimeWindowK12();
+      repeatTimeWindow = this.getApplicationProperties().getRepeatTimeWindowK12();
     }
-    LocalDateTime startDate = LocalDateTime.now().minusDays(repeatTimeWindow);
-    return repository.findAllRepeatsGivenBatchStudent(penRequestBatchStudent.getPenRequestBatchEntity().getMincode(), PenRequestBatchStatusCodes.ARCHIVED.getCode(), startDate, penRequestBatchStudent.getLocalID(), Arrays.asList(PenRequestBatchStudentStatusCodes.FIXABLE.getCode(), ERROR.getCode(), PenRequestBatchStudentStatusCodes.LOADED.getCode()), penRequestBatchStudent.getSubmittedPen(), penRequestBatchStudent.getLegalFirstName(), penRequestBatchStudent.getLegalMiddleNames(), penRequestBatchStudent.getLegalLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames(), penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getDob(), penRequestBatchStudent.getGenderCode(), penRequestBatchStudent.getGradeCode(), penRequestBatchStudent.getPostalCode());
+    final LocalDateTime startDate = LocalDateTime.now().minusDays(repeatTimeWindow);
+    return this.repository.findAllRepeatsGivenBatchStudent(penRequestBatchStudent.getPenRequestBatchEntity().getMincode(), PenRequestBatchStatusCodes.ARCHIVED.getCode(), startDate, penRequestBatchStudent.getLocalID(), Arrays.asList(PenRequestBatchStudentStatusCodes.FIXABLE.getCode(), ERROR.getCode(), PenRequestBatchStudentStatusCodes.LOADED.getCode()), penRequestBatchStudent.getSubmittedPen(), penRequestBatchStudent.getLegalFirstName(), penRequestBatchStudent.getLegalMiddleNames(), penRequestBatchStudent.getLegalLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames(), penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getDob(), penRequestBatchStudent.getGenderCode(), penRequestBatchStudent.getGradeCode(), penRequestBatchStudent.getPostalCode());
   }
 
   /**
@@ -270,11 +273,11 @@ public class PenRequestBatchStudentService {
    * @return the completable future
    */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-  public CompletableFuture<Page<PenRequestBatchStudentEntity>> findAll(Specification<PenRequestBatchStudentEntity> studentEntitySpecification, Integer pageNumber, Integer pageSize, List<Sort.Order> sorts) {
+  public CompletableFuture<Page<PenRequestBatchStudentEntity>> findAll(final Specification<PenRequestBatchStudentEntity> studentEntitySpecification, final Integer pageNumber, final Integer pageSize, final List<Sort.Order> sorts) {
     return CompletableFuture.supplyAsync(() -> {
-      Pageable paging = PageRequest.of(pageNumber, pageSize, Sort.by(sorts));
+      final Pageable paging = PageRequest.of(pageNumber, pageSize, Sort.by(sorts));
       try {
-        return getRepository().findAll(studentEntitySpecification, paging);
+        return this.getRepository().findAll(studentEntitySpecification, paging);
       } catch (final Exception ex) {
         throw new CompletionException(ex);
       }
@@ -289,7 +292,7 @@ public class PenRequestBatchStudentService {
    */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
   public List<PenRequestBatchStudentStatusCodeEntity> getAllStudentStatusCodes() {
-    return getStudentStatusCodeRepository().findAll();
+    return this.getStudentStatusCodeRepository().findAll();
   }
 
   /**
@@ -298,8 +301,8 @@ public class PenRequestBatchStudentService {
    * @param penRequestBatchStudentID the pen request batch student id
    * @return the optional
    */
-  public Optional<PenRequestBatchStudentEntity> findByID(UUID penRequestBatchStudentID) {
-    return getRepository().findById(penRequestBatchStudentID);
+  public Optional<PenRequestBatchStudentEntity> findByID(final UUID penRequestBatchStudentID) {
+    return this.getRepository().findById(penRequestBatchStudentID);
   }
 
 }

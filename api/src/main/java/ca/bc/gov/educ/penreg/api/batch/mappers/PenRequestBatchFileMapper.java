@@ -2,9 +2,9 @@ package ca.bc.gov.educ.penreg.api.batch.mappers;
 
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
 import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
-import ca.bc.gov.educ.penreg.api.model.PENWebBlobEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -16,7 +16,6 @@ import org.mapstruct.factory.Mappers;
  */
 @Mapper
 @DecoratedWith(PenRequestBatchFileDecorator.class)
-@SuppressWarnings("squid:S1214")
 public interface PenRequestBatchFileMapper {
   /**
    * The constant mapper.

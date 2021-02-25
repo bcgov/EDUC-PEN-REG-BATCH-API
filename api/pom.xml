@@ -21,15 +21,15 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
     <org.mapstruct.version>1.4.1.Final</org.mapstruct.version>
-    <shedlock.version>4.15.1</shedlock.version>
-    <springdoc.version>1.4.8</springdoc.version>
+    <shedlock.version>4.20.0</shedlock.version>
+    <springdoc.version>1.5.2</springdoc.version>
     <lombok.version>1.18.12</lombok.version>
   </properties>
 
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>2.4.2</version>
+    <version>2.4.3</version>
   </parent>
 
   <dependencies>

@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.model;
+package ca.bc.gov.educ.penreg.api.model.v1;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -60,17 +60,17 @@ public class PenRequestBatchEvent {
   private String replyChannel;
 
   public String getEventPayload() {
-    return new String(getEventPayloadBytes(), StandardCharsets.UTF_8);
+    return new String(this.getEventPayloadBytes(), StandardCharsets.UTF_8);
   }
 
-  public void setEventPayload(String eventPayload) {
-    setEventPayloadBytes(eventPayload.getBytes(StandardCharsets.UTF_8));
+  public void setEventPayload(final String eventPayload) {
+    this.setEventPayloadBytes(eventPayload.getBytes(StandardCharsets.UTF_8));
   }
 
   public static class PenRequestBatchEventBuilder {
     byte[] eventPayloadBytes;
 
-    public PenRequestBatchEvent.PenRequestBatchEventBuilder eventPayload(String eventPayload) {
+    public PenRequestBatchEvent.PenRequestBatchEventBuilder eventPayload(final String eventPayload) {
       this.eventPayloadBytes = eventPayload.getBytes(StandardCharsets.UTF_8);
       return this;
     }

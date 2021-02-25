@@ -1,7 +1,7 @@
 package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentInfoRequestMacroEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentInfoRequestMacroEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentInfoRequestMacroRepository;
 import lombok.Getter;
 import lombok.val;
@@ -17,31 +17,32 @@ import static lombok.AccessLevel.PRIVATE;
 @Service
 public class PenRequestBatchStudentInfoRequestMacroService {
 
-    @Getter(PRIVATE)
-    private final PenRequestBatchStudentInfoRequestMacroRepository penRequestBatchMacroRepository;
+  @Getter(PRIVATE)
+  private final PenRequestBatchStudentInfoRequestMacroRepository penRequestBatchMacroRepository;
 
-    @Autowired
-    public PenRequestBatchStudentInfoRequestMacroService(PenRequestBatchStudentInfoRequestMacroRepository penRequestMacroRepository) {
-        this.penRequestBatchMacroRepository = penRequestMacroRepository;
-    }
+  @Autowired
+  public PenRequestBatchStudentInfoRequestMacroService(final PenRequestBatchStudentInfoRequestMacroRepository penRequestMacroRepository) {
+    this.penRequestBatchMacroRepository = penRequestMacroRepository;
+  }
 
-    public List<PenRequestBatchStudentInfoRequestMacroEntity> findAllMacros() {
-        return getPenRequestBatchMacroRepository().findAll();
-    }
-    public Optional<PenRequestBatchStudentInfoRequestMacroEntity> getMacro(UUID macroId) {
-        return getPenRequestBatchMacroRepository().findById(macroId);
-    }
+  public List<PenRequestBatchStudentInfoRequestMacroEntity> findAllMacros() {
+    return this.getPenRequestBatchMacroRepository().findAll();
+  }
 
-    public PenRequestBatchStudentInfoRequestMacroEntity createMacro(PenRequestBatchStudentInfoRequestMacroEntity penRequestBatchEntity) {
-        return getPenRequestBatchMacroRepository().save(penRequestBatchEntity);
-    }
+  public Optional<PenRequestBatchStudentInfoRequestMacroEntity> getMacro(final UUID macroId) {
+    return this.getPenRequestBatchMacroRepository().findById(macroId);
+  }
 
-    public PenRequestBatchStudentInfoRequestMacroEntity updateMacro(UUID macroId, PenRequestBatchStudentInfoRequestMacroEntity entity) {
-        val result = getPenRequestBatchMacroRepository().findById(macroId);
-        if (result.isPresent()) {
-            return getPenRequestBatchMacroRepository().save(entity);
-        } else {
-            throw new EntityNotFoundException(entity.getClass(), "macroId", macroId.toString());
-        }
+  public PenRequestBatchStudentInfoRequestMacroEntity createMacro(final PenRequestBatchStudentInfoRequestMacroEntity penRequestBatchEntity) {
+    return this.getPenRequestBatchMacroRepository().save(penRequestBatchEntity);
+  }
+
+  public PenRequestBatchStudentInfoRequestMacroEntity updateMacro(final UUID macroId, final PenRequestBatchStudentInfoRequestMacroEntity entity) {
+    val result = this.getPenRequestBatchMacroRepository().findById(macroId);
+    if (result.isPresent()) {
+      return this.getPenRequestBatchMacroRepository().save(entity);
+    } else {
+      throw new EntityNotFoundException(entity.getClass(), "macroId", macroId.toString());
     }
+  }
 }

@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchTypeCodeEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchTypeCodeEntity;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

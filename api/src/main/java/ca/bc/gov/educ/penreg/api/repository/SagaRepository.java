@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
-import ca.bc.gov.educ.penreg.api.model.Saga;
+import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -26,6 +26,7 @@ public interface SagaRepository extends CrudRepository<Saga, UUID> {
    *
    * @return the list
    */
+  @Override
   List<Saga> findAll();
 
   /**

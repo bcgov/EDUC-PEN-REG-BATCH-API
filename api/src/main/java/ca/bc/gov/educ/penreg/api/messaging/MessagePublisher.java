@@ -1,9 +1,12 @@
 package ca.bc.gov.educ.penreg.api.messaging;
 
 import io.nats.client.Connection;
+import io.nats.client.Message;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * The type Message publisher.
@@ -26,7 +29,11 @@ public class MessagePublisher {
    * @param subject the subject
    * @param message the message
    */
-  public void dispatchMessage(String subject, byte[] message) {
-      connection.publish(subject, message);
+  public void dispatchMessage(final String subject, final byte[] message) {
+    this.connection.publish(subject, message);
+  }
+
+  public CompletableFuture<Message> requestMessage(final String subject, final byte[] message) {
+    return this.connection.request(subject, message);
   }
 }

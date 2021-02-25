@@ -1,6 +1,9 @@
-package ca.bc.gov.educ.penreg.api.model;
+package ca.bc.gov.educ.penreg.api.model.v1;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -105,17 +108,17 @@ public class Saga {
   LocalDateTime updateDate;
 
   public String getPayload() {
-    return new String(getPayloadBytes(), StandardCharsets.UTF_8);
+    return new String(this.getPayloadBytes(), StandardCharsets.UTF_8);
   }
 
-  public void setPayload(String payload) {
-    setPayloadBytes(payload.getBytes(StandardCharsets.UTF_8));
+  public void setPayload(final String payload) {
+    this.setPayloadBytes(payload.getBytes(StandardCharsets.UTF_8));
   }
 
   public static class SagaBuilder {
     byte[] payloadBytes;
 
-    public SagaBuilder payload(String payload) {
+    public SagaBuilder payload(final String payload) {
       this.payloadBytes = payload.getBytes(StandardCharsets.UTF_8);
       return this;
     }

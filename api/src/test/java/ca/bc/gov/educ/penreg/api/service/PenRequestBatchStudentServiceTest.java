@@ -1,8 +1,8 @@
 package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.model.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -44,29 +44,29 @@ public class PenRequestBatchStudentServiceTest {
 
   @Before
   public void setUp() throws IOException {
-    batchList = PenRequestBatchUtils.createBatchStudents(penRequestBatchRepository, "mock_pen_req_batch_archived.json",
-      "mock_pen_req_batch_student_archived.json", 1);
-    penRequestBatchID = batchList.get(0).getPenRequestBatchID();
+    this.batchList = PenRequestBatchUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json",
+        "mock_pen_req_batch_student_archived.json", 1);
+    this.penRequestBatchID = this.batchList.get(0).getPenRequestBatchID();
   }
 
   @After
   public void after() {
-    penRequestBatchRepository.deleteAll();
+    this.penRequestBatchRepository.deleteAll();
   }
 
   @Test
   @Transactional
   public void testUpdatePenRequestBatchStudent_givenStatusChangeFromFixableToNewPenUsr_shouldUpdatePrbStudentAndPrb() throws IOException {
-    penRequestBatchStudentID = getFirstPenRequestBatchStudentID(FIXABLE.getCode());
+    this.penRequestBatchStudentID = this.getFirstPenRequestBatchStudentID(FIXABLE.getCode());
 
-    var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
+    final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
     prbStudentEntity.setUpdateDate(LocalDateTime.now());
 
-    var updatedPrbStudent = prbStudentService.updateStudent(prbStudentEntity, penRequestBatchID, penRequestBatchStudentID);
+    final var updatedPrbStudent = this.prbStudentService.updateStudent(prbStudentEntity, this.penRequestBatchID, this.penRequestBatchStudentID);
 
     assertThat(updatedPrbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.toString());
 
-    var penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
+    final var penRequestBatch = this.penRequestBatchRepository.findById(this.penRequestBatchID);
     assertThat(penRequestBatch).isPresent();
     assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
     assertThat(penRequestBatch.get().getFixableCount()).isZero();
@@ -75,16 +75,16 @@ public class PenRequestBatchStudentServiceTest {
   @Test
   @Transactional
   public void testUpdatePenRequestBatchStudent_givenStatusChangeFromMatchedSysToNewPenUsr_shouldUpdatePrbStudentAndPrb() throws IOException {
-    penRequestBatchStudentID = getFirstPenRequestBatchStudentID(SYS_MATCHED.getCode());
+    this.penRequestBatchStudentID = this.getFirstPenRequestBatchStudentID(SYS_MATCHED.getCode());
 
-    var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
+    final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
     prbStudentEntity.setUpdateDate(LocalDateTime.now());
 
-    var updatedPrbStudent = prbStudentService.updateStudent(prbStudentEntity, penRequestBatchID, penRequestBatchStudentID);
+    final var updatedPrbStudent = this.prbStudentService.updateStudent(prbStudentEntity, this.penRequestBatchID, this.penRequestBatchStudentID);
 
     assertThat(updatedPrbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.toString());
 
-    var penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
+    final var penRequestBatch = this.penRequestBatchRepository.findById(this.penRequestBatchID);
     assertThat(penRequestBatch).isPresent();
     assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
     assertThat(penRequestBatch.get().getMatchedCount()).isEqualTo(1);
@@ -93,16 +93,16 @@ public class PenRequestBatchStudentServiceTest {
   @Test
   @Transactional
   public void testUpdatePenRequestBatchStudent_givenStatusChangeFromMatchedUsrToNewPenUsr_shouldUpdatePrbStudentAndPrb() throws IOException {
-    penRequestBatchStudentID = getFirstPenRequestBatchStudentID(USR_MATCHED.getCode());
+    this.penRequestBatchStudentID = this.getFirstPenRequestBatchStudentID(USR_MATCHED.getCode());
 
-    var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
+    final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
     prbStudentEntity.setUpdateDate(LocalDateTime.now());
 
-    var updatedPrbStudent = prbStudentService.updateStudent(prbStudentEntity, penRequestBatchID, penRequestBatchStudentID);
+    final var updatedPrbStudent = this.prbStudentService.updateStudent(prbStudentEntity, this.penRequestBatchID, this.penRequestBatchStudentID);
 
     assertThat(updatedPrbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.toString());
 
-    var penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
+    final var penRequestBatch = this.penRequestBatchRepository.findById(this.penRequestBatchID);
     assertThat(penRequestBatch).isPresent();
     assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
     assertThat(penRequestBatch.get().getMatchedCount()).isEqualTo(1);
@@ -111,16 +111,16 @@ public class PenRequestBatchStudentServiceTest {
   @Test
   @Transactional
   public void testUpdatePenRequestBatchStudent_givenStatusChangeFromInforeqToNewPenUsr_shouldUpdatePrbStudentAndPrb() throws IOException {
-    penRequestBatchStudentID = getFirstPenRequestBatchStudentID(INFOREQ.getCode());
+    this.penRequestBatchStudentID = this.getFirstPenRequestBatchStudentID(INFOREQ.getCode());
 
-    var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
+    final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
     prbStudentEntity.setUpdateDate(LocalDateTime.now());
 
-    var updatedPrbStudent = prbStudentService.updateStudent(prbStudentEntity, penRequestBatchID, penRequestBatchStudentID);
+    final var updatedPrbStudent = this.prbStudentService.updateStudent(prbStudentEntity, this.penRequestBatchID, this.penRequestBatchStudentID);
 
     assertThat(updatedPrbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.toString());
 
-    var penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
+    final var penRequestBatch = this.penRequestBatchRepository.findById(this.penRequestBatchID);
     assertThat(penRequestBatch).isPresent();
     assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
     assertThat(penRequestBatch.get().getErrorCount()).isEqualTo(1);
@@ -129,16 +129,16 @@ public class PenRequestBatchStudentServiceTest {
   @Test
   @Transactional
   public void testUpdatePenRequestBatchStudent_givenStatusChangeFromRepeatToNewPenUsr_shouldUpdatePrbStudentAndPrb() throws IOException {
-    penRequestBatchStudentID = getFirstPenRequestBatchStudentID(REPEAT.getCode());
+    this.penRequestBatchStudentID = this.getFirstPenRequestBatchStudentID(REPEAT.getCode());
 
-    var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
+    final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
     prbStudentEntity.setUpdateDate(LocalDateTime.now());
 
-    var updatedPrbStudent = prbStudentService.updateStudent(prbStudentEntity, penRequestBatchID, penRequestBatchStudentID);
+    final var updatedPrbStudent = this.prbStudentService.updateStudent(prbStudentEntity, this.penRequestBatchID, this.penRequestBatchStudentID);
 
     assertThat(updatedPrbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.toString());
 
-    var penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
+    final var penRequestBatch = this.penRequestBatchRepository.findById(this.penRequestBatchID);
     assertThat(penRequestBatch).isPresent();
     assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
     assertThat(penRequestBatch.get().getRepeatCount()).isZero();
@@ -147,41 +147,41 @@ public class PenRequestBatchStudentServiceTest {
   @Test
   @Transactional
   public void testUpdatePenRequestBatchStudent_givenStatusChangeFromRepeatToUserMatched_shouldUpdatePrbStudentAndPrbWithUnarchivedChangedStatus() throws IOException {
-    var penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
-    var penRequestBatchEntity = penRequestBatch.get();
+    var penRequestBatch = this.penRequestBatchRepository.findById(this.penRequestBatchID);
+    final var penRequestBatchEntity = penRequestBatch.get();
     penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.UNARCHIVED.getCode());
-    penRequestBatchRepository.save(penRequestBatchEntity);
+    this.penRequestBatchRepository.save(penRequestBatchEntity);
 
-    penRequestBatchStudentID = getFirstPenRequestBatchStudentID(REPEAT.getCode());
+    this.penRequestBatchStudentID = this.getFirstPenRequestBatchStudentID(REPEAT.getCode());
 
-    var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, dummyPenRequestBatchStudentDataJson(USR_MATCHED.toString()));
+    final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_MATCHED.toString()));
     prbStudentEntity.setUpdateDate(LocalDateTime.now());
 
-    var updatedPrbStudent = prbStudentService.updateStudent(prbStudentEntity, penRequestBatchID, penRequestBatchStudentID);
+    final var updatedPrbStudent = this.prbStudentService.updateStudent(prbStudentEntity, this.penRequestBatchID, this.penRequestBatchStudentID);
 
     assertThat(updatedPrbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_MATCHED.toString());
 
-    penRequestBatch = penRequestBatchRepository.findById(penRequestBatchID);
+    penRequestBatch = this.penRequestBatchRepository.findById(this.penRequestBatchID);
     assertThat(penRequestBatch).isPresent();
     assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(2);
     assertThat(penRequestBatch.get().getRepeatCount()).isZero();
     assertThat(penRequestBatch.get().getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode());
   }
 
-  protected String dummyPenRequestBatchStudentDataJson(String status) {
+  protected String dummyPenRequestBatchStudentDataJson(final String status) {
     return " {\n" +
-      "    \"createUser\": \"test\",\n" +
-      "    \"updateUser\": \"test\",\n" +
-      "    \"penRequestBatchID\": \"" + penRequestBatchID + "\",\n" +
-      "    \"penRequestBatchStudentID\": \"" + penRequestBatchStudentID + "\",\n" +
-      "    \"legalFirstName\": \"Jack\",\n" +
-      "    \"penRequestBatchStudentStatusCode\": \"" + status + "\",\n" +
-      "    \"genderCode\": \"X\"\n" +
-      "  }";
+        "    \"createUser\": \"test\",\n" +
+        "    \"updateUser\": \"test\",\n" +
+        "    \"penRequestBatchID\": \"" + this.penRequestBatchID + "\",\n" +
+        "    \"penRequestBatchStudentID\": \"" + this.penRequestBatchStudentID + "\",\n" +
+        "    \"legalFirstName\": \"Jack\",\n" +
+        "    \"penRequestBatchStudentStatusCode\": \"" + status + "\",\n" +
+        "    \"genderCode\": \"X\"\n" +
+        "  }";
   }
 
-  private UUID getFirstPenRequestBatchStudentID(String status) {
-    return batchList.get(0).getPenRequestBatchStudentEntities().stream()
-      .filter(student -> student.getPenRequestBatchStudentStatusCode().equals(status)).findFirst().orElseThrow().getPenRequestBatchStudentID();
+  private UUID getFirstPenRequestBatchStudentID(final String status) {
+    return this.batchList.get(0).getPenRequestBatchStudentEntities().stream()
+        .filter(student -> student.getPenRequestBatchStudentStatusCode().equals(status)).findFirst().orElseThrow().getPenRequestBatchStudentID();
   }
 }

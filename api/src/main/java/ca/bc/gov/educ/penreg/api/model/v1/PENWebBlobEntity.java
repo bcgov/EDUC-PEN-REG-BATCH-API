@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.model;
+package ca.bc.gov.educ.penreg.api.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
