@@ -1,9 +1,4 @@
 ALTER TABLE PEN_REQUEST_BATCH
-    MODIFY (
-        PEN_REQUEST_BATCH_STATUS_CODE VARCHAR2(20)
-    );
-
-ALTER TABLE PEN_REQUEST_BATCH
     DROP COLUMN UNARCHIVED_BATCH_STATUS_CODE;
 
 ALTER TABLE PEN_REQUEST_BATCH
@@ -15,7 +10,7 @@ ALTER TABLE PEN_REQUEST_BATCH
 INSERT INTO PEN_REQUEST_BATCH_STATUS_CODE (PEN_REQUEST_BATCH_STATUS_CODE, LABEL, DESCRIPTION,
                                            DISPLAY_ORDER, EFFECTIVE_DATE, EXPIRY_DATE, CREATE_USER, CREATE_DATE,
                                            UPDATE_USER, UPDATE_DATE)
-VALUES ('UNARCHIVED_CHANGED',
+VALUES ('UNARCH_CHG',
         'Batch has been modified while unarchived',
         'Batch was unarchived and then edited/modified while unarchived.',
         9,
