@@ -32,6 +32,10 @@ public class PENWebBlob {
    */
   private String fileType;
   /**
+   * The File contents.
+   */
+  private String fileContents;
+  /**
    * The Insert date time.
    */
   private String insertDateTime;
