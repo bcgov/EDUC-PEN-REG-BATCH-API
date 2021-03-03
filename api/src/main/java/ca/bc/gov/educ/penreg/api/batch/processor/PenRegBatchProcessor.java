@@ -203,7 +203,8 @@ public class PenRegBatchProcessor {
     this.getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
     if (isSchoolNotified != null) {
       try {
-        isSchoolNotified.get(); // wait here for result.
+        final boolean isNotificationSuccessful = isSchoolNotified.get(); // wait here for result.
+        log.info("notification result for :: {} is :: {}", guid, isNotificationSuccessful);
       } catch (final InterruptedException e) {
         Thread.currentThread().interrupt();
       } catch (final ExecutionException e) {

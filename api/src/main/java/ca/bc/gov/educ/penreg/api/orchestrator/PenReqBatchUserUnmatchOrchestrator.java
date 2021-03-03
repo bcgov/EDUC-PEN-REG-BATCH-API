@@ -7,13 +7,15 @@ import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.PossibleMatch;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.DELETE_POSSIBLE_MATCH;
@@ -77,18 +79,20 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
     final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(DELETE_POSSIBLE_MATCH.toString()); // set current event as saga state.
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-    final List<Map<String, UUID>> payload = new ArrayList<>();
+    final List<PossibleMatch> possibleMatches = new ArrayList<>();
     penRequestBatchUnmatchSagaData
         .getMatchedStudentIDList().forEach(element -> {
-      final Map<String, UUID> deletePossibleMatchMap = new HashMap<>();
-      deletePossibleMatchMap.put("studentID", UUID.fromString(penRequestBatchUnmatchSagaData.getStudentID()));
-      deletePossibleMatchMap.put("matchedStudentID", UUID.fromString(element));
-      payload.add(deletePossibleMatchMap);
+      final PossibleMatch possibleMatch = new PossibleMatch();
+      possibleMatch.setStudentID(penRequestBatchUnmatchSagaData.getStudentID());
+      possibleMatch.setMatchedStudentID(element);
+      possibleMatch.setCreateUser(penRequestBatchUnmatchSagaData.getCreateUser());
+      possibleMatch.setUpdateUser(penRequestBatchUnmatchSagaData.getUpdateUser());
+      possibleMatches.add(possibleMatch);
     });
     final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
         .eventType(DELETE_POSSIBLE_MATCH)
         .replyTo(this.getTopicToSubscribe())
-        .eventPayload(JsonUtil.getJsonStringFromObject(payload))
+        .eventPayload(JsonUtil.getJsonStringFromObject(possibleMatches))
         .build();
     this.postMessageToTopic(PEN_MATCH_API_TOPIC.toString(), nextEvent);
     log.info("message sent to PEN_MATCH_API_TOPIC for DELETE_POSSIBLE_MATCH Event.");

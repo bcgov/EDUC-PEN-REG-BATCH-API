@@ -9,6 +9,7 @@ import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.PossibleMatch;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -27,7 +28,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
@@ -132,10 +132,10 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     verify(this.messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(PEN_MATCH_API_TOPIC.toString()), this.eventCaptor.capture());
     final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
     assertThat(newEvent.getEventType()).isEqualTo(DELETE_POSSIBLE_MATCH);
-    final List<Map<String, UUID>> payload = new ObjectMapper().readValue(newEvent.getEventPayload(), new TypeReference<>() {
+    final List<PossibleMatch> payload = new ObjectMapper().readValue(newEvent.getEventPayload(), new TypeReference<>() {
     });
     assertThat(payload).size().isEqualTo(1);
-    assertThat(payload.get(0)).containsKey("matchedStudentID").containsValue(UUID.fromString(this.studentTwinID));
+    assertThat(payload.get(0).getMatchedStudentID()).isEqualTo(this.studentTwinID);
     final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     final var currentSaga = sagaFromDB.get();

@@ -32,21 +32,17 @@ public class MessageSubscriber {
   public MessageSubscriber(final Connection con, final List<EventHandler> eventHandlers) {
     this.connection = con;
     eventHandlers.forEach(handler -> {
-      handlerMap.put(handler.getTopicToSubscribe(), handler);
-      subscribe(handler.getTopicToSubscribe(), handler);
+      this.handlerMap.put(handler.getTopicToSubscribe(), handler);
+      this.subscribe(handler.getTopicToSubscribe(), handler);
     });
   }
 
-  /**
-   * This subscription will makes sure the messages are required to acknowledge manually to STAN.
-   * Subscribe.
-   */
-  public void subscribe(String topic, EventHandler eventHandler) {
-    if (!handlerMap.containsKey(topic)) {
-      handlerMap.put(topic, eventHandler);
+  public void subscribe(final String topic, final EventHandler eventHandler) {
+    if (!this.handlerMap.containsKey(topic)) {
+      this.handlerMap.put(topic, eventHandler);
     }
-    String queue = topic.replace("_", "-");
-    var dispatcher = connection.createDispatcher(onMessage(eventHandler));
+    final String queue = topic.replace("_", "-");
+    final var dispatcher = this.connection.createDispatcher(this.onMessage(eventHandler));
     dispatcher.subscribe(topic, queue);
   }
 
@@ -55,13 +51,13 @@ public class MessageSubscriber {
    *
    * @return the message handler
    */
-  public MessageHandler onMessage(EventHandler eventHandler) {
+  public MessageHandler onMessage(final EventHandler eventHandler) {
     return (Message message) -> {
       if (message != null) {
         log.info("Message received subject :: {},  replyTo :: {}, subscriptionID :: {}", message.getSubject(), message.getReplyTo(), message.getSID());
         try {
-          var eventString = new String(message.getData());
-          var event = JsonUtil.getJsonObjectFromString(Event.class, eventString);
+          final var eventString = new String(message.getData());
+          final var event = JsonUtil.getJsonObjectFromString(Event.class, eventString);
           eventHandler.handleEvent(event);
         } catch (final Exception e) {
           log.error("Exception ", e);
