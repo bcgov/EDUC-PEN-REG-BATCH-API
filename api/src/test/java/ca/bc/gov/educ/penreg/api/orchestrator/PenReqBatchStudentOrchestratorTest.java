@@ -340,7 +340,6 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
   }
 
   private void runMatchStudentTestBasedOnArgument(final String penStatus) throws IOException, InterruptedException, TimeoutException {
-    when(this.restUtils.getRestTemplate()).thenReturn(this.restTemplate);
     when(this.restUtils.getStudentByStudentID(this.studentID)).thenReturn(Student.builder().studentID(this.studentID).pen(TEST_PEN).build());
     doNothing().when(this.restUtils).updateStudent(this.createStudentCaptor.capture());
     final List<PenMatchRecord> matchRecords = new ArrayList<>();
@@ -375,7 +374,6 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
   }
 
   private void runCreateNewStudentTestBasedOnArgument(final String penStatus) throws IOException, InterruptedException, TimeoutException {
-    when(this.restUtils.getRestTemplate()).thenReturn(this.restTemplate);
     when(this.restUtils.getNextPenNumberFromPenServiceAPI(this.saga.getSagaId().toString())).thenReturn(TEST_PEN);
     when(this.restUtils.getStudentByPEN(TEST_PEN)).thenReturn(Optional.empty());
     when(this.restUtils.createStudent(this.createStudentCaptor.capture())).thenReturn(Student.builder().studentID(this.studentID).pen(TEST_PEN).build());

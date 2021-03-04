@@ -19,7 +19,7 @@ import java.util.UUID;
 public interface PenRequestBatchSagaEndpoint {
 
   @GetMapping("/{sagaID}")
-  @PreAuthorize("#oauth2.hasAnyScope('PEN_REQUEST_BATCH_READ_SAGA')")
+  @PreAuthorize("hasAuthority('SCOPE_PEN_REQUEST_BATCH_READ_SAGA')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK."), @ApiResponse(responseCode = "404", description = "Not Found.")})
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to retrieve saga by its ID (GUID).", description = "Endpoint to retrieve saga by its ID (GUID).")
@@ -27,7 +27,7 @@ public interface PenRequestBatchSagaEndpoint {
 
 
   @PostMapping("/new-pen")
-  @PreAuthorize("#oauth2.hasAnyScope('PEN_REQUEST_BATCH_NEW_PEN_SAGA')")
+  @PreAuthorize("hasAuthority('SCOPE_PEN_REQUEST_BATCH_NEW_PEN_SAGA')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK."), @ApiResponse(responseCode = "409", description = "Conflict.")})
   @Transactional
   @Tag(name = "Endpoint to start issue new pen saga.", description = "Endpoint to start issue new pen saga")
@@ -35,7 +35,7 @@ public interface PenRequestBatchSagaEndpoint {
   ResponseEntity<String> issueNewPen(@Validated @RequestBody PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData);
 
   @PostMapping("/user-match")
-  @PreAuthorize("#oauth2.hasAnyScope('PEN_REQUEST_BATCH_USER_MATCH_SAGA')")
+  @PreAuthorize("hasAuthority('SCOPE_PEN_REQUEST_BATCH_USER_MATCH_SAGA')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK."), @ApiResponse(responseCode = "409", description = "Conflict.")})
   @Transactional
   @Tag(name = "Endpoint to start User Match of a student to a pen request.",
@@ -44,7 +44,7 @@ public interface PenRequestBatchSagaEndpoint {
   ResponseEntity<String> processStudentRequestMatchedByUser(@Validated @RequestBody PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData);
 
   @PostMapping("/user-unmatch")
-  @PreAuthorize("#oauth2.hasAnyScope('PEN_REQUEST_BATCH_USER_MATCH_SAGA')")
+  @PreAuthorize("hasAuthority('SCOPE_PEN_REQUEST_BATCH_USER_MATCH_SAGA')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK."), @ApiResponse(responseCode = "409", description = "Conflict.")})
   @Transactional
   @Tag(name = "Endpoint to start User Unmatch of a student to a pen request.",

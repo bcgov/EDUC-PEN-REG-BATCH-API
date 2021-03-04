@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
@@ -30,7 +29,6 @@ import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USE
 import static lombok.AccessLevel.PRIVATE;
 
 @RestController
-@EnableResourceServer
 @Slf4j
 public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoint {
 

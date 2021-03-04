@@ -14,7 +14,6 @@ import ca.bc.gov.educ.penreg.api.struct.v1.Search;
 import ca.bc.gov.educ.penreg.api.struct.v1.SearchCriteria;
 import ca.bc.gov.educ.penreg.api.struct.v1.ValueType;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
-import ca.bc.gov.educ.penreg.api.support.WithMockOAuth2Scope;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -42,6 +42,7 @@ import static ca.bc.gov.educ.penreg.api.struct.v1.Condition.OR;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -52,6 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class PenRequestBatchAPIControllerTest {
@@ -62,6 +64,7 @@ public class PenRequestBatchAPIControllerTest {
   /**
    * The Mock mvc.
    */
+  @Autowired
   private MockMvc mockMvc;
   /**
    * The constant mapper.
@@ -94,8 +97,6 @@ public class PenRequestBatchAPIControllerTest {
   @Before
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    this.mockMvc = MockMvcBuilders.standaloneSetup(this.penRequestBatchAPIController)
-        .setControllerAdvice(new RestExceptionHandler()).build();
   }
 
   /**
@@ -112,10 +113,10 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchPaginated_Always_ShouldReturnStatusOk() throws Exception {
     final MvcResult result = this.mockMvc
         .perform(get("/api/v1/pen-request-batch/paginated")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
@@ -127,7 +128,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchPaginated_GivenFixableCountFilterWithoutData_ShouldReturnStatusOk() throws Exception {
     final File file = new File(
         Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
@@ -144,7 +144,9 @@ public class PenRequestBatchAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated").param("searchCriteriaList", criteriaJSON)
+        .perform(get("/api/v1/pen-request-batch/paginated")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+            .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
@@ -156,7 +158,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchPaginated_GivenSchoolGroupCodeFilter_ShouldReturnStatusOk() throws Exception {
     final File file = new File(
         Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
@@ -173,7 +174,9 @@ public class PenRequestBatchAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated").param("searchCriteriaList", criteriaJSON)
+        .perform(get("/api/v1/pen-request-batch/paginated")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+            .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)));
@@ -185,7 +188,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchPaginated_GivenSchoolGroupCodeOrPenReqBatchStatusCodeFilterAndMatchedCountOrFixableCount_ShouldReturnStatusOk() throws Exception {
     final File file = new File(
         Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
@@ -210,7 +212,9 @@ public class PenRequestBatchAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated").param("searchCriteriaList", criteriaJSON)
+        .perform(get("/api/v1/pen-request-batch/paginated")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+            .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk());
@@ -222,7 +226,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchPaginated_GivenSchoolGroupCodeAndPenReqBatchStatusCodeFilterAndMatchedCountOrFixableCount_ShouldReturnStatusOk() throws Exception {
     final File file = new File(
         Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
@@ -247,7 +250,9 @@ public class PenRequestBatchAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated").param("searchCriteriaList", criteriaJSON)
+        .perform(get("/api/v1/pen-request-batch/paginated")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+            .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
@@ -259,7 +264,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchPaginated_GivenSchoolGroupCodeANDPenReqBatchStatusCodeFilterORMatchedCountANDFixableCount_ShouldReturnStatusOk() throws Exception {
     final File file = new File(
         Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
@@ -284,8 +288,10 @@ public class PenRequestBatchAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated").param("searchCriteriaList", criteriaJSON)
-            .contentType(APPLICATION_JSON))
+        .perform(get("/api/v1/pen-request-batch/paginated")
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+                .param("searchCriteriaList", criteriaJSON)
+                .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk());
   }
@@ -296,7 +302,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchPaginated_GivenSchoolGroupCodeOrPenReqBatchStatusCodeFilterOrSisProductNameANDMatchedCountORFixableCountORSourceStudentCount_ShouldReturnStatusOk() throws Exception {
     final File file = new File(
         Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
@@ -325,7 +330,9 @@ public class PenRequestBatchAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated").param("searchCriteriaList", criteriaJSON)
+        .perform(get("/api/v1/pen-request-batch/paginated")
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+                .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk());
@@ -337,7 +344,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchPaginated_GivenMultipleGroupCondition_ShouldReturnStatusOk() throws Exception {
     final File file = new File(
         Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
@@ -374,7 +380,9 @@ public class PenRequestBatchAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated").param("searchCriteriaList", criteriaJSON)
+        .perform(get("/api/v1/pen-request-batch/paginated")
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+                .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk());
@@ -387,7 +395,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchPaginated_GivenSchoolNameAndStudentName_ShouldReturnStatusOk() throws Exception {
     final String batchIDs = this.createBatchStudentRecords(2);
 
@@ -408,7 +415,9 @@ public class PenRequestBatchAPIControllerTest {
     final String sorts = objectMapper.writeValueAsString(sortMap);
 
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated").param("searchCriteriaList", criteriaJSON)
+        .perform(get("/api/v1/pen-request-batch/paginated")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+            .param("searchCriteriaList", criteriaJSON)
             .param("pageNumber", "1")
             .param("pageSize", "1")
             .param("sort", sorts)
@@ -423,7 +432,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchPaginated_GivenSchoolNameAndStudentName_WithoutPageAndSortCriteria_ShouldReturnStatusOk() throws Exception {
     final String batchIDs = this.createBatchStudentRecords(2);
 
@@ -438,7 +446,9 @@ public class PenRequestBatchAPIControllerTest {
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
 
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated").param("searchCriteriaList", criteriaJSON)
+        .perform(get("/api/v1/pen-request-batch/paginated")
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+                .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(2)));
@@ -450,7 +460,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchPaginated_GivenSchoolNameAndInvalidStudentName_ShouldReturnStatusOk() throws Exception {
     final String batchIDs = this.createBatchStudentRecords(2);
 
@@ -464,7 +473,9 @@ public class PenRequestBatchAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated").param("searchCriteriaList", criteriaJSON)
+        .perform(get("/api/v1/pen-request-batch/paginated")
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+                .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
@@ -476,7 +487,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchStudentPaginated_GivenMultipleGroupCondition_ShouldReturnStatusOk() throws Exception {
     final String batchIDs = this.createBatchStudentRecords(2);
 
@@ -503,7 +513,9 @@ public class PenRequestBatchAPIControllerTest {
     final String sort = this.createSortParam();
 
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/student/paginated").param("searchCriteriaList", criteriaJSON).param("sort", sort)
+        .perform(get("/api/v1/pen-request-batch/student/paginated")
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+                .param("searchCriteriaList", criteriaJSON).param("sort", sort)
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(10)));
@@ -515,7 +527,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchStudentPaginated_GivenPenRequestBatchIdsAndStudentStatusCodes_ShouldReturnStatusOk() throws Exception {
     final String batchIDs = this.createBatchStudentRecords(2);
 
@@ -536,7 +547,9 @@ public class PenRequestBatchAPIControllerTest {
     final String sort = this.createSortParam();
 
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/student/paginated").param("searchCriteriaList", criteriaJSON).param("sort", sort)
+        .perform(get("/api/v1/pen-request-batch/student/paginated")
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+                .param("searchCriteriaList", criteriaJSON).param("sort", sort)
             .param("pageSize", "3")
             .contentType(APPLICATION_JSON))
         .andReturn();
@@ -549,7 +562,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchStudentPaginated_GivenPenRequestBatchIdsAndAllStudentStatusCodesAndOtherConditions_ShouldReturnStatusOk() throws Exception {
     final String batchIDs = this.createBatchStudentRecords(2);
 
@@ -575,7 +587,9 @@ public class PenRequestBatchAPIControllerTest {
     final String sort = this.createSortParam();
 
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/student/paginated").param("searchCriteriaList", criteriaJSON).param("sort", sort)
+        .perform(get("/api/v1/pen-request-batch/student/paginated")
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+                .param("searchCriteriaList", criteriaJSON).param("sort", sort)
             .param("pageSize", "3")
             .contentType(APPLICATION_JSON))
         .andReturn();
@@ -588,7 +602,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatchStudentPaginated_GivenMultipleGroupCondition2_ShouldReturnStatusOk() throws Exception {
     final File file = new File(
         Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
@@ -622,7 +635,9 @@ public class PenRequestBatchAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/student/paginated").param("searchCriteriaList", criteriaJSON)
+        .perform(get("/api/v1/pen-request-batch/student/paginated")
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+                .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(5)));
@@ -634,7 +649,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "WRITE_PEN_REQUEST_BATCH")
   public void testUpdatePenRequestBatchStudent_GivenPenRequestBatchStudent_ShouldReturnStatusOk() throws Exception {
     final var models = this.createBatchStudents(1);
     final var student = studentMapper.toStructure(models.get(0).getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow());
@@ -645,6 +659,7 @@ public class PenRequestBatchAPIControllerTest {
 
     this.mockMvc
         .perform(put(String.format("/api/v1/pen-request-batch/%s/student/%s", student.getPenRequestBatchID(), student.getPenRequestBatchStudentID()))
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
             .contentType(APPLICATION_JSON).accept(APPLICATION_JSON).content(request))
         .andDo(print()).andExpect(status().isOk())
         .andExpect(jsonPath("$.penRequestBatchStudentStatusCode", is("FIXABLE")))
@@ -657,9 +672,10 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatch_GivenInvalidID_ShouldReturnStatusNotFound() throws Exception {
-    this.mockMvc.perform(get("/api/v1/pen-request-batch/" + UUID.randomUUID())).andDo(print()).andExpect(status().isNotFound());
+    this.mockMvc.perform(get("/api/v1/pen-request-batch/" + UUID.randomUUID())
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH"))))
+            .andDo(print()).andExpect(status().isNotFound());
   }
 
   /**
@@ -668,7 +684,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "READ_PEN_REQUEST_BATCH")
   public void testReadPenRequestBatch_GivenValidID_ShouldReturnStatusOk() throws Exception {
     final File file = new File(
         Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
@@ -677,7 +692,9 @@ public class PenRequestBatchAPIControllerTest {
     });
     final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
     final var results = this.penRequestBatchRepository.saveAll(models);
-    this.mockMvc.perform(get("/api/v1/pen-request-batch/" + results.iterator().next().getPenRequestBatchID())).andDo(print()).andExpect(status().isOk());
+    this.mockMvc.perform(get("/api/v1/pen-request-batch/" + results.iterator().next().getPenRequestBatchID())
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH"))))
+            .andDo(print()).andExpect(status().isOk());
   }
 
   /**
@@ -686,7 +703,6 @@ public class PenRequestBatchAPIControllerTest {
    * @throws Exception the exception
    */
   @Test
-  @WithMockOAuth2Scope(scope = "WRITE_PEN_REQUEST_BATCH")
   public void testUpdatePenRequestBatch_GivenPenRequestBatchId_ShouldReturnStatusOk() throws Exception {
     final var models = this.createBatchStudents(1);
     final var batch = mapper.toStructure(models.get(0));
@@ -696,6 +712,7 @@ public class PenRequestBatchAPIControllerTest {
 
     this.mockMvc
         .perform(put(String.format("/api/v1/pen-request-batch/%s", batch.getPenRequestBatchID()))
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
             .contentType(APPLICATION_JSON).accept(APPLICATION_JSON).content(request))
         .andDo(print()).andExpect(status().isOk())
         .andExpect(jsonPath("$.penRequestBatchStatusCode", is("ARCHIVED")));

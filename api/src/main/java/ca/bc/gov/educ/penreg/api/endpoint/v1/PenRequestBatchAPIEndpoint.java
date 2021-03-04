@@ -37,7 +37,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the pen request batch
    */
   @GetMapping(value = "/{penRequestBatchID}")
-  @PreAuthorize("#oauth2.hasScope('READ_PEN_REQUEST_BATCH')")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to get Pen Request Batch Entity.", description = "Endpoint to get Pen Request Batch Entity By ID.")
@@ -52,7 +52,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the pen request batch
    */
   @PostMapping
-  @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQUEST_BATCH')")
+  @PreAuthorize("hasAuthority('SCOPE_WRITE_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "CREATED"), @ApiResponse(responseCode = "400", description = "BAD REQUEST")})
   @ResponseStatus(CREATED)
   @Transactional
@@ -69,7 +69,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the pen request batch
    */
   @PutMapping("/{penRequestBatchID}")
-  @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQUEST_BATCH')")
+  @PreAuthorize("hasAuthority('SCOPE_WRITE_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "400", description = "BAD REQUEST"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
   @Transactional
   @Tag(name = "Endpoint to update Pen Request Batch Entity.", description = "Endpoint to update the Pen Request Batch Entity")
@@ -87,7 +87,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the completable future Page {@link PenRequestBatch}
    */
   @GetMapping("/paginated")
-  @PreAuthorize("#oauth2.hasScope('READ_PEN_REQUEST_BATCH')")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR.")})
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to support data table view in frontend, with sort, filter and pagination.", description = "This API endpoint exposes flexible way to query the entity by leveraging JPA specifications.")
@@ -108,7 +108,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the pen request batch student
    */
   @PostMapping("/{penRequestBatchID}/student")
-  @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQUEST_BATCH')")
+  @PreAuthorize("hasAuthority('SCOPE_WRITE_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "CREATED"), @ApiResponse(responseCode = "400", description = "BAD REQUEST")})
   @ResponseStatus(CREATED)
   @Transactional
@@ -126,7 +126,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the pen request batch student
    */
   @PutMapping("/{penRequestBatchID}/student/{penRequestBatchStudentID}")
-  @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQUEST_BATCH')")
+  @PreAuthorize("hasAuthority('SCOPE_WRITE_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "400", description = "BAD REQUEST")})
   @Transactional
   @Tag(name = "Endpoint to update Pen Request Batch Student Entity.", description = "Endpoint to update Pen Request Batch Student Entity.")
@@ -142,7 +142,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the pen request batch student by id
    */
   @GetMapping("/{penRequestBatchID}/student/{penRequestBatchStudentID}")
-  @PreAuthorize("#oauth2.hasAnyScope('READ_PEN_REQUEST_BATCH')")
+  @PreAuthorize("#oauth2.hasAnyScope('SCOPE_READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "400", description = "BAD REQUEST")})
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to get Pen Request Batch Student Entity.", description = "Endpoint to get Pen Request Batch Student Entity by pen request batch student id and pen request batch id.")
@@ -156,7 +156,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the pen request batch by submission number
    */
   @GetMapping
-  @PreAuthorize("#oauth2.hasAnyScope('READ_PEN_REQUEST_BATCH')")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to get Pen Request Batch by submission number.", description = "Endpoint to get Pen Request Batch by submission number.")
@@ -170,7 +170,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the response entity
    */
   @DeleteMapping("/{penRequestBatchID}")
-  @PreAuthorize("#oauth2.hasAnyScope('DELETE_PEN_REQUEST_BATCH')")
+  @PreAuthorize("hasAuthority('SCOPE_DELETE_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "204", description = "NO CONTENT."), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
   @Transactional
   @Tag(name = "Endpoint to delete Pen Request Batch Entity.", description = "Endpoint to delete Pen Request Batch Entity By ID.")
@@ -184,7 +184,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the pen web blob by submission number
    */
   @GetMapping("/source")
-  @PreAuthorize("#oauth2.hasAnyScope('READ_PEN_REQUEST_BATCH_BLOB')")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH_BLOB')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to get source entity by Submission number.", description = "Endpoint to get source entity of Pen request batch by submission number.")
@@ -199,7 +199,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the pen web blob
    */
   @PutMapping("/source/{sourceID}")
-  @PreAuthorize("#oauth2.hasAnyScope('WRITE_PEN_REQUEST_BATCH_BLOB')")
+  @PreAuthorize("hasAuthority('SCOPE_WRITE_PEN_REQUEST_BATCH_BLOB')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "400", description = "BAD REQUEST"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
   @Transactional
   @Tag(name = "Endpoint to update source entity by ID.", description = "Endpoint to update source entity by ID.")
@@ -216,7 +216,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the completable future Page {@link PenRequestBatchStudent}
    */
   @GetMapping("/student/paginated")
-  @PreAuthorize("#oauth2.hasScope('READ_PEN_REQUEST_BATCH')")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR.")})
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to support data table view in frontend, with sort, filter and pagination, for Student Requests.", description = "This API endpoint exposes flexible way to query the entity by leveraging JPA specifications.")
@@ -234,7 +234,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the all pen request batch student status codes
    */
   @GetMapping("/student/pen-request-batch-student-status-codes")
-  @PreAuthorize("#oauth2.hasAnyScope('READ_PEN_REQUEST_BATCH')")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to get all the PenRequestBatchStudentStatusCode.")
