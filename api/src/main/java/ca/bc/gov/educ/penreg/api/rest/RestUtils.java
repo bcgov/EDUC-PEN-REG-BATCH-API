@@ -110,7 +110,7 @@ public class RestUtils {
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Optional<Student> getStudentByPEN(String pen) {
     final var studentResponse=this.webClient.get()
-            .uri(uriBuilder -> uriBuilder.path(props.getStudentApiURL() + "/?pen=")
+            .uri(uriBuilder -> uriBuilder.path(props.getStudentApiURL())
                     .queryParam("pen",pen)
                     .build())
             .header(CONTENT_TYPE,MediaType.APPLICATION_JSON_VALUE)
