@@ -60,12 +60,14 @@ public class PenCoordinatorService {
   }
 
   public Optional<String> getPenCoordinatorEmailByMinCode(final String mincode) {
+    log.info("getting pen coordinator email for mincode :: {}", mincode);
     if (StringUtils.length(mincode) != 8 || !StringUtils.isNumeric(mincode)) {
       return Optional.empty();
     }
     val ministryCode = Mincode.builder().districtNumber(Integer.parseInt(mincode.substring(0, 3))).schoolNumber(Integer.parseInt(mincode.substring(3, 8))).build();
     val penCoordinator = this.penCoordinatorMap.get(ministryCode);
     if (penCoordinator != null) {
+      log.info("pen coordinator email for mincode :: {} is :: {} ", mincode, penCoordinator.getPenCoordinatorEmail());
       return Optional.of(penCoordinator.getPenCoordinatorEmail());
     }
     return Optional.empty();

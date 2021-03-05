@@ -37,7 +37,17 @@ public enum FileError {
   /**
    * The mincode school is currently closed
    */
-  INVALID_MINCODE_SCHOOL_CLOSED("Invalid Mincode in Header record - school is closed.");
+  INVALID_MINCODE_SCHOOL_CLOSED("Invalid Mincode in Header record - school is closed."),
+
+  /**
+   * The Duplicate batch file psi.
+   */
+  DUPLICATE_BATCH_FILE_PSI("Duplicate file from PSI."),
+
+  /**
+   * The Duplicate batch file psi.
+   */
+  HELD_BACK_FOR_SIZE("Held Back For Size.");
   /**
    * The Message.
    */
@@ -49,7 +59,7 @@ public enum FileError {
    *
    * @param message the message
    */
-  FileError(String message) {
+  FileError(final String message) {
     this.message = message;
   }
 }

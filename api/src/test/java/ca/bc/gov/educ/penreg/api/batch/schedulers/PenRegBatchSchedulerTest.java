@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.DUPLICATE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -77,10 +78,11 @@ public class PenRegBatchSchedulerTest {
    */
   @Before
   public void setUp() throws Exception {
-    final List<PENWebBlobEntity> entities = this.createDummyRecords();
+    final List<PENWebBlobEntity> entities = this.createPlaceHolderRecords();
     this.penWebBlobRepository.saveAll(entities);
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
   }
+
 
   /**
    * Create dummy records list.
@@ -88,10 +90,10 @@ public class PenRegBatchSchedulerTest {
    * @return the list
    * @throws IOException the io exception
    */
-  private List<PENWebBlobEntity> createDummyRecords() throws IOException {
+  private List<PENWebBlobEntity> createPlaceHolderRecords() throws IOException {
     final List<PENWebBlobEntity> entities = new ArrayList<>();
     for (var index = 0; index < 1; index++) {
-      entities.add(this.createDummyRecord(index));
+      entities.add(this.createPlaceHolderRecord(index));
     }
     return entities;
   }
@@ -103,7 +105,7 @@ public class PenRegBatchSchedulerTest {
    * @return the pen web blob entity
    * @throws IOException the io exception
    */
-  private PENWebBlobEntity createDummyRecord(final int index) throws IOException {
+  private PENWebBlobEntity createPlaceHolderRecord(final int index) throws IOException {
     if (index == 0) {
       final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
       final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
@@ -138,6 +140,31 @@ public class PenRegBatchSchedulerTest {
     assertThat(this.studentRepository.findAll().size()).isEqualTo(5);
   }
 
+  @Test
+  public void testExtractUnProcessedFilesFromTSW_GivenMultipleRowsInTSWithSameFileButDifferentSubmissionNumber_ShouldBeProcessedAndMarkedAsDuplicate() throws InterruptedException, IOException {
+    this.penWebBlobRepository.deleteAll();
+    val penWebBlobs = this.loadSameFileTwice();
+    this.penWebBlobRepository.saveAll(penWebBlobs);
+    this.penRegBatchScheduler.extractUnProcessedFilesFromPenWebBlobs();
+    this.waitForAsyncToFinishPenReqBatchStatusDuplicate();
+    assertThat(this.repository.findByPenRequestBatchStatusCode(DUPLICATE.toString()).size()).isEqualTo(1);
+  }
+
+  private void waitForAsyncToFinishPenReqBatchStatusDuplicate() throws InterruptedException {
+    int i = 0;
+    while (true) {
+      if (i >= 200) {
+        break; // break out after trying for 10 seconds.
+      }
+      val duplicateRecord = this.repository.findByPenRequestBatchStatusCode(DUPLICATE.toString());
+      if (!duplicateRecord.isEmpty()) {
+        break;
+      }
+      TimeUnit.MILLISECONDS.sleep(50);
+      i++;
+    }
+  }
+
   private void waitForAsyncToFinish() throws InterruptedException {
     int i = 0;
     while (true) {
@@ -159,5 +186,23 @@ public class PenRegBatchSchedulerTest {
     school.setMincode("66510518");
     school.setDateOpened("1953-09-01T00:00:00");
     return school;
+  }
+
+  private List<PENWebBlobEntity> loadSameFileTwice() throws IOException {
+
+    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_50000_records_OK.txt")).getFile());
+    final byte[] bFile = Files.readAllBytes(file.toPath());
+    final List<PENWebBlobEntity> entities = new ArrayList<>();
+    for (var index = 0; index < 2; index++) {
+      final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+      long id = 1;
+      val penWebBlob = PENWebBlobEntity.builder().penWebBlobId(id).mincode("10210518").studentCount(5L).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_PSI_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+      if (index == 0) {
+        penWebBlob.setExtractDateTime(LocalDateTime.now());
+      }
+      entities.add(penWebBlob);
+      id = id + 1;
+    }
+    return entities;
   }
 }
