@@ -35,29 +35,25 @@ public class NotificationService {
   }
 
   public CompletableFuture<Boolean> notifySchoolForLoadFailed(final String guid, final String fileName, final String submissionNumber, final String reason, final String toEmail) {
-    return CompletableFuture.supplyAsync(() -> {
-      try {
-        val localDateTime = LocalDateTime.now();
-
-        val prbErrorNotification = new PenRequestBatchSchoolErrorNotificationEntity();
-        prbErrorNotification.setFailReason(reason);
-        prbErrorNotification.setDateTime(localDateTime.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH).concat(String.valueOf(localDateTime.getDayOfMonth())).concat(",").concat(String.valueOf(localDateTime.getYear())));
-        prbErrorNotification.setFileName(fileName);
-        prbErrorNotification.setSubmissionNumber(submissionNumber);
-        prbErrorNotification.setToEmail(toEmail);
-        prbErrorNotification.setFromEmail(this.notificationProperties.getFromEmail());
-        final Event event = Event.builder()
-            .eventType(EventType.PEN_REQUEST_BATCH_NOTIFY_SCHOOL_FILE_FORMAT_ERROR)
-            .eventPayload(JsonUtil.getJsonStringFromObject(prbErrorNotification))
-            .sagaId(UUID.fromString(guid))
-            .build();
-        this.messagePublisher.requestMessage(PROFILE_REQUEST_EMAIL_API_TOPIC.toString(), JsonUtil.getJsonStringFromObject(event).getBytes(StandardCharsets.UTF_8)).thenApplyAsync(result -> result.getData() != null && result.getData().length > 0);
-      } catch (final Exception e) {
-        log.error("Exception while sending message", e);
-        return false;
-      }
-      return true;
-    });
+    try {
+      val localDateTime = LocalDateTime.now();
+      val prbErrorNotification = new PenRequestBatchSchoolErrorNotificationEntity();
+      prbErrorNotification.setFailReason(reason);
+      prbErrorNotification.setDateTime(localDateTime.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH).concat(String.valueOf(localDateTime.getDayOfMonth())).concat(",").concat(String.valueOf(localDateTime.getYear())));
+      prbErrorNotification.setFileName(fileName);
+      prbErrorNotification.setSubmissionNumber(submissionNumber);
+      prbErrorNotification.setToEmail(toEmail);
+      prbErrorNotification.setFromEmail(this.notificationProperties.getFromEmail());
+      final Event event = Event.builder()
+          .eventType(EventType.PEN_REQUEST_BATCH_NOTIFY_SCHOOL_FILE_FORMAT_ERROR)
+          .eventPayload(JsonUtil.getJsonStringFromObject(prbErrorNotification))
+          .sagaId(UUID.fromString(guid))
+          .build();
+      return this.messagePublisher.requestMessage(PROFILE_REQUEST_EMAIL_API_TOPIC.toString(), JsonUtil.getJsonStringFromObject(event).getBytes(StandardCharsets.UTF_8)).thenApplyAsync(result -> result.getData() != null && result.getData().length > 0);
+    } catch (final Exception e) {
+      log.error("Exception while sending message for guid :: {}", guid, e);
+      return CompletableFuture.completedFuture(false);
+    }
   }
 
 }

@@ -1,9 +1,10 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,7 +12,7 @@ import java.util.Optional;
  * The interface Pen web blob repository.
  */
 @Repository
-public interface PenWebBlobRepository extends CrudRepository<PENWebBlobEntity, Long> {
+public interface PenWebBlobRepository extends JpaRepository<PENWebBlobEntity, Long> {
   /**
    * Find all by extract date time is null list.
    *
@@ -27,4 +28,6 @@ public interface PenWebBlobRepository extends CrudRepository<PENWebBlobEntity, L
    * @return the optional
    */
   Optional<PENWebBlobEntity> findBySubmissionNumber(String submissionNumber);
+
+  List<PENWebBlobEntity> findAllByMincodeAndInsertDateTimeGreaterThanAndSubmissionNumberNotAndFileTypeAndExtractDateTimeIsNotNull(String mincode, LocalDateTime insertDateTime, String submissionNumber, String fileType);
 }

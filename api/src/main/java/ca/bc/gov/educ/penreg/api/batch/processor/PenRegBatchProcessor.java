@@ -4,11 +4,14 @@ import ca.bc.gov.educ.penreg.api.batch.exception.FileError;
 import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper;
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchStudentSagaDataMapper;
+import ca.bc.gov.educ.penreg.api.batch.service.DuplicateFileCheckService;
 import ca.bc.gov.educ.penreg.api.batch.service.PenRequestBatchFileService;
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFileHeader;
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFileTrailer;
 import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
@@ -17,6 +20,7 @@ import ca.bc.gov.educ.penreg.api.service.NotificationService;
 import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.School;
+import com.google.common.base.Stopwatch;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +28,6 @@ import lombok.val;
 import net.sf.flatpack.DataError;
 import net.sf.flatpack.DataSet;
 import net.sf.flatpack.DefaultParserFactory;
-import net.sf.flatpack.Parser;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -37,6 +40,8 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.*;
@@ -104,6 +109,11 @@ public class PenRegBatchProcessor {
   private final PenCoordinatorService penCoordinatorService;
 
   /**
+   * The Duplicate file check service map.
+   */
+  private final Map<SchoolGroupCodes, DuplicateFileCheckService> duplicateFileCheckServiceMap;
+
+  /**
    * Instantiates a new Pen reg batch processor.
    *
    * @param penRegBatchStudentRecordsProcessor the pen reg batch student records processor
@@ -112,15 +122,17 @@ public class PenRegBatchProcessor {
    * @param applicationProperties              the application properties
    * @param notificationService                the notification service
    * @param penCoordinatorService              the pen coordinator service
+   * @param duplicateFileCheckServiceList      the duplicate file check service list
    */
   @Autowired
-  public PenRegBatchProcessor(final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService, final RestUtils restUtils, final ApplicationProperties applicationProperties, final NotificationService notificationService, final PenCoordinatorService penCoordinatorService) {
+  public PenRegBatchProcessor(final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService, final RestUtils restUtils, final ApplicationProperties applicationProperties, final NotificationService notificationService, final PenCoordinatorService penCoordinatorService, final List<DuplicateFileCheckService> duplicateFileCheckServiceList) {
     this.penRegBatchStudentRecordsProcessor = penRegBatchStudentRecordsProcessor;
     this.penRequestBatchFileService = penRequestBatchFileService;
     this.restUtils = restUtils;
     this.applicationProperties = applicationProperties;
     this.notificationService = notificationService;
     this.penCoordinatorService = penCoordinatorService;
+    this.duplicateFileCheckServiceMap = duplicateFileCheckServiceList.stream().collect(Collectors.toMap(DuplicateFileCheckService::getSchoolGroupCode, Function.identity()));
   }
 
   /**
@@ -132,54 +144,74 @@ public class PenRegBatchProcessor {
    */
   @Transactional
   public void processPenRegBatchFileFromPenWebBlob(@NonNull final PENWebBlobEntity penWebBlobEntity) {
+    final Stopwatch stopwatch = Stopwatch.createStarted();
     final var guid = UUID.randomUUID().toString(); // this guid will be used throughout the logs for easy tracking.
     log.info("Started processing row from Pen Web Blobs with submission Number :: {} and guid :: {}", penWebBlobEntity.getSubmissionNumber(), guid);
     final BatchFile batchFile = new BatchFile();
     Optional<Reader> batchFileReaderOptional = Optional.empty();
     try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
+      this.checkForDuplicateFile(penWebBlobEntity, guid);
       batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents())));
-      final Parser pzParser = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get());
-      final DataSet ds = pzParser.setNullEmptyStrings(true).parse();
+      final DataSet ds = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get()).setNullEmptyStrings(true).parse();
       this.processDataSetForRowLengthErrors(guid, ds);
       this.populateBatchFile(guid, ds, batchFile);
-      final var studentCount = batchFile.getBatchFileTrailer().getStudentCount();
-      if (!StringUtils.isNumeric(studentCount) || Integer.parseInt(studentCount) != batchFile.getStudentDetails().size()) {
-        throw new FileUnProcessableException(STUDENT_COUNT_MISMATCH, guid, studentCount, String.valueOf(batchFile.getStudentDetails().size()));
-      }
-
-      //Running check for large batch file
-      if (batchFile.getStudentDetails().size() >= this.getApplicationProperties().getNumRecordsForBatchHold()) {
-        this.persistDataForHeldBackBatchOnSize(guid, penWebBlobEntity, batchFile);
-      } else {
-        final var studentSagaDataSet = this.processLoadedRecordsInBatchFile(guid, batchFile, penWebBlobEntity);
-        this.getPenRegBatchStudentRecordsProcessor().publishUnprocessedStudentRecordsForProcessing(studentSagaDataSet);
-      }
+      this.processStudentCountForMismatchAndSize(guid, batchFile);
+      final Set<PenRequestBatchStudentSagaData> studentSagaDataSet = this.processLoadedRecordsInBatchFile(guid, batchFile, penWebBlobEntity);
+      this.getPenRegBatchStudentRecordsProcessor().publishUnprocessedStudentRecordsForProcessing(studentSagaDataSet);
     } catch (final FileUnProcessableException fileUnProcessableException) { // system needs to persist the data in this case.
-      this.persistDataWithException(guid, penWebBlobEntity, fileUnProcessableException);
+      this.processFileUnProcessableException(guid, penWebBlobEntity, fileUnProcessableException, batchFile);
     } catch (final Exception e) { // need to check what to do in case of general exception.
       log.error("Exception while processing the file with guid :: {} :: Exception :: {}", guid, e);
     } finally {
-      if (batchFileReaderOptional.isPresent()) {
-        try {
-          batchFileReaderOptional.get().close();
-        } catch (final IOException e) {
-          log.warn("Error closing the batch file :: " + guid, e);
-        }
-      }
+      batchFileReaderOptional.ifPresent(this::closeBatchFileReader);
+      log.info("Time taken is :: {} milli seconds", stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
   }
 
   /**
-   * Set batch to LOAD_HELD_SIZE status.
+   * Close batch file reader.
    *
-   * @param guid             the guid
-   * @param penWebBlobEntity the pen web blob entity
-   * @param file             the file
+   * @param reader the reader
    */
-  private void persistDataForHeldBackBatchOnSize(@NonNull final String guid, @NonNull final PENWebBlobEntity penWebBlobEntity, final BatchFile file) {
-    log.info("going to persist data for a batch held back for size :: {}", guid);
-    final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityLoadHeldForSize(penWebBlobEntity, file); // batch file can be processed further and persisted.
-    this.getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
+  private void closeBatchFileReader(final Reader reader) {
+    try {
+      if (reader != null) {
+        reader.close();
+      }
+    } catch (final IOException e) {
+      log.warn("Error closing the batch file :: ", e);
+    }
+  }
+
+
+  /**
+   * Process student count for mismatch and size.
+   *
+   * @param guid      the guid
+   * @param batchFile the batch file
+   * @throws FileUnProcessableException the file un processable exception
+   */
+  private void processStudentCountForMismatchAndSize(final String guid, final BatchFile batchFile) throws FileUnProcessableException {
+    final var studentCount = batchFile.getBatchFileTrailer().getStudentCount();
+    if (!StringUtils.isNumeric(studentCount) || Integer.parseInt(studentCount) != batchFile.getStudentDetails().size()) {
+      throw new FileUnProcessableException(STUDENT_COUNT_MISMATCH, guid, PenRequestBatchStatusCodes.LOAD_FAIL, studentCount, String.valueOf(batchFile.getStudentDetails().size()));
+    } else if (batchFile.getStudentDetails().size() >= this.getApplicationProperties().getNumRecordsForBatchHold()) {
+      throw new FileUnProcessableException(HELD_BACK_FOR_SIZE, guid, PenRequestBatchStatusCodes.HOLD_SIZE);
+    }
+  }
+
+  /**
+   * Check for duplicate file.
+   *
+   * @param penWebBlobEntity the pen web blob entity
+   * @param guid             the guid
+   * @throws FileUnProcessableException the file un processable exception
+   */
+  private void checkForDuplicateFile(final PENWebBlobEntity penWebBlobEntity, final String guid) throws FileUnProcessableException {
+    if (StringUtils.startsWith(penWebBlobEntity.getMincode(), "102")
+        && this.duplicateFileCheckServiceMap.get(SchoolGroupCodes.PSI).isBatchFileDuplicate(penWebBlobEntity)) {
+      throw new FileUnProcessableException(DUPLICATE_BATCH_FILE_PSI, guid, PenRequestBatchStatusCodes.DUPLICATE);
+    }
   }
 
   /**
@@ -188,30 +220,78 @@ public class PenRegBatchProcessor {
    * @param guid                       the guid
    * @param penWebBlobEntity           the pen web blob entity
    * @param fileUnProcessableException the file un processable exception
+   * @param batchFile                  the batch file
    */
-  private void persistDataWithException(@NonNull final String guid, @NonNull final PENWebBlobEntity penWebBlobEntity, @NonNull final FileUnProcessableException fileUnProcessableException) {
-    log.info("going to persist data with exception for batch :: {}", guid);
-    CompletableFuture<Boolean> isSchoolNotified = null;
-    if (fileUnProcessableException.getFileError() != INVALID_MINCODE_SCHOOL_CLOSED
-        && fileUnProcessableException.getFileError() != INVALID_MINCODE_HEADER) {
+  private void processFileUnProcessableException(@NonNull final String guid, @NonNull final PENWebBlobEntity penWebBlobEntity, @NonNull final FileUnProcessableException fileUnProcessableException, final BatchFile batchFile) {
+    val notifySchoolForFileFormatErrorsOptional = this.notifySchoolForFileFormatErrors(guid, penWebBlobEntity, fileUnProcessableException);
+    final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityForBusinessException(penWebBlobEntity, fileUnProcessableException.getReason(), fileUnProcessableException.getPenRequestBatchStatusCode(), batchFile, fileUnProcessableException.getFileError() == HELD_BACK_FOR_SIZE); // batch file can be processed further and persisted.
+    //wait here if notification was sent, if there was any error this file will be picked up again as it wont be persisted.
+    if (notifySchoolForFileFormatErrorsOptional.isPresent()) {
+      final boolean isNotified = this.waitForNotificationToCompleteIfPresent(guid, notifySchoolForFileFormatErrorsOptional.get());
+      if (isNotified) {
+        log.info("going to persist data with FileUnProcessableException for batch :: {}", guid);
+        this.getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
+      } else {
+        log.warn("Batch file could not be persisted as system was not able to send required notification to school, it will be picked up again by the scheduler.");
+      }
+    } else {
+      log.info("going to persist data with FileUnProcessableException for batch :: {}", guid);
+      this.getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
+    }
+  }
+
+  /**
+   * Wait for notification to complete if present.
+   *
+   * @param guid                     the guid
+   * @param booleanCompletableFuture the boolean completable future
+   * @return the boolean
+   */
+  private boolean waitForNotificationToCompleteIfPresent(final String guid, final CompletableFuture<Boolean> booleanCompletableFuture) {
+    try {
+      final boolean isNotificationSuccessful = booleanCompletableFuture.get(); // wait here for result.
+      log.info("notification result for :: {} is :: {}", guid, isNotificationSuccessful);
+      return isNotificationSuccessful;
+    } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
+    } catch (final ExecutionException e) {
+      log.error("execution exception", e);
+    }
+    return false;
+  }
+
+  /**
+   * Notify school for file format errors optional.
+   *
+   * @param guid                       the guid
+   * @param penWebBlobEntity           the pen web blob entity
+   * @param fileUnProcessableException the file un processable exception
+   * @return the optional
+   */
+  private Optional<CompletableFuture<Boolean>> notifySchoolForFileFormatErrors(final String guid, final PENWebBlobEntity penWebBlobEntity, final FileUnProcessableException fileUnProcessableException) {
+    Optional<CompletableFuture<Boolean>> isSchoolNotifiedFutureOptional = Optional.empty();
+    if (this.isNotificationToSchoolRequired(fileUnProcessableException)) {
+      log.info("notification to school is required :: {}", guid);
       val coordinatorEmailOptional = this.penCoordinatorService.getPenCoordinatorEmailByMinCode(penWebBlobEntity.getMincode());
       if (coordinatorEmailOptional.isPresent()) {
-        isSchoolNotified = this.notificationService.notifySchoolForLoadFailed(guid, penWebBlobEntity.getFileName(), penWebBlobEntity.getSubmissionNumber(), fileUnProcessableException.getReason(), coordinatorEmailOptional.get());
+        log.info("notification to school is required :: {}", guid);
+        isSchoolNotifiedFutureOptional = Optional.ofNullable(this.notificationService.notifySchoolForLoadFailed(guid, penWebBlobEntity.getFileName(), penWebBlobEntity.getSubmissionNumber(), fileUnProcessableException.getReason(), coordinatorEmailOptional.get()));
       }
     }
-    final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityLoadFail(penWebBlobEntity, fileUnProcessableException.getReason()); // batch file can be processed further and persisted.
-    this.getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
-    if (isSchoolNotified != null) {
-      try {
-        final boolean isNotificationSuccessful = isSchoolNotified.get(); // wait here for result.
-        log.info("notification result for :: {} is :: {}", guid, isNotificationSuccessful);
-      } catch (final InterruptedException e) {
-        Thread.currentThread().interrupt();
-      } catch (final ExecutionException e) {
-        log.error("execution exception", e);
-      }
-    }
+    return isSchoolNotifiedFutureOptional;
+  }
 
+  /**
+   * Is notification to school required boolean. notify school in all other conditions than the below ones.
+   *
+   * @param fileUnProcessableException the file un processable exception
+   * @return the boolean
+   */
+  private boolean isNotificationToSchoolRequired(final FileUnProcessableException fileUnProcessableException) {
+    return fileUnProcessableException.getFileError() != INVALID_MINCODE_SCHOOL_CLOSED
+        && fileUnProcessableException.getFileError() != INVALID_MINCODE_HEADER
+        && fileUnProcessableException.getFileError() != DUPLICATE_BATCH_FILE_PSI
+        && fileUnProcessableException.getFileError() != HELD_BACK_FOR_SIZE;
   }
 
   /**
@@ -236,7 +316,7 @@ public class PenRegBatchProcessor {
       if (message.length() > 255) {
         message = StringUtils.abbreviate(message, 255);
       }
-      throw new FileUnProcessableException(INVALID_ROW_LENGTH, guid, message);
+      throw new FileUnProcessableException(INVALID_ROW_LENGTH, guid, PenRequestBatchStatusCodes.LOAD_FAIL, message);
     }
   }
 
@@ -340,7 +420,7 @@ public class PenRegBatchProcessor {
     long index = 0;
     while (ds.next()) {
       if (index == 0 && !ds.isRecordID(HEADER.getName())) {
-        throw new FileUnProcessableException(FileError.INVALID_TRANSACTION_CODE_HEADER, guid);
+        throw new FileUnProcessableException(FileError.INVALID_TRANSACTION_CODE_HEADER, guid, PenRequestBatchStatusCodes.LOAD_FAIL);
       }
       if (ds.isRecordID(HEADER.getName()) || ds.isRecordID(TRAILER.getName())) {
         this.setHeaderOrTrailer(ds, batchFile, guid);
@@ -364,7 +444,7 @@ public class PenRegBatchProcessor {
   private StudentDetails getStudentDetailRecordFromFile(final DataSet ds, final String guid, final long index) throws FileUnProcessableException {
     final var transactionCode = ds.getString(TRANSACTION_CODE.getName());
     if (!TRANSACTION_CODE_STUDENT_DETAILS_RECORD.equals(transactionCode)) {
-      throw new FileUnProcessableException(INVALID_TRANSACTION_CODE_STUDENT_DETAILS, guid, String.valueOf(index), ds.getString(LOCAL_STUDENT_ID.getName()));
+      throw new FileUnProcessableException(INVALID_TRANSACTION_CODE_STUDENT_DETAILS, guid, PenRequestBatchStatusCodes.LOAD_FAIL, String.valueOf(index), ds.getString(LOCAL_STUDENT_ID.getName()));
     }
     return StudentDetails.builder()
         .birthDate(ds.getString(BIRTH_DATE.getName()))
@@ -410,7 +490,7 @@ public class PenRegBatchProcessor {
     } else if (ds.isRecordID(TRAILER.getName())) {
       final var transactionCode = ds.getString(TRANSACTION_CODE.getName());
       if (!TRANSACTION_CODE_TRAILER_RECORD.equals(transactionCode)) {
-        throw new FileUnProcessableException(INVALID_TRANSACTION_CODE_TRAILER, guid);
+        throw new FileUnProcessableException(INVALID_TRANSACTION_CODE_TRAILER, guid, PenRequestBatchStatusCodes.LOAD_FAIL);
       }
       batchFile.setBatchFileTrailer(BatchFileTrailer.builder()
           .transactionCode(transactionCode)
@@ -431,25 +511,25 @@ public class PenRegBatchProcessor {
    */
   private void validateMincode(final String guid, final String mincode) throws FileUnProcessableException {
     if (!StringUtils.isNumeric(mincode) || mincode.length() != 8) {
-      throw new FileUnProcessableException(INVALID_MINCODE_HEADER, guid);
+      throw new FileUnProcessableException(INVALID_MINCODE_HEADER, guid, PenRequestBatchStatusCodes.LOAD_FAIL);
     }
 
     try {
       final Optional<School> school = this.restUtils.getSchoolByMincode(mincode);
 
       if (school.isEmpty()) {
-        throw new FileUnProcessableException(INVALID_MINCODE_HEADER, guid);
+        throw new FileUnProcessableException(INVALID_MINCODE_HEADER, guid, PenRequestBatchStatusCodes.LOAD_FAIL);
       }
 
       final String openedDate = school.get().getDateOpened();
       final String closedDate = school.get().getDateClosed();
 
       if (openedDate == null || LocalDate.parse(openedDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME).isAfter(LocalDate.now()) || (closedDate != null && LocalDate.parse(closedDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME).isBefore(LocalDate.now()))) {
-        throw new FileUnProcessableException(INVALID_MINCODE_SCHOOL_CLOSED, guid);
+        throw new FileUnProcessableException(INVALID_MINCODE_SCHOOL_CLOSED, guid, PenRequestBatchStatusCodes.LOAD_FAIL);
       }
     } catch (final DateTimeParseException e) {
       log.error("Date time parse exception trying to parse School's open or closed date: {}", guid, e);
-      throw new FileUnProcessableException(INVALID_MINCODE_SCHOOL_CLOSED, guid);
+      throw new FileUnProcessableException(INVALID_MINCODE_SCHOOL_CLOSED, guid, PenRequestBatchStatusCodes.LOAD_FAIL);
     }
   }
 }

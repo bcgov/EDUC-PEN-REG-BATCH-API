@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.batch.mappers;
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
 import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
 import ca.bc.gov.educ.penreg.api.constants.MinistryPRBSourceCodes;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
@@ -14,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchTypeCode.SCHOOL;
 
 /**
@@ -84,40 +85,42 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
 
 
   /**
-   * To pen req batch entity load fail pen request batch entity.
+   * To pen req batch entity for business exception pen request batch entity.
    *
-   * @param penWebBlobEntity the pen web blob entity
-   * @param reason           the reason
+   * @param penWebBlobEntity          the pen web blob entity
+   * @param reason                    the reason
+   * @param penRequestBatchStatusCode the pen request batch status code
+   * @param batchFile                 the batch file
+   * @param persistStudentRecords     the persist student records
    * @return the pen request batch entity
    */
   @Override
-  public PenRequestBatchEntity toPenReqBatchEntityLoadFail(final PENWebBlobEntity penWebBlobEntity, final String reason) {
-    final var entity = this.delegate.toPenReqBatchEntityLoadFail(penWebBlobEntity, reason);
+  public PenRequestBatchEntity toPenReqBatchEntityForBusinessException(final PENWebBlobEntity penWebBlobEntity, final String reason, final PenRequestBatchStatusCodes penRequestBatchStatusCode, final BatchFile batchFile, final boolean persistStudentRecords) {
+    final var entity = this.delegate.toPenReqBatchEntityForBusinessException(penWebBlobEntity, reason, penRequestBatchStatusCode, batchFile, persistStudentRecords);
     this.setDefaults(entity);
-    entity.setPenRequestBatchStatusCode(LOAD_FAIL.getCode());
+    entity.setPenRequestBatchStatusCode(penRequestBatchStatusCode.getCode());
     entity.setPenRequestBatchStatusReason(reason);
-    final PenRequestBatchHistoryEntity penRequestBatchHistory = this.createPenReqBatchHistory(entity, LOAD_FAIL.getCode(), STATUS_CHANGED.getCode(), reason);
+    if (batchFile != null) {
+      if (batchFile.getStudentDetails() != null) {
+        entity.setStudentCount((long) batchFile.getStudentDetails().size());
+      }
+      if (batchFile.getBatchFileHeader() != null) {
+        entity.setSchoolGroupCode(this.computeSchoolGroupCode(batchFile.getBatchFileHeader().getMincode()));
+      }
+    }
+    final PenRequestBatchHistoryEntity penRequestBatchHistory = this.createPenReqBatchHistory(entity, penRequestBatchStatusCode.getCode(), STATUS_CHANGED.getCode(), reason);
     entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
+    if (persistStudentRecords && batchFile != null) { // for certain business exception, system needs to store the student details as well.
+      int counter = 1;
+      for (final var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.
+        final var penRequestBatchStudentEntity = this.toPenRequestBatchStudentEntity(student, entity);
+        penRequestBatchStudentEntity.setRecordNumber(counter++);
+        entity.getPenRequestBatchStudentEntities().add(penRequestBatchStudentEntity);
+      }
+    }
     return entity;
   }
 
-  /**
-   * To pen req batch entity load held back for size pen request batch entity.
-   *
-   * @param penWebBlobEntity the pen web blob entity
-   * @return the pen request batch entity
-   */
-  @Override
-  public PenRequestBatchEntity toPenReqBatchEntityLoadHeldForSize(final PENWebBlobEntity penWebBlobEntity, final BatchFile file) {
-    final var entity = this.delegate.toPenReqBatchEntityLoadHeldForSize(penWebBlobEntity, file);
-    this.setDefaults(entity);
-    entity.setPenRequestBatchStatusCode(HOLD_SIZE.getCode());
-    entity.setStudentCount((long) file.getStudentDetails().size());
-    entity.setSchoolGroupCode(this.computeSchoolGroupCode(file.getBatchFileHeader().getMincode()));
-    final PenRequestBatchHistoryEntity penRequestBatchHistory = this.createPenReqBatchHistory(entity, HOLD_SIZE.getCode(), STATUS_CHANGED.getCode(), null);
-    entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
-    return entity;
-  }
 
   /**
    * To pen request batch student entity pen request batch student entity.
@@ -137,7 +140,7 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
   /**
    * Compute school group code string.
    *
-   * @param mincode the min code
+   * @param mincode the mincode
    * @return the string
    */
   private String computeSchoolGroupCode(final String mincode) {

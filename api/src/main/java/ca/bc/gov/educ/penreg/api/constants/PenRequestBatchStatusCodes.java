@@ -45,8 +45,11 @@ public enum PenRequestBatchStatusCodes {
   /**
    * Deleted pen request batch status codes.
    */
-  DELETED("DELETED");
-
+  DELETED("DELETED"),
+  /**
+   * Duplicate pen request batch status codes.
+   */
+  DUPLICATE("DUPLICATE");
   /**
    * The Code.
    */
@@ -58,7 +61,7 @@ public enum PenRequestBatchStatusCodes {
    *
    * @param code the code
    */
-  PenRequestBatchStatusCodes(String code) {
+  PenRequestBatchStatusCodes(final String code) {
     this.code = code;
   }
 }
