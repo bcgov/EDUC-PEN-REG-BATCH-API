@@ -45,7 +45,7 @@ public enum FileError {
   DUPLICATE_BATCH_FILE_PSI("Duplicate file from PSI."),
 
   /**
-   * The Duplicate batch file psi.
+   * The Held back for size.
    */
   HELD_BACK_FOR_SIZE("Held Back For Size.");
   /**
