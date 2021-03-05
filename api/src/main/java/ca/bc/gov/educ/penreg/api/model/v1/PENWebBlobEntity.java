@@ -57,8 +57,7 @@ public class PENWebBlobEntity {
    * The File contents.
    */
 // here length is provided to make sure uni tests with H2 work.
-  @Lob
-  @Column(name = "FILE_BLOB", nullable = false, updatable = false)
+  @Column(name = "FILE_BLOB", nullable = false, updatable = false, length = 900000000)
   private byte[] fileContents;
 
   /**
