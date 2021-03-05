@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.batch.mappers.PenCoordinatorMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.Mincode;
 import ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.repository.PenCoordinatorRepository;
@@ -33,7 +34,7 @@ public class PenCoordinatorService {
 
   @PostConstruct
   public void init() {
-    this.penCoordinatorMap = this.penCoordinatorRepository.findAll().stream().collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity()));
+    this.penCoordinatorMap = this.penCoordinatorRepository.findAll().stream().map(PenCoordinatorMapper.mapper::toTrimmedPenCoordinator).collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity()));
   }
 
   @Scheduled(cron = "0 0 0/4 * * *") // every 4 hours
@@ -41,7 +42,7 @@ public class PenCoordinatorService {
     final Lock writeLock = this.penCoordinatorMapLock.writeLock();
     try {
       writeLock.lock();
-      this.penCoordinatorMap = this.penCoordinatorRepository.findAll().stream().collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity()));
+      this.init();
     } finally {
       writeLock.unlock();
     }
