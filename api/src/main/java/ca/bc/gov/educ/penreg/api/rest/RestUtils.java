@@ -57,7 +57,8 @@ public class RestUtils {
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Student getStudentByStudentID(String studentID) {
     return webClient.get()
-            .uri(uriBuilder -> uriBuilder.path(this.props.getStudentApiURL()+"/"+studentID)
+            .uri(uriBuilder -> uriBuilder.path(this.props.getStudentApiURL()+"/")
+                    .queryParam("studentID",studentID)
                     .build())
             .header(CONTENT_TYPE,MediaType.APPLICATION_JSON_VALUE)
             .retrieve()
@@ -152,7 +153,8 @@ public class RestUtils {
     Optional<School> school = Optional.empty();
     try {
       final var response = this.webClient.get()
-              .uri(uriBuilder -> uriBuilder.path(props.getSchoolApiURL().concat("/").concat(mincode))
+              .uri(uriBuilder -> uriBuilder.path(props.getSchoolApiURL().concat("/"))
+                      .queryParam("mincode",mincode)
                       .build())
               .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
               .retrieve()
