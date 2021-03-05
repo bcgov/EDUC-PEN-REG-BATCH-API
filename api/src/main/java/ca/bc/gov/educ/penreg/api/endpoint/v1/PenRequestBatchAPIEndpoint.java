@@ -142,7 +142,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @return the pen request batch student by id
    */
   @GetMapping("/{penRequestBatchID}/student/{penRequestBatchStudentID}")
-  @PreAuthorize("#oauth2.hasAnyScope('SCOPE_READ_PEN_REQUEST_BATCH')")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "400", description = "BAD REQUEST")})
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to get Pen Request Batch Student Entity.", description = "Endpoint to get Pen Request Batch Student Entity by pen request batch student id and pen request batch id.")

@@ -5,7 +5,6 @@ import ca.bc.gov.educ.penreg.api.struct.Student;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -14,7 +13,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.Objects;
+
 import java.util.Optional;
 
 /**
@@ -43,7 +42,8 @@ public class RestUtils {
    *
    * @param props the props
    */
-  public RestUtils(@Autowired final ApplicationProperties props, final WebClient webClient) {
+  @Autowired
+  public RestUtils(final ApplicationProperties props, final WebClient webClient) {
     this.props = props;
     this.webClient = webClient;
   }
@@ -110,7 +110,8 @@ public class RestUtils {
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Optional<Student> getStudentByPEN(String pen) {
     final var studentResponse=this.webClient.get()
-            .uri(uriBuilder -> uriBuilder.path(props.getStudentApiURL() + "/?pen=" + pen)
+            .uri(uriBuilder -> uriBuilder.path(props.getStudentApiURL() + "/?pen=")
+                    .queryParam("pen",pen)
                     .build())
             .header(CONTENT_TYPE,MediaType.APPLICATION_JSON_VALUE)
             .retrieve()
@@ -150,18 +151,15 @@ public class RestUtils {
   public Optional<School> getSchoolByMincode(String mincode) {
     Optional<School> school = Optional.empty();
     try {
-      final ParameterizedTypeReference<RestPageImpl<School>> responseType = new ParameterizedTypeReference<>() {
-      };
       final var response = this.webClient.get()
               .uri(uriBuilder -> uriBuilder.path(props.getSchoolApiURL().concat("/").concat(mincode))
                       .build())
               .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
               .retrieve()
-              .bodyToMono(responseType)
+              .bodyToMono(School.class)
               .block();
-      final var optionalSchool = Objects.requireNonNull(response).getContent().stream().findAny();
-      if (optionalSchool.isPresent()) {
-        school= optionalSchool;
+       if (response != null) {
+        school= Optional.of(response);
       }
     } catch (final HttpClientErrorException ex) {
       if (ex.getStatusCode().value() == HttpStatus.NOT_FOUND.value()) {
