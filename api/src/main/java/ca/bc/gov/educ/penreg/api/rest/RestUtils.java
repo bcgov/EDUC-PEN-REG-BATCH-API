@@ -11,8 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 import java.util.Optional;
@@ -154,7 +154,8 @@ public class RestUtils {
       if (response != null) {
         school = Optional.of(response);
       }
-    } catch (final HttpClientErrorException ex) {
+    } catch (final WebClientResponseException ex) {
+      log.info("no record found for :: {}", mincode);
       if (ex.getStatusCode().value() == HttpStatus.NOT_FOUND.value()) {
         return Optional.empty();
       }
