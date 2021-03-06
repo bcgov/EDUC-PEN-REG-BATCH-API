@@ -158,6 +158,8 @@ public class RestUtils {
       log.info("no record found for :: {}", mincode);
       if (ex.getStatusCode().value() == HttpStatus.NOT_FOUND.value()) {
         return Optional.empty();
+      } else {
+        throw ex;
       }
     }
     return school;
