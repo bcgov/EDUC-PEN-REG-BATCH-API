@@ -1,18 +1,19 @@
 package ca.bc.gov.educ.penreg.api.rest;
+
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
 
 import java.util.Optional;
 
@@ -55,14 +56,13 @@ public class RestUtils {
    * @return the student by student id
    */
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
-  public Student getStudentByStudentID(String studentID) {
-    return webClient.get()
-            .uri(uriBuilder -> uriBuilder.path(this.props.getStudentApiURL()+"/"+studentID)
-                    .build())
-            .header(CONTENT_TYPE,MediaType.APPLICATION_JSON_VALUE)
-            .retrieve()
-            .bodyToMono(Student.class)
-            .block();
+  public Student getStudentByStudentID(final String studentID) {
+    return this.webClient.get()
+        .uri(this.props.getStudentApiURL() + "/" + studentID)
+        .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .retrieve()
+        .bodyToMono(Student.class)
+        .block();
   }
 
   /**
@@ -71,15 +71,14 @@ public class RestUtils {
    * @param studentFromStudentAPI the student from student api
    */
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
-  public void updateStudent(Student studentFromStudentAPI) {
-    webClient.put()
-           .uri(uriBuilder -> uriBuilder.path(this.props.getStudentApiURL()+"/"+ studentFromStudentAPI.getStudentID())
-                   .build())
-           .header(CONTENT_TYPE,MediaType.APPLICATION_JSON_VALUE)
-           .body(Mono.just(studentFromStudentAPI),Student.class)
-           .retrieve()
-           .bodyToMono(Student.class)
-           .block();
+  public void updateStudent(final Student studentFromStudentAPI) {
+    this.webClient.put()
+        .uri(this.props.getStudentApiURL() + "/" + studentFromStudentAPI.getStudentID())
+        .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .body(Mono.just(studentFromStudentAPI), Student.class)
+        .retrieve()
+        .bodyToMono(Student.class)
+        .block();
   }
 
 
@@ -90,15 +89,14 @@ public class RestUtils {
    * @return the student
    */
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
-  public Student createStudent(Student student) {
-      return webClient.post()
-              .uri(uriBuilder -> uriBuilder.path(props.getStudentApiURL())
-                      .build())
-              .header(CONTENT_TYPE,MediaType.APPLICATION_JSON_VALUE)
-              .body(Mono.just(student),Student.class)
-              .retrieve()
-              .bodyToMono(Student.class)
-              .block();
+  public Student createStudent(final Student student) {
+    return this.webClient.post()
+        .uri(this.props.getStudentApiURL())
+        .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .body(Mono.just(student), Student.class)
+        .retrieve()
+        .bodyToMono(Student.class)
+        .block();
   }
 
   /**
@@ -108,16 +106,14 @@ public class RestUtils {
    * @return the student by pen
    */
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
-  public Optional<Student> getStudentByPEN(String pen) {
-    final var studentResponse=this.webClient.get()
-            .uri(uriBuilder -> uriBuilder.path(props.getStudentApiURL())
-                    .queryParam("pen",pen)
-                    .build())
-            .header(CONTENT_TYPE,MediaType.APPLICATION_JSON_VALUE)
-            .retrieve()
-            .bodyToFlux(Student.class)
-            .collectList()
-            .block();
+  public Optional<Student> getStudentByPEN(final String pen) {
+    final var studentResponse = this.webClient.get()
+        .uri(this.props.getStudentApiURL() + "?pen=" + pen)
+        .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .retrieve()
+        .bodyToFlux(Student.class)
+        .collectList()
+        .block();
     if (studentResponse != null && !studentResponse.isEmpty()) {
       return Optional.of(studentResponse.get(0));
     }
@@ -130,15 +126,13 @@ public class RestUtils {
    * @param guid the guid
    * @return the next pen number from pen service api
    */
-  public String getNextPenNumberFromPenServiceAPI(String guid) {
+  public String getNextPenNumberFromPenServiceAPI(final String guid) {
     return this.webClient.get()
-            .uri(uriBuilder -> uriBuilder.path(props.getPenServicesApiURL().concat("/api/v1/pen-services/next-pen-number"))
-                    .queryParam("transactionID",guid)
-                    .build())
-            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .retrieve()
-            .bodyToMono(String.class)
-            .block();
+        .uri(this.props.getPenServicesApiURL().concat("/api/v1/pen-services/next-pen-number?transactionID=" + guid))
+        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .retrieve()
+        .bodyToMono(String.class)
+        .block();
   }
 
   /**
@@ -148,18 +142,17 @@ public class RestUtils {
    * @return the school by min code
    */
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
-  public Optional<School> getSchoolByMincode(String mincode) {
+  public Optional<School> getSchoolByMincode(final String mincode) {
     Optional<School> school = Optional.empty();
     try {
       final var response = this.webClient.get()
-              .uri(uriBuilder -> uriBuilder.path(props.getSchoolApiURL().concat("/").concat(mincode))
-                      .build())
-              .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-              .retrieve()
-              .bodyToMono(School.class)
-              .block();
-       if (response != null) {
-        school= Optional.of(response);
+          .uri(this.props.getSchoolApiURL().concat("/").concat(mincode))
+          .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+          .retrieve()
+          .bodyToMono(School.class)
+          .block();
+      if (response != null) {
+        school = Optional.of(response);
       }
     } catch (final HttpClientErrorException ex) {
       if (ex.getStatusCode().value() == HttpStatus.NOT_FOUND.value()) {
