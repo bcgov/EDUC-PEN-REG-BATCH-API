@@ -13,7 +13,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
@@ -25,7 +24,6 @@ import static lombok.AccessLevel.PRIVATE;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @RestController
-@EnableResourceServer
 @Slf4j
 public class PenRequestBatchStudentInfoRequestMacroController implements PenRequestBatchStudentInfoRequestMacroEndpoint {
 

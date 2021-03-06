@@ -4,13 +4,13 @@ import ca.bc.gov.educ.penreg.api.exception.RestExceptionHandler;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
-import ca.bc.gov.educ.penreg.api.support.WithMockOAuth2Scope;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -33,12 +34,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 public class PenRequestBatchSagaControllerTest {
 
   @Autowired
   PenRequestBatchSagaController controller;
 
+  @Autowired
   private MockMvc mockMvc;
 
   @Autowired
@@ -57,8 +60,6 @@ public class PenRequestBatchSagaControllerTest {
   @Before
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    mockMvc = MockMvcBuilders.standaloneSetup(controller)
-                             .setControllerAdvice(new RestExceptionHandler()).build();
   }
 
   @After
@@ -68,54 +69,57 @@ public class PenRequestBatchSagaControllerTest {
   }
 
   @Test
-  @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_READ_SAGA")
   public void testIssueNewPen_GivenInValidID_ShouldReturnStatusNotFound() throws Exception {
     this.mockMvc.perform(get("/api/v1/pen-request-batch-saga/" + UUID.randomUUID().toString())
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_READ_SAGA")))
         .contentType(MediaType.APPLICATION_JSON)
         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print()).andExpect(status().isNotFound());
   }
   @Test
-  @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_READ_SAGA")
   public void testIssueNewPen_GivenValidID_ShouldReturnStatusOK() throws Exception {
     var payload = placeholderPenRequestBatchActionsSagaData();
     var sagaFromDB = sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", payload, UUID.fromString(getPenRequestBatchStudentID),
         UUID.fromString(penRequestBatchID));
     this.mockMvc.perform(get("/api/v1/pen-request-batch-saga/" + sagaFromDB.getSagaId().toString())
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_READ_SAGA")))
         .contentType(MediaType.APPLICATION_JSON)
         .accept(MediaType.APPLICATION_JSON))
                 .andDo(print()).andExpect(status().isOk());
   }
   @Test
-  @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_NEW_PEN_SAGA")
   public void testIssueNewPen_GivenInValidPayload_ShouldReturnStatusBadRequest() throws Exception {
-    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/new-pen").contentType(MediaType.APPLICATION_JSON)
-                                                                       .accept(MediaType.APPLICATION_JSON).content(placeholderInvalidPenRequestBatchActionsSagaData())).andDo(print()).andExpect(status().isBadRequest());
+    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/new-pen")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_NEW_PEN_SAGA")))
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON).content(placeholderInvalidPenRequestBatchActionsSagaData())).andDo(print()).andExpect(status().isBadRequest());
   }
 
 
   @Test
-  @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_NEW_PEN_SAGA")
   public void testIssueNewPen_GivenValidPayload_ShouldReturnStatusOk() throws Exception {
-    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/new-pen").contentType(MediaType.APPLICATION_JSON)
-                                                                       .accept(MediaType.APPLICATION_JSON).content(placeholderPenRequestBatchActionsSagaData())).andDo(print())
+    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/new-pen")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_NEW_PEN_SAGA")))
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON).content(placeholderPenRequestBatchActionsSagaData())).andDo(print())
                 .andExpect(status().isOk()).andExpect(jsonPath("$").exists());
   }
 
   @Test
-  @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_NEW_PEN_SAGA")
   public void testIssueNewPen_GivenOtherSagaWithSameStudentIdInProcess_ShouldReturnStatusConflict() throws Exception {
     var payload = placeholderPenRequestBatchActionsSagaData();
     sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", payload, UUID.fromString(getPenRequestBatchStudentID),
         UUID.fromString(penRequestBatchID));
-    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/new-pen").contentType(MediaType.APPLICATION_JSON)
-                                                                       .accept(MediaType.APPLICATION_JSON).content(payload)).andDo(print()).andExpect(status().isConflict());
+    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/new-pen")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_NEW_PEN_SAGA")))
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON).content(payload)).andDo(print()).andExpect(status().isConflict());
   }
 
   @Test
-  @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_USER_MATCH_SAGA")
   public void testProcessStudentRequestMatchedByUser_GivenInValidPayload_ShouldReturnStatusBadRequest() throws Exception {
     this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/user-match")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_USER_MATCH_SAGA")))
         .contentType(MediaType.APPLICATION_JSON)
         .accept(MediaType.APPLICATION_JSON)
         .content(placeholderInvalidPenRequestBatchActionsSagaData()))
@@ -123,35 +127,35 @@ public class PenRequestBatchSagaControllerTest {
   }
 
   @Test
-  @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_USER_MATCH_SAGA")
   public void testProcessStudentRequestMatchedByUser_GivenValidPayload_ShouldReturnStatusOk() throws Exception {
     this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/user-match")
-        .contentType(MediaType.APPLICATION_JSON)
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_USER_MATCH_SAGA")))
+            .contentType(MediaType.APPLICATION_JSON)
         .accept(MediaType.APPLICATION_JSON)
         .content(placeholderPenRequestBatchActionsSagaData()))
                 .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$").exists());
   }
 
   @Test
-  @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_USER_MATCH_SAGA")
   public void testProcessStudentRequestMatchedByUser_GivenOtherSagaWithSameStudentIdInProcess_ShouldReturnStatusConflict() throws Exception {
     var payload = placeholderPenRequestBatchActionsSagaData();
     sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA.toString(), "Test", payload, UUID.fromString(getPenRequestBatchStudentID),
         UUID.fromString(penRequestBatchID));
     this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/user-match")
-        .contentType(MediaType.APPLICATION_JSON)
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_USER_MATCH_SAGA")))
+            .contentType(MediaType.APPLICATION_JSON)
         .accept(MediaType.APPLICATION_JSON)
         .content(payload)).andDo(print()).andExpect(status().isConflict());
   }
 
   @Test
-  @WithMockOAuth2Scope(scope = "PEN_REQUEST_BATCH_USER_MATCH_SAGA")
   public void testProcessStudentRequestUnmatchedByUser_GivenValidPayload_ShouldReturnStatusOk() throws Exception {
     this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/user-unmatch")
-      .contentType(MediaType.APPLICATION_JSON)
-      .accept(MediaType.APPLICATION_JSON)
-      .content(placeholderPenRequestBatchActionsSagaData()))
-      .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$").exists());
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_USER_MATCH_SAGA")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(placeholderPenRequestBatchActionsSagaData()))
+                .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$").exists());
   }
 
 
