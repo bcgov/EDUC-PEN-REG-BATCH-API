@@ -58,7 +58,7 @@ public class RestUtils {
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Student getStudentByStudentID(final String studentID) {
     return this.webClient.get()
-        .uri(this.props.getStudentApiURL() + "/" + studentID)
+        .uri(this.props.getStudentApiURL(), uri -> uri.path("/{studentID}").build(studentID))
         .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
         .retrieve()
         .bodyToMono(Student.class)
@@ -73,7 +73,7 @@ public class RestUtils {
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public void updateStudent(final Student studentFromStudentAPI) {
     this.webClient.put()
-        .uri(this.props.getStudentApiURL() + "/" + studentFromStudentAPI.getStudentID())
+        .uri(this.props.getStudentApiURL(), uri -> uri.path("/{studentID}").build(studentFromStudentAPI.getStudentID()))
         .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
         .body(Mono.just(studentFromStudentAPI), Student.class)
         .retrieve()
@@ -108,7 +108,7 @@ public class RestUtils {
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Optional<Student> getStudentByPEN(final String pen) {
     final var studentResponse = this.webClient.get()
-        .uri(this.props.getStudentApiURL() + "?pen=" + pen)
+        .uri(this.props.getStudentApiURL(), uri -> uri.queryParam("pen", pen).build())
         .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
         .retrieve()
         .bodyToFlux(Student.class)
@@ -128,7 +128,8 @@ public class RestUtils {
    */
   public String getNextPenNumberFromPenServiceAPI(final String guid) {
     return this.webClient.get()
-        .uri(this.props.getPenServicesApiURL().concat("/api/v1/pen-services/next-pen-number?transactionID=" + guid))
+        .uri(this.props.getPenServicesApiURL(), uri -> uri.path("/api/v1/pen-services/next-pen-number")
+            .queryParam("transactionID", guid).build())
         .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
         .retrieve()
         .bodyToMono(String.class)
@@ -146,7 +147,7 @@ public class RestUtils {
     Optional<School> school = Optional.empty();
     try {
       final var response = this.webClient.get()
-          .uri(this.props.getSchoolApiURL().concat("/").concat(mincode))
+          .uri(this.props.getSchoolApiURL(), uri -> uri.path("/{mincode}").build(mincode))
           .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
           .retrieve()
           .bodyToMono(School.class)
