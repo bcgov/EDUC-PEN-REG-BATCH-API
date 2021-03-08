@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.batch.schedulers;
 
+import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -147,7 +148,9 @@ public class PenRegBatchSchedulerTest {
     this.penWebBlobRepository.saveAll(penWebBlobs);
     this.penRegBatchScheduler.extractUnProcessedFilesFromPenWebBlobs();
     this.waitForAsyncToFinishPenReqBatchStatusDuplicate();
-    assertThat(this.repository.findByPenRequestBatchStatusCode(DUPLICATE.toString()).size()).isEqualTo(1);
+    val result = this.repository.findByPenRequestBatchStatusCode(DUPLICATE.toString());
+    assertThat(result.size()).isEqualTo(1);
+    assertThat(result.get(0).getSchoolGroupCode()).isEqualTo(SchoolGroupCodes.PSI.getCode());
   }
 
   private void waitForAsyncToFinishPenReqBatchStatusDuplicate() throws InterruptedException {
