@@ -15,6 +15,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -180,7 +181,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     }
 
     if(associationNames.hasSearchAssociations()) {
-      return this.getService().findAllByPenRequestBatchStudent(penRegBatchSpecs, pageNumber, pageSize, sorts).thenApplyAsync(page -> page.map((pair) -> {
+      return this.getService().findAllByPenRequestBatchStudent(penRegBatchSpecs, pageNumber, pageSize, sorts).thenApplyAsync(page -> page.map(pair -> {
         final var batch = mapper.toSearchStructure(pair.getFirst());
         batch.setSearchedCount(pair.getSecond());
         return batch;
@@ -357,6 +358,11 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   @Override
   public List<PenRequestBatchStudentStatusCode> getAllPenRequestBatchStudentStatusCodes() {
     return this.getStudentService().getAllStudentStatusCodes().stream().map(studentStatusCodeMapper::toStruct).collect(Collectors.toList());
+  }
+
+  @Override
+  public PenRequestBatchStats readPenRequestBatchStats() {
+    return this.getService().getStats();
   }
 
   /**

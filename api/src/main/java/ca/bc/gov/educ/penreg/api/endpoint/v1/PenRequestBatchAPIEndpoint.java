@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
@@ -240,4 +241,16 @@ public interface PenRequestBatchAPIEndpoint {
   @Tag(name = "Endpoint to get all the PenRequestBatchStudentStatusCode.")
   List<PenRequestBatchStudentStatusCode> getAllPenRequestBatchStudentStatusCodes();
 
+  /**
+   * Read pen request batch stats list.
+   *
+   * @return the list of PenRequestBatchStats
+   */
+  @GetMapping(value = "/stats")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
+  @Transactional(readOnly = true)
+  @Tag(name = "Endpoint to get the List of stats of Pen Request Batch.", description = "Endpoint to get the List of stats of Pen Request Batch.")
+  @Schema(name = "PenRequestBatchStats", implementation = PenRequestBatchStats.class)
+  PenRequestBatchStats readPenRequestBatchStats();
 }

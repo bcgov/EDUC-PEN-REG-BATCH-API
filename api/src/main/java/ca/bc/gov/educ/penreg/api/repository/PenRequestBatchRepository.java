@@ -1,8 +1,8 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,15 +13,7 @@ import java.util.UUID;
  * The interface Pen request batch repository.
  */
 @Repository
-public interface PenRequestBatchRepository extends CrudRepository<PenRequestBatchEntity, UUID>, JpaSpecificationExecutor<PenRequestBatchEntity>, PenRequestBatchSearchRepository {
-
-  /**
-   * Find all list.
-   *
-   * @return the list
-   */
-  @Override
-  List<PenRequestBatchEntity> findAll();
+public interface PenRequestBatchRepository extends JpaRepository<PenRequestBatchEntity, UUID>, JpaSpecificationExecutor<PenRequestBatchEntity>, PenRequestBatchSearchRepository {
 
   /**
    * Find by submission number optional.
@@ -38,4 +30,10 @@ public interface PenRequestBatchRepository extends CrudRepository<PenRequestBatc
    * @return the list
    */
   List<PenRequestBatchEntity> findByPenRequestBatchStatusCode(String penRequestBatchStatusCode);
+
+  List<PenRequestBatchEntity> findByPenRequestBatchStatusCodeAndSchoolGroupCode(String penRequestBatchStatusCode, String schoolGroupCode);
+
+  long countPenRequestBatchEntitiesByPenRequestBatchStatusCode(String penRequestBatchStatusCode);
+
+  long countAllByPenRequestBatchStatusCodeInAndSchoolGroupCode(List<String> penRequestBatchStatusCodes, String schoolGroupCode);
 }
