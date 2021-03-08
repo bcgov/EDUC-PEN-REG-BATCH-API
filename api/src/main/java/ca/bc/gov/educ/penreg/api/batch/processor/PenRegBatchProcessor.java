@@ -136,12 +136,12 @@ public class PenRegBatchProcessor {
     final BatchFile batchFile = new BatchFile();
     Optional<Reader> batchFileReaderOptional = Optional.empty();
     try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
-      this.checkForDuplicateFile(penWebBlobEntity, guid);
       batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents())));
       final DataSet ds = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get()).setStoreRawDataToDataError(true).setStoreRawDataToDataSet(true).setNullEmptyStrings(true).parse();
       this.penRequestBatchFileValidator.validateFileForFormatAndLength(guid, ds);
       this.populateBatchFile(guid, ds, batchFile);
       this.penRequestBatchFileValidator.validateStudentCountForMismatchAndSize(guid, batchFile);
+      this.checkForDuplicateFile(penWebBlobEntity, guid); // if all other validations passed check if it is a duplicate file from PSI.
       final Set<PenRequestBatchStudentSagaData> studentSagaDataSet = this.processLoadedRecordsInBatchFile(guid, batchFile, penWebBlobEntity);
       this.getPenRegBatchStudentRecordsProcessor().publishUnprocessedStudentRecordsForProcessing(studentSagaDataSet);
     } catch (final FileUnProcessableException fileUnProcessableException) { // system needs to persist the data in this case.

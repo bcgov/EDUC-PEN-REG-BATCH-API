@@ -190,7 +190,7 @@ public class PenRegBatchSchedulerTest {
 
   private List<PENWebBlobEntity> loadSameFileTwice() throws IOException {
 
-    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_50000_records_OK.txt")).getFile());
+    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_PSI_OK.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
     final List<PENWebBlobEntity> entities = new ArrayList<>();
     for (var index = 0; index < 2; index++) {
