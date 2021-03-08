@@ -1,6 +1,8 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
@@ -8,9 +10,12 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStat;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -25,10 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -264,5 +266,41 @@ public class PenRequestBatchService {
     final byte[] bFile = idsFile.toString().getBytes();
 
     return this.getPenWebBlobRepository().save(PENWebBlobEntity.builder().mincode(penRequestBatchEntity.getMincode()).sourceApplication("PENWEB").fileName(penRequestBatchEntity.getMincode() + ".IDS").fileType("IDS").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(penRequestBatchEntity.getSubmissionNumber()).build());
+  }
+
+  @Transactional(propagation = Propagation.SUPPORTS)
+  public PenRequestBatchStats getStats() {
+    final List<PenRequestBatchStat> penRequestBatchStats = new ArrayList<>();
+    for (final SchoolGroupCodes schoolGroupCode : SchoolGroupCodes.values()) {
+      val results = this.getRepository().findByPenRequestBatchStatusCodeAndSchoolGroupCode(PenRequestBatchStatusCodes.ACTIVE.getCode(), schoolGroupCode.getCode());
+      final PenRequestBatchStat stats = this.calculateFixableAndRepeats(results);
+      stats.setSchoolGroupCode(schoolGroupCode.getCode());
+      List<String> penReqBatchStatusCodes = Arrays.asList(PenRequestBatchStatusCodes.UNARCHIVED.getCode(), PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode());
+      stats.setUnarchivedCount(this.getRepository().countAllByPenRequestBatchStatusCodeInAndSchoolGroupCode(penReqBatchStatusCodes, schoolGroupCode.getCode()));
+      if (schoolGroupCode == SchoolGroupCodes.PSI) {
+        penReqBatchStatusCodes = Arrays.asList(PenRequestBatchStatusCodes.HOLD_SIZE.getCode(), PenRequestBatchStatusCodes.DUPLICATE.getCode());
+        stats.setHeldForReviewCount(this.getRepository().countAllByPenRequestBatchStatusCodeInAndSchoolGroupCode(penReqBatchStatusCodes, schoolGroupCode.getCode()));
+      } else {
+        stats.setHeldForReviewCount(0L);
+      }
+      penRequestBatchStats.add(stats);
+    }
+    // this is irrespective of school group code.
+    val loadFailedCount = this.getRepository().countPenRequestBatchEntitiesByPenRequestBatchStatusCode(PenRequestBatchStatusCodes.LOAD_FAIL.getCode());
+    return PenRequestBatchStats.builder().penRequestBatchStatList(penRequestBatchStats).loadFailCount(loadFailedCount).build();
+  }
+
+  private PenRequestBatchStat calculateFixableAndRepeats(final List<PenRequestBatchEntity> results) {
+    final PenRequestBatchStat.PenRequestBatchStatBuilder builder = PenRequestBatchStat.builder();
+    long fixableCount = 0;
+    long repeatCount = 0;
+    for (val result : results) {
+      fixableCount += result.getFixableCount();
+      repeatCount += result.getRepeatCount();
+    }
+    builder.fixableCount(fixableCount);
+    builder.repeatCount(repeatCount);
+    builder.pendingCount((long) results.size());
+    return builder.build();
   }
 }

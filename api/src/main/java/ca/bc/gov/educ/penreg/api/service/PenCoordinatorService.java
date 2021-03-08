@@ -4,16 +4,20 @@ import ca.bc.gov.educ.penreg.api.batch.mappers.PenCoordinatorMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.Mincode;
 import ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.repository.PenCoordinatorRepository;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;
+import org.jboss.threads.EnhancedQueueExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -23,6 +27,9 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class PenCoordinatorService {
+  private final Executor bgTaskExecutor = new EnhancedQueueExecutor.Builder()
+      .setThreadFactory(new ThreadFactoryBuilder().setNameFormat("bg-task-%d").build())
+      .setCorePoolSize(1).setMaximumPoolSize(2).setKeepAliveTime(Duration.ofSeconds(60)).build();
   private final PenCoordinatorRepository penCoordinatorRepository;
   private final ReadWriteLock penCoordinatorMapLock = new ReentrantReadWriteLock();
   private Map<Mincode, PenCoordinator> penCoordinatorMap;
@@ -34,7 +41,8 @@ public class PenCoordinatorService {
 
   @PostConstruct
   public void init() {
-    this.penCoordinatorMap = this.penCoordinatorRepository.findAll().stream().map(PenCoordinatorMapper.mapper::toTrimmedPenCoordinator).collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity()));
+    this.bgTaskExecutor.execute(() -> this.penCoordinatorMap = this.penCoordinatorRepository.findAll().stream().map(PenCoordinatorMapper.mapper::toTrimmedPenCoordinator).collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity())));
+
   }
 
   @Scheduled(cron = "0 0 0/4 * * *") // every 4 hours
