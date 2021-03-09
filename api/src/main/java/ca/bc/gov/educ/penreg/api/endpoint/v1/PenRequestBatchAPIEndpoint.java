@@ -27,7 +27,7 @@ import static org.springframework.http.HttpStatus.CREATED;
  * The interface Pen reg api endpoint.
  */
 @RequestMapping("/api/v1/pen-request-batch")
-@OpenAPIDefinition(info = @Info(title = "API for Pen Registry.", description = "This CRU API is related to batch processing of student data.", version = "1"), security = {@SecurityRequirement(name = "OAUTH2", scopes = {"READ_STUDENT", "WRITE_STUDENT"})})
+@OpenAPIDefinition(info = @Info(title = "API for Pen Registry.", description = "This CRU API is related to batch processing of student data.", version = "1"), security = {@SecurityRequirement(name = "OAUTH2", scopes = {"READ_PEN_REQUEST_BATCH", "WRITE_PEN_REQUEST_BATCH, READ_PEN_REQUEST_BATCH_HISTORY"})})
 public interface PenRequestBatchAPIEndpoint {
 
 

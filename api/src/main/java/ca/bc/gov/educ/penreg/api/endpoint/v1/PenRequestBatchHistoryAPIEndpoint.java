@@ -24,7 +24,6 @@ import java.util.concurrent.CompletableFuture;
  * The interface Pen reg api endpoint.
  */
 @RequestMapping("/api/v1/pen-request-batch/history")
-@OpenAPIDefinition(info = @Info(title = "API for Pen Registry.", description = "This CRU API is related to batch processing of student history data.", version = "1"), security = {@SecurityRequirement(name = "OAUTH2", scopes = {"READ_PEN_REQUEST_BATCH_HISTORY"})})
 public interface PenRequestBatchHistoryAPIEndpoint {
 
   /**
