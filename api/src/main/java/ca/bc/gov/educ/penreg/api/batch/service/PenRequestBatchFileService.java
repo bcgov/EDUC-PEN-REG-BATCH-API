@@ -171,7 +171,7 @@ public class PenRequestBatchFileService {
     if (repeatRequests.size() > 1) {
       final PenRequestBatchStudentEntity mostRecentRepeat = Collections.max(repeatRequests, Comparator.comparing(t -> t.getPenRequestBatchEntity().getProcessDate()));
       penRequestBatchStudent.setRepeatRequestOriginalID(mostRecentRepeat.getRepeatRequestOriginalID());
-      penRequestBatchStudent.setRepeatRequestSequenceNumber(mostRecentRepeat.getRepeatRequestSequenceNumber() + 1);
+      penRequestBatchStudent.setRepeatRequestSequenceNumber(mostRecentRepeat.getRepeatRequestSequenceNumber() == null? 1 : mostRecentRepeat.getRepeatRequestSequenceNumber() + 1);
     } else {
       penRequestBatchStudent.setRepeatRequestOriginalID(repeatRequests.get(0).getRepeatRequestOriginalID());
       penRequestBatchStudent.setRepeatRequestSequenceNumber(1);
