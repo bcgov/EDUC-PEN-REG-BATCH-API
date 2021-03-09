@@ -23,9 +23,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA;
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA;
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_UNMATCH_PROCESSING_SAGA;
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.*;
 import static lombok.AccessLevel.PRIVATE;
 
 @RestController

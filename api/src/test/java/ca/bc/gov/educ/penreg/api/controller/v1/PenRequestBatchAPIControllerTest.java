@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
-import ca.bc.gov.educ.penreg.api.exception.RestExceptionHandler;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
@@ -30,7 +29,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.io.File;
 import java.io.IOException;

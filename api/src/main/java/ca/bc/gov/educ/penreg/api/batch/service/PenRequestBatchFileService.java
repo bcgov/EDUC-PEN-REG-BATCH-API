@@ -76,7 +76,7 @@ public class PenRequestBatchFileService {
   public void markInitialLoadComplete(@NonNull final PenRequestBatchEntity penRequestBatchEntity, @NonNull final PENWebBlobEntity penWebBlobEntity) {
     final var result = this.getPenRequestBatchService().findPenRequestBatchBySubmissionNumber(penRequestBatchEntity.getSubmissionNumber());
     if (result.isEmpty()) {
-      this.getPenRequestBatchService().createPenRequestBatch(penRequestBatchEntity);
+      this.getPenRequestBatchService().savePenRequestBatch(penRequestBatchEntity);
       penWebBlobEntity.setExtractDateTime(LocalDateTime.now()); // update the entity extract date time to mark the batch job as complete , so that wont be polled from table in the next schedule.
       this.getPenWebBlobRepository().save(penWebBlobEntity);
     } else {
@@ -156,7 +156,7 @@ public class PenRequestBatchFileService {
     log.debug("{} :: Found {} total repeats", guid, numRepeats);
     penRequestBatchEntity.setRepeatCount(numRepeats);
     penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.REPEATS_CHECKED.getCode());
-    this.getPenRequestBatchService().saveAttachedEntity(penRequestBatchEntity);
+    this.getPenRequestBatchService().savePenRequestBatch(penRequestBatchEntity);
 
     return filteredStudentEntities;
   }

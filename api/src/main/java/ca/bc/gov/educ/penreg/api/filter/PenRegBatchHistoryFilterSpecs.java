@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.filter;
 
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,7 @@ import java.util.function.Function;
  */
 @Service
 @Slf4j
-public class PenRegBatchFilterSpecs extends BaseFilterSpecs<PenRequestBatchEntity> {
+public class PenRegBatchHistoryFilterSpecs extends BaseFilterSpecs<PenRequestBatchHistoryEntity> {
 
   /**
    * Instantiates a new Student filter specs.
@@ -28,8 +29,7 @@ public class PenRegBatchFilterSpecs extends BaseFilterSpecs<PenRequestBatchEntit
    * @param uuidFilterSpecifications     the uuid filter specifications
    * @param converters                   the converters
    */
-  public PenRegBatchFilterSpecs(FilterSpecifications<PenRequestBatchEntity, ChronoLocalDate> dateFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, ChronoLocalDateTime<?>> dateTimeFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, Integer> integerFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, String> stringFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, Long> longFilterSpecifications, FilterSpecifications<PenRequestBatchEntity, UUID> uuidFilterSpecifications, Converters converters) {
+  public PenRegBatchHistoryFilterSpecs(FilterSpecifications<PenRequestBatchHistoryEntity, ChronoLocalDate> dateFilterSpecifications, FilterSpecifications<PenRequestBatchHistoryEntity, ChronoLocalDateTime<?>> dateTimeFilterSpecifications, FilterSpecifications<PenRequestBatchHistoryEntity, Integer> integerFilterSpecifications, FilterSpecifications<PenRequestBatchHistoryEntity, String> stringFilterSpecifications, FilterSpecifications<PenRequestBatchHistoryEntity, Long> longFilterSpecifications, FilterSpecifications<PenRequestBatchHistoryEntity, UUID> uuidFilterSpecifications, Converters converters) {
     super(dateFilterSpecifications, dateTimeFilterSpecifications, integerFilterSpecifications, stringFilterSpecifications, longFilterSpecifications, uuidFilterSpecifications, converters);
   }
-
 }

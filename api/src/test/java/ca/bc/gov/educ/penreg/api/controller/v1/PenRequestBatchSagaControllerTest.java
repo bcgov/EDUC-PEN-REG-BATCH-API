@@ -1,6 +1,5 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
-import ca.bc.gov.educ.penreg.api.exception.RestExceptionHandler;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
@@ -16,7 +15,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.UUID;
 

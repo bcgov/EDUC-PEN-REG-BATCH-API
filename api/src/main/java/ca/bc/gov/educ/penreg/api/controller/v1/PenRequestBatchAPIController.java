@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes;
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchAPIEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
@@ -130,7 +131,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   public PenRequestBatch createPenRequestBatch(final PenRequestBatch penRequestBatch) {
     final var model = mapper.toModel(penRequestBatch);
     this.populateAuditColumns(model);
-    return mapper.toStructure(this.getService().createPenRequestBatch(model));
+    return mapper.toStructure(this.getService().savePenRequestBatch(model));
   }
 
 
@@ -596,6 +597,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     }
     model.setCreateDate(LocalDateTime.now());
     model.setUpdateDate(LocalDateTime.now());
+    model.setPenRequestBatchProcessTypeCode(PenRequestBatchProcessTypeCodes.API.getCode());
   }
 
   /**
