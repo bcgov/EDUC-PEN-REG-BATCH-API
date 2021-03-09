@@ -1,10 +1,12 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -12,6 +14,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStat;
+import ca.bc.gov.educ.penreg.api.util.PenRequestBatchHistoryUtils;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -143,6 +146,8 @@ public class PenRequestBatchService {
    */
   @Transactional(propagation = Propagation.MANDATORY)
   public PenRequestBatchEntity createPenRequestBatch(final PenRequestBatchEntity penRequestBatchEntity) {
+    final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, penRequestBatchEntity.getPenRequestBatchStatusCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
+    penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     return this.getRepository().save(penRequestBatchEntity);
   }
 
@@ -159,8 +164,10 @@ public class PenRequestBatchService {
     final var penRequestBatchEntityOptional = this.getRepository().findById(penRequestBatchID);
     return penRequestBatchEntityOptional.map(penRequestBatchEntityDB -> {
       BeanUtils.copyProperties(penRequestBatchEntity, penRequestBatchEntityDB,
-        "penRequestBatchStudentEntities", "penRequestBatchHistoryEntities", "createUser", "createDate");
+              "penRequestBatchStudentEntities", "penRequestBatchHistoryEntities", "createUser", "createDate");
       penRequestBatchEntityDB.setPenRequestBatchID(penRequestBatchID);
+      final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, penRequestBatchEntity.getPenRequestBatchStatusCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
+      penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
       return this.getRepository().save(penRequestBatchEntityDB);
     }).orElseThrow(EntityNotFoundException::new);
   }

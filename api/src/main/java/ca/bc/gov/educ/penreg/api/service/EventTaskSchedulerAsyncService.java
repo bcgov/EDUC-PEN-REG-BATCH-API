@@ -16,9 +16,9 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
+import ca.bc.gov.educ.penreg.api.util.PenRequestBatchHistoryUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -32,7 +32,6 @@ import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import static ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper.PEN_REQUEST_BATCH_API;
 import static ca.bc.gov.educ.penreg.api.constants.EventStatus.DB_COMMITTED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REPEATS_CHECKED;
@@ -134,7 +133,7 @@ public class EventTaskSchedulerAsyncService {
         final var repeatCount = studentEntities.stream().filter(student -> PenRequestBatchStudentStatusCodes.REPEAT.toString().equals(student.getPenRequestBatchStudentStatusCode())).count();
         if (penRequestBatchEntity.getStudentCount() == repeatCount) { // all records are repeats, need to be marked active.
           penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ACTIVE.getCode());
-          final PenRequestBatchHistoryEntity penRequestBatchHistory = this.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchStatusCodes.ACTIVE.getCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
+          final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchStatusCodes.ACTIVE.getCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
           penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
           penReqBatchEntities.add(penRequestBatchEntity);
         } else if (!studentSagaRecords.isEmpty()) {
@@ -142,7 +141,7 @@ public class EventTaskSchedulerAsyncService {
           if (count == studentSagaRecords.size()) { // All records are processed mark batch to active.
             this.setDifferentCounts(penRequestBatchEntity, studentEntities);
             penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ACTIVE.getCode());
-            final PenRequestBatchHistoryEntity penRequestBatchHistory = this.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchStatusCodes.ACTIVE.getCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
+            final PenRequestBatchHistoryEntity penRequestBatchHistory =PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchStatusCodes.ACTIVE.getCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
             penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
             penReqBatchEntities.add(penRequestBatchEntity);
           }
@@ -204,28 +203,6 @@ public class EventTaskSchedulerAsyncService {
         }
       }
     }
-  }
-
-  /**
-   * Create pen req batch history pen request batch history entity.
-   *
-   * @param entity     the entity
-   * @param statusCode the status code
-   * @param eventCode  the event code
-   * @return the pen request batch history entity
-   */
-  private PenRequestBatchHistoryEntity createPenReqBatchHistory(@NonNull final PenRequestBatchEntity entity, final String statusCode, final String eventCode) {
-    final var penRequestBatchHistory = new PenRequestBatchHistoryEntity();
-    penRequestBatchHistory.setCreateDate(LocalDateTime.now());
-    penRequestBatchHistory.setUpdateDate(LocalDateTime.now());
-    penRequestBatchHistory.setPenRequestBatchEntity(entity);
-    penRequestBatchHistory.setPenRequestBatchStatusCode(statusCode);
-    penRequestBatchHistory.setPenRequestBatchEventCode(eventCode);
-    penRequestBatchHistory.setCreateUser(PEN_REQUEST_BATCH_API);
-    penRequestBatchHistory.setUpdateUser(PEN_REQUEST_BATCH_API);
-    penRequestBatchHistory.setEventDate(LocalDateTime.now());
-    penRequestBatchHistory.setEventReason(null);
-    return penRequestBatchHistory;
   }
 
   /**
