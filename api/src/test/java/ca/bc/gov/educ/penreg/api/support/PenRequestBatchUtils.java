@@ -1,9 +1,9 @@
 package ca.bc.gov.educ.penreg.api.support;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes;
 import ca.bc.gov.educ.penreg.api.constants.SagaEnum;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
@@ -11,7 +11,6 @@ import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.NonNull;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -20,7 +19,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper.PEN_REQUEST_BATCH_API;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.MARK_SAGA_COMPLETE;
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
 import static java.util.stream.Collectors.toList;
@@ -50,6 +48,7 @@ public class PenRequestBatchUtils {
     }
     model.setCreateDate(LocalDateTime.now());
     model.setUpdateDate(LocalDateTime.now());
+    model.setPenRequestBatchProcessTypeCode(PenRequestBatchProcessTypeCodes.FLAT_FILE.getCode());
     return model;
   }
 
@@ -80,7 +79,6 @@ public class PenRequestBatchUtils {
    * @param total the total
    * @param batchConsumer the function to make changes on the batch entity
    * @return the list
-   * @throws IOException the io exception
    */
   public static List<PenRequestBatchEntity> createBatchStudents(final PenRequestBatchRepository penRequestBatchRepository, final String batchFileName,
                                                                 final String batchStudentFileName, final Integer total, final Consumer<PenRequestBatchEntity> batchConsumer) throws java.io.IOException {

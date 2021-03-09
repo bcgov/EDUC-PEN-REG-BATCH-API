@@ -7,14 +7,11 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchTypeCode.SCHOOL;
 
@@ -55,34 +52,8 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
     entity.setPenRequestBatchStatusCode(LOADED.getCode());
     entity.setStudentCount((long) file.getStudentDetails().size());
     entity.setSchoolGroupCode(this.computeSchoolGroupCode(file.getBatchFileHeader().getMincode()));
-    final PenRequestBatchHistoryEntity penRequestBatchHistory = this.createPenReqBatchHistory(entity, LOADED.getCode(), STATUS_CHANGED.getCode(), null);
-    entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     return entity;
   }
-
-  /**
-   * Create pen req batch history pen request batch history entity.
-   *
-   * @param entity     the entity
-   * @param statusCode the status code
-   * @param eventCode  the event code
-   * @param reason     the reason
-   * @return the pen request batch history entity
-   */
-  private PenRequestBatchHistoryEntity createPenReqBatchHistory(@NonNull final PenRequestBatchEntity entity, final String statusCode, final String eventCode, final String reason) {
-    final var penRequestBatchHistory = new PenRequestBatchHistoryEntity();
-    penRequestBatchHistory.setCreateDate(LocalDateTime.now());
-    penRequestBatchHistory.setUpdateDate(LocalDateTime.now());
-    penRequestBatchHistory.setPenRequestBatchEntity(entity);
-    penRequestBatchHistory.setPenRequestBatchStatusCode(statusCode);
-    penRequestBatchHistory.setPenRequestBatchEventCode(eventCode);
-    penRequestBatchHistory.setCreateUser(PEN_REQUEST_BATCH_API);
-    penRequestBatchHistory.setUpdateUser(PEN_REQUEST_BATCH_API);
-    penRequestBatchHistory.setEventDate(LocalDateTime.now());
-    penRequestBatchHistory.setEventReason(reason);
-    return penRequestBatchHistory;
-  }
-
 
   /**
    * To pen req batch entity for business exception pen request batch entity.
@@ -108,8 +79,8 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
         entity.setSchoolGroupCode(this.computeSchoolGroupCode(batchFile.getBatchFileHeader().getMincode()));
       }
     }
-    final PenRequestBatchHistoryEntity penRequestBatchHistory = this.createPenReqBatchHistory(entity, penRequestBatchStatusCode.getCode(), STATUS_CHANGED.getCode(), reason);
-    entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
+//    final PenRequestBatchHistoryEntity penRequestBatchHistory = this.createPenReqBatchHistory(entity, penRequestBatchStatusCode.getCode(), STATUS_CHANGED.getCode(), reason);
+//    entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     if (persistStudentRecords && batchFile != null) { // for certain business exception, system needs to store the student details as well.
       int counter = 1;
       for (final var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.

@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.orchestrator;
 
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchTypeCode;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
@@ -147,6 +148,7 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
     entity.setSourceStudentCount(1L);
     entity.setStudentCount(1L);
     entity.setSourceApplication("PEN");
+    entity.setPenRequestBatchProcessTypeCode(PenRequestBatchProcessTypeCodes.FLAT_FILE.getCode());
     penRequestBatchStudentEntity.setPenRequestBatchEntity(entity);
     entity.getPenRequestBatchStudentEntities().add(penRequestBatchStudentEntity);
     this.penRequestBatchRepository.save(entity);

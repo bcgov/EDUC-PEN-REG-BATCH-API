@@ -190,6 +190,11 @@ public class PenRequestBatchEntity {
    */
   @Column(name = "SIS_PRODUCT_ID", length = 15)
   String sisProductID;
+  /**
+   * The Pen request batch process type code.
+   */
+  @Column(name = "PEN_REQUEST_BATCH_PROCESS_TYPE_CODE",updatable = false, nullable = false, length = 10)
+  String penRequestBatchProcessTypeCode;
 
   /**
    * The Create user.

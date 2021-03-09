@@ -1,6 +1,8 @@
 package ca.bc.gov.educ.penreg.api.struct.v1;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -123,7 +125,10 @@ public abstract class BasePenRequestBatch {
    * The Sis product id.
    */
   String sisProductID;
-
+  /**
+   * The PEN Request Batch Process Type Code.
+   */
+  String penRequestBatchProcessTypeCode;
   /**
    * The School group code.
    */

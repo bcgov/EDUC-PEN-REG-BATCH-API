@@ -15,5 +15,10 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @SuppressWarnings("squid:S1700")
-public class PenRequestBatch extends BasePenRequestBatch {
+public class PenRequestBatchHistory extends BasePenRequestBatch {
+
+    /**
+     * The Pen request batch history id.
+     */
+    String penRequestBatchHistoryID;
 }

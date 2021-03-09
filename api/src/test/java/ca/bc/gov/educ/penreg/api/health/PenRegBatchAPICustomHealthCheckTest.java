@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.health;
 
-import io.nats.client.*;
+import io.nats.client.Connection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

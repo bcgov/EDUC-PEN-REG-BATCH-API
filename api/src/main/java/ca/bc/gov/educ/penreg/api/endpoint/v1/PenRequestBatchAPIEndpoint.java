@@ -100,7 +100,6 @@ public interface PenRequestBatchAPIEndpoint {
                                                        implementation = ca.bc.gov.educ.penreg.api.struct.v1.Search.class))
                                                    @RequestParam(name = "searchCriteriaList", required = false) String searchCriteriaListJson);
 
-
   /**
    * Create pen request batch student pen request batch student.
    *

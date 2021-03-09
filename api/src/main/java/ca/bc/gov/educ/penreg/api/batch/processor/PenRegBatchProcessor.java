@@ -10,6 +10,7 @@ import ca.bc.gov.educ.penreg.api.batch.struct.BatchFileHeader;
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFileTrailer;
 import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
 import ca.bc.gov.educ.penreg.api.batch.validator.PenRequestBatchFileValidator;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
@@ -281,6 +282,7 @@ public class PenRegBatchProcessor {
     var counter = 1;
     log.info("going to persist data for batch :: {}", guid);
     final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityLoaded(penWebBlobEntity, batchFile); // batch file can be processed further and persisted.
+    entity.setPenRequestBatchProcessTypeCode(PenRequestBatchProcessTypeCodes.FLAT_FILE.getCode());
     for (final var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.
       final var penRequestBatchStudentEntity = mapper.toPenRequestBatchStudentEntity(student, entity);
       penRequestBatchStudentEntity.setRecordNumber(counter++);

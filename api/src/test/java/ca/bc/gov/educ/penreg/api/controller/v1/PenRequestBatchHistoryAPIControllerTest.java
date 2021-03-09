@@ -4,7 +4,6 @@ import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -31,17 +30,16 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.struct.v1.Condition.AND;
 import static ca.bc.gov.educ.penreg.api.struct.v1.Condition.OR;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -54,7 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class PenRequestBatchAPIControllerTest {
+public class PenRequestBatchHistoryAPIControllerTest {
   /**
    * The constant PEN_REQUEST_BATCH_API.
    */
@@ -386,214 +384,6 @@ public class PenRequestBatchAPIControllerTest {
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk());
   }
 
-
-  /**
-   * Test read pen request batch paginated given school name and student name should return status ok.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testReadPenRequestBatchPaginated_GivenSchoolNameAndStudentName_ShouldReturnStatusOk() throws Exception {
-    final String batchIDs = this.createBatchStudentRecords(2);
-
-    final SearchCriteria criteria = SearchCriteria.builder().key("schoolName").operation(FilterOperation.STARTS_WITH).value("Brae").valueType(ValueType.STRING).build();
-    final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStudentEntities.legalLastName").condition(AND).operation(FilterOperation.STARTS_WITH).value("JO").valueType(ValueType.STRING).build();
-    final List<SearchCriteria> criteriaList = new ArrayList<>();
-    criteriaList.add(criteria);
-    criteriaList.add(criteria2);
-    final List<Search> searches = new LinkedList<>();
-    searches.add(Search.builder().searchCriteriaList(criteriaList).build());
-    final ObjectMapper objectMapper = new ObjectMapper();
-    final String criteriaJSON = objectMapper.writeValueAsString(searches);
-
-    final Map<String, String> sortMap = Map.of(
-        "mincode", "ASC",
-        "submissionNumber", "ASC"
-    );
-    final String sorts = objectMapper.writeValueAsString(sortMap);
-
-    final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated")
-            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
-            .param("searchCriteriaList", criteriaJSON)
-            .param("pageNumber", "1")
-            .param("pageSize", "1")
-            .param("sort", sorts)
-            .contentType(APPLICATION_JSON))
-        .andReturn();
-    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)));
-  }
-
-  /**
-   * Test read pen request batch paginated given school name and student name should return status ok.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testReadPenRequestBatchPaginated_GivenSchoolNameAndStudentName_WithoutPageAndSortCriteria_ShouldReturnStatusOk() throws Exception {
-    final String batchIDs = this.createBatchStudentRecords(2);
-
-    final SearchCriteria criteria = SearchCriteria.builder().key("schoolName").operation(FilterOperation.STARTS_WITH).value("Brae").valueType(ValueType.STRING).build();
-    final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStudentEntities.legalLastName").condition(AND).operation(FilterOperation.STARTS_WITH).value("JO").valueType(ValueType.STRING).build();
-    final List<SearchCriteria> criteriaList = new ArrayList<>();
-    criteriaList.add(criteria);
-    criteriaList.add(criteria2);
-    final List<Search> searches = new LinkedList<>();
-    searches.add(Search.builder().searchCriteriaList(criteriaList).build());
-    final ObjectMapper objectMapper = new ObjectMapper();
-    final String criteriaJSON = objectMapper.writeValueAsString(searches);
-
-    final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated")
-                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
-                .param("searchCriteriaList", criteriaJSON)
-            .contentType(APPLICATION_JSON))
-        .andReturn();
-    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(2)));
-  }
-
-  /**
-   * Test read pen request batch paginated given school name and invalid student name should return empty list.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testReadPenRequestBatchPaginated_GivenSchoolNameAndInvalidStudentName_ShouldReturnStatusOk() throws Exception {
-    final String batchIDs = this.createBatchStudentRecords(2);
-
-    final SearchCriteria criteria = SearchCriteria.builder().key("schoolName").operation(FilterOperation.STARTS_WITH).value("Brae").valueType(ValueType.STRING).build();
-    final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStudentEntities.legalLastName").condition(AND).operation(FilterOperation.STARTS_WITH).value("AB").valueType(ValueType.STRING).build();
-    final List<SearchCriteria> criteriaList = new ArrayList<>();
-    criteriaList.add(criteria);
-    criteriaList.add(criteria2);
-    final List<Search> searches = new LinkedList<>();
-    searches.add(Search.builder().searchCriteriaList(criteriaList).build());
-    final ObjectMapper objectMapper = new ObjectMapper();
-    final String criteriaJSON = objectMapper.writeValueAsString(searches);
-    final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated")
-                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
-                .param("searchCriteriaList", criteriaJSON)
-            .contentType(APPLICATION_JSON))
-        .andReturn();
-    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
-  }
-
-  /**
-   * Test read pen request batch student paginated given multiple group condition should return status ok.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testReadPenRequestBatchStudentPaginated_GivenMultipleGroupCondition_ShouldReturnStatusOk() throws Exception {
-    final String batchIDs = this.createBatchStudentRecords(2);
-
-    final SearchCriteria criteria = SearchCriteria.builder().key("penRequestBatchStudentStatusCode").operation(FilterOperation.EQUAL).value("LOADED").valueType(ValueType.STRING).build();
-    final SearchCriteria criteria2 = SearchCriteria.builder().key("legalFirstName").condition(OR).operation(FilterOperation.STARTS_WITH).value("AC").valueType(ValueType.STRING).build();
-    final SearchCriteria criteria3 = SearchCriteria.builder().key("legalLastName").condition(OR).operation(FilterOperation.CONTAINS_IGNORE_CASE).value("MI").valueType(ValueType.STRING).build();
-    final List<SearchCriteria> criteriaList = new LinkedList<>();
-    criteriaList.add(criteria);
-    criteriaList.add(criteria2);
-    criteriaList.add(criteria3);
-    final SearchCriteria criteria4 = SearchCriteria.builder().key("penRequestBatchEntity.submissionNumber").operation(FilterOperation.EQUAL).value("T-534093").valueType(ValueType.STRING).build();
-    final SearchCriteria criteria5 = SearchCriteria.builder().key("gradeCode").condition(OR).operation(FilterOperation.GREATER_THAN).value("2").valueType(ValueType.STRING).build();
-    final SearchCriteria criteria6 = SearchCriteria.builder().key("penRequestBatchEntity.penRequestBatchID").operation(FilterOperation.IN).value(batchIDs).valueType(ValueType.UUID).build();
-    final List<SearchCriteria> criteriaList1 = new LinkedList<>();
-    criteriaList1.add(criteria4);
-    criteriaList1.add(criteria5);
-    criteriaList1.add(criteria6);
-    final List<Search> searches = new LinkedList<>();
-    searches.add(Search.builder().searchCriteriaList(criteriaList).build());
-    searches.add(Search.builder().condition(AND).searchCriteriaList(criteriaList1).build());
-    final ObjectMapper objectMapper = new ObjectMapper();
-    final String criteriaJSON = objectMapper.writeValueAsString(searches);
-
-    final String sort = this.createSortParam();
-
-    final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/student/paginated")
-                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
-                .param("searchCriteriaList", criteriaJSON).param("sort", sort)
-            .contentType(APPLICATION_JSON))
-        .andReturn();
-    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(10)));
-  }
-
-  /**
-   * Test read pen request batch student paginated given pen request batch ids and student status codes should return status ok.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testReadPenRequestBatchStudentPaginated_GivenPenRequestBatchIdsAndStudentStatusCodes_ShouldReturnStatusOk() throws Exception {
-    final String batchIDs = this.createBatchStudentRecords(2);
-
-    final SearchCriteria criteria = SearchCriteria.builder().key("penRequestBatchEntity.penRequestBatchID").operation(FilterOperation.IN).value(batchIDs).valueType(ValueType.UUID).build();
-
-    final List<SearchCriteria> criteriaList = new LinkedList<>();
-    criteriaList.add(criteria);
-
-    final SearchCriteria criteria1 = SearchCriteria.builder().key("penRequestBatchStudentStatusCode").operation(FilterOperation.IN).value("LOADED,ERROR,FIXABLE").valueType(ValueType.STRING).build();
-    final List<SearchCriteria> criteriaList1 = new LinkedList<>();
-    criteriaList1.add(criteria1);
-    final List<Search> searches = new LinkedList<>();
-    searches.add(Search.builder().searchCriteriaList(criteriaList).build());
-    searches.add(Search.builder().condition(AND).searchCriteriaList(criteriaList1).build());
-    final ObjectMapper objectMapper = new ObjectMapper();
-    final String criteriaJSON = objectMapper.writeValueAsString(searches);
-
-    final String sort = this.createSortParam();
-
-    final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/student/paginated")
-                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
-                .param("searchCriteriaList", criteriaJSON).param("sort", sort)
-            .param("pageSize", "3")
-            .contentType(APPLICATION_JSON))
-        .andReturn();
-    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(3)));
-  }
-
-  /**
-   * Test read pen request batch student paginated given pen request batch ids and all student status codes and other conditions should return status ok.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testReadPenRequestBatchStudentPaginated_GivenPenRequestBatchIdsAndAllStudentStatusCodesAndOtherConditions_ShouldReturnStatusOk() throws Exception {
-    final String batchIDs = this.createBatchStudentRecords(2);
-
-    final SearchCriteria criteria = SearchCriteria.builder().key("penRequestBatchEntity.penRequestBatchID").operation(FilterOperation.IN).value(batchIDs).valueType(ValueType.UUID).build();
-
-    final List<SearchCriteria> criteriaList = new LinkedList<>();
-    criteriaList.add(criteria);
-
-    final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStudentStatusCode").operation(FilterOperation.NOT_EQUAL).value("FIXABLE").valueType(ValueType.STRING).build();
-    final SearchCriteria criteria3 = SearchCriteria.builder().key("penRequestBatchEntity.mincode").condition(AND).operation(FilterOperation.STARTS_WITH_IGNORE_CASE).value("1").valueType(ValueType.STRING).build();
-    final SearchCriteria criteria4 = SearchCriteria.builder().key("legalLastName").condition(AND).operation(FilterOperation.STARTS_WITH_IGNORE_CASE).value("j").valueType(ValueType.STRING).build();
-
-    final List<SearchCriteria> criteriaList1 = new LinkedList<>();
-    criteriaList1.add(criteria2);
-    criteriaList1.add(criteria3);
-    criteriaList1.add(criteria4);
-    final List<Search> searches = new LinkedList<>();
-    searches.add(Search.builder().searchCriteriaList(criteriaList).build());
-    searches.add(Search.builder().condition(AND).searchCriteriaList(criteriaList1).build());
-    final ObjectMapper objectMapper = new ObjectMapper();
-    final String criteriaJSON = objectMapper.writeValueAsString(searches);
-
-    final String sort = this.createSortParam();
-
-    final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/student/paginated")
-                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
-                .param("searchCriteriaList", criteriaJSON).param("sort", sort)
-            .param("pageSize", "3")
-            .contentType(APPLICATION_JSON))
-        .andReturn();
-    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(3)));
-  }
-
   /**
    * Test read pen request batch student paginated given multiple group condition 2 should return status ok.
    *
@@ -642,29 +432,6 @@ public class PenRequestBatchAPIControllerTest {
   }
 
   /**
-   * Test update pen request batch student given pen request batch student should return status ok.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testUpdatePenRequestBatchStudent_GivenPenRequestBatchStudent_ShouldReturnStatusOk() throws Exception {
-    final var models = this.createBatchStudents(1);
-    final var student = studentMapper.toStructure(models.get(0).getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow());
-
-    student.setPenRequestBatchStudentStatusCode("FIXABLE");
-    student.setInfoRequest("Test Info");
-    final var request = new ObjectMapper().writeValueAsString(student);
-
-    this.mockMvc
-        .perform(put(String.format("/api/v1/pen-request-batch/%s/student/%s", student.getPenRequestBatchID(), student.getPenRequestBatchStudentID()))
-                .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
-            .contentType(APPLICATION_JSON).accept(APPLICATION_JSON).content(request))
-        .andDo(print()).andExpect(status().isOk())
-        .andExpect(jsonPath("$.penRequestBatchStudentStatusCode", is("FIXABLE")))
-        .andExpect(jsonPath("$.infoRequest", is("Test Info")));
-  }
-
-  /**
    * Test read pen request batch given invalid id should return status not found.
    *
    * @throws Exception the exception
@@ -674,72 +441,6 @@ public class PenRequestBatchAPIControllerTest {
     this.mockMvc.perform(get("/api/v1/pen-request-batch/" + UUID.randomUUID())
             .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH"))))
             .andDo(print()).andExpect(status().isNotFound());
-  }
-
-  /**
-   * Test read pen request batch given valid id should return status ok.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testReadPenRequestBatch_GivenValidID_ShouldReturnStatusOk() throws Exception {
-    final File file = new File(
-        Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
-    );
-    final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
-    });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
-    final var results = this.penRequestBatchRepository.saveAll(models);
-    this.mockMvc.perform(get("/api/v1/pen-request-batch/" + results.iterator().next().getPenRequestBatchID())
-            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH"))))
-            .andDo(print()).andExpect(status().isOk());
-  }
-
-  /**
-   * Test update pen request batch given pen request batch id should return status ok.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testUpdatePenRequestBatch_GivenPenRequestBatchId_ShouldReturnStatusOk() throws Exception {
-    final var models = this.createBatchStudents(1);
-    final var batch = mapper.toStructure(models.get(0));
-
-    batch.setPenRequestBatchStatusCode("ARCHIVED");
-    final var request = new ObjectMapper().writeValueAsString(batch);
-
-    this.mockMvc
-        .perform(put(String.format("/api/v1/pen-request-batch/%s", batch.getPenRequestBatchID()))
-                .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
-            .contentType(APPLICATION_JSON).accept(APPLICATION_JSON).content(request))
-        .andDo(print()).andExpect(status().isOk())
-        .andExpect(jsonPath("$.penRequestBatchStatusCode", is("ARCHIVED")));
-  }
-
-  /**
-   * Create batch students list.
-   *
-   * @param total the total
-   * @return the list
-   * @throws IOException the io exception
-   */
-  private List<PenRequestBatchEntity> createBatchStudents(final Integer total) throws IOException {
-    return PenRequestBatchUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch.json",
-        "mock_pen_req_batch_student.json", total);
-  }
-
-  /**
-   * Create batch student records string.
-   *
-   * @param total the total
-   * @return the string
-   * @throws IOException the io exception
-   */
-  private String createBatchStudentRecords(final Integer total) throws IOException {
-
-    final var models = this.createBatchStudents(total);
-
-    return models.stream().map(batch -> batch.getPenRequestBatchID().toString().toUpperCase()).collect(Collectors.joining(","));
   }
 
   /**

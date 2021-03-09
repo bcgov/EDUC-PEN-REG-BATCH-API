@@ -1,5 +1,12 @@
 DROP TABLE PEN_REQUEST_BATCH_HISTORY;
 
+ALTER TABLE PEN_REQUEST_BATCH
+ADD (
+    PEN_REQUEST_BATCH_PROCESS_TYPE_CODE     VARCHAR2(10)  NOT NULL
+);
+
+COMMENT ON COLUMN PEN_REQUEST_BATCH.PEN_REQUEST_BATCH_PROCESS_TYPE_CODE IS 'The batch processing type used (API or FLATFILE).';
+
 --PEN Request Batch History
 CREATE TABLE PEN_REQUEST_BATCH_HISTORY
 (
@@ -26,6 +33,7 @@ CREATE TABLE PEN_REQUEST_BATCH_HISTORY
     OFFICE_NUMBER                   NUMBER,
     SOURCE_STUDENT_COUNT            NUMBER,
     STUDENT_COUNT                   NUMBER,
+    BATCH_TYPE
     SIS_VENDOR_NAME                 VARCHAR2(100),
     SIS_PRODUCT_NAME                VARCHAR2(100),
     SIS_PRODUCT_ID                  VARCHAR2(15),
@@ -35,6 +43,7 @@ CREATE TABLE PEN_REQUEST_BATCH_HISTORY
     REPEAT_COUNT                    NUMBER,
     FIXABLE_COUNT                   NUMBER,
     SCHOOL_GROUP_CODE               VARCHAR2(10),
+    PEN_REQUEST_BATCH_PROCESS_TYPE_CODE     VARCHAR2(10)  NOT NULL,
     CREATE_USER                   VARCHAR2(32) NOT NULL,
     CREATE_DATE                   DATE DEFAULT SYSDATE NOT NULL,
     UPDATE_USER                   VARCHAR2(32) NOT NULL,
@@ -77,6 +86,7 @@ COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.ISSUED_PEN_COUNT IS 'A dynamic, runn
 COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.ERROR_COUNT IS 'A dynamic, running count of the number of PEN request records in the batch that have errors of some sort (PEN not yet matched nor issued). Includes Validation errors, Repeats and Fixables.';
 COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.REPEAT_COUNT IS 'A dynamic, running count of the number of PEN request records in the batch that are a repeat of an earlier PEN request by the same school, using the same request data.';
 COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.FIXABLE_COUNT IS 'A dynamic, running count of the number of PEN request records in the batch that are valid requests but could not automatically be fulfilled, and require manual review.';
+COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.PEN_REQUEST_BATCH_PROCESS_TYPE_CODE IS 'The batch processing type used (API or FLATFILE).';
 
 ALTER TABLE PEN_REQUEST_BATCH_HISTORY
     ADD CONSTRAINT PEN_REQUEST_BATCH_HISTORY_PEN_REQUEST_BATCH_ID_FK FOREIGN KEY (PEN_REQUEST_BATCH_ID) REFERENCES PEN_REQUEST_BATCH (PEN_REQUEST_BATCH_ID);

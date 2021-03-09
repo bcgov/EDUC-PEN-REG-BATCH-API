@@ -1,7 +1,5 @@
 package ca.bc.gov.educ.penreg.api.util;
 
-import ca.bc.gov.educ.penreg.api.constants.GenderCodes;
-import ca.bc.gov.educ.penreg.api.constants.SexCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import lombok.NonNull;
@@ -23,7 +21,7 @@ public final class PenRequestBatchHistoryUtils {
    * @param eventCode  the event code
    * @return the pen request batch history entity
    */
-  public static PenRequestBatchHistoryEntity createPenReqBatchHistory(@NonNull final PenRequestBatchEntity entity, final String statusCode, final String eventCode) {
+  public static PenRequestBatchHistoryEntity createPenReqBatchHistory(@NonNull final PenRequestBatchEntity entity, final String statusCode, final String eventCode, final String updateUser) {
     PenRequestBatchHistoryEntity penRequestBatchHistoryEntity = new PenRequestBatchHistoryEntity();
     penRequestBatchHistoryEntity.setPenRequestBatchEntity(entity);
     penRequestBatchHistoryEntity.setEventDate(LocalDateTime.now());
@@ -58,7 +56,7 @@ public final class PenRequestBatchHistoryUtils {
     penRequestBatchHistoryEntity.setSisProductID(entity.getSisProductID());
     penRequestBatchHistoryEntity.setCreateUser(PEN_REQUEST_BATCH_API);
     penRequestBatchHistoryEntity.setCreateDate(LocalDateTime.now());
-    penRequestBatchHistoryEntity.setUpdateUser(PEN_REQUEST_BATCH_API);
+    penRequestBatchHistoryEntity.setUpdateUser(updateUser);
     penRequestBatchHistoryEntity.setUpdateDate(LocalDateTime.now());
     return penRequestBatchHistoryEntity;
   }

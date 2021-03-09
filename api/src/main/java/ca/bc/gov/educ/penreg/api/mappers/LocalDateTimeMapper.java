@@ -3,8 +3,6 @@ package ca.bc.gov.educ.penreg.api.mappers;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import static java.time.temporal.ChronoField.*;
-
 /**
  * The type Local date time mapper.
  */
