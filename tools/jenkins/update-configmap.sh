@@ -82,6 +82,10 @@ $KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body
 #PEN_REQUEST_BATCH_READ_SAGA
 $KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body "{\"description\": \"Fetch Saga information based on saga id.\",\"id\": \"PEN_REQUEST_BATCH_READ_SAGA\",\"name\": \"PEN_REQUEST_BATCH_READ_SAGA\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
 
+#PEN_REQUEST_BATCH_READ_HISTORY
+$KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body "{\"description\": \"Read PEN request batch history records.\",\"id\": \"PEN_REQUEST_BATCH_READ_HISTORY\",\"name\": \"PEN_REQUEST_BATCH_READ_HISTORY\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
+
+
 ###########################################################
 #Setup for config-map
 ###########################################################

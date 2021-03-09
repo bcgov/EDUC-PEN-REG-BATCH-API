@@ -1,12 +1,12 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
+import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
-import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.Search;
 import ca.bc.gov.educ.penreg.api.struct.v1.SearchCriteria;
@@ -67,25 +67,20 @@ public class PenRequestBatchHistoryAPIControllerTest {
    */
   private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
   /**
-   * The constant student mapper.
-   */
-  private static final PenRequestBatchStudentMapper studentMapper = PenRequestBatchStudentMapper.mapper;
-  /**
-   * The Pen request batch api controller.
+   * The Pen request batch history api controller.
    */
   @Autowired
-  PenRequestBatchAPIController penRequestBatchAPIController;
+  PenRequestBatchHistoryAPIController penRequestBatchHistoryAPIController;
   /**
    * The Pen request batch repository.
    */
   @Autowired
   PenRequestBatchRepository penRequestBatchRepository;
-
   /**
-   * The Pen request batch student repository.
+   * The Pen request batch history repository.
    */
   @Autowired
-  PenRequestBatchStudentRepository penRequestBatchStudentRepository;
+  PenRequestBatchHistoryRepository penRequestBatchHistoryRepository;
 
   /**
    * Sets up.
@@ -100,7 +95,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
    */
   @After
   public void tearDown() {
-    this.penRequestBatchRepository.deleteAll();
+    this.penRequestBatchHistoryRepository.deleteAll();
   }
 
   /**
@@ -111,8 +106,8 @@ public class PenRequestBatchHistoryAPIControllerTest {
   @Test
   public void testReadPenRequestBatchPaginated_Always_ShouldReturnStatusOk() throws Exception {
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated")
-            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .perform(get("/api/v1/pen-request-batch-history/paginated")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
@@ -130,7 +125,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumnsAndHistory).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("fixableCount").operation(FilterOperation.GREATER_THAN).value("10").valueType(ValueType.LONG).build();
     final List<SearchCriteria> criteriaList = new ArrayList<>();
@@ -140,8 +135,8 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated")
-            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .perform(get("/api/v1/pen-request-batch-history/paginated")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
             .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
@@ -160,7 +155,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumnsAndHistory).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("schoolGroupCode").operation(FilterOperation.EQUAL).value(SchoolGroupCodes.K12.getCode()).valueType(ValueType.STRING).build();
     final List<SearchCriteria> criteriaList = new ArrayList<>();
@@ -170,12 +165,42 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated")
-            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .perform(get("/api/v1/pen-request-batch-history/paginated")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
             .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)));
+  }
+
+  /**
+   * Test read pen request batch paginated given school group code filter should return status ok.
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void testReadPenRequestBatchPaginated_GivenStatusFilter_ShouldReturnStatusOk() throws Exception {
+    final File file = new File(
+            Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
+    );
+    final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
+    });
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumnsAndHistory).collect(Collectors.toList());
+    this.penRequestBatchRepository.saveAll(models);
+    final SearchCriteria criteria = SearchCriteria.builder().key("penRequestBatchStatusCode").operation(FilterOperation.EQUAL).value(PenRequestBatchStatusCodes.LOADED.getCode()).valueType(ValueType.STRING).build();
+    final List<SearchCriteria> criteriaList = new ArrayList<>();
+    criteriaList.add(criteria);
+    final List<Search> searches = new LinkedList<>();
+    searches.add(Search.builder().searchCriteriaList(criteriaList).build());
+    final ObjectMapper objectMapper = new ObjectMapper();
+    final String criteriaJSON = objectMapper.writeValueAsString(searches);
+    final MvcResult result = this.mockMvc
+            .perform(get("/api/v1/pen-request-batch-history/paginated")
+                    .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
+                    .param("searchCriteriaList", criteriaJSON)
+                    .contentType(APPLICATION_JSON))
+            .andReturn();
+    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(2)));
   }
 
   /**
@@ -190,7 +215,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumnsAndHistory).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("schoolGroupCode").operation(FilterOperation.EQUAL).value(SchoolGroupCodes.K12.getCode()).valueType(ValueType.STRING).build();
     final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStatusCode").condition(OR).operation(FilterOperation.IN).value("LOADED,ACTIVE").valueType(ValueType.STRING).build();
@@ -208,8 +233,8 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated")
-            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .perform(get("/api/v1/pen-request-batch-history/paginated")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
             .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
@@ -228,7 +253,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumnsAndHistory).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("schoolGroupCode").operation(FilterOperation.EQUAL).value(SchoolGroupCodes.K12.getCode()).valueType(ValueType.STRING).build();
     final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStatusCode").condition(AND).operation(FilterOperation.IN).value("LOADED,ACTIVE").valueType(ValueType.STRING).build();
@@ -246,8 +271,8 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated")
-            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .perform(get("/api/v1/pen-request-batch-history/paginated")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
             .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
@@ -266,7 +291,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumnsAndHistory).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("schoolGroupCode").operation(FilterOperation.EQUAL).value(SchoolGroupCodes.K12.getCode()).valueType(ValueType.STRING).build();
     final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStatusCode").condition(AND).operation(FilterOperation.IN).value("LOADED,ACTIVE").valueType(ValueType.STRING).build();
@@ -284,8 +309,8 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated")
-                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .perform(get("/api/v1/pen-request-batch-history/paginated")
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
                 .param("searchCriteriaList", criteriaJSON)
                 .contentType(APPLICATION_JSON))
         .andReturn();
@@ -304,7 +329,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumnsAndHistory).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("schoolGroupCode").operation(FilterOperation.EQUAL).value(SchoolGroupCodes.K12.getCode()).valueType(ValueType.STRING).build();
     final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStatusCode").condition(OR).operation(FilterOperation.IN).value("LOADED,ACTIVE").valueType(ValueType.STRING).build();
@@ -326,8 +351,8 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated")
-                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .perform(get("/api/v1/pen-request-batch-history/paginated")
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
                 .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
@@ -346,7 +371,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumnsAndHistory).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("schoolGroupCode").operation(FilterOperation.EQUAL).value(SchoolGroupCodes.K12.getCode()).valueType(ValueType.STRING).build();
     final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStatusCode").condition(OR).operation(FilterOperation.IN).value("LOADED,ACTIVE").valueType(ValueType.STRING).build();
@@ -376,71 +401,12 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/paginated")
-                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .perform(get("/api/v1/pen-request-batch-history/paginated")
+                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
                 .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
         .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk());
-  }
-
-  /**
-   * Test read pen request batch student paginated given multiple group condition 2 should return status ok.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testReadPenRequestBatchStudentPaginated_GivenMultipleGroupCondition2_ShouldReturnStatusOk() throws Exception {
-    final File file = new File(
-        Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_pen_req_batch.json")).getFile()
-    );
-    final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
-    });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
-
-
-    final File student = new File(
-        Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_pen_req_batch_student.json")).getFile()
-    );
-    final List<PenRequestBatchStudentEntity> studentEntities = new ObjectMapper().readValue(student, new TypeReference<>() {
-    });
-    final var students = studentEntities.stream().map(PenRequestBatchUtils::populateAuditColumns).peek(el -> el.setPenRequestBatchEntity(models.get(0))).collect(Collectors.toSet());
-
-    models.get(0).setPenRequestBatchStudentEntities(students);
-    this.penRequestBatchRepository.saveAll(models);
-
-
-    final SearchCriteria criteria = SearchCriteria.builder().key("penRequestBatchStudentStatusCode").operation(FilterOperation.EQUAL).value("LOADED").valueType(ValueType.STRING).build();
-    final SearchCriteria criteria2 = SearchCriteria.builder().key("legalFirstName").condition(OR).operation(FilterOperation.STARTS_WITH).value("A").valueType(ValueType.STRING).build();
-    final SearchCriteria criteria3 = SearchCriteria.builder().key("legalLastName").condition(OR).operation(FilterOperation.CONTAINS_IGNORE_CASE).value("M").valueType(ValueType.STRING).build();
-    final List<SearchCriteria> criteriaList = new LinkedList<>();
-    criteriaList.add(criteria);
-    criteriaList.add(criteria2);
-    criteriaList.add(criteria3);
-
-    final List<Search> searches = new LinkedList<>();
-    searches.add(Search.builder().searchCriteriaList(criteriaList).build());
-    final ObjectMapper objectMapper = new ObjectMapper();
-    final String criteriaJSON = objectMapper.writeValueAsString(searches);
-    final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/student/paginated")
-                .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
-                .param("searchCriteriaList", criteriaJSON)
-            .contentType(APPLICATION_JSON))
-        .andReturn();
-    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(5)));
-  }
-
-  /**
-   * Test read pen request batch given invalid id should return status not found.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testReadPenRequestBatch_GivenInvalidID_ShouldReturnStatusNotFound() throws Exception {
-    this.mockMvc.perform(get("/api/v1/pen-request-batch/" + UUID.randomUUID())
-            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH"))))
-            .andDo(print()).andExpect(status().isNotFound());
   }
 
   /**
