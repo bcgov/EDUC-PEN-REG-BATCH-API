@@ -361,6 +361,51 @@ public class PenRegBatchProcessorTest {
   }
 
   /**
+   * Test process pen reg batch file from tsw given 30 row valid files should create records in db.
+   *
+   * @throws IOException the io exception
+   */
+  @Test
+  @Transactional
+  public void testProcessPenRegBatchFileFromTSW_Given30RowValidFileAndExistingRecords_ShouldShowRepeatsMoreThanOne() throws IOException {
+    when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
+    createBatchStudents(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
+            (batch) -> batch.setProcessDate(LocalDateTime.now().minusDays(3)));
+    createBatchStudents(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
+            (batch) -> {
+                batch.setSubmissionNumber("T-534094");
+                batch.setProcessDate(LocalDateTime.now().minusDays(3));
+            });
+    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
+    final byte[] bFile = Files.readAllBytes(file.toPath());
+    final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+    final var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    this.penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
+    final var result = this.repository.findAll();
+    assertThat(result.size()).isEqualTo(3);
+    final var entity = result.get(0);
+    assertThat(entity.getPenRequestBatchID()).isNotNull();
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    assertThat(entity.getRepeatCount()).isEqualTo(1);
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
+    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
+    final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
+    assertThat(students.stream().filter(s -> PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(s.getPenRequestBatchStudentStatusCode())).count()).isEqualTo(1);
+    assertThat(students.size()).isEqualTo(5);
+    students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
+    log.error("students {}",students);
+    var counter = 1;
+    for (final PenRequestBatchStudentEntity student : students) {
+      assertThat(counter++).isEqualTo(student.getRecordNumber());
+    }
+  }
+
+  /**
    * Test process pen reg batch file from tsw given 10000 row file should create records in db.
    *
    * @throws IOException the io exception
