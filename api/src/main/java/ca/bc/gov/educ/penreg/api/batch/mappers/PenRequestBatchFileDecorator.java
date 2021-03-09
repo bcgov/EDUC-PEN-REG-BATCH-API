@@ -79,8 +79,6 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
         entity.setSchoolGroupCode(this.computeSchoolGroupCode(batchFile.getBatchFileHeader().getMincode()));
       }
     }
-//    final PenRequestBatchHistoryEntity penRequestBatchHistory = this.createPenReqBatchHistory(entity, penRequestBatchStatusCode.getCode(), STATUS_CHANGED.getCode(), reason);
-//    entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     if (persistStudentRecords && batchFile != null) { // for certain business exception, system needs to store the student details as well.
       int counter = 1;
       for (final var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.

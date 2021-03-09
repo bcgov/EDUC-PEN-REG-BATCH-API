@@ -18,8 +18,5 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuppressWarnings("squid:S1700")
 public class PenRequestBatchHistorySearch extends BasePenRequestBatch {
-  /**
-   * The count of searched student records
-   */
-  Long searchedCount;
+
 }
