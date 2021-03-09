@@ -390,9 +390,9 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
-    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(2);
     assertThat(entity.getRepeatCount()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
