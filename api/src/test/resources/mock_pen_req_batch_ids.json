@@ -26,6 +26,7 @@
     "errorCount": 2,
     "repeatCount": 1,
     "fixableCount": 1,
-    "schoolGroupCode": "PSI"
+    "schoolGroupCode": "PSI",
+    "penRequestBatchProcessTypeCode": "FLAT_FILE"
   }
 ]

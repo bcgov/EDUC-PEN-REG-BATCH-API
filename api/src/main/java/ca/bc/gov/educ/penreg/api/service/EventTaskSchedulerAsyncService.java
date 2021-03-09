@@ -134,7 +134,7 @@ public class EventTaskSchedulerAsyncService {
         final var repeatCount = studentEntities.stream().filter(student -> PenRequestBatchStudentStatusCodes.REPEAT.toString().equals(student.getPenRequestBatchStudentStatusCode())).count();
         if (penRequestBatchEntity.getStudentCount() == repeatCount) { // all records are repeats, need to be marked active.
           penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ACTIVE.getCode());
-          final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchStatusCodes.ACTIVE.getCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode(),PEN_REQUEST_BATCH_API);
+          final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode(),PEN_REQUEST_BATCH_API);
           penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
           penReqBatchEntities.add(penRequestBatchEntity);
         } else if (!studentSagaRecords.isEmpty()) {
@@ -142,7 +142,7 @@ public class EventTaskSchedulerAsyncService {
           if (count == studentSagaRecords.size()) { // All records are processed mark batch to active.
             this.setDifferentCounts(penRequestBatchEntity, studentEntities);
             penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ACTIVE.getCode());
-            final PenRequestBatchHistoryEntity penRequestBatchHistory =PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchStatusCodes.ACTIVE.getCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode(),PEN_REQUEST_BATCH_API);
+            final PenRequestBatchHistoryEntity penRequestBatchHistory =PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode(),PEN_REQUEST_BATCH_API);
             penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
             penReqBatchEntities.add(penRequestBatchEntity);
           }

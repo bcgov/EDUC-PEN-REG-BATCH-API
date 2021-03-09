@@ -64,7 +64,7 @@ public class PenRequestBatchUtils {
    */
   public static PenRequestBatchEntity populateAuditColumnsAndHistory(final PenRequestBatchEntity penRequestBatchEntity) {
     populateAuditColumns(penRequestBatchEntity);
-    final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, penRequestBatchEntity.getPenRequestBatchStatusCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode(), PEN_REQUEST_BATCH_API);
+    final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode(), PEN_REQUEST_BATCH_API);
     penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     return penRequestBatchEntity;
   }

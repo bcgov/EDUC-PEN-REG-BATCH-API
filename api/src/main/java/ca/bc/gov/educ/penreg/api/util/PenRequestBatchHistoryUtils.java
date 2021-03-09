@@ -17,19 +17,17 @@ public final class PenRequestBatchHistoryUtils {
    * Create pen req batch history pen request batch history entity.
    *
    * @param entity     the entity
-   * @param statusCode the status code
    * @param eventCode  the event code
    * @return the pen request batch history entity
    */
-  public static PenRequestBatchHistoryEntity createPenReqBatchHistory(@NonNull final PenRequestBatchEntity entity, final String statusCode, final String eventCode, final String updateUser) {
+  public static PenRequestBatchHistoryEntity createPenReqBatchHistory(@NonNull final PenRequestBatchEntity entity, final String eventCode, final String updateUser) {
     PenRequestBatchHistoryEntity penRequestBatchHistoryEntity = new PenRequestBatchHistoryEntity();
     penRequestBatchHistoryEntity.setPenRequestBatchEntity(entity);
     penRequestBatchHistoryEntity.setEventDate(LocalDateTime.now());
     penRequestBatchHistoryEntity.setPenRequestBatchEventCode(eventCode);
-    penRequestBatchHistoryEntity.setEventReason(null);
     penRequestBatchHistoryEntity.setSubmissionNumber(entity.getSubmissionNumber());
     penRequestBatchHistoryEntity.setPenRequestBatchStatusCode(entity.getPenRequestBatchStatusCode());
-    penRequestBatchHistoryEntity.setPenRequestBatchStatusReason(statusCode);
+    penRequestBatchHistoryEntity.setPenRequestBatchStatusReason(entity.getPenRequestBatchStatusReason());
     penRequestBatchHistoryEntity.setPenRequestBatchTypeCode(entity.getPenRequestBatchTypeCode());
     penRequestBatchHistoryEntity.setMinistryPRBSourceCode(entity.getMinistryPRBSourceCode());
     penRequestBatchHistoryEntity.setSchoolGroupCode(entity.getSchoolGroupCode());
@@ -54,6 +52,7 @@ public final class PenRequestBatchHistoryUtils {
     penRequestBatchHistoryEntity.setSisVendorName(entity.getSisVendorName());
     penRequestBatchHistoryEntity.setSisProductName(entity.getSisProductName());
     penRequestBatchHistoryEntity.setSisProductID(entity.getSisProductID());
+    penRequestBatchHistoryEntity.setPenRequestBatchProcessTypeCode(entity.getPenRequestBatchProcessTypeCode());
     penRequestBatchHistoryEntity.setCreateUser(PEN_REQUEST_BATCH_API);
     penRequestBatchHistoryEntity.setCreateDate(LocalDateTime.now());
     penRequestBatchHistoryEntity.setUpdateUser(updateUser);

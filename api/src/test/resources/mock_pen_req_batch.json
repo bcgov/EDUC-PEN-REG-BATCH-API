@@ -26,7 +26,8 @@
     "errorCount": null,
     "repeatCount": null,
     "fixableCount": null,
-    "schoolGroupCode": "PSI"
+    "schoolGroupCode": "PSI",
+    "penRequestBatchProcessTypeCode": "FLAT_FILE"
   },
   {
     "submissionNumber": "T-428469",
@@ -55,6 +56,7 @@
     "errorCount": null,
     "repeatCount": null,
     "fixableCount": null,
-    "schoolGroupCode": "K12"
+    "schoolGroupCode": "K12",
+    "penRequestBatchProcessTypeCode": "FLAT_FILE"
   }
 ]

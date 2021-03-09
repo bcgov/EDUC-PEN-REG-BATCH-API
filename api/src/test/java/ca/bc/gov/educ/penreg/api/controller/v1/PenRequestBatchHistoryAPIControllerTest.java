@@ -106,7 +106,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
   @Test
   public void testReadPenRequestBatchPaginated_Always_ShouldReturnStatusOk() throws Exception {
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch-history/paginated")
+        .perform(get("/api/v1/pen-request-batch/history/paginated")
             .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
             .contentType(APPLICATION_JSON))
         .andReturn();
@@ -135,7 +135,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch-history/paginated")
+        .perform(get("/api/v1/pen-request-batch/history/paginated")
             .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
             .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
@@ -165,7 +165,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch-history/paginated")
+        .perform(get("/api/v1/pen-request-batch/history/paginated")
             .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
             .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
@@ -195,7 +195,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-            .perform(get("/api/v1/pen-request-batch-history/paginated")
+            .perform(get("/api/v1/pen-request-batch/history/paginated")
                     .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
                     .param("searchCriteriaList", criteriaJSON)
                     .contentType(APPLICATION_JSON))
@@ -233,7 +233,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch-history/paginated")
+        .perform(get("/api/v1/pen-request-batch/history/paginated")
             .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
             .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
@@ -271,7 +271,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch-history/paginated")
+        .perform(get("/api/v1/pen-request-batch/history/paginated")
             .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
             .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
@@ -309,7 +309,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch-history/paginated")
+        .perform(get("/api/v1/pen-request-batch/history/paginated")
                 .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
                 .param("searchCriteriaList", criteriaJSON)
                 .contentType(APPLICATION_JSON))
@@ -351,7 +351,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch-history/paginated")
+        .perform(get("/api/v1/pen-request-batch/history/paginated")
                 .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
                 .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))
@@ -401,7 +401,7 @@ public class PenRequestBatchHistoryAPIControllerTest {
     final ObjectMapper objectMapper = new ObjectMapper();
     final String criteriaJSON = objectMapper.writeValueAsString(searches);
     final MvcResult result = this.mockMvc
-        .perform(get("/api/v1/pen-request-batch-history/paginated")
+        .perform(get("/api/v1/pen-request-batch/history/paginated")
                 .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_HISTORY")))
                 .param("searchCriteriaList", criteriaJSON)
             .contentType(APPLICATION_JSON))

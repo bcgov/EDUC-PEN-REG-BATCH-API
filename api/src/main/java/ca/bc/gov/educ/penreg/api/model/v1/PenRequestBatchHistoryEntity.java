@@ -55,17 +55,10 @@ public class PenRequestBatchHistoryEntity {
   String penRequestBatchEventCode;
 
   /**
-   * The Event reason.
-   */
-  @Basic
-  @Column(name = "EVENT_REASON")
-  String eventReason;
-
-  /**
    * The Submission number.
    * this data comes from TSW table
    */
-  @Column(name = "SUBMISSION_NO", unique = true, length = 8, nullable = false)
+  @Column(name = "SUBMISSION_NO", length = 8, nullable = false)
   String submissionNumber;
 
   /**
@@ -245,5 +238,11 @@ public class PenRequestBatchHistoryEntity {
   @Basic
   @Column(name = "UPDATE_DATE", nullable = false)
   LocalDateTime updateDate;
+
+  /**
+   * The Pen request batch process type code.
+   */
+  @Column(name = "PEN_REQUEST_BATCH_PROCESS_TYPE_CODE",updatable = false, nullable = false, length = 10)
+  String penRequestBatchProcessTypeCode;
 
 }

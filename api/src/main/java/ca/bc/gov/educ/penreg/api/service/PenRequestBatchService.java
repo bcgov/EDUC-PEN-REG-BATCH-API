@@ -146,8 +146,8 @@ public class PenRequestBatchService {
    * @return the pen request batch entity
    */
   @Transactional(propagation = Propagation.MANDATORY)
-  public PenRequestBatchEntity createPenRequestBatch(final PenRequestBatchEntity penRequestBatchEntity) {
-    final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, penRequestBatchEntity.getPenRequestBatchStatusCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode(), PEN_REQUEST_BATCH_API);
+  public PenRequestBatchEntity savePenRequestBatch(final PenRequestBatchEntity penRequestBatchEntity) {
+    final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode(), PEN_REQUEST_BATCH_API);
     penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     return this.getRepository().save(penRequestBatchEntity);
   }
@@ -167,23 +167,10 @@ public class PenRequestBatchService {
       BeanUtils.copyProperties(penRequestBatchEntity, penRequestBatchEntityDB,
               "penRequestBatchStudentEntities", "penRequestBatchHistoryEntities", "createUser", "createDate");
       penRequestBatchEntityDB.setPenRequestBatchID(penRequestBatchID);
-      final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, penRequestBatchEntity.getPenRequestBatchStatusCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode(),PEN_REQUEST_BATCH_API);
+      final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode(), PEN_REQUEST_BATCH_API);
       penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
       return this.getRepository().save(penRequestBatchEntityDB);
     }).orElseThrow(EntityNotFoundException::new);
-  }
-
-  /**
-   * Save pen request batch pen request batch entity.
-   *
-   * @param penRequestBatchEntity the entity
-   * @return pen request batch entity
-   */
-  @Transactional(propagation = Propagation.MANDATORY)
-  public PenRequestBatchEntity saveAttachedEntity(final PenRequestBatchEntity penRequestBatchEntity) {
-    final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, penRequestBatchEntity.getPenRequestBatchStatusCode(), PenRequestBatchEventCodes.STATUS_CHANGED.getCode(), PEN_REQUEST_BATCH_API);
-    penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
-    return this.getRepository().save(penRequestBatchEntity);
   }
 
   /**

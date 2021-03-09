@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.batch.processor;
 
+import ca.bc.gov.educ.penreg.api.compare.PenRequestBatchHistoryComparator;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
@@ -34,6 +35,7 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
@@ -146,11 +148,11 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Header record is missing characters");
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).containsIgnoringCase("Header record is missing characters");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).containsIgnoringCase("Header record is missing characters");
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -175,11 +177,11 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Header record has extraneous characters");
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).containsIgnoringCase("Header record has extraneous characters");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).containsIgnoringCase("Header record has extraneous characters");
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -204,11 +206,11 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Trailer record has extraneous characters");
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).containsIgnoringCase("Trailer record has extraneous characters");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).containsIgnoringCase("Trailer record has extraneous characters");
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -233,11 +235,11 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Trailer record is missing characters");
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).containsIgnoringCase("Trailer record is missing characters");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).containsIgnoringCase("Trailer record is missing characters");
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -265,12 +267,12 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusReason()).isNull();
     assertThat(entity.getRepeatCount()).isZero();
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
-    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(2);
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isNull();
     assertThat(students.size()).isEqualTo(30);
 
     students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
@@ -299,12 +301,13 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusReason()).isNull();
     assertThat(entity.getRepeatCount()).isZero();
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
-    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(2);
+
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isNull();
     assertThat(students.size()).isEqualTo(6);
 
     students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
@@ -342,13 +345,13 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
-    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(2);
     assertThat(entity.getRepeatCount()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isNull();
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.stream().filter(s -> PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(s.getPenRequestBatchStudentStatusCode())).count()).isEqualTo(1);
     assertThat(students.size()).isEqualTo(5);
@@ -381,12 +384,12 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).isNull();
-    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(2);
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isNull();
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isEqualTo(1000);
   }
@@ -412,11 +415,11 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Invalid count in trailer record. Stated was 30, Actual was 10");
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).containsIgnoringCase("Invalid count in trailer record. Stated was 30, Actual was 10");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).containsIgnoringCase("Invalid count in trailer record. Stated was 30, Actual was 10");
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -443,7 +446,7 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(HOLD_SIZE.getCode());
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(HOLD_SIZE.getCode());
@@ -470,11 +473,11 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Invalid transaction code on Detail record");
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).containsIgnoringCase("Invalid transaction code on Detail record");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).containsIgnoringCase("Invalid transaction code on Detail record");
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -500,12 +503,12 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(PSI.getCode());
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
-    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(2);
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isNull();
     assertThat(students.size()).isEqualTo(5);
     students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
     log.error("students {}",students);
@@ -535,12 +538,12 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
-    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(2);
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOADED.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isNull();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isNull();
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isEqualTo(5);
     students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
@@ -567,11 +570,11 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getSchoolGroupCode()).isNull();
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isEqualTo("Invalid Mincode in Header record.");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isEqualTo("Invalid Mincode in Header record.");
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -594,11 +597,11 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getSchoolGroupCode()).isNull();
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isEqualTo("Invalid Mincode in Header record - school is closed.");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isEqualTo("Invalid Mincode in Header record - school is closed.");
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -621,11 +624,11 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getSchoolGroupCode()).isNull();
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isEqualTo("Invalid Mincode in Header record - school is closed.");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isEqualTo("Invalid Mincode in Header record - school is closed.");
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -648,11 +651,11 @@ public class PenRegBatchProcessorTest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
     assertThat(entity.getSchoolGroupCode()).isNull();
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().findFirst();
+    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().sorted(new PenRequestBatchHistoryComparator()).findFirst();
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getEventReason()).isEqualTo("Invalid Mincode in Header record - school is closed.");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isEqualTo("Invalid Mincode in Header record - school is closed.");
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }

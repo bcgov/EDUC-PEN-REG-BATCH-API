@@ -131,7 +131,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   public PenRequestBatch createPenRequestBatch(final PenRequestBatch penRequestBatch) {
     final var model = mapper.toModel(penRequestBatch);
     this.populateAuditColumns(model);
-    return mapper.toStructure(this.getService().createPenRequestBatch(model));
+    return mapper.toStructure(this.getService().savePenRequestBatch(model));
   }
 
 

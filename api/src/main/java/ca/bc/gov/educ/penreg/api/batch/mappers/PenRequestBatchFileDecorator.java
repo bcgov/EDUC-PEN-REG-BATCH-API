@@ -48,10 +48,10 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
   @Override
   public PenRequestBatchEntity toPenReqBatchEntityLoaded(final PENWebBlobEntity penWebBlobEntity, final BatchFile file) {
     final var entity = this.delegate.toPenReqBatchEntityLoaded(penWebBlobEntity, file);
-    this.setDefaults(entity);
     entity.setPenRequestBatchStatusCode(LOADED.getCode());
     entity.setStudentCount((long) file.getStudentDetails().size());
     entity.setSchoolGroupCode(this.computeSchoolGroupCode(file.getBatchFileHeader().getMincode()));
+    this.setDefaults(entity);
     return entity;
   }
 
@@ -68,9 +68,9 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
   @Override
   public PenRequestBatchEntity toPenReqBatchEntityForBusinessException(final PENWebBlobEntity penWebBlobEntity, final String reason, final PenRequestBatchStatusCodes penRequestBatchStatusCode, final BatchFile batchFile, final boolean persistStudentRecords) {
     final var entity = this.delegate.toPenReqBatchEntityForBusinessException(penWebBlobEntity, reason, penRequestBatchStatusCode, batchFile, persistStudentRecords);
-    this.setDefaults(entity);
     entity.setPenRequestBatchStatusCode(penRequestBatchStatusCode.getCode());
     entity.setPenRequestBatchStatusReason(reason);
+    this.setDefaults(entity);
     if (batchFile != null) {
       if (batchFile.getStudentDetails() != null) {
         entity.setStudentCount((long) batchFile.getStudentDetails().size());
@@ -126,11 +126,11 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
   /**
    * Sets defaults.
    *
-   * @param entity the entity
+   * @param penRequestBatchEntity the entity
    */
-  private void setDefaults(final PenRequestBatchEntity entity) {
-    entity.setMinistryPRBSourceCode(MinistryPRBSourceCodes.TSW_PEN_WEB.getCode());
-    entity.setPenRequestBatchTypeCode(SCHOOL.getCode()); // it will be always school for this process.
-    entity.setExtractDate(LocalDateTime.now());
+  private void setDefaults(final PenRequestBatchEntity penRequestBatchEntity) {
+    penRequestBatchEntity.setMinistryPRBSourceCode(MinistryPRBSourceCodes.TSW_PEN_WEB.getCode());
+    penRequestBatchEntity.setPenRequestBatchTypeCode(SCHOOL.getCode()); // it will be always school for this process.
+    penRequestBatchEntity.setExtractDate(LocalDateTime.now());
   }
 }
