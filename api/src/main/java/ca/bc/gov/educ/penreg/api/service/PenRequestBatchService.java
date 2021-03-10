@@ -192,7 +192,7 @@ public class PenRequestBatchService {
    */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
   public Optional<PENWebBlobEntity> findPenWebBlobBySubmissionNumber(@NonNull final String submissionNumber) {
-    return this.getPenWebBlobRepository().findBySubmissionNumber(submissionNumber);
+    return this.getPenWebBlobRepository().findBySubmissionNumberAndFileType(submissionNumber, "PEN");
   }
 
   /**

@@ -25,9 +25,10 @@ public interface PenWebBlobRepository extends JpaRepository<PENWebBlobEntity, Lo
    * Find by submission number optional.
    *
    * @param submissionNumber the submission number
+   * @param fileType         the file type which is `PEN`
    * @return the optional
    */
-  Optional<PENWebBlobEntity> findBySubmissionNumber(String submissionNumber);
+  Optional<PENWebBlobEntity> findBySubmissionNumberAndFileType(String submissionNumber, String fileType);
 
   List<PENWebBlobEntity> findAllByMincodeAndInsertDateTimeGreaterThanAndSubmissionNumberNotAndFileTypeAndExtractDateTimeIsNotNull(String mincode, LocalDateTime insertDateTime, String submissionNumber, String fileType);
 }
