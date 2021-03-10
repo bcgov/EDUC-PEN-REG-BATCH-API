@@ -81,7 +81,7 @@ COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.SIS_VENDOR_NAME IS 'The name of the 
 COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.SIS_PRODUCT_NAME IS 'The name of the Student information System (SIS) product used by the submitting school. E.g. Aspen';
 COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.SIS_PRODUCT_ID IS 'The ID of the Student information System (SIS) product used by the submitting school. E.g. A version number.';
 COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.MATCHED_COUNT IS 'A dynamic, running count of the number of PEN request records in the batch that have been matched to existing records in the Student table.';
-COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.ISSUED_PEN_COUNT IS 'A dynamic, running count of the number of PEN request records in the batch that resulted in the creation of a new Student/PEN in the Student table.';
+COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.NEW_PEN_COUNT IS 'A dynamic, running count of the number of PEN request records in the batch that resulted in the creation of a new Student/PEN in the Student table.';
 COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.ERROR_COUNT IS 'A dynamic, running count of the number of PEN request records in the batch that have errors of some sort (PEN not yet matched nor issued). Includes Validation errors, Repeats and Fixables.';
 COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.REPEAT_COUNT IS 'A dynamic, running count of the number of PEN request records in the batch that are a repeat of an earlier PEN request by the same school, using the same request data.';
 COMMENT ON COLUMN PEN_REQUEST_BATCH_HISTORY.FIXABLE_COUNT IS 'A dynamic, running count of the number of PEN request records in the batch that are valid requests but could not automatically be fulfilled, and require manual review.';
