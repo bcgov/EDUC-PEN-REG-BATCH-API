@@ -88,7 +88,7 @@ public class RestUtils {
    * @param student the student
    * @return the student
    */
-  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
+  //@Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Student createStudent(final Student student) {
     return this.webClient.post()
         .uri(this.props.getStudentApiURL())
@@ -126,6 +126,7 @@ public class RestUtils {
    * @param guid the guid
    * @return the next pen number from pen service api
    */
+  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public String getNextPenNumberFromPenServiceAPI(final String guid) {
     return this.webClient.get()
         .uri(this.props.getPenServicesApiURL(), uri -> uri.path("/api/v1/pen-services/next-pen-number")

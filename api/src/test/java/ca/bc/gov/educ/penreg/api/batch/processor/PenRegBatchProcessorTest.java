@@ -6,6 +6,7 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
@@ -35,7 +36,6 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
@@ -104,6 +104,8 @@ public class PenRegBatchProcessorTest {
   @Autowired
   private PenRequestBatchStudentRepository studentRepository;
 
+  @Autowired
+  private PenRequestBatchHistoryRepository penRequestBatchHistoryRepository;
   /**
    * The Pen web blob repository.
    */
@@ -719,6 +721,8 @@ public class PenRegBatchProcessorTest {
   @After
   @Transactional
   public void after() {
+    this.studentRepository.deleteAll();
+    this.penRequestBatchHistoryRepository.deleteAll();
     this.repository.deleteAll();
     this.penWebBlobRepository.deleteAll();
   }
