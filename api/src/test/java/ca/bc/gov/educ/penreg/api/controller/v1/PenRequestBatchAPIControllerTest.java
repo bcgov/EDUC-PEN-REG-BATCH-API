@@ -6,6 +6,7 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
@@ -24,7 +25,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -32,11 +32,13 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.struct.v1.Condition.AND;
 import static ca.bc.gov.educ.penreg.api.struct.v1.Condition.OR;
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -53,7 +55,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class PenRequestBatchAPIControllerTest {
   /**
    * The constant PEN_REQUEST_BATCH_API.
@@ -88,6 +89,8 @@ public class PenRequestBatchAPIControllerTest {
    */
   @Autowired
   PenRequestBatchStudentRepository penRequestBatchStudentRepository;
+  @Autowired
+  PenRequestBatchHistoryRepository penRequestBatchHistoryRepository;
 
   /**
    * Sets up.
@@ -102,6 +105,8 @@ public class PenRequestBatchAPIControllerTest {
    */
   @After
   public void tearDown() {
+    this.penRequestBatchStudentRepository.deleteAll();
+    this.penRequestBatchHistoryRepository.deleteAll();
     this.penRequestBatchRepository.deleteAll();
   }
 
@@ -710,10 +715,32 @@ public class PenRequestBatchAPIControllerTest {
 
     this.mockMvc
         .perform(put(String.format("/api/v1/pen-request-batch/%s", batch.getPenRequestBatchID()))
-                .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
             .contentType(APPLICATION_JSON).accept(APPLICATION_JSON).content(request))
         .andDo(print()).andExpect(status().isOk())
         .andExpect(jsonPath("$.penRequestBatchStatusCode", is("ARCHIVED")));
+  }
+
+  @Test
+  public void testStats_givenDataINDB_ShouldReturnStatusOkWithData() throws Exception {
+    final File file = new File(
+        Objects.requireNonNull(this.getClass().getClassLoader().getResource("API_PEN_REQUEST_BATCH_PEN_REQUEST_BATCH.json")).getFile()
+    );
+    final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
+    });
+    final var models = entities.stream().peek(x -> {
+      x.setInsertDate(LocalDateTime.now().toString());
+      x.setExtractDate(LocalDateTime.now().toString());
+    }).map(PenRequestBatchMapper.mapper::toModel).collect(toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(toList());
+
+    this.penRequestBatchRepository.saveAll(models);
+
+    this.mockMvc
+        .perform(get("/api/v1/pen-request-batch/stats")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+            .contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
+        .andDo(print()).andExpect(status().isOk())
+        .andExpect(jsonPath("$.loadFailCount", is(6)));
   }
 
   /**

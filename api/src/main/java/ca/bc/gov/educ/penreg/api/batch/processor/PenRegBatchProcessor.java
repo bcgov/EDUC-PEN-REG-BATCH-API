@@ -35,6 +35,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -220,13 +221,14 @@ public class PenRegBatchProcessor {
    */
   private boolean waitForNotificationToCompleteIfPresent(final String guid, final CompletableFuture<Boolean> booleanCompletableFuture) {
     try {
-      final boolean isNotificationSuccessful = booleanCompletableFuture.get(); // wait here for result.
+      final boolean isNotificationSuccessful = booleanCompletableFuture.get(2000L, TimeUnit.MILLISECONDS); // wait here for result.
       log.info("notification result for :: {} is :: {}", guid, isNotificationSuccessful);
       return isNotificationSuccessful;
     } catch (final InterruptedException e) {
+      log.error("InterruptedException ", e);
       Thread.currentThread().interrupt();
-    } catch (final ExecutionException e) {
-      log.error("execution exception", e);
+    } catch (final ExecutionException | TimeoutException e) {
+      log.error("ExecutionException | TimeoutException ", e);
     }
     return false;
   }

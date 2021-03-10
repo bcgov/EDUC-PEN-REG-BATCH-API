@@ -3,10 +3,10 @@ package ca.bc.gov.educ.penreg.api.controller.v1;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
-import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.Search;
 import ca.bc.gov.educ.penreg.api.struct.v1.SearchCriteria;
@@ -23,7 +23,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -51,7 +50,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class PenRequestBatchHistoryAPIControllerTest {
   /**
    * The constant PEN_REQUEST_BATCH_API.
@@ -83,6 +81,12 @@ public class PenRequestBatchHistoryAPIControllerTest {
   PenRequestBatchHistoryRepository penRequestBatchHistoryRepository;
 
   /**
+   * The Pen request batch student repository.
+   */
+  @Autowired
+  PenRequestBatchStudentRepository penRequestBatchStudentRepository;
+
+  /**
    * Sets up.
    */
   @Before
@@ -95,7 +99,9 @@ public class PenRequestBatchHistoryAPIControllerTest {
    */
   @After
   public void tearDown() {
+    this.penRequestBatchStudentRepository.deleteAll();
     this.penRequestBatchHistoryRepository.deleteAll();
+    this.penRequestBatchRepository.deleteAll();
   }
 
   /**

@@ -1,12 +1,17 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.val;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,10 +22,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
+import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -73,8 +82,8 @@ public class PenRequestBatchServiceTest {
 
   @After
   public void after() {
-    this.prbRepository.deleteAll();
     this.prbStudentRepository.deleteAll();
+    this.prbRepository.deleteAll();
   }
 
   @Test
@@ -102,4 +111,58 @@ public class PenRequestBatchServiceTest {
 //    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
 //    assertThat(penRequestBatch.get().getFixableCount()).isZero();
   }
+
+  @Test
+  public void testGetStats_givenNoDataInDB_shouldReturnTheCountsAsZero() {
+    val result = this.prbService.getStats();
+    assertThat(result).isNotNull();
+    assertThat(result.getPenRequestBatchStatList()).isNotEmpty();
+    assertThat(result.getPenRequestBatchStatList()).size().isEqualTo(2);
+    assertThat(result.getPenRequestBatchStatList().get(0).getSchoolGroupCode()).isNotEmpty();
+    assertThat(result.getPenRequestBatchStatList().get(0).getSchoolGroupCode()).isEqualTo("K12");
+    assertThat(result.getPenRequestBatchStatList().get(0).getFixableCount()).isZero();
+    assertThat(result.getPenRequestBatchStatList().get(0).getRepeatCount()).isZero();
+    assertThat(result.getPenRequestBatchStatList().get(0).getHeldForReviewCount()).isZero();
+    assertThat(result.getPenRequestBatchStatList().get(0).getPendingCount()).isZero();
+    assertThat(result.getPenRequestBatchStatList().get(1).getSchoolGroupCode()).isNotEmpty();
+    assertThat(result.getPenRequestBatchStatList().get(1).getSchoolGroupCode()).isEqualTo("PSI");
+    assertThat(result.getPenRequestBatchStatList().get(1).getFixableCount()).isZero();
+    assertThat(result.getPenRequestBatchStatList().get(1).getRepeatCount()).isZero();
+    assertThat(result.getPenRequestBatchStatList().get(1).getHeldForReviewCount()).isZero();
+    assertThat(result.getPenRequestBatchStatList().get(1).getPendingCount()).isZero();
+    assertThat(result.getLoadFailCount()).isZero();
+  }
+
+  @Test
+  public void testGetStats_givenDataInDB_shouldReturnTheCountsAsInDB() throws IOException {
+    final File file = new File(
+        Objects.requireNonNull(this.getClass().getClassLoader().getResource("API_PEN_REQUEST_BATCH_PEN_REQUEST_BATCH.json")).getFile()
+    );
+    final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
+    });
+    final var models = entities.stream().peek(x -> {
+      x.setInsertDate(LocalDateTime.now().toString());
+      x.setExtractDate(LocalDateTime.now().toString());
+    }).map(PenRequestBatchMapper.mapper::toModel).collect(toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(toList());
+
+    this.prbRepository.saveAll(models);
+    val result = this.prbService.getStats();
+    assertThat(result).isNotNull();
+    assertThat(result.getPenRequestBatchStatList()).isNotEmpty();
+    assertThat(result.getPenRequestBatchStatList()).size().isEqualTo(2);
+    assertThat(result.getPenRequestBatchStatList().get(0).getSchoolGroupCode()).isNotEmpty();
+    assertThat(result.getPenRequestBatchStatList().get(0).getSchoolGroupCode()).isEqualTo("K12");
+    assertThat(result.getPenRequestBatchStatList().get(0).getFixableCount()).isEqualTo(13L);
+    assertThat(result.getPenRequestBatchStatList().get(0).getRepeatCount()).isZero();
+    assertThat(result.getPenRequestBatchStatList().get(0).getHeldForReviewCount()).isZero();
+    assertThat(result.getPenRequestBatchStatList().get(0).getPendingCount()).isEqualTo(2L);
+    assertThat(result.getPenRequestBatchStatList().get(1).getSchoolGroupCode()).isNotEmpty();
+    assertThat(result.getPenRequestBatchStatList().get(1).getSchoolGroupCode()).isEqualTo("PSI");
+    assertThat(result.getPenRequestBatchStatList().get(1).getFixableCount()).isEqualTo(19L);
+    assertThat(result.getPenRequestBatchStatList().get(1).getRepeatCount()).isZero();
+    assertThat(result.getPenRequestBatchStatList().get(1).getHeldForReviewCount()).isZero();
+    assertThat(result.getPenRequestBatchStatList().get(1).getPendingCount()).isEqualTo(7L);
+    assertThat(result.getLoadFailCount()).isEqualTo(6L);
+  }
+
 }
