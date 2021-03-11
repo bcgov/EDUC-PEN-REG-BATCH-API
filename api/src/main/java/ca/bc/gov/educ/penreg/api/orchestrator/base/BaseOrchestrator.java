@@ -10,18 +10,22 @@ import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.NotificationEvent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import ca.bc.gov.educ.penreg.api.util.ThreadFactoryBuilder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.jboss.threads.EnhancedQueueExecutor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
@@ -40,6 +44,10 @@ import static lombok.AccessLevel.PUBLIC;
  */
 @Slf4j
 public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator {
+
+  private final Executor multipleSagaExecutor = new EnhancedQueueExecutor.Builder()
+          .setThreadFactory(new ThreadFactoryBuilder().withNameFormat("multiple-saga-executor-%d").get())
+          .setCorePoolSize(1).setMaximumPoolSize(5).setKeepAliveTime(Duration.ofSeconds(60)).build();
   /**
    * The constant issueMapper.
    */
@@ -486,6 +494,38 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
         .eventPayload(payload)
         .build());
     return saga;
+  }
+
+  /**
+   * Start to execute sagas
+   *
+   * @param payload                  the event payload
+   * @param penRequestBatchIDs       the pen request batch ids
+   * @param userName                 the user who created the saga
+   * @return saga record
+   * @throws IOException          the io exception
+   */
+  @Transactional
+  public List<Saga> startMultipleSagas(@NotNull String payload, List<UUID> penRequestBatchIDs, String userName) throws IOException {
+    var sagas = getSagaService().createMultipleBatchSagaRecordsInDB(getSagaName(), userName, payload, penRequestBatchIDs);
+    multipleSagaExecutor.execute(() -> {
+      for(Saga saga : sagas) {
+        try {
+          handleEvent(Event.builder()
+                  .eventType(EventType.INITIATED)
+                  .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+                  .sagaId(saga.getSagaId())
+                  .eventPayload(saga.getPayload())
+                  .build());
+        } catch (InterruptedException e) {
+          log.error("There was an unexpected exception attempting to start multiple sagas", e);
+          Thread.currentThread().interrupt();
+        } catch (IOException | TimeoutException e) {
+          log.error("There was an unexpected exception attempting to start multiple sagas", e);
+        }
+      }
+    });
+    return sagas;
   }
 
   /**
