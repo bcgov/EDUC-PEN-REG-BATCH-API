@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.support;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes;
 import ca.bc.gov.educ.penreg.api.constants.SagaEnum;
+import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
@@ -11,7 +12,6 @@ import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
-import ca.bc.gov.educ.penreg.api.util.PenRequestBatchHistoryUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -22,7 +22,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper.PEN_REQUEST_BATCH_API;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.MARK_SAGA_COMPLETE;
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
 import static java.util.stream.Collectors.toList;
@@ -64,7 +63,7 @@ public class PenRequestBatchUtils {
    */
   public static PenRequestBatchEntity populateAuditColumnsAndHistory(final PenRequestBatchEntity penRequestBatchEntity) {
     populateAuditColumns(penRequestBatchEntity);
-    final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode(), PEN_REQUEST_BATCH_API);
+    final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryMapper.mapper.toModelFromBatch(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
     penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
     return penRequestBatchEntity;
   }

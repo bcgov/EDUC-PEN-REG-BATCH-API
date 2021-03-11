@@ -6,6 +6,7 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
+import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
@@ -16,7 +17,6 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
-import ca.bc.gov.educ.penreg.api.util.PenRequestBatchHistoryUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,7 +32,6 @@ import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-import static ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper.PEN_REQUEST_BATCH_API;
 import static ca.bc.gov.educ.penreg.api.constants.EventStatus.DB_COMMITTED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REPEATS_CHECKED;
@@ -50,6 +49,7 @@ public class EventTaskSchedulerAsyncService {
    * The constant mapper.
    */
   private static final PenRequestBatchStudentSagaDataMapper mapper = PenRequestBatchStudentSagaDataMapper.mapper;
+  private static final PenRequestBatchHistoryMapper historyMapper = PenRequestBatchHistoryMapper.mapper;
   /**
    * The Saga repository.
    */
@@ -134,7 +134,7 @@ public class EventTaskSchedulerAsyncService {
         final var repeatCount = studentEntities.stream().filter(student -> PenRequestBatchStudentStatusCodes.REPEAT.toString().equals(student.getPenRequestBatchStudentStatusCode())).count();
         if (penRequestBatchEntity.getStudentCount() == repeatCount) { // all records are repeats, need to be marked active.
           penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ACTIVE.getCode());
-          final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode(),PEN_REQUEST_BATCH_API);
+          final PenRequestBatchHistoryEntity penRequestBatchHistory = historyMapper.toModelFromBatch(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
           penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
           penReqBatchEntities.add(penRequestBatchEntity);
         } else if (!studentSagaRecords.isEmpty()) {
@@ -142,7 +142,7 @@ public class EventTaskSchedulerAsyncService {
           if (count == studentSagaRecords.size()) { // All records are processed mark batch to active.
             this.setDifferentCounts(penRequestBatchEntity, studentEntities);
             penRequestBatchEntity.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ACTIVE.getCode());
-            final PenRequestBatchHistoryEntity penRequestBatchHistory =PenRequestBatchHistoryUtils.createPenReqBatchHistory(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode(),PEN_REQUEST_BATCH_API);
+            final PenRequestBatchHistoryEntity penRequestBatchHistory = PenRequestBatchHistoryMapper.mapper.toModelFromBatch(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
             penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
             penReqBatchEntities.add(penRequestBatchEntity);
           }
