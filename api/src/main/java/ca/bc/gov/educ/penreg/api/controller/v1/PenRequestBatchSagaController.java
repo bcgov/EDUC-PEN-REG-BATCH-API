@@ -10,6 +10,7 @@ import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.BasePenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.Saga;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import lombok.Getter;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.*;
 import static lombok.AccessLevel.PRIVATE;
@@ -70,6 +72,11 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
     return processStudentRequest(PEN_REQUEST_BATCH_USER_UNMATCH_PROCESSING_SAGA, penRequestBatchUnmatchSagaData);
   }
 
+  @Override
+  public ResponseEntity<Map<UUID,UUID>> archiveAndReturnAllFiles(PenRequestBatchArchiveAndReturnAllSagaData penRequestBatchArchiveAndReturnAllSagaData) {
+    return processBatchRequest(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA, penRequestBatchArchiveAndReturnAllSagaData);
+  }
+
   private ResponseEntity<String> processStudentRequest(SagaEnum sagaName, BasePenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
     var penRequestBatchStudentID = penRequestBatchStudentSagaData.getPenRequestBatchStudentID();
     var sagaInProgress = getSagaService().findAllByPenRequestBatchStudentIDAndStatusIn(penRequestBatchStudentID,
@@ -83,6 +90,27 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
         .startSaga(JsonUtil.getJsonStringFromObject(penRequestBatchStudentSagaData),
           penRequestBatchStudentID, penRequestBatchStudentSagaData.getPenRequestBatchID(), penRequestBatchStudentSagaData.getCreateUser());
       return ResponseEntity.ok(saga.getSagaId().toString());
+    } catch (InterruptedException | TimeoutException | IOException e) {
+      Thread.currentThread().interrupt();
+      throw new SagaRuntimeException(e.getMessage());
+    }
+  }
+
+  private ResponseEntity<Map<UUID, UUID>> processBatchRequest(SagaEnum sagaName, PenRequestBatchArchiveAndReturnAllSagaData penRequestBatchArchiveAndReturnAllSagaData) {
+    var penRequestBatchIDs = penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchIDs();
+
+    var sagaInProgress = !this.getSagaService().findAllByPenRequestBatchStudentIDInAndStatusIn(penRequestBatchIDs, sagaName.toString(), this.getStatusesFilter()).isEmpty();
+
+    if (sagaInProgress) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
+    try {
+      var sagas = this.getOrchestratorMap()
+              .get(sagaName.toString())
+              .startMultipleSagas(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnAllSagaData),
+                      penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchIDs(), penRequestBatchArchiveAndReturnAllSagaData.getCreateUser());
+
+      return ResponseEntity.ok(sagas.stream().map(sagaMapper::toStruct).collect(Collectors.toMap(Saga::getPenRequestBatchID, Saga::getSagaId)));
     } catch (InterruptedException | TimeoutException | IOException e) {
       Thread.currentThread().interrupt();
       throw new SagaRuntimeException(e.getMessage());
