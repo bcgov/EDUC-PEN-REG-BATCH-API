@@ -8,5 +8,5 @@ import org.mapstruct.factory.Mappers;
 public interface ArchiveAndReturnSagaResponseMapper {
     ArchiveAndReturnSagaResponseMapper mapper = Mappers.getMapper(ArchiveAndReturnSagaResponseMapper.class);
 
-    ArchiveAndReturnSagaResponse toStruct(ca.bc.gov.educ.penreg.api.model.v1.Saga penCoordinator);
+    ArchiveAndReturnSagaResponse toStruct(ca.bc.gov.educ.penreg.api.model.v1.Saga saga);
 }
