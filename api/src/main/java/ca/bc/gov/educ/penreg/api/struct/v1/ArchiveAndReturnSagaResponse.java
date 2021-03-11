@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -13,9 +15,9 @@ public class ArchiveAndReturnSagaResponse {
     /**
      * The pen request batch id.
      */
-    String penRequestBatchID;
+    UUID penRequestBatchID;
     /**
      * The saga id.
      */
-    String sagaId;
+    UUID sagaId;
 }
