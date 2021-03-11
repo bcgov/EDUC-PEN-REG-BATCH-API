@@ -1,5 +1,7 @@
 package ca.bc.gov.educ.penreg.api.schedulers;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,7 +42,8 @@ public class PurgeSoftDeletedBatchRecordsScheduler {
   public void pollBatchFilesAndPurgeSoftDeletedRecords() {
     LockAssert.assertLocked();
     final LocalDateTime createDateToCompare = this.calculateCreateDateBasedOnSoftDeletedRetentionDays();
-    final var prbRecords = this.getPenRequestBatchRepository().findAllByCreateDateBefore(createDateToCompare);
+    final var prbRecords = this.getPenRequestBatchRepository().findByPenRequestBatchStatusCodeAndCreateDateBefore(
+      PenRequestBatchStatusCodes.DELETED.getCode(), createDateToCompare);
     if (!prbRecords.isEmpty()) {
       this.getPenRequestBatchRepository().deleteAll(prbRecords);
     }
