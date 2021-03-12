@@ -27,7 +27,9 @@ public interface Orchestrator {
   Saga startSaga(String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID, String userName) throws InterruptedException, TimeoutException, IOException;
 
 
-  List<Saga> startMultipleSagas(String payload, List<UUID> penRequestBatchIDs, String userName) throws InterruptedException, TimeoutException, IOException;
+  List<Saga> saveMultipleSagas(String payload, List<UUID> penRequestBatchIDs, String userName) throws InterruptedException, TimeoutException, IOException;
+
+  void startMultipleSagas(List<Saga> sagas) throws InterruptedException, TimeoutException, IOException;
 
   /**
    * Gets saga name.

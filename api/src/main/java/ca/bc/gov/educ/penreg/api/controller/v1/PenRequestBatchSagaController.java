@@ -111,8 +111,11 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
     try {
       var sagas = this.getOrchestratorMap()
               .get(sagaName.toString())
-              .startMultipleSagas(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnAllSagaData),
+              .saveMultipleSagas(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnAllSagaData),
                       penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchIDs(), penRequestBatchArchiveAndReturnAllSagaData.getCreateUser());
+      getOrchestratorMap()
+              .get(sagaName.toString())
+              .startMultipleSagas(sagas);
 
       return ResponseEntity.ok(sagas.stream().map(archiveAndReturnSagaResponseMapper::toStruct).collect(Collectors.toList()));
     } catch (InterruptedException | TimeoutException | IOException e) {

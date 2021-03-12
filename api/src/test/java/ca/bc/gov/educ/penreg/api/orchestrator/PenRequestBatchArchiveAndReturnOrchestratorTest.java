@@ -123,7 +123,6 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         this.repository.deleteAll();
         this.penRequestBatchRepository.deleteAll();
         this.penCoordinatorRepository.deleteAll();
-        this.penCoordinatorService = null;
     }
 
     @Test
@@ -152,11 +151,6 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
 
     @Test
     public void testHandleEvent_givenEventAndSagaDataAndPenCoordinatorExists_shouldBeMarkedPEN_COORDINATOR_FOUND() throws IOException, InterruptedException, TimeoutException {
-        PenCoordinator penCoordinator = new PenCoordinator();
-        penCoordinator.setMincode(Mincode.builder().districtNumber(193).schoolNumber(37120).build());
-        penCoordinator.setPenCoordinatorEmail("jhamberston0@va.gov");
-
-        this.penCoordinatorRepository.save(penCoordinator);
         final var event = Event.builder()
                 .eventType(EventType.INITIATED)
                 .eventOutcome(EventOutcome.INITIATE_SUCCESS)
