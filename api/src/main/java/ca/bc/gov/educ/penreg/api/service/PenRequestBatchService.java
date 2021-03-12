@@ -168,7 +168,7 @@ public class PenRequestBatchService {
               "penRequestBatchStudentEntities", "penRequestBatchHistoryEntities", "createUser", "createDate");
       penRequestBatchEntityDB.setPenRequestBatchID(penRequestBatchID);
       final PenRequestBatchHistoryEntity penRequestBatchHistory = historyMapper.toModelFromBatch(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
-      penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
+      penRequestBatchEntityDB.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
       return this.getRepository().save(penRequestBatchEntityDB);
     }).orElseThrow(EntityNotFoundException::new);
   }
