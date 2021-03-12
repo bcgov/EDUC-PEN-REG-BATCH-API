@@ -56,7 +56,7 @@ public interface PenRequestBatchSagaEndpoint {
   ResponseEntity<String> processStudentRequestUnmatchedByUser(@Validated @RequestBody PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData);
 
   @PostMapping("/archive-and-return")
-  @PreAuthorize("hasAuthority('SCOPE_PEN_REQUEST_BATCH_ARCHIVE_RETURN_SAGA')")
+  @PreAuthorize("hasAuthority('SCOPE_PEN_REQUEST_BATCH_ARCHIVE_SAGA')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK."), @ApiResponse(responseCode = "409", description = "Conflict.")})
   @Transactional
   @Tag(name = "Endpoint to start archive and return files saga.", description = "archive and return files saga")
