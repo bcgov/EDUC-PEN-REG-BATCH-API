@@ -10,22 +10,18 @@ import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.NotificationEvent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import ca.bc.gov.educ.penreg.api.util.ThreadFactoryBuilder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.jboss.threads.EnhancedQueueExecutor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.Executor;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
@@ -44,10 +40,6 @@ import static lombok.AccessLevel.PUBLIC;
  */
 @Slf4j
 public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator {
-
-  private final Executor multipleSagaExecutor = new EnhancedQueueExecutor.Builder()
-          .setThreadFactory(new ThreadFactoryBuilder().withNameFormat("multiple-saga-executor-%d").get())
-          .setCorePoolSize(1).setMaximumPoolSize(5).setKeepAliveTime(Duration.ofSeconds(60)).build();
   /**
    * The constant issueMapper.
    */
@@ -507,11 +499,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    */
   @Transactional
   public List<Saga> saveMultipleSagas(@NotNull String payload, List<UUID> penRequestBatchIDs, String userName) throws IOException {
-    var sagas = getSagaService().createMultipleBatchSagaRecordsInDB(getSagaName(), userName, payload, penRequestBatchIDs);
-    multipleSagaExecutor.execute(() -> {
-
-    });
-    return sagas;
+    return getSagaService().createMultipleBatchSagaRecordsInDB(getSagaName(), userName, payload, penRequestBatchIDs);
   }
 
   @Async("subscriberExecutor")
