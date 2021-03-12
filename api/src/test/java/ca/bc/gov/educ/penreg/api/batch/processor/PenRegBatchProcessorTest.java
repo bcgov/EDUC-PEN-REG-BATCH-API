@@ -197,7 +197,7 @@ public class PenRegBatchProcessorTest {
     final var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Trailer record has extraneous characters");
+    assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Header record is missing characters.");
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
     final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().min(new PenRequestBatchHistoryComparator());
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
@@ -226,7 +226,7 @@ public class PenRegBatchProcessorTest {
     final var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Trailer record is missing characters");
+    assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Header record is missing characters.");
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
     final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().min(new PenRequestBatchHistoryComparator());
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
