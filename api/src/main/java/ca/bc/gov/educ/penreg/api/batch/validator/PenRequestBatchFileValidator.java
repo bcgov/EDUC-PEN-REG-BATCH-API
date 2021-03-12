@@ -108,17 +108,21 @@ public class PenRequestBatchFileValidator {
   private void processDataSetForRowLengthErrors(@NonNull final String guid, @NonNull final DataSet ds) throws FileUnProcessableException {
     if (ds.getErrors() != null && !ds.getErrors().isEmpty()) {
       var message = "";
+      boolean firstErrorFound = false;
       for (final DataError error : ds.getErrors()) {
         if (error.getErrorDesc() != null && error.getErrorDesc().contains("SHOULD BE 211")) { // Header record should be 211 characters long.
           message = this.getHeaderRowLengthIncorrectMessage(message, error);
-        } else if (error.getErrorDesc() != null && error.getErrorDesc().contains("SHOULD BE 224")) { // Trailer Record should be 224 characters long.
-          message = this.getTrailerRowLengthIncorrectMessage(message, error);
+          firstErrorFound = true;
         } else if (error.getErrorDesc() != null && error.getErrorDesc().contains("SHOULD BE 234")) { // Details Record should be 234 characters long.
           message = this.getDetailRowLengthIncorrectMessage(message, error);
+          firstErrorFound = true;
+        } else if (error.getErrorDesc() != null && error.getErrorDesc().contains("SHOULD BE 224")) { // Trailer Record should be 224 characters long.
+          message = this.getTrailerRowLengthIncorrectMessage(message, error);
+          firstErrorFound = true;
         }
-      }
-      if (message.length() > 255) {
-        message = StringUtils.abbreviate(message, 255);
+        if (firstErrorFound) {
+          break; // if system found one error , system breaks the loop.
+        }
       }
       throw new FileUnProcessableException(INVALID_ROW_LENGTH, guid, PenRequestBatchStatusCodes.LOAD_FAIL, message);
     }
@@ -127,6 +131,9 @@ public class PenRequestBatchFileValidator {
 
   /**
    * Gets detail row length incorrect message.
+   * here 1 is subtracted from the line number as line number starts from header record and here header record
+   * needs to
+   * be  discarded
    *
    * @param message the message
    * @param error   the error
@@ -134,9 +141,9 @@ public class PenRequestBatchFileValidator {
    */
   private String getDetailRowLengthIncorrectMessage(String message, final DataError error) {
     if (error.getErrorDesc().contains(TOO_LONG)) {
-      message = message.concat("Detail record " + error.getLineNo() + " has extraneous characters, ");
+      message = message.concat("Detail record " + (error.getLineNo() - 1) + " has extraneous characters.");
     } else {
-      message = message.concat("Detail record " + error.getLineNo() + " is missing characters, ");
+      message = message.concat("Detail record " + (error.getLineNo() - 1) + " is missing characters.");
     }
     return message;
   }
@@ -150,9 +157,9 @@ public class PenRequestBatchFileValidator {
    */
   private String getTrailerRowLengthIncorrectMessage(String message, final DataError error) {
     if (error.getErrorDesc().contains(TOO_LONG)) {
-      message = message.concat("Trailer record has extraneous characters, ");
+      message = message.concat("Trailer record has extraneous characters.");
     } else {
-      message = message.concat("Trailer record is missing characters, ");
+      message = message.concat("Trailer record is missing characters.");
     }
     return message;
   }
@@ -166,9 +173,9 @@ public class PenRequestBatchFileValidator {
    */
   private String getHeaderRowLengthIncorrectMessage(String message, final DataError error) {
     if (error.getErrorDesc().contains(TOO_LONG)) {
-      message = message.concat("Header record has extraneous characters, ");
+      message = message.concat("Header record has extraneous characters.");
     } else {
-      message = message.concat("Header record is missing characters, ");
+      message = message.concat("Header record is missing characters.");
     }
     return message;
   }
