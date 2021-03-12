@@ -506,26 +506,32 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @throws IOException          the io exception
    */
   @Transactional
-  public List<Saga> startMultipleSagas(@NotNull String payload, List<UUID> penRequestBatchIDs, String userName) throws IOException {
+  public List<Saga> saveMultipleSagas(@NotNull String payload, List<UUID> penRequestBatchIDs, String userName) throws IOException {
     var sagas = getSagaService().createMultipleBatchSagaRecordsInDB(getSagaName(), userName, payload, penRequestBatchIDs);
     multipleSagaExecutor.execute(() -> {
-      for(Saga saga : sagas) {
-        try {
-          handleEvent(Event.builder()
-                  .eventType(EventType.INITIATED)
-                  .eventOutcome(EventOutcome.INITIATE_SUCCESS)
-                  .sagaId(saga.getSagaId())
-                  .eventPayload(saga.getPayload())
-                  .build());
-        } catch (InterruptedException e) {
-          log.error("There was an unexpected exception attempting to start multiple sagas", e);
-          Thread.currentThread().interrupt();
-        } catch (IOException | TimeoutException e) {
-          log.error("There was an unexpected exception attempting to start multiple sagas", e);
-        }
-      }
+
     });
     return sagas;
+  }
+
+  @Async("subscriberExecutor")
+  @Transactional
+  public void startMultipleSagas(List<Saga> sagas) {
+    for(Saga saga : sagas) {
+      try {
+        handleEvent(Event.builder()
+                .eventType(EventType.INITIATED)
+                .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+                .sagaId(saga.getSagaId())
+                .eventPayload(saga.getPayload())
+                .build());
+      } catch (InterruptedException e) {
+        log.error("There was an unexpected exception attempting to start multiple sagas", e);
+        Thread.currentThread().interrupt();
+      } catch (IOException | TimeoutException e) {
+        log.error("There was an unexpected exception attempting to start multiple sagas", e);
+      }
+    }
   }
 
   /**
