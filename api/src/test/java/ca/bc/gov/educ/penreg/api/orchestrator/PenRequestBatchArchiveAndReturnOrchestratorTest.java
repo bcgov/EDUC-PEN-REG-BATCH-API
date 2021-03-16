@@ -11,6 +11,7 @@ import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchivedEmailEvent;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentStatusCode;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -109,7 +110,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
-        this.createSaga("19337120", "12345678");
+        this.createSaga("19337120", "12345678", LOADED.getCode());
         final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-pen-coordinator.json")).getFile());
         final List<ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator> structs = new ObjectMapper().readValue(file, new TypeReference<>() {
         });
@@ -127,7 +128,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
 
     @Test
     public void testHandleEvent_givenEventAndSagaData_shouldBeMarkedPEN_COORDINATOR_NOT_FOUND() throws IOException, InterruptedException, TimeoutException {
-        this.createSaga("10200000", "12345679");
+        this.createSaga("10200000", "12345679", LOADED.getCode());
         final var event = Event.builder()
                 .eventType(EventType.INITIATED)
                 .eventOutcome(EventOutcome.INITIATE_SUCCESS)
@@ -172,6 +173,40 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         assertThat(sagaStates.get(3).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_COORDINATOR_FOUND.toString());
 
     }
+
+    @Test
+    public void testHandleEvent_givenEventAndSagaDataAndPenCoordinatorExists_shouldBeMarkedPEN_COORDINATOR_FOUND_withReArchivedBatchStatus() throws IOException, InterruptedException, TimeoutException {
+        final var event = Event.builder()
+                .eventType(EventType.INITIATED)
+                .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+                .sagaId(this.saga.get(0).getSagaId())
+                .build();
+        Optional<PenRequestBatchEntity> prbBatchOption = this.penRequestBatchRepository.findBySubmissionNumber("12345678");
+        if (prbBatchOption.isPresent()) {
+            prbBatchOption.get().setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode());
+            this.penRequestBatchRepository.saveAndFlush(prbBatchOption.get());
+        }
+
+        this.orchestrator.handleEvent(event);
+        final var sagaFromDB = this.sagaService.findSagaById(this.saga.get(0).getSagaId());
+        assertThat(sagaFromDB).isPresent();
+        assertThat(sagaFromDB.get().getSagaState()).isEqualTo(EventType.NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT.toString());
+        final var sagaStates = this.sagaService.findAllSagaStates(sagaFromDB.get());
+        assertThat(sagaStates.size()).isEqualTo(4);
+        assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
+        assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
+        assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(EventType.UPDATE_PEN_REQUEST_BATCH.toString());
+        assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_REQUEST_BATCH_UPDATED.toString());
+        assertThat(sagaStates.get(2).getSagaEventState()).isEqualTo(GENERATE_IDS_REPORT.toString());
+        assertThat(sagaStates.get(2).getSagaEventOutcome()).isEqualTo(EventOutcome.IDS_REPORT_GENERATED.toString());
+        assertThat(sagaStates.get(3).getSagaEventState()).isEqualTo(GET_PEN_COORDINATOR.toString());
+        assertThat(sagaStates.get(3).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_COORDINATOR_FOUND.toString());
+
+        prbBatchOption = this.penRequestBatchRepository.findBySubmissionNumber("12345678");
+        assertThat(prbBatchOption.isPresent()).isTrue();
+        assertThat(prbBatchOption.get().getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.REARCHIVED.getCode());
+    }
+
     @Test
     public void testArchivePenRequestBatch_givenEventAndSagaData_shouldBeMarkedCOMPLETED() throws IOException, InterruptedException, TimeoutException {
         final var event = Event.builder()
@@ -249,9 +284,9 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_COORDINATOR_NOT_FOUND.toString());
     }
 
-    private void createSaga(String mincode, String submissionNumber) throws JsonProcessingException {
+    private void createSaga(String mincode, String submissionNumber, String penRequestBatchStudentStatusCode) throws JsonProcessingException {
         final PenRequestBatchStudentEntity penRequestBatchStudentEntity = new PenRequestBatchStudentEntity();
-        penRequestBatchStudentEntity.setPenRequestBatchStudentStatusCode(LOADED.getCode());
+        penRequestBatchStudentEntity.setPenRequestBatchStudentStatusCode(penRequestBatchStudentStatusCode);
         penRequestBatchStudentEntity.setCreateDate(LocalDateTime.now());
         penRequestBatchStudentEntity.setUpdateDate(LocalDateTime.now());
         penRequestBatchStudentEntity.setCreateUser("TEST");

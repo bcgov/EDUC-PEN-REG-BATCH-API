@@ -39,6 +39,10 @@ public enum PenRequestBatchStatusCodes {
    */
   ARCHIVED("ARCHIVED"),
   /**
+   * Re-Archived pen request batch status codes.
+   */
+  REARCHIVED("REARCHIVED"),
+  /**
    * Status code for loads held back for size.
    */
   HOLD_SIZE("HOLD_SIZE"),
