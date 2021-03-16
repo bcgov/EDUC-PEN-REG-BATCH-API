@@ -12,6 +12,7 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenWebBlobMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.StudentStatusCodeMapper;
+import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
@@ -280,14 +281,21 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   }
 
   /**
-   * Gets pen web blob by submission number.
+   * Gets list of pen web blob by submission number and file type.
    *
    * @param submissionNumber the submission number
-   * @return the pen web blob by submission number
+   * @param fileType the file type
+   * @return the list of pen web blob by submission number and file type
    */
   @Override
-  public PENWebBlob getPenWebBlobBySubmissionNumber(final String submissionNumber) {
-    return this.getService().findPenWebBlobBySubmissionNumber(submissionNumber).map(penWebBlobMapper::toStructure).orElseThrow(EntityNotFoundException::new);
+  public List<PENWebBlob> getPenWebBlobs(final String submissionNumber, final String fileType) {
+    List<PENWebBlobEntity> blobEntities;
+    if(fileType == null) {
+      blobEntities = this.getService().findPenWebBlobBySubmissionNumber(submissionNumber);
+    } else {
+      blobEntities = this.getService().findPenWebBlobBySubmissionNumberAndFileType(submissionNumber, fileType);
+    }
+    return blobEntities.stream().map(penWebBlobMapper::toStructure).collect(Collectors.toList());
   }
 
   /**

@@ -185,14 +185,26 @@ public class PenRequestBatchService {
   }
 
   /**
-   * Find pen web blob by submission number optional.
+   * Find pen web blobs by submission number and file type.
    *
    * @param submissionNumber the submission number
-   * @return the optional
+   * @param fileType the file type
+   * @return the list
    */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-  public Optional<PENWebBlobEntity> findPenWebBlobBySubmissionNumber(@NonNull final String submissionNumber) {
-    return this.getPenWebBlobRepository().findBySubmissionNumberAndFileType(submissionNumber, "PEN");
+  public List<PENWebBlobEntity> findPenWebBlobBySubmissionNumberAndFileType(@NonNull final String submissionNumber, @NonNull final String fileType) {
+    return this.getPenWebBlobRepository().findAllBySubmissionNumberAndFileType(submissionNumber, fileType);
+  }
+
+  /**
+   * Find pen web blobs by submission number.
+   *
+   * @param submissionNumber the submission number
+   * @return the list
+   */
+  @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+  public List<PENWebBlobEntity> findPenWebBlobBySubmissionNumber(@NonNull final String submissionNumber) {
+    return this.getPenWebBlobRepository().findAllBySubmissionNumber(submissionNumber);
   }
 
   /**

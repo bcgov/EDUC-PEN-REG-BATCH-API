@@ -5,6 +5,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.Mincode;
 import ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.repository.PenCoordinatorRepository;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;
@@ -32,6 +33,7 @@ public class PenCoordinatorService {
       .setCorePoolSize(1).setMaximumPoolSize(2).setKeepAliveTime(Duration.ofSeconds(60)).build();
   private final PenCoordinatorRepository penCoordinatorRepository;
   private final ReadWriteLock penCoordinatorMapLock = new ReentrantReadWriteLock();
+  @Setter
   private Map<Mincode, PenCoordinator> penCoordinatorMap;
 
   @Autowired
