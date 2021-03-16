@@ -280,14 +280,15 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   }
 
   /**
-   * Gets pen web blob by submission number.
+   * Gets list of pen web blob by submission number and file type.
    *
    * @param submissionNumber the submission number
-   * @return the pen web blob by submission number
+   * @param fileType the file type
+   * @return the list of pen web blob by submission number and file type
    */
   @Override
-  public PENWebBlob getPenWebBlobBySubmissionNumber(final String submissionNumber) {
-    return this.getService().findPenWebBlobBySubmissionNumber(submissionNumber).map(penWebBlobMapper::toStructure).orElseThrow(EntityNotFoundException::new);
+  public List<PENWebBlob> getPenWebBlobs(final String submissionNumber, final String fileType) {
+    return this.getService().findPenWebBlobBySubmissionNumberAndFileType(submissionNumber, fileType).stream().map(penWebBlobMapper::toStructure).collect(Collectors.toList());
   }
 
   /**

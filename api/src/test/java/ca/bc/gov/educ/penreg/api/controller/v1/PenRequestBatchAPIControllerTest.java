@@ -4,11 +4,13 @@ import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
+import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
+import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.Search;
 import ca.bc.gov.educ.penreg.api.struct.v1.SearchCriteria;
@@ -91,6 +93,9 @@ public class PenRequestBatchAPIControllerTest {
   PenRequestBatchStudentRepository penRequestBatchStudentRepository;
   @Autowired
   PenRequestBatchHistoryRepository penRequestBatchHistoryRepository;
+
+  @Autowired
+  PenWebBlobRepository penWebBlobRepository;
 
   /**
    * Sets up.
@@ -741,6 +746,40 @@ public class PenRequestBatchAPIControllerTest {
             .contentType(APPLICATION_JSON).accept(APPLICATION_JSON))
         .andDo(print()).andExpect(status().isOk())
         .andExpect(jsonPath("$.loadFailCount", is(6)));
+  }
+
+  @Test
+  public void testGetPenWebBlobs_GivenSubmissionNumberAndFileType_ShouldReturnStatusOk() throws Exception {
+    var submissionNumber = "T-534093";
+    var fileType = "PEN";
+    var penWebBlob = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("10210518").fileName("sample_5_PSI_OK").fileType(fileType)
+      .fileContents("test data".getBytes()).submissionNumber(submissionNumber).build();
+    this.penWebBlobRepository.saveAll(List.of(penWebBlob));
+
+    this.mockMvc
+      .perform(get("/api/v1/pen-request-batch/source")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_BLOB")))
+        .param("submissionNumber", submissionNumber)
+        .param("fileType", fileType)
+        .contentType(APPLICATION_JSON))
+      .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(1)));
+  }
+
+  @Test
+  public void testGetPenWebBlobs_GivenInvalidSubmissionNumberAndFileType_ShouldReturnEmptyList() throws Exception {
+    var submissionNumber = "T-534093";
+    var fileType = "PEN";
+    var penWebBlob = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("10210518").fileName("sample_5_PSI_OK").fileType(fileType)
+      .fileContents("test data".getBytes()).submissionNumber(submissionNumber).build();
+    this.penWebBlobRepository.saveAll(List.of(penWebBlob));
+
+    this.mockMvc
+      .perform(get("/api/v1/pen-request-batch/source")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_BLOB")))
+        .param("submissionNumber", "T-000000")
+        .param("fileType", fileType)
+        .contentType(APPLICATION_JSON))
+      .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(0)));
   }
 
   /**

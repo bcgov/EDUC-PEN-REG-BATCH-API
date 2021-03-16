@@ -178,18 +178,19 @@ public interface PenRequestBatchAPIEndpoint {
   ResponseEntity<Void> deletePenRequestBatch(@PathVariable UUID penRequestBatchID);
 
   /**
-   * Gets pen web blob by submission number.
+   * Gets list of pen web blob by submission number.
    *
    * @param submissionNumber the submission number
-   * @return the pen web blob by submission number
+   * @param fileType the file type
+   * @return the list of pen web blob by submission number and file type
    */
   @GetMapping("/source")
   @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH_BLOB')")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
   @Transactional(readOnly = true)
-  @Tag(name = "Endpoint to get source entity by Submission number.", description = "Endpoint to get source entity of Pen request batch by submission number.")
-  @Schema(name = "PENWebBlob", implementation = PENWebBlob.class)
-  PENWebBlob getPenWebBlobBySubmissionNumber(@RequestParam("submissionNumber") String submissionNumber);
+  @Tag(name = "Endpoint to get source entity list by Submission number and file type.", description = "Endpoint to get source entity list of Pen request batch by submission number and file type.")
+  @ArraySchema(schema = @Schema(name = "PENWebBlob", implementation = PENWebBlob.class))
+  List<PENWebBlob> getPenWebBlobs(@RequestParam("submissionNumber") String submissionNumber, @RequestParam("fileType") String fileType);
 
   /**
    * Update pen web blob pen web blob.
