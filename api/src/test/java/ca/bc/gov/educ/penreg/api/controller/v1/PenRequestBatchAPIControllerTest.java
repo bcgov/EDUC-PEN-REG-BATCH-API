@@ -751,33 +751,40 @@ public class PenRequestBatchAPIControllerTest {
   @Test
   public void testGetPenWebBlobs_GivenSubmissionNumberAndFileType_ShouldReturnStatusOk() throws Exception {
     var submissionNumber = "T-534093";
-    var fileType = "PEN";
-    var penWebBlob = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("10210518").fileName("sample_5_PSI_OK").fileType(fileType)
-      .fileContents("test data".getBytes()).submissionNumber(submissionNumber).build();
-    this.penWebBlobRepository.saveAll(List.of(penWebBlob));
+    this.createPENWebBlobs(submissionNumber);
 
     this.mockMvc
       .perform(get("/api/v1/pen-request-batch/source")
         .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_BLOB")))
         .param("submissionNumber", submissionNumber)
-        .param("fileType", fileType)
+        .param("fileType", "PEN")
         .contentType(APPLICATION_JSON))
       .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(1)));
   }
 
   @Test
+  public void testGetPenWebBlobs_GivenSubmissionNumber_ShouldReturnStatusOk() throws Exception {
+    var submissionNumber = "T-534093";
+    this.createPENWebBlobs(submissionNumber);
+
+    this.mockMvc
+      .perform(get("/api/v1/pen-request-batch/source")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_BLOB")))
+        .param("submissionNumber", submissionNumber)
+        .contentType(APPLICATION_JSON))
+      .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(2)));
+  }
+
+  @Test
   public void testGetPenWebBlobs_GivenInvalidSubmissionNumberAndFileType_ShouldReturnEmptyList() throws Exception {
     var submissionNumber = "T-534093";
-    var fileType = "PEN";
-    var penWebBlob = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("10210518").fileName("sample_5_PSI_OK").fileType(fileType)
-      .fileContents("test data".getBytes()).submissionNumber(submissionNumber).build();
-    this.penWebBlobRepository.saveAll(List.of(penWebBlob));
+    this.createPENWebBlobs(submissionNumber);
 
     this.mockMvc
       .perform(get("/api/v1/pen-request-batch/source")
         .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_BLOB")))
         .param("submissionNumber", "T-000000")
-        .param("fileType", fileType)
+        .param("fileType", "PEN")
         .contentType(APPLICATION_JSON))
       .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(0)));
   }
@@ -820,5 +827,13 @@ public class PenRequestBatchAPIControllerTest {
     sortMap.put("legalLastName", "ASC");
     sortMap.put("legalFirstName", "DESC");
     return new ObjectMapper().writeValueAsString(sortMap);
+  }
+
+  private void createPENWebBlobs(String submissionNumber) {
+    var penBlob = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("10210518").fileName("sample_5_PSI_PEN").fileType("PEN")
+      .fileContents("test data".getBytes()).submissionNumber(submissionNumber).build();
+    var pdfBlob = PENWebBlobEntity.builder().penWebBlobId(2L).mincode("10210518").fileName("sample_5_PSI_PDF").fileType("PDF")
+      .fileContents("test data".getBytes()).submissionNumber(submissionNumber).build();
+    this.penWebBlobRepository.saveAll(List.of(penBlob, pdfBlob));
   }
 }

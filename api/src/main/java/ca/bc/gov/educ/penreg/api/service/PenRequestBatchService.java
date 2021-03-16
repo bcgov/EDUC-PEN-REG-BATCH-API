@@ -197,6 +197,17 @@ public class PenRequestBatchService {
   }
 
   /**
+   * Find pen web blobs by submission number.
+   *
+   * @param submissionNumber the submission number
+   * @return the list
+   */
+  @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+  public List<PENWebBlobEntity> findPenWebBlobBySubmissionNumber(@NonNull final String submissionNumber) {
+    return this.getPenWebBlobRepository().findAllBySubmissionNumber(submissionNumber);
+  }
+
+  /**
    * Update pen web blob pen web blob entity.
    *
    * @param entity       the entity
