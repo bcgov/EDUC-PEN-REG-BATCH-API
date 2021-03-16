@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
@@ -115,7 +116,9 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         final List<ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator> structs = new ObjectMapper().readValue(file, new TypeReference<>() {
         });
         this.penCoordinatorRepository.saveAll(structs.stream().map(PenCoordinatorMapper.mapper::toModel).collect(Collectors.toList()));
-        this.penCoordinatorService.init();
+        this.penCoordinatorService.setPenCoordinatorMap(this.penCoordinatorRepository.findAll().stream()
+          .map(ca.bc.gov.educ.penreg.api.batch.mappers.PenCoordinatorMapper.mapper::toTrimmedPenCoordinator)
+          .collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity())));
     }
 
     @After
