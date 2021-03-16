@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.orchestrator;
 
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
@@ -19,12 +20,14 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.ARCHIVED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REARCHIVED;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_TOPIC;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.UPDATE_PEN_REQUEST_BATCH;
@@ -115,7 +118,12 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
         var penRequestBatch = getPenRequestBatchService().findById(penRequestBatchArchiveAndReturnSagaData.getPenRequestBatchID());
         Event nextEvent = Event.builder().sagaId(saga.getSagaId()).eventType(EventType.UPDATE_PEN_REQUEST_BATCH).build();
         if (penRequestBatch.isPresent()) {
-            penRequestBatch.get().setPenRequestBatchStatusCode(ARCHIVED.getCode());
+            if (StringUtils.equals(penRequestBatch.get().getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED.getCode())
+                || StringUtils.equals(penRequestBatch.get().getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode())) {
+                penRequestBatch.get().setPenRequestBatchStatusCode(REARCHIVED.getCode());
+            } else {
+                penRequestBatch.get().setPenRequestBatchStatusCode(ARCHIVED.getCode());
+            }
             if (penRequestBatchArchiveAndReturnSagaData.getUpdateUser() == null) {
                 penRequestBatch.get().setUpdateUser(PEN_REQUEST_BATCH_API);
             } else {
