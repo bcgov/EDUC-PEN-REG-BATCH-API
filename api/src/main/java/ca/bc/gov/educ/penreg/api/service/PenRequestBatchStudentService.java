@@ -58,6 +58,12 @@ public class PenRequestBatchStudentService {
   private final PenRequestBatchRepository penRequestBatchRepository;
 
   /**
+   * The Pen request batch service.
+   */
+  @Getter(PRIVATE)
+  private final PenRequestBatchService penRequestBatchService;
+
+  /**
    * The Student status code repository.
    */
   @Getter(PRIVATE)
@@ -78,10 +84,11 @@ public class PenRequestBatchStudentService {
    * @param applicationProperties       the application properties
    */
   @Autowired
-  public PenRequestBatchStudentService(final PenRequestBatchStudentRepository repository, final PenRequestBatchRepository penRequestBatchRepository, final PenRequestBatchStudentStatusCodeRepository studentStatusCodeRepository, final ApplicationProperties applicationProperties) {
+  public PenRequestBatchStudentService(final PenRequestBatchStudentRepository repository, final PenRequestBatchRepository penRequestBatchRepository, final PenRequestBatchStudentStatusCodeRepository studentStatusCodeRepository, final PenRequestBatchService penRequestBatchService, final ApplicationProperties applicationProperties) {
     this.repository = repository;
     this.penRequestBatchRepository = penRequestBatchRepository;
     this.studentStatusCodeRepository = studentStatusCodeRepository;
+    this.penRequestBatchService = penRequestBatchService;
     this.applicationProperties = applicationProperties;
   }
 
@@ -163,10 +170,10 @@ public class PenRequestBatchStudentService {
             this.changeSummaryCount(penRequestBatch, currentStatus, false);
             penRequestBatch.setUpdateUser(penRequestBatchStudent.getUpdateUser());
             penRequestBatch.setUpdateDate(penRequestBatchStudent.getUpdateDate());
-            this.penRequestBatchRepository.save(penRequestBatch);
+            saveBatch(penRequestBatch,isUnArchivedChanged);
             this.logCounts(penRequestBatch, "Updated");
           } else if (isUnArchivedChanged) {
-            this.penRequestBatchRepository.save(penRequestBatch);
+            saveBatch(penRequestBatch,true);
           }
           return savedPrbStudent;
         } else {
@@ -178,6 +185,14 @@ public class PenRequestBatchStudentService {
 
     } else {
       throw new EntityNotFoundException(PenRequestBatchEntity.class, "penRequestBatchID", penRequestBatchID.toString());
+    }
+  }
+
+  private void saveBatch(final PenRequestBatchEntity penRequestBatch, final boolean isUnArchivedChanged){
+    if (!isUnArchivedChanged) {
+      this.penRequestBatchRepository.save(penRequestBatch);
+    }else{
+      this.penRequestBatchService.savePenRequestBatch(penRequestBatch);
     }
   }
 
