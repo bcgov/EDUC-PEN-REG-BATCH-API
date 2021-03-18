@@ -125,11 +125,11 @@ if [ "$envValue" = "tools" ]; then
 fi
 
 if [ "$envValue" = "dev" ]; then
-  PEN_COORDINATOR_EMAIL=gurvinder.bhatia@gov.bc.ca
+  PEN_COORDINATOR_EMAIL=Gurvinder.J.Bhatia@gov.bc.ca
 fi
 
 if [ "$envValue" = "test" ]; then
-  PEN_COORDINATOR_EMAIL=gurvinder.bhatia@gov.bc.ca
+  PEN_COORDINATOR_EMAIL=Gurvinder.J.Bhatia@gov.bc.ca
 fi
 if [ "$envValue" = "prod" ]; then
   PEN_COORDINATOR_EMAIL=pens.coordinator@gov.bc.ca
