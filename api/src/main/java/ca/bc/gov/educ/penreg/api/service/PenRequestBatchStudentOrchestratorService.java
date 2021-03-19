@@ -319,6 +319,7 @@ public class PenRequestBatchStudentOrchestratorService {
     studentFromStudentAPI.setMincode(penRequestBatchEntity.getMincode());
     studentFromStudentAPI.setLocalID(penRequestBatchStudent.getLocalID());
     studentFromStudentAPI.setGradeCode(penRequestBatchStudent.getGradeCode());
+    studentFromStudentAPI.setGradeYear(Integer.toString(LocalDateTime.now().getYear()));
     studentFromStudentAPI.setPostalCode(penRequestBatchStudent.getPostalCode());
 
     //Added as part of PEN-1007; Update the usual given & surnames if provided and not blank
