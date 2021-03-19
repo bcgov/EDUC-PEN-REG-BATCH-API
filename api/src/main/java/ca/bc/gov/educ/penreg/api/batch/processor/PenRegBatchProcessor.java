@@ -15,9 +15,11 @@ import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.NotificationService;
 import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
+import ca.bc.gov.educ.penreg.api.struct.School;
 import com.google.common.base.Stopwatch;
 import lombok.Getter;
 import lombok.NonNull;
@@ -83,6 +85,12 @@ public class PenRegBatchProcessor {
   private final ApplicationProperties applicationProperties;
 
   /**
+   * The Rest utils.
+   */
+  @Getter(PRIVATE)
+  private final RestUtils restUtils;
+
+  /**
    * The Notification service.
    */
   private final NotificationService notificationService;
@@ -112,7 +120,7 @@ public class PenRegBatchProcessor {
    * @param penRequestBatchFileValidator       the pen request batch file validator
    */
   @Autowired
-  public PenRegBatchProcessor(final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService, final ApplicationProperties applicationProperties, final NotificationService notificationService, final PenCoordinatorService penCoordinatorService, final List<DuplicateFileCheckService> duplicateFileCheckServiceList, final PenRequestBatchFileValidator penRequestBatchFileValidator) {
+  public PenRegBatchProcessor(final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService, final ApplicationProperties applicationProperties, final NotificationService notificationService, final PenCoordinatorService penCoordinatorService, final List<DuplicateFileCheckService> duplicateFileCheckServiceList, final PenRequestBatchFileValidator penRequestBatchFileValidator, final RestUtils restUtils) {
     this.penRegBatchStudentRecordsProcessor = penRegBatchStudentRecordsProcessor;
     this.penRequestBatchFileService = penRequestBatchFileService;
     this.applicationProperties = applicationProperties;
@@ -120,6 +128,7 @@ public class PenRegBatchProcessor {
     this.penCoordinatorService = penCoordinatorService;
     this.duplicateFileCheckServiceMap = duplicateFileCheckServiceList.stream().collect(Collectors.toMap(DuplicateFileCheckService::getSchoolGroupCode, Function.identity()));
     this.penRequestBatchFileValidator = penRequestBatchFileValidator;
+    this.restUtils = restUtils;
   }
 
   /**
@@ -197,6 +206,11 @@ public class PenRegBatchProcessor {
   private void processFileUnProcessableException(@NonNull final String guid, @NonNull final PENWebBlobEntity penWebBlobEntity, @NonNull final FileUnProcessableException fileUnProcessableException, final BatchFile batchFile) {
     val notifySchoolForFileFormatErrorsOptional = this.notifySchoolForFileFormatErrors(guid, penWebBlobEntity, fileUnProcessableException);
     final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityForBusinessException(penWebBlobEntity, fileUnProcessableException.getReason(), fileUnProcessableException.getPenRequestBatchStatusCode(), batchFile, fileUnProcessableException.getFileError() == HELD_BACK_FOR_SIZE); // batch file can be processed further and persisted.
+    final Optional<School> school = this.restUtils.getSchoolByMincode(penWebBlobEntity.getMincode());
+    if (school.isPresent()) {
+      entity.setSchoolName(school.get().getSchoolName());
+    }
+    entity.setMincode(penWebBlobEntity.getMincode());
     //wait here if notification was sent, if there was any error this file will be picked up again as it wont be persisted.
     if (notifySchoolForFileFormatErrorsOptional.isPresent()) {
       final boolean isNotified = this.waitForNotificationToCompleteIfPresent(guid, notifySchoolForFileFormatErrorsOptional.get());
