@@ -167,11 +167,7 @@ public class PenRequestBatchService {
   public PenRequestBatchEntity updatePenRequestBatch(final PenRequestBatchEntity penRequestBatchEntity, final UUID penRequestBatchID) {
     final var penRequestBatchEntityOptional = this.getRepository().findById(penRequestBatchID);
     return penRequestBatchEntityOptional.map(penRequestBatchEntityDB -> {
-      if ( StringUtils.equals(penRequestBatchEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.ARCHIVED.getCode())
-        && (StringUtils.equals(penRequestBatchEntityDB.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED.getCode())
-            || StringUtils.equals(penRequestBatchEntityDB.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode())) ) {
-        penRequestBatchEntity.setPenRequestBatchStatusCode(REARCHIVED.getCode());
-      }
+      checkAndPopulateStatusCode(penRequestBatchEntity, penRequestBatchEntityDB);
       BeanUtils.copyProperties(penRequestBatchEntity, penRequestBatchEntityDB,
               "penRequestBatchStudentEntities", "penRequestBatchHistoryEntities", "createUser", "createDate");
       penRequestBatchEntityDB.setPenRequestBatchID(penRequestBatchID);
@@ -319,5 +315,13 @@ public class PenRequestBatchService {
     builder.repeatCount(repeatCount);
     builder.pendingCount((long) results.size());
     return builder.build();
+  }
+
+  private void checkAndPopulateStatusCode(PenRequestBatchEntity requestPrbEntity, PenRequestBatchEntity currentPrbEntity) {
+    if ( StringUtils.equals(requestPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.ARCHIVED.getCode())
+        && (StringUtils.equals(currentPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED.getCode())
+          || StringUtils.equals(currentPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode())) ) {
+      requestPrbEntity.setPenRequestBatchStatusCode(REARCHIVED.getCode());
+    }
   }
 }
