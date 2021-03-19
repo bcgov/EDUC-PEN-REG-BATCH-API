@@ -19,6 +19,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -37,6 +38,8 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.ARCHIVED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REARCHIVED;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -164,6 +167,11 @@ public class PenRequestBatchService {
   public PenRequestBatchEntity updatePenRequestBatch(final PenRequestBatchEntity penRequestBatchEntity, final UUID penRequestBatchID) {
     final var penRequestBatchEntityOptional = this.getRepository().findById(penRequestBatchID);
     return penRequestBatchEntityOptional.map(penRequestBatchEntityDB -> {
+      if ( StringUtils.equals(penRequestBatchEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.ARCHIVED.getCode())
+        && (StringUtils.equals(penRequestBatchEntityDB.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED.getCode())
+            || StringUtils.equals(penRequestBatchEntityDB.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode())) ) {
+        penRequestBatchEntity.setPenRequestBatchStatusCode(REARCHIVED.getCode());
+      }
       BeanUtils.copyProperties(penRequestBatchEntity, penRequestBatchEntityDB,
               "penRequestBatchStudentEntities", "penRequestBatchHistoryEntities", "createUser", "createDate");
       penRequestBatchEntityDB.setPenRequestBatchID(penRequestBatchID);
