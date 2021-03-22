@@ -14,6 +14,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
+import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStat;
 import lombok.Getter;
 import lombok.NonNull;
@@ -259,17 +260,14 @@ public class PenRequestBatchService {
     }
 
     final StringBuilder idsFile = new StringBuilder();
-
-    for (final PenRequestBatchStudentEntity entity : penRequestBatchStudentEntities) {
-      final var student = this.getRestUtils().getStudentByPEN(entity.getAssignedPEN());
-      if (student.isPresent()) {
-//        Uncomment and update this logic once trueNumber is added to student table
-//        if(student.get().getTrueNumber()) {
-//          student = getRestUtils().getStudentByStudentID(student.get().getTrueNumber());
-//        }
-//        if(student.isPresent()) {
-        idsFile.append("E03").append(student.get().getMincode()).append(String.format("%-12s", student.get().getLocalID()).replace(' ', '0')).append(student.get().getPen()).append(" ").append(student.get().getLegalLastName()).append("\n");
-//        }
+    for(PenRequestBatchStudentEntity entity: penRequestBatchStudentEntities) {
+      var studentResponse = this.getRestUtils().getStudentByPEN(entity.getAssignedPEN());
+      if(studentResponse.isPresent()) {
+        Student student = studentResponse.get();
+        if(student.getTrueStudentID() != null) {
+          student = this.getRestUtils().getStudentByStudentID(student.getTrueStudentID());
+        }
+        idsFile.append("E03").append(student.getMincode()).append(String.format("%-12s", student.getLocalID()).replace(' ', '0')).append(student.getPen()).append(" ").append(student.getLegalLastName()).append("\n");
       }
     }
     final byte[] bFile = idsFile.toString().getBytes();
