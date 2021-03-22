@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventStatus.DB_COMMITTED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
@@ -71,16 +70,10 @@ public class EventTaskSchedulerAsyncService {
   @Getter(PRIVATE)
   private final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor;
   /**
-   * The Status filters.
-   */
-  @Setter
-  private List<String> statusFilters;
-  /**
    * The saga name and orchestrator map.
    */
   @Getter(PRIVATE)
   private final Map<String, Orchestrator> sagaOrchestrators = new HashMap<>();
-
   /**
    * The pen request batch event repository.
    */
@@ -91,6 +84,11 @@ public class EventTaskSchedulerAsyncService {
    */
   @Getter(PRIVATE)
   private final EventPublisherService eventPublisherService;
+  /**
+   * The Status filters.
+   */
+  @Setter
+  private List<String> statusFilters;
 
   /**
    * Instantiates a new Event task scheduler async service.
@@ -102,7 +100,6 @@ public class EventTaskSchedulerAsyncService {
    * @param penRequestBatchEventRepository     the pen request batch event repository
    * @param eventPublisherService              the event publisher service
    * @param orchestrators                      the orchestrators
-   *
    */
   public EventTaskSchedulerAsyncService(final SagaRepository sagaRepository, final PenRequestBatchRepository penRequestBatchRepository,
                                         final PenRequestBatchStudentRepository penRequestBatchStudentRepository,
@@ -183,7 +180,6 @@ public class EventTaskSchedulerAsyncService {
 
   /**
    * Find and process uncompleted sagas.
-   *
    */
   @Async("taskExecutor")
   @Transactional
@@ -227,18 +223,20 @@ public class EventTaskSchedulerAsyncService {
   private Set<PenRequestBatchStudentSagaData> findRepeatsCheckedStudentRecordsToBeProcessed() {
     final Set<PenRequestBatchStudentSagaData> penRequestBatchStudents = new HashSet<>();
     final var penReqBatches = this.getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
-    penReqBatches.forEach(penRequestBatchEntity -> {
-      val studentEntitiesAlreadyInProcess = this.getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatchEntity.getPenRequestBatchID(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString());
-      penRequestBatchStudents.addAll(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().filter(penRequestBatchStudentEntity ->
-          studentEntitiesAlreadyInProcess.stream()
-              .allMatch(saga -> (!penRequestBatchStudentEntity.getPenRequestBatchStudentID().equals(saga.getPenRequestBatchStudentID()))))
-          .map(mapper::toPenReqBatchStudentSagaData)
-          .peek(penRequestBatchStudentSagaData -> {
-            penRequestBatchStudentSagaData.setMincode(penRequestBatchEntity.getMincode());
-            penRequestBatchStudentSagaData.setPenRequestBatchID(penRequestBatchEntity.getPenRequestBatchID());
-          })
-          .collect(Collectors.toSet()));
-    });
+    for (val penRequestBatch : penReqBatches) {
+      final var studentEntitiesAlreadyInProcess = this.getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatch.getPenRequestBatchID(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString());
+      for (val penReqBatchStudent : penRequestBatch.getPenRequestBatchStudentEntities()) {
+        if (PenRequestBatchStudentStatusCodes.DUPLICATE.getCode().equals(penReqBatchStudent.getPenRequestBatchStudentStatusCode())
+            || PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(penReqBatchStudent.getPenRequestBatchStudentStatusCode())
+            || studentEntitiesAlreadyInProcess.stream().anyMatch(penReqBatchStudentEntity -> penReqBatchStudentEntity.getPenRequestBatchStudentID().equals(penReqBatchStudent.getPenRequestBatchStudentID()))) {
+          continue;
+        }
+        val sagaData = mapper.toPenReqBatchStudentSagaData(penReqBatchStudent);
+        sagaData.setMincode(penRequestBatch.getMincode());
+        sagaData.setPenRequestBatchID(penRequestBatch.getPenRequestBatchID());
+        penRequestBatchStudents.add(sagaData);
+      }
+    }
     return penRequestBatchStudents;
   }
 

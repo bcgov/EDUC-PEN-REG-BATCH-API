@@ -11,6 +11,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.github.javafaker.Faker;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +42,6 @@ import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.DUPLICATE;
 import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.K12;
 import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.PSI;
-import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils.createBatchStudents;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -102,6 +102,9 @@ public class PenRegBatchProcessorTest {
    */
   @Autowired
   private PenWebBlobRepository penWebBlobRepository;
+
+  @Autowired
+  private PenRequestBatchUtils penRequestBatchUtils;
   /**
    * The Faker.
    */
@@ -323,7 +326,7 @@ public class PenRegBatchProcessorTest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given30RowValidFileAndExistingRecords_ShouldShowRepeats() throws IOException {
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
-    createBatchStudents(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
+    this.penRequestBatchUtils.createBatchStudentsInSingleTransaction(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
         (batch) -> batch.setProcessDate(LocalDateTime.now().minusDays(3)));
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
@@ -332,7 +335,7 @@ public class PenRegBatchProcessorTest {
     this.penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     final var result = this.repository.findAll();
     assertThat(result.size()).isEqualTo(2);
-    final var entity = result.get(0);
+    final var entity = result.get(1);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
@@ -342,7 +345,7 @@ public class PenRegBatchProcessorTest {
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isNull();
-    final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
+    final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(1));
     assertThat(students.stream().filter(s -> PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(s.getPenRequestBatchStudentStatusCode())).count()).isEqualTo(1);
     assertThat(students.size()).isEqualTo(5);
     students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
@@ -354,6 +357,36 @@ public class PenRegBatchProcessorTest {
   }
 
   /**
+   * Test that duplicate student request is not marked as a repeat
+   *
+   * @throws IOException the io exception
+   */
+  @Test
+  @Transactional
+  public void testProcessPenRegBatchFileFromTSW_GivenExistingRecordThatIsAlsoDuplicate_ShouldShowDuplicate() throws IOException {
+    when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
+    this.penRequestBatchUtils.createBatchStudentsInSingleTransaction(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
+            (batch) -> batch.setProcessDate(LocalDateTime.now().minusDays(3)));
+    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_Duplicate_And_Repeat.txt")).getFile());
+    final byte[] bFile = Files.readAllBytes(file.toPath());
+    final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+    final var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_Duplicate_And_Repeat").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    this.penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
+    final var result = this.repository.findAll();
+    assertThat(result.size()).isEqualTo(2);
+    final var entity = result.get(1);
+    assertThat(entity.getPenRequestBatchID()).isNotNull();
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
+    assertThat(entity.getPenRequestBatchStatusReason()).isNull();
+    assertThat(entity.getRepeatCount()).isEqualTo(1);
+    final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(1));
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(2);
+    assertThat(students.stream().filter(s -> PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(s.getPenRequestBatchStudentStatusCode())).count()).isEqualTo(1);
+    assertThat(students.stream().filter(s -> DUPLICATE.getCode().equals(s.getPenRequestBatchStudentStatusCode())).count()).isEqualTo(1);
+  }
+
+  /**
    * Test process pen reg batch file from tsw given 30 row valid files should create records in db.
    *
    * @throws IOException the io exception
@@ -362,9 +395,9 @@ public class PenRegBatchProcessorTest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given30RowValidFileAndExistingRecords_ShouldShowRepeatsMoreThanOne() throws IOException {
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
-    createBatchStudents(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
+    this.penRequestBatchUtils.createBatchStudentsInSingleTransaction(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
             (batch) -> batch.setProcessDate(LocalDateTime.now().minusDays(3)));
-    createBatchStudents(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
+    this.penRequestBatchUtils.createBatchStudentsInSingleTransaction(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
             (batch) -> {
                 batch.setSubmissionNumber("T-534094");
                 batch.setProcessDate(LocalDateTime.now().minusDays(3));
@@ -376,7 +409,7 @@ public class PenRegBatchProcessorTest {
     this.penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     final var result = this.repository.findAll();
     assertThat(result.size()).isEqualTo(3);
-    final var entity = result.get(0);
+    final var entity = result.get(2);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
@@ -386,7 +419,7 @@ public class PenRegBatchProcessorTest {
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isNull();
-    final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
+    final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(2));
     assertThat(students.stream().filter(s -> PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(s.getPenRequestBatchStudentStatusCode())).count()).isEqualTo(1);
     assertThat(students.size()).isEqualTo(5);
     students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
