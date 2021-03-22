@@ -14,6 +14,10 @@ import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -26,6 +30,8 @@ import static ca.bc.gov.educ.penreg.api.constants.EventType.MARK_SAGA_COMPLETE;
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
 import static java.util.stream.Collectors.toList;
 
+@Component
+@Profile("test")
 public class PenRequestBatchUtils {
   /**
    * The constant PEN_REQUEST_BATCH_API.
@@ -128,6 +134,12 @@ public class PenRequestBatchUtils {
   public static List<PenRequestBatchEntity> createBatchStudents(final PenRequestBatchRepository penRequestBatchRepository, final String batchFileName,
                                                                 final String batchStudentFileName, final Integer total) throws java.io.IOException {
     return createBatchStudents(penRequestBatchRepository, batchFileName, batchStudentFileName, total, null);
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void createBatchStudentsInSingleTransaction(final PenRequestBatchRepository penRequestBatchRepository, final String batchFileName,
+                                                         final String batchStudentFileName, final Integer total, final Consumer<PenRequestBatchEntity> batchConsumer) throws java.io.IOException {
+    createBatchStudents(penRequestBatchRepository, batchFileName, batchStudentFileName, total, batchConsumer);
   }
 
   public static List<Saga> createSagaRecords(final SagaRepository sagaRepository, final List<PenRequestBatchEntity> batches) {
