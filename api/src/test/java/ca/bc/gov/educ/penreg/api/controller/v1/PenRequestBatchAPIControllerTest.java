@@ -342,7 +342,7 @@ public class PenRequestBatchAPIControllerTest {
   }
 
   /**
-   * Test read pen request batch paginated given multiple group condition should return status ok.
+   * Test read pen request batch paginated given multile group condition should return status ok.
    *
    * @throws Exception the exception
    */
