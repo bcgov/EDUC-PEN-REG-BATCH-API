@@ -77,6 +77,7 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
       studentEntity.setCreateUser("TEST");
       studentEntity.setUpdateUser("TEST");
       studentEntity.setUpdateDate(LocalDateTime.now());
+      studentEntity.setBestMatchPEN("TEST");
       studentEntity.setPenRequestBatchEntity(entity);
       entity.getPenRequestBatchStudentEntities().add(studentEntity);
     }
