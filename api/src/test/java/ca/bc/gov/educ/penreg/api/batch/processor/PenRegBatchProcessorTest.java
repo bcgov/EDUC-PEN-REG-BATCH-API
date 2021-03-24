@@ -15,7 +15,6 @@ import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.github.javafaker.Faker;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.Objects;
@@ -63,21 +61,6 @@ public class PenRegBatchProcessorTest {
    * The Max.
    */
   static final int MAX = 9999999;
-  /**
-   * The Grade codes.
-   */
-  private final String[] gradeCodes = {"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "SU", "GA"};
-  /**
-   * The Postal codes.
-   */
-  private final String[] postalCodes = {"V8N0A1", "V8N0A2", "V8N0A3", "V8N0A4", "V8N0A5", "V8N0A6", "V8N0A7", "V8N0A8", "V8N0A9", "V8N0B1",
-      "V8N0B2", "V8N0B3", "V8N0B4", "V8N0B5", "V8N0B6", "V8N0B7", "V8N1A1", "V8N1A2", "V8N1A3", "V8N1A4", "V8N1A5", "V8N1A6",
-      "V8N1A7", "V8N1A8", "V8N1A9", "V8N1B3", "V8N1B4", "V8N1B5", "V8N1B6", "V8N1B7", "V8N1B8", "V8N1B9", "V8N1C1", "V8N1C2",
-      "V8N1C3", "V8N1C4", "V8N1C5", "V8N1C6", "V8N1C8", "V8N1C9", "V8N1E1", "V8N1E2", "V8N1E3", "V8N1E4", "V8N1E5", "V8N1E6",
-      "V8N1E8", "V8N1E9", "V8N1G1", "V8N1G2", "V8N1G3", "V8N1G4", "V8N1G5", "V8N1G6", "V8N1G7", "V8N1G8", "V8N1G9", "V8N1H1",
-      "V8N1H2", "V8N1H3", "V8N1H4", "V8N1H5", "V8N1H6", "V8N1H7", "V8N1H8", "V8N1H9", "V8N1J1", "V8N1J2", "V8N1J3", "V8N1J4",
-      "V8N1J5", "V8N1J6", "V8N1J7", "V8N1J8", "V8N1J9", "V8N1K1", "V8N1K2", "V8N1K3", "V8N1K4", "V8N1K5", "V8N1K6", "V8N1K7",
-      "V8N1K8", "V8N1K9", "V8N1L1", "V8N1L2", "V8N1L3"};
   /**
    * The Pen reg batch processor.
    */
@@ -744,76 +727,5 @@ public class PenRegBatchProcessorTest {
     this.penWebBlobRepository.deleteAll();
   }
 
-  /**
-   * Generate header record string.
-   *
-   * @return the string
-   */
-  private String generateHeaderRecord() {
-    return "FFI61610518 Braefoot Elementary                     20200707kleahy@sd61.bc.ca                                                                                   2504779616School Contact";
-  }
-
-  /**
-   * Generate invalid header record string.
-   *
-   * @return the string
-   */
-  private String generateInvalidHeaderRecord() {
-    return "FFX61610518 Braefoot Elementary                     20200707kleahy@sd61.bc.ca                                                                                   2504779616School Contact";
-  }
-
-  /**
-   * Generate trailer record string.
-   *
-   * @param numOfStudents the num of students
-   * @return the string
-   */
-  private String generateTrailerRecord(final int numOfStudents) {
-    return "BTR" + StringUtils.rightPad(String.valueOf(numOfStudents), 6, " ") + "    Vendor Name                                                                                         Product Name                                                                                        Product ID";
-  }
-
-  /**
-   * Generate invalid trailer record string.
-   *
-   * @param numOfStudents the num of students
-   * @return the string
-   */
-  private String generateInvalidTrailerRecord(final int numOfStudents) {
-    return "BTR" + numOfStudents + "    Vendor Name                                                                                         Product Name                                                                                        Product ID";
-  }
-
-  /**
-   * Generate random student record string.
-   *
-   * @param localID the local id
-   * @return the string
-   */
-  private String generateRandomStudentRecord(final String localID) {
-    final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-    final Random random = new Random();
-    String gender = "M";
-    if (random.nextBoolean()) {
-      gender = "F";
-    }
-    final int randomGradeIndex = (int) Math.floor(Math.random() * this.gradeCodes.length);
-    final String randomGrade = this.gradeCodes[randomGradeIndex];
-    final int randomPostalCodeIndex = (int) Math.floor(Math.random() * this.postalCodes.length);
-    final String randomPostalCode = this.postalCodes[randomPostalCodeIndex];
-    return "SRM"
-        .concat(localID)
-        .concat(StringUtils.leftPad("", 10, " "))
-        .concat(StringUtils.rightPad(this.faker.name().lastName(), 25, " "))
-        .concat(StringUtils.rightPad(this.faker.name().firstName(), 25, " "))
-        .concat(StringUtils.rightPad("", 25, " "))
-        .concat(StringUtils.rightPad(this.faker.name().lastName(), 25, " "))
-        .concat(StringUtils.rightPad(this.faker.name().firstName(), 25, " "))
-        .concat(StringUtils.rightPad("", 25, " "))
-        .concat(StringUtils.rightPad(dateFormat.format(this.faker.date().birthday()), 8, " "))
-        .concat(gender)
-        .concat(StringUtils.leftPad("", 16, " "))
-        .concat(randomGrade)
-        .concat(StringUtils.leftPad("", 26, " "))
-        .concat(randomPostalCode);
-  }
 }
 
