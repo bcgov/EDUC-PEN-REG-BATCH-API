@@ -8,6 +8,7 @@ import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import lombok.val;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -58,6 +59,13 @@ public class PenRequestBatchFileServiceTest {
   @Before
   public void before() {
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(new School()));
+  }
+
+  @After
+  public void tearDown() {
+    this.penRequestBatchHistoryRepository.deleteAll();
+    this.studentRepository.deleteAll();
+    this.repository.deleteAll();
   }
 
   @Test
