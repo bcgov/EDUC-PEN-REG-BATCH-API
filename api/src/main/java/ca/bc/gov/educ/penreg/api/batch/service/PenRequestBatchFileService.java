@@ -156,8 +156,8 @@ public class PenRequestBatchFileService {
         log.trace("{} :: Checking following penRequestBatchStudent for repeats :: {}", guid, penRequestBatchStudent);
         log.debug("{} :: Found {} repeat records for prb student record :: {}", guid, repeatRequests.size(), penRequestBatchStudent.getPenRequestBatchStudentID());
         if (!repeatRequests.isEmpty()) {
-          this.updatePenRequestBatchStudentRequest(repeatRequests, penRequestBatchStudent);
           filteredStudentEntities.remove(penRequestBatchStudent); // if it is a repeat remove it from the list to be
+          this.updatePenRequestBatchStudentRequest(repeatRequests, penRequestBatchStudent);
           // further processed.
           numRepeats++;
         }
