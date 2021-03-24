@@ -1,7 +1,7 @@
 package ca.bc.gov.educ.penreg.api.orchestrator.base;
 
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
+import org.springframework.data.util.Pair;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,7 +28,7 @@ public interface Orchestrator {
   Saga startSaga(String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID, String userName) throws InterruptedException, TimeoutException, IOException;
 
 
-  List<Saga> saveMultipleSagas(String payload, List<PenRequestBatchArchiveAndReturnSagaData> penRequestBatchIDs, String userName) throws InterruptedException, TimeoutException, IOException;
+  List<Saga> saveMultipleSagas(List<Pair<UUID, String>> payloads, String userName);
 
   void startMultipleSagas(List<Saga> sagas) throws InterruptedException, TimeoutException, IOException;
 

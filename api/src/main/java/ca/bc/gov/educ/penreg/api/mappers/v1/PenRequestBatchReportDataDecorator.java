@@ -38,7 +38,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
      * @return the pen request batch report data entity
      */
     @Override
-    public PenRequestBatchReportData toReportData(final PenRequestBatchArchiveAndReturnSagaData data) {
+    public PenRequestBatchReportData toReportData(final BasePenRequestBatchReturnFilesSagaData data) {
         final var reportData = this.delegate.toReportData(data);
         List<ReportListItem> pendingList = new ArrayList<>();
         List<ReportListItem> newPenList = new ArrayList<>();

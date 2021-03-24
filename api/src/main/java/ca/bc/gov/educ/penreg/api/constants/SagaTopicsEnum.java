@@ -46,5 +46,7 @@ public enum SagaTopicsEnum {
   /**
    * Pen report generation api topic saga topics enum.
    */
-  PEN_REPORT_GENERATION_API_TOPIC
+  PEN_REPORT_GENERATION_API_TOPIC,
+
+  PEN_REQUEST_BATCH_REPOST_REPORTS_TOPIC
 }

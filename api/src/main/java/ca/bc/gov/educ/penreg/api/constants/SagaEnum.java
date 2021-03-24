@@ -27,5 +27,10 @@ public enum SagaEnum {
   /**
    * Pen request batch archive and return saga saga enum.
    */
-  PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA
+  PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA,
+
+  /**
+   * Pen request batch repost reports saga saga enum.
+   */
+  PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA
 }

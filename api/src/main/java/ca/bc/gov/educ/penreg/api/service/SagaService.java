@@ -4,15 +4,13 @@ import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
-import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -130,12 +128,12 @@ public class SagaService {
     return this.getSagaRepository().findByPenRequestBatchStudentIDAndSagaName(penRequestBatchStudentID, sagaName);
   }
 
-  public List<Saga> findAllByPenRequestBatchStudentIDAndStatusIn(final UUID penRequestBatchStudentID, final String sagaName, final List<String> statuses) {
-    return this.getSagaRepository().findAllByPenRequestBatchStudentIDAndSagaNameAndStatusIn(penRequestBatchStudentID, sagaName, statuses);
+  public List<Saga> findAllByPenRequestBatchStudentIDAndStatusIn(final UUID penRequestBatchStudentID, final List<String> statuses) {
+    return this.getSagaRepository().findAllByPenRequestBatchStudentIDAndStatusIn(penRequestBatchStudentID, statuses);
   }
 
-  public List<Saga> findAllByPenRequestBatchStudentIDInAndStatusIn(final List<UUID> penRequestBatchStudentIDs, final String sagaName, final List<String> statuses) {
-    return this.getSagaRepository().findAllByPenRequestBatchStudentIDInAndSagaNameAndStatusIn(penRequestBatchStudentIDs, sagaName, statuses);
+  public List<Saga> findAllByPenRequestBatchIDInAndStatusIn(final List<UUID> penRequestBatchIDs, final List<String> statuses) {
+    return this.getSagaRepository().findAllByPenRequestBatchIDInAndStatusIn(penRequestBatchIDs, statuses);
   }
 
   @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
@@ -179,33 +177,24 @@ public class SagaService {
    *
    * @param sagaName                 the saga name
    * @param userName                 the user name
-   * @param payload                  the payload
-   * @param penRequestBatchesSagaData       the list of saga data
+   * @param payloads                 the list of pen request batch id and the payload
    * @return the saga
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public List<Saga> createMultipleBatchSagaRecordsInDB(String sagaName, String userName, String payload, List<PenRequestBatchArchiveAndReturnSagaData> penRequestBatchesSagaData) throws JsonProcessingException {
+  public List<Saga> createMultipleBatchSagaRecordsInDB(String sagaName, String userName, List<Pair<UUID, String>> payloads) {
     List<Saga> sagas = new ArrayList<>();
-    var updateUser = JsonUtil.getJsonObjectFromString(PenRequestBatchArchiveAndReturnAllSagaData.class, payload).getUpdateUser();
-    penRequestBatchesSagaData.forEach(sagaData -> {
-      sagaData.setUpdateUser(updateUser);
-      try {
-        sagas.add(
-          Saga.builder()
-            .payload(JsonUtil.getJsonStringFromObject(sagaData))
-            .penRequestBatchID(sagaData.getPenRequestBatchID())
-            .sagaName(sagaName)
-            .status(STARTED.toString())
-            .sagaState(INITIATED.toString())
-            .createDate(LocalDateTime.now())
-            .createUser(userName)
-            .updateUser(userName)
-            .updateDate(LocalDateTime.now())
-            .build());
-      } catch (JsonProcessingException e) {
-        log.error("An unexpected error occurred while trying to parse PenRequestBatchArchiveAndReturnSagaData object into json ", e);
-      }
-    });
+    payloads.forEach(payloadPair -> sagas.add(
+      Saga.builder()
+        .payload(payloadPair.getSecond())
+        .penRequestBatchID(payloadPair.getFirst())
+        .sagaName(sagaName)
+        .status(STARTED.toString())
+        .sagaState(INITIATED.toString())
+        .createDate(LocalDateTime.now())
+        .createUser(userName)
+        .updateUser(userName)
+        .updateDate(LocalDateTime.now())
+        .build()));
 
     return getSagaRepository().saveAll(sagas);
   }

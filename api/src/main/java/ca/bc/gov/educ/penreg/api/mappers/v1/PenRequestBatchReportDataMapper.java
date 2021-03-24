@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.mappers.v1;
 
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.BasePenRequestBatchReturnFilesSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
@@ -26,5 +26,5 @@ public interface PenRequestBatchReportDataMapper {
     @Mapping(target = "processDate", ignore = true)
     @Mapping(target = "processTime", ignore = true)
     @Mapping(target = "reportDate", ignore = true)
-    PenRequestBatchReportData toReportData(PenRequestBatchArchiveAndReturnSagaData data);
+    PenRequestBatchReportData toReportData(BasePenRequestBatchReturnFilesSagaData data);
 }
