@@ -307,14 +307,18 @@ public class PenRequestBatchService {
     List<PENWebBlobEntity> penWebBlobs = findPenWebBlobBySubmissionNumberAndFileType(penRequestBatchEntity.getSubmissionNumber(), "PEN");
     PENWebBlobEntity penWebBlob = penWebBlobs.isEmpty()? null : penWebBlobs.get(0);
 
+    Pair<String, Map<String, String>> pair = parseOriginalPenFile(penWebBlob != null? penWebBlob.getFileContents() : null);
+    String applicationCode = pair.getFirst();
+    Map<String, String> applicationKeyMap = pair.getSecond();
+
     final StringBuilder txtFile = new StringBuilder();
     // FFI header
-    txtFile.append(createHeader(penRequestBatchEntity, penWebBlob));
+    txtFile.append(createHeader(penRequestBatchEntity, applicationCode));
 
     // SRM details records
     for (final PenRequestBatchStudentEntity entity : penRequestBatchStudentEntities) {
       if (entity.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode())) {
-        txtFile.append(createBody(entity, penWebBlob));
+        txtFile.append(createBody(entity, applicationKeyMap));
       }
     }
 
@@ -346,13 +350,12 @@ public class PenRequestBatchService {
     val loadFailedCount = this.getRepository().countPenRequestBatchEntitiesByPenRequestBatchStatusCode(PenRequestBatchStatusCodes.LOAD_FAIL.getCode());
     return PenRequestBatchStats.builder().penRequestBatchStatList(penRequestBatchStats).loadFailCount(loadFailedCount).build();
   }
-  private String createHeader(final PenRequestBatchEntity penRequestBatchEntity, PENWebBlobEntity penWebBlob) {
+
+  private String createHeader(final PenRequestBatchEntity penRequestBatchEntity, String applicationCode) {
     final StringBuilder header = new StringBuilder();
     final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
     // retrieved from PEN_COORDINATOR table
     Optional<PenCoordinator> penCoordinator = penCoordinatorService.getPenCoordinatorByMinCode(penRequestBatchEntity.getMincode());
-    // retrieved from the original prb file
-    String applicationCode = penWebBlob != null? getApplicationCodeFromRawHeader(penWebBlob.getFileContents()) : "";
 
     header.append("FFI")
             .append(String.format("%-8.8s", print(penRequestBatchEntity.getMincode())))
@@ -381,11 +384,12 @@ public class PenRequestBatchService {
     return footer.toString();
   }
 
-  private String createBody(final PenRequestBatchStudentEntity penRequestBatchStudentEntity, PENWebBlobEntity penWebBlob) {
+  private String createBody(final PenRequestBatchStudentEntity penRequestBatchStudentEntity, Map<String,String> applicationKeyMap) {
     final StringBuilder body = new StringBuilder();
     final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-    // retrieved from the original prb file
-    String applicationKey = penWebBlob != null? getApplicationKeyFromRawStudentRecords(penWebBlob.getFileContents(), penRequestBatchStudentEntity.getLocalID()) : "";
+
+    String localID = StringUtils.leftPad(penRequestBatchStudentEntity.getLocalID(), 12, "0");
+    String applicationKey = applicationKeyMap.get(localID);
 
     body.append("SRM")
             .append(StringUtils.leftPad(penRequestBatchStudentEntity.getLocalID(), 12, "0"))
@@ -408,44 +412,29 @@ public class PenRequestBatchService {
     return body.toString();
   }
 
-  private String getApplicationCodeFromRawHeader(byte[] fileContents) {
+  private Pair<String, Map<String, String>> parseOriginalPenFile(byte[] fileContents) {
+    String applicationCode = "";
+    Map<String, String> applicationKeyMap = new HashMap();
+
+    if (fileContents == null || fileContents.length == 0) {
+      return Pair.of(applicationCode, applicationKeyMap);
+    }
+
     try {
       InputStreamReader inStreamReader = new InputStreamReader(new ByteArrayInputStream(fileContents));
       BufferedReader reader = new BufferedReader(inStreamReader);
 
-      String applicationCode = "";
       String line = "";
       while ((line = reader.readLine()) != null) {
         if (line.startsWith("FFI")) {
           applicationCode = line.substring(211,215).trim();
-          break;
+        } else if (line.startsWith("SRM")) {
+          String currentLocalID = line.substring(3, 15);
+          applicationKeyMap.put(currentLocalID, line.substring(235, 255).trim());
         }
       }
-      return applicationCode;
-    } catch (IOException ioe) {
-      return "";
-    }
-  }
-
-  private String getApplicationKeyFromRawStudentRecords(byte[] fileContents, String localID) {
-    try {
-      InputStreamReader inStreamReader = new InputStreamReader(new ByteArrayInputStream(fileContents));
-      BufferedReader reader = new BufferedReader(inStreamReader);
-
-      String applicationKey = "";
-      String line = "";
-      while ((line = reader.readLine()) != null) {
-        if (line.startsWith("SRM")) {
-          String currentLocalID = line.substring(3,15);
-          if (StringUtils.equals(currentLocalID, StringUtils.leftPad(localID, 12, "0"))) {
-            applicationKey = line.substring(235, 255).trim();
-            break;
-          }
-        }
-      }
-      return applicationKey;
-    } catch (IOException ioe) {
-      return "";
+    } finally {
+      return Pair.of(applicationCode, applicationKeyMap);
     }
   }
 
