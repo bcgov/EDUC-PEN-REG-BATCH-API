@@ -22,12 +22,21 @@ public interface PenWebBlobRepository extends JpaRepository<PENWebBlobEntity, Lo
   List<PENWebBlobEntity> findAllByExtractDateTimeIsNullAndFileType(String fileType);
 
   /**
-   * Find by submission number optional.
+   * Find all by submission number and file type.
    *
    * @param submissionNumber the submission number
-   * @return the optional
+   * @param fileType         the file type, such as `PEN`
+   * @return the list
    */
-  Optional<PENWebBlobEntity> findBySubmissionNumber(String submissionNumber);
+  List<PENWebBlobEntity> findAllBySubmissionNumberAndFileType(String submissionNumber, String fileType);
+
+  /**
+   * Find all by submission number.
+   *
+   * @param submissionNumber the submission number
+   * @return the list
+   */
+  List<PENWebBlobEntity> findAllBySubmissionNumber(String submissionNumber);
 
   List<PENWebBlobEntity> findAllByMincodeAndInsertDateTimeGreaterThanAndSubmissionNumberNotAndFileTypeAndExtractDateTimeIsNotNull(String mincode, LocalDateTime insertDateTime, String submissionNumber, String fileType);
 }

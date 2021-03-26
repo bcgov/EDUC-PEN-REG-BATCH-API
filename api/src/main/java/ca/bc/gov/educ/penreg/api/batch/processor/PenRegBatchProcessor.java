@@ -15,9 +15,11 @@ import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.NotificationService;
 import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
+import ca.bc.gov.educ.penreg.api.struct.School;
 import com.google.common.base.Stopwatch;
 import lombok.Getter;
 import lombok.NonNull;
@@ -83,6 +85,12 @@ public class PenRegBatchProcessor {
   private final ApplicationProperties applicationProperties;
 
   /**
+   * The Rest utils.
+   */
+  @Getter(PRIVATE)
+  private final RestUtils restUtils;
+
+  /**
    * The Notification service.
    */
   private final NotificationService notificationService;
@@ -112,7 +120,7 @@ public class PenRegBatchProcessor {
    * @param penRequestBatchFileValidator       the pen request batch file validator
    */
   @Autowired
-  public PenRegBatchProcessor(final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService, final ApplicationProperties applicationProperties, final NotificationService notificationService, final PenCoordinatorService penCoordinatorService, final List<DuplicateFileCheckService> duplicateFileCheckServiceList, final PenRequestBatchFileValidator penRequestBatchFileValidator) {
+  public PenRegBatchProcessor(final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService, final ApplicationProperties applicationProperties, final NotificationService notificationService, final PenCoordinatorService penCoordinatorService, final List<DuplicateFileCheckService> duplicateFileCheckServiceList, final PenRequestBatchFileValidator penRequestBatchFileValidator, final RestUtils restUtils) {
     this.penRegBatchStudentRecordsProcessor = penRegBatchStudentRecordsProcessor;
     this.penRequestBatchFileService = penRequestBatchFileService;
     this.applicationProperties = applicationProperties;
@@ -120,6 +128,7 @@ public class PenRegBatchProcessor {
     this.penCoordinatorService = penCoordinatorService;
     this.duplicateFileCheckServiceMap = duplicateFileCheckServiceList.stream().collect(Collectors.toMap(DuplicateFileCheckService::getSchoolGroupCode, Function.identity()));
     this.penRequestBatchFileValidator = penRequestBatchFileValidator;
+    this.restUtils = restUtils;
   }
 
   /**
@@ -197,6 +206,11 @@ public class PenRegBatchProcessor {
   private void processFileUnProcessableException(@NonNull final String guid, @NonNull final PENWebBlobEntity penWebBlobEntity, @NonNull final FileUnProcessableException fileUnProcessableException, final BatchFile batchFile) {
     val notifySchoolForFileFormatErrorsOptional = this.notifySchoolForFileFormatErrors(guid, penWebBlobEntity, fileUnProcessableException);
     final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityForBusinessException(penWebBlobEntity, fileUnProcessableException.getReason(), fileUnProcessableException.getPenRequestBatchStatusCode(), batchFile, fileUnProcessableException.getFileError() == HELD_BACK_FOR_SIZE); // batch file can be processed further and persisted.
+    final Optional<School> school = this.restUtils.getSchoolByMincode(penWebBlobEntity.getMincode());
+    if (school.isPresent()) {
+      entity.setSchoolName(school.get().getSchoolName());
+    }
+    entity.setMincode(penWebBlobEntity.getMincode());
     //wait here if notification was sent, if there was any error this file will be picked up again as it wont be persisted.
     if (notifySchoolForFileFormatErrorsOptional.isPresent()) {
       final boolean isNotified = this.waitForNotificationToCompleteIfPresent(guid, notifySchoolForFileFormatErrorsOptional.get());
@@ -283,6 +297,8 @@ public class PenRegBatchProcessor {
     var counter = 1;
     log.info("going to persist data for batch :: {}", guid);
     final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityLoaded(penWebBlobEntity, batchFile); // batch file can be processed further and persisted.
+    final Optional<School> school = this.restUtils.getSchoolByMincode(penWebBlobEntity.getMincode());
+    school.ifPresent(value -> entity.setSchoolName(value.getSchoolName()));
     for (final var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.
       final var penRequestBatchStudentEntity = mapper.toPenRequestBatchStudentEntity(student, entity);
       penRequestBatchStudentEntity.setRecordNumber(counter++);
@@ -291,18 +307,13 @@ public class PenRegBatchProcessor {
     this.getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
     if (entity.getPenRequestBatchID() != null) { // this could happen when the same submission number is picked up again, system should not process the same submission.
       // the entity was saved in propagation new context , so system needs to get it again from DB to have an attached entity bound to the current thread.
-      final Optional<PenRequestBatchEntity> penRequestBatchEntityOptional = this.getPenRequestBatchFileService().findEntity(entity.getPenRequestBatchID());
-      if (penRequestBatchEntityOptional.isPresent()) {
-        final var noRepeatsEntity = this.getPenRequestBatchFileService().filterDuplicatesAndRepeatRequests(guid, penRequestBatchEntityOptional.get());
-        return noRepeatsEntity.stream()
-            .map(studentSagaDataMapper::toPenReqBatchStudentSagaData)
-            .peek(element -> {
-              element.setMincode(entity.getMincode());
-              element.setPenRequestBatchID(entity.getPenRequestBatchID());
-            }).collect(Collectors.toSet());
-      } else {
-        log.info("system knows it wont happen");
-      }
+      final var studentEntitiesToBeProcessed = this.getPenRequestBatchFileService().filterDuplicatesAndRepeatRequests(guid, entity);
+      return studentEntitiesToBeProcessed.stream()
+          .map(studentSagaDataMapper::toPenReqBatchStudentSagaData)
+          .peek(element -> {
+            element.setMincode(entity.getMincode());
+            element.setPenRequestBatchID(entity.getPenRequestBatchID());
+          }).collect(Collectors.toSet());
     }
     return new HashSet<>();
   }

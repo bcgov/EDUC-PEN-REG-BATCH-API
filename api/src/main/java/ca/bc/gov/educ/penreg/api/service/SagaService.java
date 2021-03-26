@@ -4,6 +4,10 @@ import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
+import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +20,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -129,6 +134,10 @@ public class SagaService {
     return this.getSagaRepository().findAllByPenRequestBatchStudentIDAndSagaNameAndStatusIn(penRequestBatchStudentID, sagaName, statuses);
   }
 
+  public List<Saga> findAllByPenRequestBatchStudentIDInAndStatusIn(final List<UUID> penRequestBatchStudentIDs, final String sagaName, final List<String> statuses) {
+    return this.getSagaRepository().findAllByPenRequestBatchStudentIDInAndSagaNameAndStatusIn(penRequestBatchStudentIDs, sagaName, statuses);
+  }
+
   @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void updateAttachedEntityDuringSagaProcess(final Saga saga) {
@@ -162,5 +171,43 @@ public class SagaService {
         .updateDate(LocalDateTime.now())
         .build();
     return this.createSagaRecord(saga);
+  }
+
+
+  /**
+   * Create saga record in db saga.
+   *
+   * @param sagaName                 the saga name
+   * @param userName                 the user name
+   * @param payload                  the payload
+   * @param penRequestBatchIDs       the list of pen request batch ids
+   * @return the saga
+   */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public List<Saga> createMultipleBatchSagaRecordsInDB(String sagaName, String userName, String payload, List<UUID> penRequestBatchIDs) throws JsonProcessingException {
+    List<Saga> sagas = new ArrayList<>();
+    var updateUser = JsonUtil.getJsonObjectFromString(PenRequestBatchArchiveAndReturnAllSagaData.class, payload).getUpdateUser();
+    penRequestBatchIDs.forEach(penRequestBatchID -> {
+      var newSagaPayload = PenRequestBatchArchiveAndReturnSagaData.builder().penRequestBatchID(penRequestBatchID).build();
+      newSagaPayload.setUpdateUser(updateUser);
+      try {
+        sagas.add(
+          Saga.builder()
+            .payload(JsonUtil.getJsonStringFromObject(newSagaPayload))
+            .penRequestBatchID(penRequestBatchID)
+            .sagaName(sagaName)
+            .status(STARTED.toString())
+            .sagaState(INITIATED.toString())
+            .createDate(LocalDateTime.now())
+            .createUser(userName)
+            .updateUser(userName)
+            .updateDate(LocalDateTime.now())
+            .build());
+      } catch (JsonProcessingException e) {
+        log.error("An unexpected error occurred while trying to parse PenRequestBatchArchiveAndReturnSagaData object into json ", e);
+      }
+    });
+
+    return getSagaRepository().saveAll(sagas);
   }
 }

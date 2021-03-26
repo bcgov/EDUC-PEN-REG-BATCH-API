@@ -63,5 +63,25 @@ public enum EventType {
   /**
    * Pen request batch notify school file format error event type.
    */
-  PEN_REQUEST_BATCH_NOTIFY_SCHOOL_FILE_FORMAT_ERROR
+  PEN_REQUEST_BATCH_NOTIFY_SCHOOL_FILE_FORMAT_ERROR,
+  /**
+   * Pen request batch event update pen request batch event type.
+   */
+  UPDATE_PEN_REQUEST_BATCH,
+  /**
+   * Pen request batch event generate ids report event type.
+   */
+  GENERATE_IDS_REPORT,
+  /**
+   * Get pen coordinator event type.
+   */
+  GET_PEN_COORDINATOR,
+  /**
+   * Notify pen request batch archive has contact event type.
+   */
+  NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT,
+  /**
+   * Notify pen request batch archive has no school contact event type.
+   */
+  NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT
 }

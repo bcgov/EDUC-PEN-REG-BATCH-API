@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.batch.schedulers;
 
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
@@ -56,6 +57,10 @@ public class PenRegBatchSchedulerTest {
    */
   @Autowired
   private PenRequestBatchRepository repository;
+
+
+  @Autowired
+  private PenRequestBatchHistoryRepository penRequestBatchHistoryRepository;
 
   /**
    * The Student repository.
@@ -125,6 +130,8 @@ public class PenRegBatchSchedulerTest {
    */
   @After
   public void tearDown() {
+    this.studentRepository.deleteAll();
+    this.penRequestBatchHistoryRepository.deleteAll();
     this.penWebBlobRepository.deleteAll();
     this.repository.deleteAll();
   }

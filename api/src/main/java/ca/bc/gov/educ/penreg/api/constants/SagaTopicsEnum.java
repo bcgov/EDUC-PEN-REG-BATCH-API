@@ -37,5 +37,10 @@ public enum SagaTopicsEnum {
    * Pen request batch api topic saga topics enum.
    */
   PEN_REQUEST_BATCH_API_TOPIC,
-  PROFILE_REQUEST_EMAIL_API_TOPIC
+  /**
+   * Pen request batch api topic saga topics enum.
+   */
+  PROFILE_REQUEST_EMAIL_API_TOPIC,
+
+  PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_TOPIC
 }

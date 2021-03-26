@@ -76,4 +76,28 @@ public enum EventOutcome {
    * Possible match deleted event outcome.
    */
   POSSIBLE_MATCH_DELETED,
+  /**
+   * Pen request batch updated event outcome.
+   */
+  PEN_REQUEST_BATCH_UPDATED,
+  /**
+   * Pen request batch not found event outcome.
+   */
+  PEN_REQUEST_BATCH_NOT_FOUND,
+  /**
+   * Pen coordinator found outcome
+   */
+  PEN_COORDINATOR_FOUND,
+  /**
+   * Pen coordinator not found outcome
+   */
+  PEN_COORDINATOR_NOT_FOUND,
+  /**
+   * IDS report generated event outcome
+   */
+  IDS_REPORT_GENERATED,
+  /**
+   * Archive email sent event outcome
+   */
+  ARCHIVE_EMAIL_SENT
 }

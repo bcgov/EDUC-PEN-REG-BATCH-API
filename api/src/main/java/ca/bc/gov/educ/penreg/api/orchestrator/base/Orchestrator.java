@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.orchestrator.base;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
@@ -24,6 +25,11 @@ public interface Orchestrator {
    * @throws IOException          the io exception
    */
   Saga startSaga(String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID, String userName) throws InterruptedException, TimeoutException, IOException;
+
+
+  List<Saga> saveMultipleSagas(String payload, List<UUID> penRequestBatchIDs, String userName) throws InterruptedException, TimeoutException, IOException;
+
+  void startMultipleSagas(List<Saga> sagas) throws InterruptedException, TimeoutException, IOException;
 
   /**
    * Gets saga name.

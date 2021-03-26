@@ -67,4 +67,18 @@ public class PenRequestBatchFileValidatorTest {
       assertThat(result.getReason()).isEqualTo(errorMessage);
     }
   }
+
+  @Test
+  public void testValidateFileForHeaderAndTrailer_givenInvalidFileWithDetailRecordAtPosition2_shouldThrowException() throws IOException {
+    try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
+      final File file =
+          new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_wrong_details_record_length_at_position_2.txt")).getFile());
+      final byte[] bFile = Files.readAllBytes(file.toPath());
+      final Optional<Reader> batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(bFile)));
+      final DataSet ds = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get()).setStoreRawDataToDataSet(true).setNullEmptyStrings(true).parse();
+      final String errorMessage = "Detail record 2 is missing characters.";
+      val result = Assertions.assertThrows(FileUnProcessableException.class, () -> this.penRequestBatchFileValidator.validateFileForFormatAndLength(UUID.randomUUID().toString(), ds));
+      assertThat(result.getReason()).isEqualTo(errorMessage);
+    }
+  }
 }

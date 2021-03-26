@@ -3,12 +3,14 @@ package ca.bc.gov.educ.penreg.api.mappers.v1;
 
 import ca.bc.gov.educ.penreg.api.mappers.LocalDateTimeMapper;
 import ca.bc.gov.educ.penreg.api.mappers.UUIDMapper;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchHistory;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchHistorySearch;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 /**
@@ -47,5 +49,9 @@ public interface PenRequestBatchHistoryMapper {
   @InheritInverseConfiguration
   PenRequestBatchHistoryEntity toModel(PenRequestBatch penRequestBatchHistory);
 
-
+  @Mapping(target = "penRequestBatchHistoryId", ignore = true)
+  @Mapping(target = "penRequestBatchEventCode", source = "eventCode")
+  @Mapping(target = "penRequestBatchEntity", source = "entity")
+  @Mapping(target = "eventDate", expression = "java(java.time.LocalDateTime.now())")
+  PenRequestBatchHistoryEntity toModelFromBatch(PenRequestBatchEntity entity, String eventCode);
 }

@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
@@ -15,6 +16,7 @@ import lombok.val;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -163,6 +165,31 @@ public class PenRequestBatchServiceTest {
     assertThat(result.getPenRequestBatchStatList().get(1).getHeldForReviewCount()).isZero();
     assertThat(result.getPenRequestBatchStatList().get(1).getPendingCount()).isEqualTo(7L);
     assertThat(result.getLoadFailCount()).isEqualTo(6L);
+  }
+
+  @Test
+  @Transactional
+  public void testUnArchivedStatus_givenDataInDB_shouldBeUpdatedToReArchivedStatus() throws IOException {
+    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+            "mock_pen_req_batch_student_ids.json", 1);
+
+    assertThat(this.batchList).isNotEmpty();
+    Optional<PenRequestBatchEntity> prbFileOptional = this.prbRepository.findById(this.batchList.get(0).getPenRequestBatchID());
+    assertThat(prbFileOptional.isPresent()).isTrue();
+    prbFileOptional.get().setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.UNARCHIVED.getCode());
+    this.prbRepository.saveAndFlush(prbFileOptional.get());
+
+    Optional<PenRequestBatchEntity> prbFileDBOptional = this.prbRepository.findById(this.batchList.get(0).getPenRequestBatchID());
+    assertThat(prbFileDBOptional.isPresent()).isTrue();
+    assertThat(prbFileDBOptional.get().getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.UNARCHIVED.getCode());
+
+    PenRequestBatchEntity requestPrbFile = new PenRequestBatchEntity();
+    BeanUtils.copyProperties(prbFileDBOptional.get(), requestPrbFile);
+    requestPrbFile.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ARCHIVED.getCode());
+    this.prbService.updatePenRequestBatch(requestPrbFile, prbFileDBOptional.get().getPenRequestBatchID());
+
+    PenRequestBatchEntity returnedPrbFile = this.prbRepository.getOne(prbFileDBOptional.get().getPenRequestBatchID());
+    assertThat(returnedPrbFile.getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.REARCHIVED.getCode());
   }
 
 }

@@ -62,7 +62,6 @@ public interface PenRequestBatchFileMapper {
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(penWebBlobEntity.getFileName() ))", target = "fileName")
   @Mapping(source = "penWebBlobEntity.studentCount", target = "sourceStudentCount")
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileHeader().getMincode() ))", target = "mincode")
-  @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileHeader().getSchoolName() ))", target = "schoolName")
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileHeader().getEmailID() ))", target = "email")
   @Mapping(expression = "java( org.apache.commons.lang3.StringUtils.trim(file.getBatchFileHeader().getContactName() ))", target = "contactName")
   @Mapping(source = "file.batchFileHeader.officeNumber", target = "officeNumber")

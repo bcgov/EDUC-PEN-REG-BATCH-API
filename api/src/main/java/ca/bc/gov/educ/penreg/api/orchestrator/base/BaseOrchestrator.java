@@ -489,6 +489,40 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
   }
 
   /**
+   * Start to execute sagas
+   *
+   * @param payload                  the event payload
+   * @param penRequestBatchIDs       the pen request batch ids
+   * @param userName                 the user who created the saga
+   * @return saga record
+   * @throws IOException          the io exception
+   */
+  @Transactional
+  public List<Saga> saveMultipleSagas(@NotNull String payload, List<UUID> penRequestBatchIDs, String userName) throws IOException {
+    return getSagaService().createMultipleBatchSagaRecordsInDB(getSagaName(), userName, payload, penRequestBatchIDs);
+  }
+
+  @Async("subscriberExecutor")
+  @Transactional
+  public void startMultipleSagas(List<Saga> sagas) {
+    for(Saga saga : sagas) {
+      try {
+        handleEvent(Event.builder()
+                .eventType(EventType.INITIATED)
+                .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+                .sagaId(saga.getSagaId())
+                .eventPayload(saga.getPayload())
+                .build());
+      } catch (InterruptedException e) {
+        log.error("There was an unexpected exception attempting to start multiple sagas", e);
+        Thread.currentThread().interrupt();
+      } catch (IOException | TimeoutException e) {
+        log.error("There was an unexpected exception attempting to start multiple sagas", e);
+      }
+    }
+  }
+
+  /**
    * DONT DO ANYTHING the message was broad-casted for the frontend listeners, that a saga process has initiated, completed.
    *
    * @param event the event object received from queue.
