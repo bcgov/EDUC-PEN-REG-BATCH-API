@@ -392,7 +392,7 @@ public class PenRequestBatchService {
     String applicationKey = applicationKeyMap.get(localID);
 
     body.append("SRM")
-            .append(StringUtils.leftPad(penRequestBatchStudentEntity.getLocalID(), 12, "0"))
+            .append(String.format("%-12.12s", print(localID)))
             .append(String.format("%-10.10s", print(penRequestBatchStudentEntity.getSubmittedPen())))
             .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getLegalLastName())))
             .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getLegalFirstName())))
