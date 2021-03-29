@@ -308,8 +308,12 @@ public class PenRequestBatchService {
     long repeatCount = 0;
     for (val result : results) {
       if (result != null) {
-        fixableCount += result.getFixableCount();
-        repeatCount += result.getRepeatCount();
+        if (result.getFixableCount() != null) {
+          fixableCount += result.getFixableCount();
+        }
+        if (result.getRepeatCount() != null) {
+          repeatCount += result.getRepeatCount();
+        }
       }
     }
     builder.fixableCount(fixableCount);
