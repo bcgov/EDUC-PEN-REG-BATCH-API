@@ -38,7 +38,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.ARCHIVED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REARCHIVED;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -167,9 +166,9 @@ public class PenRequestBatchService {
   public PenRequestBatchEntity updatePenRequestBatch(final PenRequestBatchEntity penRequestBatchEntity, final UUID penRequestBatchID) {
     final var penRequestBatchEntityOptional = this.getRepository().findById(penRequestBatchID);
     return penRequestBatchEntityOptional.map(penRequestBatchEntityDB -> {
-      checkAndPopulateStatusCode(penRequestBatchEntity, penRequestBatchEntityDB);
+      this.checkAndPopulateStatusCode(penRequestBatchEntity, penRequestBatchEntityDB);
       BeanUtils.copyProperties(penRequestBatchEntity, penRequestBatchEntityDB,
-              "penRequestBatchStudentEntities", "penRequestBatchHistoryEntities", "createUser", "createDate");
+          "penRequestBatchStudentEntities", "penRequestBatchHistoryEntities", "createUser", "createDate");
       penRequestBatchEntityDB.setPenRequestBatchID(penRequestBatchID);
       final PenRequestBatchHistoryEntity penRequestBatchHistory = historyMapper.toModelFromBatch(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
       penRequestBatchEntityDB.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
@@ -308,8 +307,10 @@ public class PenRequestBatchService {
     long fixableCount = 0;
     long repeatCount = 0;
     for (val result : results) {
-      fixableCount += result.getFixableCount();
-      repeatCount += result.getRepeatCount();
+      if (result != null) {
+        fixableCount += result.getFixableCount();
+        repeatCount += result.getRepeatCount();
+      }
     }
     builder.fixableCount(fixableCount);
     builder.repeatCount(repeatCount);
@@ -317,10 +318,10 @@ public class PenRequestBatchService {
     return builder.build();
   }
 
-  private void checkAndPopulateStatusCode(PenRequestBatchEntity requestPrbEntity, PenRequestBatchEntity currentPrbEntity) {
-    if ( StringUtils.equals(requestPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.ARCHIVED.getCode())
+  private void checkAndPopulateStatusCode(final PenRequestBatchEntity requestPrbEntity, final PenRequestBatchEntity currentPrbEntity) {
+    if (StringUtils.equals(requestPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.ARCHIVED.getCode())
         && (StringUtils.equals(currentPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED.getCode())
-          || StringUtils.equals(currentPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode())) ) {
+        || StringUtils.equals(currentPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode()))) {
       requestPrbEntity.setPenRequestBatchStatusCode(REARCHIVED.getCode());
     }
   }
