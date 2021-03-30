@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
+import ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -82,36 +83,23 @@ public class PenRequestBatchServiceTest {
           " \"updateUser\": \"test\"}"
   };
 
+  private static final String mockMincode = "{\n" +
+          "    \"districtNumber\": 102,\n" +
+          "    \"schoolNumber\": 10518\n" +
+          "  }";
+
+  private static final String mockCoordinator = "{\n" +
+          "    \"mincode\":" +  mockMincode + ",\n" +
+          "    \"penCoordinatorName\": \"Jenni Hamberston\",\n" +
+          "    \"penCoordinatorEmail\": \"jhamberston0@va.gov\",\n" +
+          "    \"penCoordinatorFax\": \"780-308-6528\",\n" +
+          "    \"sendPenResultsVia\": \"E\"\n" +
+          "  }";
+
   @After
   public void after() {
     this.prbStudentRepository.deleteAll();
     this.prbRepository.deleteAll();
-  }
-
-  @Test
-  @Transactional
-  public void testCreateIDSFile_givenBatchFileHasCorrectStudents_shouldCreateIDSFile() throws IOException {
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
-        "mock_pen_req_batch_student_ids.json", 1);
-    when(this.restUtils.getStudentByPEN("123456789")).thenReturn(Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[0])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[1])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[2])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[3])));
-
-    final var penWebBlob = this.prbService.createIDSFile(this.batchList.get(0));
-
-    assertThat(penWebBlob).isNotNull();
-//    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
-//    assertThat(penRequestBatch.get().getFixableCount()).isZero();
-  }
-
-  @Test
-  @Transactional
-  public void testCreateIDSFile_givenBatchFileHasBadStudents_shouldReturnNull() throws IOException {
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
-        "mock_pen_req_batch_student_ids_null.json", 1);
-    final var penWebBlob = this.prbService.createIDSFile(this.batchList.get(0));
-
-    assertThat(penWebBlob).isNull();
-//    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
-//    assertThat(penRequestBatch.get().getFixableCount()).isZero();
   }
 
   @Test
