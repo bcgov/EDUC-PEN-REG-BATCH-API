@@ -54,6 +54,9 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
     private final PenRequestBatchService penRequestBatchService;
 
     @Getter(PRIVATE)
+    private final ResponseFileGeneratorService responseFileGeneratorService;
+
+    @Getter(PRIVATE)
     private final PenCoordinatorService penCoordinatorService;
 
     @Getter(PRIVATE)
@@ -75,12 +78,14 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
     public PenRequestBatchArchiveAndReturnOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
                                                        PenRequestBatchService penRequestBatchService,
                                                        PenCoordinatorService penCoordinatorService,
-                                                       NotificationProperties notificationProperties) {
+                                                       NotificationProperties notificationProperties,
+                                                       ResponseFileGeneratorService responseFileGeneratorService) {
         super(sagaService, messagePublisher, PenRequestBatchArchiveAndReturnSagaData.class,
                 PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString(), PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_TOPIC.toString());
         this.penRequestBatchService = penRequestBatchService;
         this.penCoordinatorService = penCoordinatorService;
         this.notificationProperties = notificationProperties;
+        this.responseFileGeneratorService = responseFileGeneratorService;
     }
 
     /**
@@ -150,7 +155,7 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
         saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnSagaData)); // save the updated payload to DB...
         this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
-        getPenRequestBatchService().createIDSFile(mapper.toModel(JsonUtil.getJsonObjectFromString(PenRequestBatch.class, event.getEventPayload())));
+        getResponseFileGeneratorService().createIDSFile(mapper.toModel(JsonUtil.getJsonObjectFromString(PenRequestBatch.class, event.getEventPayload())));
 
         Event nextEvent = Event.builder().sagaId(saga.getSagaId())
                 .eventType(EventType.GENERATE_IDS_REPORT)

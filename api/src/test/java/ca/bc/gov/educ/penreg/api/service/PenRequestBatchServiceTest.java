@@ -49,8 +49,6 @@ public class PenRequestBatchServiceTest {
   private PenRequestBatchStudentRepository prbStudentRepository;
   @MockBean
   RestUtils restUtils;
-  @MockBean
-  private PenCoordinatorService penCoordinatorService;
 
   private List<PenRequestBatchEntity> batchList;
 
@@ -102,49 +100,6 @@ public class PenRequestBatchServiceTest {
   public void after() {
     this.prbStudentRepository.deleteAll();
     this.prbRepository.deleteAll();
-  }
-
-  @Test
-  @Transactional
-  public void testCreateIDSFile_givenBatchFileHasCorrectStudents_shouldCreateIDSFile() throws IOException {
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
-        "mock_pen_req_batch_student_ids.json", 1);
-    when(this.restUtils.getStudentByPEN("123456789")).thenReturn(Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[0])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[1])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[2])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[3])));
-
-    final var penWebBlob = this.prbService.createIDSFile(this.batchList.get(0));
-
-    assertThat(penWebBlob).isNotNull();
-//    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
-//    assertThat(penRequestBatch.get().getFixableCount()).isZero();
-  }
-
-  @Test
-  @Transactional
-  public void testCreateIDSFile_givenBatchFileHasBadStudents_shouldReturnNull() throws IOException {
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
-        "mock_pen_req_batch_student_ids_null.json", 1);
-    final var penWebBlob = this.prbService.createIDSFile(this.batchList.get(0));
-
-    assertThat(penWebBlob).isNull();
-//    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
-//    assertThat(penRequestBatch.get().getFixableCount()).isZero();
-  }
-
-  @Test
-  @Transactional
-  public void testCreateTxtFile_givenBatchFileHasErrorStudents_shouldCreateTxtFile() throws IOException {
-      this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_txt.json",
-            "mock_pen_req_batch_student_txt.json", 1);
-    when(this.penCoordinatorService.getPenCoordinatorByMinCode("10210518")).thenReturn(Optional.of(JsonUtil.getJsonObjectFromString(PenCoordinator.class, mockCoordinator)));
-
-    final var penWebBlob = this.prbService.createTxtFile(this.batchList.get(0));
-    assertThat(penWebBlob).isNotNull();
-
-    final var penWebBlobsDB = this.prbService.findPenWebBlobBySubmissionNumberAndFileType(penWebBlob.getSubmissionNumber(), "TXT");
-    assertThat(penWebBlobsDB.isEmpty()).isFalse();
-    assertThat(penWebBlobsDB.get(0).getPenWebBlobId()).isEqualTo(penWebBlob.getPenWebBlobId());
-    assertThat(penWebBlobsDB.get(0).getFileName()).isEqualTo(penWebBlob.getMincode() + ".TXT");
-    assertThat(penWebBlobsDB.get(0).getFileContents().length > 0).isTrue();
   }
 
   @Test
