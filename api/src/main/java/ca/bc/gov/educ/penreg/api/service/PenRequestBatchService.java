@@ -38,7 +38,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.ARCHIVED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REARCHIVED;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -254,8 +253,7 @@ public class PenRequestBatchService {
    * @param penRequestBatchEntity the pen request batch entity
    * @return the pen web blob entity
    */
-  @Transactional(propagation = Propagation.MANDATORY)
-  public PENWebBlobEntity createIDSFile(final PenRequestBatchEntity penRequestBatchEntity) {
+  public PENWebBlobEntity getIDSBlob(final PenRequestBatchEntity penRequestBatchEntity) {
     final var penRequestBatchStudentEntities = this.getPenRequestBatchStudentRepository().findAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIsInAndLocalIDNotNull(penRequestBatchEntity, Arrays.asList(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), PenRequestBatchStudentStatusCodes.USR_NEW_PEN.getCode(), PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode(), PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode()));
 
     if (penRequestBatchStudentEntities.isEmpty()) {
@@ -266,19 +264,38 @@ public class PenRequestBatchService {
 
     for (final PenRequestBatchStudentEntity entity : penRequestBatchStudentEntities) {
       final var student = this.getRestUtils().getStudentByPEN(entity.getAssignedPEN());
-      if (student.isPresent()) {
-//        Uncomment and update this logic once trueNumber is added to student table
-//        if(student.get().getTrueNumber()) {
-//          student = getRestUtils().getStudentByStudentID(student.get().getTrueNumber());
-//        }
-//        if(student.isPresent()) {
-        idsFile.append("E03").append(student.get().getMincode()).append(String.format("%-12s", student.get().getLocalID()).replace(' ', '0')).append(student.get().getPen()).append(" ").append(student.get().getLegalLastName()).append("\n");
-//        }
-      }
+      student.ifPresent(value -> idsFile.append("E03").append(value.getMincode()).append(String.format("%-12s", value.getLocalID()).replace(' ', '0')).append(value.getPen()).append(" ").append(value.getLegalLastName()).append("\n"));
     }
     final byte[] bFile = idsFile.toString().getBytes();
 
-    return this.getPenWebBlobRepository().save(PENWebBlobEntity.builder().mincode(penRequestBatchEntity.getMincode()).sourceApplication("PENWEB").fileName(penRequestBatchEntity.getMincode() + ".IDS").fileType("IDS").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(penRequestBatchEntity.getSubmissionNumber()).build());
+    return PENWebBlobEntity.builder()
+            .mincode(penRequestBatchEntity.getMincode())
+            .sourceApplication("PENWEB")
+            .fileName(penRequestBatchEntity.getMincode() + ".IDS")
+            .fileType("IDS")
+            .fileContents(bFile)
+            .insertDateTime(LocalDateTime.now())
+            .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
+            .build();
+  }
+  public PENWebBlobEntity getPDFBlob(String pdfReport, PenRequestBatchEntity penRequestBatchEntity) {
+    return PENWebBlobEntity.builder()
+            .mincode(penRequestBatchEntity.getMincode())
+            .sourceApplication("PENWEB")
+            .fileName(penRequestBatchEntity.getMincode() + ".PDF")
+            .fileType("PDF")
+            .fileContents(pdfReport.getBytes())
+            .insertDateTime(LocalDateTime.now())
+            .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
+            .build();
+  }
+  @Transactional(propagation = Propagation.MANDATORY)
+  public List<PENWebBlobEntity> saveReports(final String pdfReport, PenRequestBatchEntity penRequestBatchEntity) {
+    return this.getPenWebBlobRepository().saveAll(
+            Arrays.asList(
+                    this.getPDFBlob(pdfReport, penRequestBatchEntity),
+                    this.getIDSBlob(penRequestBatchEntity))
+    );
   }
 
   @Transactional(propagation = Propagation.SUPPORTS)
