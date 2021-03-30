@@ -123,16 +123,19 @@ FLB_CONFIG="[SERVICE]
 SOFT_DELETED_RETENTION_DAYS=365
 if [ "$envValue" = "tools" ]; then
   PEN_COORDINATOR_EMAIL=omprakashmishra7234@gmail.com
+  SOFT_DELETED_RETENTION_DAYS=20
 fi
 
 if [ "$envValue" = "dev" ]; then
   PEN_COORDINATOR_EMAIL=Gurvinder.J.Bhatia@gov.bc.ca
+  SOFT_DELETED_RETENTION_DAYS=2
 fi
 
 if [ "$envValue" = "test" ]; then
   PEN_COORDINATOR_EMAIL=Gurvinder.J.Bhatia@gov.bc.ca
   SOFT_DELETED_RETENTION_DAYS=2
 fi
+
 if [ "$envValue" = "prod" ]; then
   PEN_COORDINATOR_EMAIL=pens.coordinator@gov.bc.ca
 fi
