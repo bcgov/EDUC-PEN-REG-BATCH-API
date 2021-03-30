@@ -6,7 +6,7 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchReportData;
+import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;

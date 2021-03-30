@@ -4,6 +4,9 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.StudentDemogCode;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
+import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
+import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportListItem;
+import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportUserMatchedListItem;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;

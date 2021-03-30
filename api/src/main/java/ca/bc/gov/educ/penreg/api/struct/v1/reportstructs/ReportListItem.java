@@ -1,4 +1,4 @@
-package ca.bc.gov.educ.penreg.api.struct.v1;
+package ca.bc.gov.educ.penreg.api.struct.v1.reportstructs;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

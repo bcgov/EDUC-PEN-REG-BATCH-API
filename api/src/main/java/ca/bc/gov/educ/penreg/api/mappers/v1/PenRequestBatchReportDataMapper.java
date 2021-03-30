@@ -1,7 +1,7 @@
 package ca.bc.gov.educ.penreg.api.mappers.v1;
 
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchReportData;
+import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

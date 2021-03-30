@@ -2,8 +2,8 @@ package ca.bc.gov.educ.penreg.api.mappers.v1;
 
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
-import ca.bc.gov.educ.penreg.api.struct.v1.ReportListItem;
-import ca.bc.gov.educ.penreg.api.struct.v1.ReportUserMatchedListItem;
+import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportListItem;
+import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportUserMatchedListItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
