@@ -66,12 +66,6 @@ public class PenRequestBatchService {
   private final PenRequestBatchStudentRepository penRequestBatchStudentRepository;
 
   /**
-   * the pen coordinator service
-   */
-  @Getter(PRIVATE)
-  private final PenCoordinatorService penCoordinatorService;
-
-  /**
    * The Rest utils.
    */
   @Getter(PRIVATE)
@@ -84,11 +78,10 @@ public class PenRequestBatchService {
    * @param penWebBlobRepository the pen web blob repository
    */
   @Autowired
-  public PenRequestBatchService(final PenRequestBatchRepository repository, final PenWebBlobRepository penWebBlobRepository, PenRequestBatchStudentRepository penRequestBatchStudentRepository, final PenCoordinatorService penCoordinatorService, final RestUtils restUtils) {
+  public PenRequestBatchService(final PenRequestBatchRepository repository, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils) {
     this.repository = repository;
     this.penWebBlobRepository = penWebBlobRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
-    this.penCoordinatorService = penCoordinatorService;
     this.restUtils = restUtils;
   }
 

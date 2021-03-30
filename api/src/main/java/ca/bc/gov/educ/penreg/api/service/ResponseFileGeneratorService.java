@@ -66,7 +66,7 @@ public class ResponseFileGeneratorService {
   private final RestUtils restUtils;
 
   @Autowired
-  public ResponseFileGeneratorService(final PenRequestBatchService prbBatchService, final PenCoordinatorService penCoordinatorService, final PenWebBlobRepository penWebBlobRepository, PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils) {
+  public ResponseFileGeneratorService(final PenRequestBatchService prbBatchService, final PenCoordinatorService penCoordinatorService, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils) {
     this.prbBatchService = prbBatchService;
     this.penCoordinatorService = penCoordinatorService;
     this.penWebBlobRepository = penWebBlobRepository;
@@ -90,15 +90,15 @@ public class ResponseFileGeneratorService {
     final StringBuilder idsFile = new StringBuilder();
 
     for (final PenRequestBatchStudentEntity entity : penRequestBatchStudentEntities) {
-      final var student = this.getRestUtils().getStudentByPEN(entity.getAssignedPEN());
-      if (student.isPresent()) {
-//        Uncomment and update this logic once trueNumber is added to student table
-//        if(student.get().getTrueNumber()) {
-//          student = getRestUtils().getStudentByStudentID(student.get().getTrueNumber());
-//        }
-//        if(student.isPresent()) {
-        idsFile.append("E03").append(student.get().getMincode()).append(String.format("%-12s", student.get().getLocalID()).replace(' ', '0')).append(student.get().getPen()).append(" ").append(student.get().getLegalLastName()).append("\n");
-//        }
+      final var studentOptional = this.getRestUtils().getStudentByPEN(entity.getAssignedPEN());
+      if (studentOptional.isPresent()) {
+        var student = studentOptional.get();
+        if(student.getTrueStudentID() != null) {
+          student = getRestUtils().getStudentByStudentID(student.getTrueStudentID());
+        }
+        if(student != null) {
+          idsFile.append("E03").append(student.getMincode()).append(String.format("%-12s", student.getLocalID()).replace(' ', '0')).append(student.getPen()).append(" ").append(student.getLegalLastName()).append("\n");
+        }
       }
     }
     final byte[] bFile = idsFile.toString().getBytes();
