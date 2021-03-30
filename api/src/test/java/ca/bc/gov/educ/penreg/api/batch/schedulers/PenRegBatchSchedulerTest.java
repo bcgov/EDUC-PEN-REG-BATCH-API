@@ -163,7 +163,7 @@ public class PenRegBatchSchedulerTest {
   private void waitForAsyncToFinishPenReqBatchStatusDuplicate() throws InterruptedException {
     int i = 0;
     while (true) {
-      if (i >= 200) {
+      if (i >= 2000) {
         break; // break out after trying for 10 seconds.
       }
       val duplicateRecord = this.repository.findByPenRequestBatchStatusCode(DUPLICATE.toString());
@@ -178,7 +178,7 @@ public class PenRegBatchSchedulerTest {
   private void waitForAsyncToFinish() throws InterruptedException {
     int i = 0;
     while (true) {
-      if (i >= 100) {
+      if (i >= 1000) {
         break; // break out after trying for 5 seconds.
       }
       val isStudentRecordPresent = this.studentRepository.findAll().isEmpty();
