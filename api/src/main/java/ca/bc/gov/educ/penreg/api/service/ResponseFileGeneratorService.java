@@ -36,7 +36,7 @@ import static lombok.AccessLevel.PRIVATE;
 public class ResponseFileGeneratorService {
 
   /**
-   * the pen coordinator service
+   * the pen batch service
    */
   @Getter(PRIVATE)
   private final PenRequestBatchService prbBatchService;
