@@ -50,6 +50,9 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
     private final PenRequestBatchService penRequestBatchService;
 
     @Getter(PRIVATE)
+    private final ResponseFileGeneratorService responseFileGeneratorService;
+
+    @Getter(PRIVATE)
     private final PenCoordinatorService penCoordinatorService;
 
     @Getter(PRIVATE)
@@ -76,12 +79,14 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
     public PenRequestBatchArchiveAndReturnOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
                                                        PenRequestBatchService penRequestBatchService,
                                                        PenCoordinatorService penCoordinatorService,
-                                                       PenCoordinatorProperties penCoordinatorProperties) {
+                                                       PenCoordinatorProperties penCoordinatorProperties,
+                                                       ResponseFileGeneratorService responseFileGeneratorService) {
         super(sagaService, messagePublisher, PenRequestBatchArchiveAndReturnSagaData.class,
                 PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString(), PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_TOPIC.toString());
         this.penRequestBatchService = penRequestBatchService;
         this.penCoordinatorService = penCoordinatorService;
         this.penCoordinatorProperties = penCoordinatorProperties;
+        this.responseFileGeneratorService = responseFileGeneratorService;
     }
 
     /**

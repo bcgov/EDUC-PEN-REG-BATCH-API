@@ -1,0 +1,32 @@
+[
+  {
+    "submissionNumber": "T-534095",
+    "penRequestBatchStatusCode": "LOADED",
+    "penRequestBatchStatusReason": null,
+    "penRequestBatchTypeCode": "SCHOOL",
+    "fileName": "sample_1_PSI_OK",
+    "fileType": "txt",
+    "insertDate": "2020-08-04T12:19:29",
+    "extractDate": "2020-08-04T12:19:29",
+    "processDate": null,
+    "sourceApplication": "TSW",
+    "ministryPRBSourceCode": "TSWPENWEB",
+    "mincode": "66510518",
+    "schoolName": "Braefoot Elementary",
+    "contactName": "School Contact",
+    "email": "kleahy@sd61.bc.ca",
+    "officeNumber": null,
+    "sourceStudentCount": null,
+    "studentCount": 1,
+    "sisVendorName": "Vendor Name",
+    "sisProductName": "Product Name",
+    "sisProductID": "Product ID",
+    "matchedCount": null,
+    "newPenCount": null,
+    "errorCount": null,
+    "repeatCount": null,
+    "fixableCount": null,
+    "schoolGroupCode": "PSI",
+    "penRequestBatchProcessTypeCode": "FLAT_FILE"
+  }
+]

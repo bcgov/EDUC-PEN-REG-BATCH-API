@@ -2,13 +2,11 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
@@ -33,7 +31,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -166,9 +163,9 @@ public class PenRequestBatchService {
   public PenRequestBatchEntity updatePenRequestBatch(final PenRequestBatchEntity penRequestBatchEntity, final UUID penRequestBatchID) {
     final var penRequestBatchEntityOptional = this.getRepository().findById(penRequestBatchID);
     return penRequestBatchEntityOptional.map(penRequestBatchEntityDB -> {
-      checkAndPopulateStatusCode(penRequestBatchEntity, penRequestBatchEntityDB);
+      this.checkAndPopulateStatusCode(penRequestBatchEntity, penRequestBatchEntityDB);
       BeanUtils.copyProperties(penRequestBatchEntity, penRequestBatchEntityDB,
-              "penRequestBatchStudentEntities", "penRequestBatchHistoryEntities", "createUser", "createDate");
+          "penRequestBatchStudentEntities", "penRequestBatchHistoryEntities", "createUser", "createDate");
       penRequestBatchEntityDB.setPenRequestBatchID(penRequestBatchID);
       final PenRequestBatchHistoryEntity penRequestBatchHistory = historyMapper.toModelFromBatch(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
       penRequestBatchEntityDB.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
@@ -325,8 +322,14 @@ public class PenRequestBatchService {
     long fixableCount = 0;
     long repeatCount = 0;
     for (val result : results) {
-      fixableCount += result.getFixableCount();
-      repeatCount += result.getRepeatCount();
+      if (result != null) {
+        if (result.getFixableCount() != null) {
+          fixableCount += result.getFixableCount();
+        }
+        if (result.getRepeatCount() != null) {
+          repeatCount += result.getRepeatCount();
+        }
+      }
     }
     builder.fixableCount(fixableCount);
     builder.repeatCount(repeatCount);
@@ -334,10 +337,10 @@ public class PenRequestBatchService {
     return builder.build();
   }
 
-  private void checkAndPopulateStatusCode(PenRequestBatchEntity requestPrbEntity, PenRequestBatchEntity currentPrbEntity) {
-    if ( StringUtils.equals(requestPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.ARCHIVED.getCode())
+  private void checkAndPopulateStatusCode(final PenRequestBatchEntity requestPrbEntity, final PenRequestBatchEntity currentPrbEntity) {
+    if (StringUtils.equals(requestPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.ARCHIVED.getCode())
         && (StringUtils.equals(currentPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED.getCode())
-          || StringUtils.equals(currentPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode())) ) {
+        || StringUtils.equals(currentPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode()))) {
       requestPrbEntity.setPenRequestBatchStatusCode(REARCHIVED.getCode());
     }
   }

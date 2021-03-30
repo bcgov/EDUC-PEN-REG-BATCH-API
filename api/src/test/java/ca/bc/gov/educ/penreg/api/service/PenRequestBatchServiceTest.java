@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
+import ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -82,6 +83,19 @@ public class PenRequestBatchServiceTest {
           " \"updateUser\": \"test\"}"
   };
 
+  private static final String mockMincode = "{\n" +
+          "    \"districtNumber\": 102,\n" +
+          "    \"schoolNumber\": 10518\n" +
+          "  }";
+
+  private static final String mockCoordinator = "{\n" +
+          "    \"mincode\":" +  mockMincode + ",\n" +
+          "    \"penCoordinatorName\": \"Jenni Hamberston\",\n" +
+          "    \"penCoordinatorEmail\": \"jhamberston0@va.gov\",\n" +
+          "    \"penCoordinatorFax\": \"780-308-6528\",\n" +
+          "    \"sendPenResultsVia\": \"E\"\n" +
+          "  }";
+
   @After
   public void after() {
     this.prbStudentRepository.deleteAll();
@@ -131,11 +145,8 @@ public class PenRequestBatchServiceTest {
     final var penWebBlob = this.prbService.getIDSBlob(this.batchList.get(0));
 
     assertThat(penWebBlob).isNull();
-//    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
-//    assertThat(penRequestBatch.get().getFixableCount()).isZero();
   }
 
-  @Test
   public void testGetStats_givenNoDataInDB_shouldReturnTheCountsAsZero() {
     val result = this.prbService.getStats();
     assertThat(result).isNotNull();
