@@ -14,6 +14,7 @@ import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
 import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
+import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
