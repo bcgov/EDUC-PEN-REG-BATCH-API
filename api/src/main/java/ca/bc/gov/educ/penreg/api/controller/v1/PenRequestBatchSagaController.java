@@ -13,6 +13,7 @@ import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.ArchiveAndReturnSagaResponse;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.Saga;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import lombok.Getter;
@@ -101,7 +102,8 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
   }
 
   private ResponseEntity<List<ArchiveAndReturnSagaResponse>> processBatchRequest(SagaEnum sagaName, PenRequestBatchArchiveAndReturnAllSagaData penRequestBatchArchiveAndReturnAllSagaData) {
-    var penRequestBatchIDs = penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchIDs();
+    var penRequestBatchIDs = penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchArchiveAndReturnSagaData()
+            .stream().map(PenRequestBatchArchiveAndReturnSagaData::getPenRequestBatchID).collect(Collectors.toList());
 
     var sagaInProgress = !this.getSagaService().findAllByPenRequestBatchStudentIDInAndStatusIn(penRequestBatchIDs, sagaName.toString(), this.getStatusesFilter()).isEmpty();
 
@@ -112,7 +114,7 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
       var sagas = this.getOrchestratorMap()
               .get(sagaName.toString())
               .saveMultipleSagas(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnAllSagaData),
-                      penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchIDs(), penRequestBatchArchiveAndReturnAllSagaData.getCreateUser());
+                      penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchArchiveAndReturnSagaData(), penRequestBatchArchiveAndReturnAllSagaData.getCreateUser());
       getOrchestratorMap()
               .get(sagaName.toString())
               .startMultipleSagas(sagas);

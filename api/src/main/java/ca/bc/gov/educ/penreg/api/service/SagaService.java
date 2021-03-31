@@ -180,21 +180,20 @@ public class SagaService {
    * @param sagaName                 the saga name
    * @param userName                 the user name
    * @param payload                  the payload
-   * @param penRequestBatchIDs       the list of pen request batch ids
+   * @param penRequestBatchesSagaData       the list of saga data
    * @return the saga
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public List<Saga> createMultipleBatchSagaRecordsInDB(String sagaName, String userName, String payload, List<UUID> penRequestBatchIDs) throws JsonProcessingException {
+  public List<Saga> createMultipleBatchSagaRecordsInDB(String sagaName, String userName, String payload, List<PenRequestBatchArchiveAndReturnSagaData> penRequestBatchesSagaData) throws JsonProcessingException {
     List<Saga> sagas = new ArrayList<>();
     var updateUser = JsonUtil.getJsonObjectFromString(PenRequestBatchArchiveAndReturnAllSagaData.class, payload).getUpdateUser();
-    penRequestBatchIDs.forEach(penRequestBatchID -> {
-      var newSagaPayload = PenRequestBatchArchiveAndReturnSagaData.builder().penRequestBatchID(penRequestBatchID).build();
-      newSagaPayload.setUpdateUser(updateUser);
+    penRequestBatchesSagaData.forEach(sagaData -> {
+      sagaData.setUpdateUser(updateUser);
       try {
         sagas.add(
           Saga.builder()
-            .payload(JsonUtil.getJsonStringFromObject(newSagaPayload))
-            .penRequestBatchID(penRequestBatchID)
+            .payload(JsonUtil.getJsonStringFromObject(sagaData))
+            .penRequestBatchID(sagaData.getPenRequestBatchID())
             .sagaName(sagaName)
             .status(STARTED.toString())
             .sagaState(INITIATED.toString())

@@ -103,6 +103,50 @@ public class PenRequestBatchServiceTest {
   }
 
   @Test
+  public void testgetIDSBlob_givenBatchFileHasCorrectStudents_shouldCreateIDSBlob() throws IOException {
+    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+        "mock_pen_req_batch_student_ids.json", 1);
+    when(this.restUtils.getStudentByPEN("123456789")).thenReturn(Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[0])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[1])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[2])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[3])));
+
+    final var penWebBlob = this.prbService.getIDSBlob(this.batchList.get(0));
+
+    assertThat(penWebBlob).isNotNull();
+  }
+
+  @Test
+  public void testGetPDFBlob_givenBatchFileHasCorrectData_shouldCreateReportBlob() throws IOException {
+    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+            "mock_pen_req_batch_student_ids.json", 1);
+
+    final var penWebBlob = this.prbService.getPDFBlob("here is a pretend pdf", this.batchList.get(0));
+
+    assertThat(penWebBlob).isNotNull();
+  }
+
+  @Test
+  @Transactional
+  public void testSaveReports_givenBatchFileHasCorrectData_shouldSaveReports() throws IOException {
+    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+            "mock_pen_req_batch_student_ids.json", 1);
+
+    when(this.restUtils.getStudentByPEN("123456789")).thenReturn(Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[0])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[1])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[2])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[3])));
+
+    final var penWebBlob = this.prbService.saveReports("here is a pretend pdf", this.batchList.get(0));
+
+    assertThat(penWebBlob).isNotNull();
+    assertThat(penWebBlob.size()).isEqualTo(2);
+  }
+
+  @Test
+  @Transactional
+  public void testCreateIDSFile_givenBatchFileHasBadStudents_shouldReturnNull() throws IOException {
+    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+        "mock_pen_req_batch_student_ids_null.json", 1);
+    final var penWebBlob = this.prbService.getIDSBlob(this.batchList.get(0));
+
+    assertThat(penWebBlob).isNull();
+  }
+
   public void testGetStats_givenNoDataInDB_shouldReturnTheCountsAsZero() {
     val result = this.prbService.getStats();
     assertThat(result).isNotNull();

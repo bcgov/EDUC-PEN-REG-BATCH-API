@@ -9,6 +9,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.NotificationEvent;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
@@ -498,7 +499,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @throws IOException          the io exception
    */
   @Transactional
-  public List<Saga> saveMultipleSagas(@NotNull String payload, List<UUID> penRequestBatchIDs, String userName) throws IOException {
+  public List<Saga> saveMultipleSagas(@NotNull String payload, List<PenRequestBatchArchiveAndReturnSagaData> penRequestBatchIDs, String userName) throws IOException {
     return getSagaService().createMultipleBatchSagaRecordsInDB(getSagaName(), userName, payload, penRequestBatchIDs);
   }
 

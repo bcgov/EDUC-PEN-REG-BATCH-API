@@ -69,10 +69,6 @@ public enum EventType {
    */
   UPDATE_PEN_REQUEST_BATCH,
   /**
-   * Pen request batch event generate ids report event type.
-   */
-  GENERATE_IDS_REPORT,
-  /**
    * Get pen coordinator event type.
    */
   GET_PEN_COORDINATOR,
@@ -83,5 +79,21 @@ public enum EventType {
   /**
    * Notify pen request batch archive has no school contact event type.
    */
-  NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT
+  NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT,
+  /**
+   * Get matched students event type.
+   */
+  GET_STUDENTS,
+  /**
+   * Generate pdf report event type
+   */
+  GENERATE_PDF_REPORT,
+  /**
+   * Gather report data event type
+   */
+  GATHER_REPORT_DATA,
+  /**
+   * Save pdf report event type
+   */
+  SAVE_REPORTS
 }

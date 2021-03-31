@@ -2,7 +2,7 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.properties.NotificationProperties;
+import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.v1.notification.PenRequestBatchSchoolErrorNotificationEntity;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -27,11 +27,11 @@ import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PROFILE_REQUEST
 public class NotificationService {
 
   private final MessagePublisher messagePublisher;
-  private final NotificationProperties notificationProperties;
+  private final PenCoordinatorProperties penCoordinatorProperties;
 
-  public NotificationService(final MessagePublisher messagePublisher, final NotificationProperties notificationProperties) {
+  public NotificationService(final MessagePublisher messagePublisher, final PenCoordinatorProperties penCoordinatorProperties) {
     this.messagePublisher = messagePublisher;
-    this.notificationProperties = notificationProperties;
+    this.penCoordinatorProperties = penCoordinatorProperties;
   }
 
   public CompletableFuture<Boolean> notifySchoolForLoadFailed(final String guid, final String fileName, final String submissionNumber, final String reason, final String toEmail) {
@@ -43,7 +43,7 @@ public class NotificationService {
       prbErrorNotification.setFileName(fileName);
       prbErrorNotification.setSubmissionNumber(submissionNumber);
       prbErrorNotification.setToEmail(toEmail);
-      prbErrorNotification.setFromEmail(this.notificationProperties.getFromEmail());
+      prbErrorNotification.setFromEmail(this.penCoordinatorProperties.getFromEmail());
       final Event event = Event.builder()
           .eventType(EventType.PEN_REQUEST_BATCH_NOTIFY_SCHOOL_FILE_FORMAT_ERROR)
           .eventPayload(JsonUtil.getJsonStringFromObject(prbErrorNotification))

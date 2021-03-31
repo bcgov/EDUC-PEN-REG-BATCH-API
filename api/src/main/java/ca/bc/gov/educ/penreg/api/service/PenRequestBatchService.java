@@ -2,11 +2,13 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
@@ -31,6 +33,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -242,6 +245,62 @@ public class PenRequestBatchService {
    */
   public Optional<PenRequestBatchEntity> findById(final UUID penRequestBatchID) {
     return this.repository.findById(penRequestBatchID);
+  }
+
+  /**
+   * Create an IDS file for a pen request batch entity
+   *
+   * @param penRequestBatchEntity the pen request batch entity
+   * @return the pen web blob entity
+   */
+  public PENWebBlobEntity getIDSBlob(final PenRequestBatchEntity penRequestBatchEntity) {
+    final var penRequestBatchStudentEntities = this.getPenRequestBatchStudentRepository()
+            .findAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIsInAndLocalIDNotNull(penRequestBatchEntity,
+                    Arrays.asList(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(),
+                            PenRequestBatchStudentStatusCodes.USR_NEW_PEN.getCode(),
+                            PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode(),
+                            PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode()));
+
+    if (penRequestBatchStudentEntities.isEmpty()) {
+      return null;
+    }
+
+    final StringBuilder idsFile = new StringBuilder();
+
+    for (final PenRequestBatchStudentEntity entity : penRequestBatchStudentEntities) {
+      final var student = this.getRestUtils().getStudentByPEN(entity.getAssignedPEN());
+      student.ifPresent(value -> idsFile.append("E03").append(value.getMincode()).append(String.format("%-12s", value.getLocalID()).replace(' ', '0')).append(value.getPen()).append(" ").append(value.getLegalLastName()).append("\n"));
+    }
+    final byte[] bFile = idsFile.toString().getBytes();
+
+    return PENWebBlobEntity.builder()
+            .mincode(penRequestBatchEntity.getMincode())
+            .sourceApplication("PENWEB")
+            .fileName(penRequestBatchEntity.getMincode() + ".IDS")
+            .fileType("IDS")
+            .fileContents(bFile)
+            .insertDateTime(LocalDateTime.now())
+            .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
+            .build();
+  }
+  public PENWebBlobEntity getPDFBlob(String pdfReport, PenRequestBatchEntity penRequestBatchEntity) {
+    return PENWebBlobEntity.builder()
+            .mincode(penRequestBatchEntity.getMincode())
+            .sourceApplication("PENWEB")
+            .fileName(penRequestBatchEntity.getMincode() + ".PDF")
+            .fileType("PDF")
+            .fileContents(pdfReport.getBytes())
+            .insertDateTime(LocalDateTime.now())
+            .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
+            .build();
+  }
+  @Transactional(propagation = Propagation.MANDATORY)
+  public List<PENWebBlobEntity> saveReports(final String pdfReport, PenRequestBatchEntity penRequestBatchEntity) {
+    return this.getPenWebBlobRepository().saveAll(
+            Arrays.asList(
+                    this.getPDFBlob(pdfReport, penRequestBatchEntity),
+                    this.getIDSBlob(penRequestBatchEntity))
+    );
   }
 
   @Transactional(propagation = Propagation.SUPPORTS)
