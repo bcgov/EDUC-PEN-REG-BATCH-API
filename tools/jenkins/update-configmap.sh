@@ -88,6 +88,9 @@ $KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body
 #PEN_REQUEST_BATCH_ARCHIVE_SAGA
 $KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body "{\"description\": \"Start archive and return saga.\",\"id\": \"PEN_REQUEST_BATCH_ARCHIVE_SAGA\",\"name\": \"PEN_REQUEST_BATCH_ARCHIVE_SAGA\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
 
+#PEN_REQUEST_BATCH_REPOST_SAGA
+$KCADM_FILE_BIN_FOLDER/kcadm.sh create client-scopes -r $SOAM_KC_REALM_ID --body "{\"description\": \"Start repost reports saga.\",\"id\": \"PEN_REQUEST_BATCH_REPOST_SAGA\",\"name\": \"PEN_REQUEST_BATCH_REPOST_SAGA\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
+
 ###########################################################
 #Setup for config-map
 ###########################################################

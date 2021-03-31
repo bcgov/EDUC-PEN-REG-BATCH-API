@@ -7,6 +7,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class PenRequestBatchArchiveAndReturnSagaData extends BasePenRequestBatchReturnFilesSagaData {
+public class PenRequestBatchRepostReportsFilesSagaData extends BasePenRequestBatchReturnFilesSagaData {
 
 }

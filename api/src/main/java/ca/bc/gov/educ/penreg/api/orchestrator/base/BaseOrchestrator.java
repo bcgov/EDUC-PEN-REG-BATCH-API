@@ -9,13 +9,13 @@ import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.NotificationEvent;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -492,15 +492,13 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
   /**
    * Start to execute sagas
    *
-   * @param payload                  the event payload
-   * @param penRequestBatchIDs       the pen request batch ids
+   * @param payloads                  the pen request batch ids and the event payloads
    * @param userName                 the user who created the saga
    * @return saga record
-   * @throws IOException          the io exception
    */
   @Transactional
-  public List<Saga> saveMultipleSagas(@NotNull String payload, List<PenRequestBatchArchiveAndReturnSagaData> penRequestBatchIDs, String userName) throws IOException {
-    return getSagaService().createMultipleBatchSagaRecordsInDB(getSagaName(), userName, payload, penRequestBatchIDs);
+  public List<Saga> saveMultipleSagas(@NotNull List<Pair<UUID, String>> payloads, String userName) {
+    return getSagaService().createMultipleBatchSagaRecordsInDB(getSagaName(), userName, payloads);
   }
 
   @Async("subscriberExecutor")

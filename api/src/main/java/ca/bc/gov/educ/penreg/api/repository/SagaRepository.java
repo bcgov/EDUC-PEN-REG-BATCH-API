@@ -51,21 +51,19 @@ public interface SagaRepository extends JpaRepository<Saga, UUID> {
    * Find by pen request batch student id and status
    *
    * @param penRequestBatchStudentID the pen request batch student id
-   * @param sagaName                 the saga name
    * @param statuses                 the statuses
    * @return the list
    */
-  List<Saga> findAllByPenRequestBatchStudentIDAndSagaNameAndStatusIn(UUID penRequestBatchStudentID, String sagaName, List<String> statuses);
+  List<Saga> findAllByPenRequestBatchStudentIDAndStatusIn(UUID penRequestBatchStudentID, List<String> statuses);
 
   /**
-   * Find by pen request batch student ids and statuses
+   * Find by pen request batch ids and statuses
    *
-   * @param penRequestBatchStudentIDs the list pen request batch student ids
-   * @param sagaName                 the saga name
-   * @param statuses                 the statuses
+   * @param penRequestBatchIDs the list pen request batch ids
+   * @param statuses           the statuses
    * @return the list
    */
-  List<Saga> findAllByPenRequestBatchStudentIDInAndSagaNameAndStatusIn(List<UUID> penRequestBatchStudentIDs, String sagaName, List<String> statuses);
+  List<Saga> findAllByPenRequestBatchIDInAndStatusIn(List<UUID> penRequestBatchIDs, List<String> statuses);
 
   List<Saga> findAllByCreateDateBefore(LocalDateTime createDate);
 }
