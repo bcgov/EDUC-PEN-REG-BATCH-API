@@ -8,6 +8,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.After;
@@ -75,6 +76,9 @@ public class PenRegBatchSchedulerTest {
   private PenWebBlobRepository penWebBlobRepository;
 
   @Autowired
+  private PenRequestBatchUtils penRequestBatchUtils;
+
+  @Autowired
   RestUtils restUtils;
 
   /**
@@ -84,6 +88,7 @@ public class PenRegBatchSchedulerTest {
    */
   @Before
   public void setUp() throws Exception {
+    this.penRequestBatchUtils.cleanDB();
     final List<PENWebBlobEntity> entities = this.createPlaceHolderRecords();
     this.penWebBlobRepository.saveAll(entities);
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
