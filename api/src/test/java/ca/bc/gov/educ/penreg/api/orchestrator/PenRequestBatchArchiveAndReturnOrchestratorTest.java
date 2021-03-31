@@ -169,7 +169,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         this.orchestrator.handleEvent(event);
         final var sagaFromDB = this.sagaService.findSagaById(this.saga.get(0).getSagaId());
         assertThat(sagaFromDB).isPresent();
-        assertThat(sagaFromDB.get().getSagaState()).isEqualTo(GENERATE_PDF_REPORT.toString());
+        assertThat(sagaFromDB.get().getSagaState()).isEqualTo(GENERATE_PEN_REQUEST_BATCH_REPORTS.toString());
         final var sagaStates = this.sagaService.findAllSagaStates(sagaFromDB.get());
         assertThat(sagaStates.size()).isEqualTo(4);
         assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
@@ -216,7 +216,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         this.orchestrator.handleEvent(event);
         final var sagaFromDB = this.sagaService.findSagaById(this.saga.get(0).getSagaId());
         assertThat(sagaFromDB).isPresent();
-        assertThat(sagaFromDB.get().getSagaState()).isEqualTo(EventType.GENERATE_PDF_REPORT.toString());
+        assertThat(sagaFromDB.get().getSagaState()).isEqualTo(EventType.GENERATE_PEN_REQUEST_BATCH_REPORTS.toString());
         final var sagaStates = this.sagaService.findAllSagaStates(sagaFromDB.get());
         assertThat(sagaStates.size()).isEqualTo(2);
         assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(GET_STUDENTS.toString());
@@ -243,8 +243,8 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         this.saga.get(0).setPayload(JsonUtil.getJsonStringFromObject(payload));
         this.sagaService.updateAttachedEntityDuringSagaProcess(this.saga.get(0));
         final var event = Event.builder()
-                .eventType(EventType.GENERATE_PDF_REPORT)
-                .eventOutcome(EventOutcome.PDF_REPORT_GENERATED)
+                .eventType(EventType.GENERATE_PEN_REQUEST_BATCH_REPORTS)
+                .eventOutcome(EventOutcome.ARCHIVE_PEN_REQUEST_BATCH_REPORTS_GENERATED)
                 .eventPayload("Heres a pdf report")
                 .sagaId(this.saga.get(0).getSagaId())
                 .build();
@@ -259,8 +259,8 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         assertThat(sagaFromDB.get().getSagaState()).isEqualTo(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT.toString());
         final var sagaStates = this.sagaService.findAllSagaStates(this.saga.get(0));
         assertThat(sagaStates.size()).isEqualTo(2);
-        assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(GENERATE_PDF_REPORT.toString());
-        assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.PDF_REPORT_GENERATED.toString());
+        assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(GENERATE_PEN_REQUEST_BATCH_REPORTS.toString());
+        assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.ARCHIVE_PEN_REQUEST_BATCH_REPORTS_GENERATED.toString());
         assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(EventType.SAVE_REPORTS.toString());
         assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.REPORTS_SAVED.toString());
     }
@@ -281,8 +281,8 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         this.saga.get(0).setPayload(JsonUtil.getJsonStringFromObject(payload));
         this.sagaService.updateAttachedEntityDuringSagaProcess(this.saga.get(0));
         final var event = Event.builder()
-                .eventType(EventType.GENERATE_PDF_REPORT)
-                .eventOutcome(EventOutcome.PDF_REPORT_GENERATED)
+                .eventType(EventType.GENERATE_PEN_REQUEST_BATCH_REPORTS)
+                .eventOutcome(EventOutcome.ARCHIVE_PEN_REQUEST_BATCH_REPORTS_GENERATED)
                 .eventPayload("Heres a pdf report")
                 .sagaId(this.saga.get(0).getSagaId())
                 .build();
@@ -297,8 +297,8 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         assertThat(sagaFromDB.get().getSagaState()).isEqualTo(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT.toString());
         final var sagaStates = this.sagaService.findAllSagaStates(this.saga.get(0));
         assertThat(sagaStates.size()).isEqualTo(2);
-        assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(GENERATE_PDF_REPORT.toString());
-        assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.PDF_REPORT_GENERATED.toString());
+        assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(GENERATE_PEN_REQUEST_BATCH_REPORTS.toString());
+        assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.ARCHIVE_PEN_REQUEST_BATCH_REPORTS_GENERATED.toString());
         assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(EventType.SAVE_REPORTS.toString());
         assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.REPORTS_SAVED.toString());
     }

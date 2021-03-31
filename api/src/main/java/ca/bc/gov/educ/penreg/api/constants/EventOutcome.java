@@ -97,9 +97,9 @@ public enum EventOutcome {
    */
   ARCHIVE_EMAIL_SENT,
   /**
-   * Pdf report generated event outcome
+   * Archive pen request batch reports generated event outcome
    */
-  PDF_REPORT_GENERATED,
+  ARCHIVE_PEN_REQUEST_BATCH_REPORTS_GENERATED,
   /**
    * Students found event outcome
    */

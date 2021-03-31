@@ -85,9 +85,9 @@ public enum EventType {
    */
   GET_STUDENTS,
   /**
-   * Generate pdf report event type
+   * generate pen request batch reports event type
    */
-  GENERATE_PDF_REPORT,
+  GENERATE_PEN_REQUEST_BATCH_REPORTS,
   /**
    * Gather report data event type
    */
