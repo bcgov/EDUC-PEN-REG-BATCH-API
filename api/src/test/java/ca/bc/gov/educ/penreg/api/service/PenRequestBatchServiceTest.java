@@ -88,14 +88,6 @@ public class PenRequestBatchServiceTest {
           "    \"schoolNumber\": 10518\n" +
           "  }";
 
-  private static final String mockCoordinator = "{\n" +
-          "    \"mincode\":" +  mockMincode + ",\n" +
-          "    \"penCoordinatorName\": \"Jenni Hamberston\",\n" +
-          "    \"penCoordinatorEmail\": \"jhamberston0@va.gov\",\n" +
-          "    \"penCoordinatorFax\": \"780-308-6528\",\n" +
-          "    \"sendPenResultsVia\": \"E\"\n" +
-          "  }";
-
   @After
   public void after() {
     this.prbStudentRepository.deleteAll();
