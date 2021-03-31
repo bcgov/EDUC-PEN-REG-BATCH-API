@@ -36,12 +36,6 @@ import static lombok.AccessLevel.PRIVATE;
 public class ResponseFileGeneratorService {
 
   /**
-   * the pen batch service
-   */
-  @Getter(PRIVATE)
-  private final PenRequestBatchService prbBatchService;
-
-  /**
    * the pen coordinator service
    */
   @Getter(PRIVATE)
@@ -66,8 +60,7 @@ public class ResponseFileGeneratorService {
   private final RestUtils restUtils;
 
   @Autowired
-  public ResponseFileGeneratorService(final PenRequestBatchService prbBatchService, final PenCoordinatorService penCoordinatorService, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils) {
-    this.prbBatchService = prbBatchService;
+  public ResponseFileGeneratorService(final PenCoordinatorService penCoordinatorService, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils) {
     this.penCoordinatorService = penCoordinatorService;
     this.penWebBlobRepository = penWebBlobRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
@@ -121,7 +114,7 @@ public class ResponseFileGeneratorService {
     }
 
     // retrieve the original prb file from school
-    List<PENWebBlobEntity> penWebBlobs = prbBatchService.findPenWebBlobBySubmissionNumberAndFileType(penRequestBatchEntity.getSubmissionNumber(), "PEN");
+    List<PENWebBlobEntity> penWebBlobs = this.getPenWebBlobRepository().findAllBySubmissionNumberAndFileType(penRequestBatchEntity.getSubmissionNumber(), "PEN");
     PENWebBlobEntity penWebBlob = penWebBlobs.isEmpty()? null : penWebBlobs.get(0);
 
     Pair<String, Map<String, String>> pair = parseOriginalPenFile(penWebBlob != null? penWebBlob.getFileContents() : null);
@@ -150,7 +143,7 @@ public class ResponseFileGeneratorService {
     final StringBuilder header = new StringBuilder();
     final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
     // retrieved from PEN_COORDINATOR table
-    Optional<PenCoordinator> penCoordinator = penCoordinatorService.getPenCoordinatorByMinCode(penRequestBatchEntity.getMincode());
+    Optional<PenCoordinator> penCoordinator = this.getPenCoordinatorService().getPenCoordinatorByMinCode(penRequestBatchEntity.getMincode());
 
     header.append("FFI")
             .append(String.format("%-8.8s", print(penRequestBatchEntity.getMincode())))
@@ -181,7 +174,6 @@ public class ResponseFileGeneratorService {
 
   private String createBody(final PenRequestBatchStudentEntity penRequestBatchStudentEntity, Map<String,String> applicationKeyMap) {
     final StringBuilder body = new StringBuilder();
-    final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
     String localID = StringUtils.leftPad(penRequestBatchStudentEntity.getLocalID(), 12, "0");
     String applicationKey = applicationKeyMap.get(localID);
@@ -209,7 +201,7 @@ public class ResponseFileGeneratorService {
 
   private Pair<String, Map<String, String>> parseOriginalPenFile(byte[] fileContents) {
     String applicationCode = "";
-    Map<String, String> applicationKeyMap = new HashMap();
+    Map<String, String> applicationKeyMap = new HashMap<>();
 
     if (fileContents == null || fileContents.length == 0) {
       return Pair.of(applicationCode, applicationKeyMap);
@@ -219,7 +211,7 @@ public class ResponseFileGeneratorService {
       InputStreamReader inStreamReader = new InputStreamReader(new ByteArrayInputStream(fileContents));
       BufferedReader reader = new BufferedReader(inStreamReader);
 
-      String line = "";
+      String line;
       while ((line = reader.readLine()) != null) {
         if (line.startsWith("FFI")) {
           applicationCode = line.substring(211,215).trim();
@@ -242,7 +234,7 @@ public class ResponseFileGeneratorService {
 
   private Long print(Long value) {
     if (value == null) {
-      return Long.valueOf(0L);
+      return 0L;
     }
     return value;
   }

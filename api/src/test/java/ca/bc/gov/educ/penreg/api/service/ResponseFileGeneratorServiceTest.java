@@ -107,8 +107,6 @@ public class ResponseFileGeneratorServiceTest {
     final var penWebBlob = this.responseFileGeneratorService.createIDSFile(this.batchList.get(0));
 
     assertThat(penWebBlob).isNotNull();
-//    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
-//    assertThat(penRequestBatch.get().getFixableCount()).isZero();
   }
 
   @Test
