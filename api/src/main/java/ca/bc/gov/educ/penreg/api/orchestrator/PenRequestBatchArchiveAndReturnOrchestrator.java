@@ -14,10 +14,11 @@ import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
 import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
-import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.*;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchivedEmailEvent;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -35,7 +36,8 @@ import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.ARCHIVED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REARCHIVED;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_TOPIC;
 import static lombok.AccessLevel.PRIVATE;
@@ -49,9 +51,6 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
      */
     @Getter(PRIVATE)
     private final PenRequestBatchService penRequestBatchService;
-
-    @Getter(PRIVATE)
-    private final ResponseFileGeneratorService responseFileGeneratorService;
 
     @Getter(PRIVATE)
     private final PenCoordinatorService penCoordinatorService;
@@ -80,14 +79,12 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
     public PenRequestBatchArchiveAndReturnOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
                                                        PenRequestBatchService penRequestBatchService,
                                                        PenCoordinatorService penCoordinatorService,
-                                                       PenCoordinatorProperties penCoordinatorProperties,
-                                                       ResponseFileGeneratorService responseFileGeneratorService) {
+                                                       PenCoordinatorProperties penCoordinatorProperties) {
         super(sagaService, messagePublisher, PenRequestBatchArchiveAndReturnSagaData.class,
                 PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString(), PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_TOPIC.toString());
         this.penRequestBatchService = penRequestBatchService;
         this.penCoordinatorService = penCoordinatorService;
         this.penCoordinatorProperties = penCoordinatorProperties;
-        this.responseFileGeneratorService = responseFileGeneratorService;
     }
 
     /**
