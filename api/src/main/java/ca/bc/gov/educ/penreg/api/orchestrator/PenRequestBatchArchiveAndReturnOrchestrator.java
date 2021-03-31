@@ -99,8 +99,8 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
                 .begin(GATHER_REPORT_DATA, this::gatherReportData)
                 .step(GATHER_REPORT_DATA, REPORT_DATA_GATHERED, GET_STUDENTS, this::getStudents)
                 .step(GET_STUDENTS, STUDENTS_FOUND, UPDATE_PEN_REQUEST_BATCH, this::archivePenRequestBatch)
-                .step(UPDATE_PEN_REQUEST_BATCH, PEN_REQUEST_BATCH_UPDATED, GENERATE_PDF_REPORT, this::generatePDFReport)
-                .step(GENERATE_PDF_REPORT, PDF_REPORT_GENERATED, SAVE_REPORTS, this::saveReports)
+                .step(UPDATE_PEN_REQUEST_BATCH, PEN_REQUEST_BATCH_UPDATED, GENERATE_PEN_REQUEST_BATCH_REPORTS, this::generatePDFReport)
+                .step(GENERATE_PEN_REQUEST_BATCH_REPORTS, ARCHIVE_PEN_REQUEST_BATCH_REPORTS_GENERATED, SAVE_REPORTS, this::saveReports)
                 .step(SAVE_REPORTS, REPORTS_SAVED, this::hasPenCoordinatorEmail, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT, this::sendHasCoordinatorEmail)
                 .step(SAVE_REPORTS, REPORTS_SAVED, this::hasNoPenCoordinatorEmail, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT, this::sendHasNoCoordinatorEmail)
                 .end(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT, ARCHIVE_EMAIL_SENT)
@@ -205,17 +205,17 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
 
     private void generatePDFReport(Event event, Saga saga, PenRequestBatchArchiveAndReturnSagaData penRequestBatchArchiveAndReturnSagaData) throws JsonProcessingException {
         SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
-        saga.setSagaState(GENERATE_PDF_REPORT.toString());
+        saga.setSagaState(GENERATE_PEN_REQUEST_BATCH_REPORTS.toString());
         saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnSagaData)); // save the updated payload to DB...
         this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
         Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-                .eventType(GENERATE_PDF_REPORT)
+                .eventType(GENERATE_PEN_REQUEST_BATCH_REPORTS)
                 .replyTo(this.getTopicToSubscribe())
                 .eventPayload(JsonUtil.getJsonStringFromObject(reportMapper.toReportData(penRequestBatchArchiveAndReturnSagaData)))
                 .build();
         this.postMessageToTopic(SagaTopicsEnum.PEN_REPORT_GENERATION_API_TOPIC.toString(), nextEvent);
-        log.info("message sent to PEN_REPORT_GENERATION_API_TOPIC for {} Event. :: {}", GENERATE_PDF_REPORT.toString(), saga.getSagaId());
+        log.info("message sent to PEN_REPORT_GENERATION_API_TOPIC for {} Event. :: {}", GENERATE_PEN_REQUEST_BATCH_REPORTS.toString(), saga.getSagaId());
     }
 
     private void saveReports(Event event, Saga saga, PenRequestBatchArchiveAndReturnSagaData penRequestBatchArchiveAndReturnSagaData) throws IOException, InterruptedException, TimeoutException {
