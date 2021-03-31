@@ -132,8 +132,8 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
 
 
     @Test
-    public void testHandleEvent_givenBatchInSagaDataExists_shouldGatherReportDataAndBeMarkedREPORT_DATA_GATHERED() throws IOException, InterruptedException, TimeoutException {
-        this.createSaga("19337120", "12345679", LOADED.getCode());
+    public void testHandleEvent_givenBatchInSagaDataExistsAndUsrMtchStudent_shouldGatherReportDataAndBeMarkedREPORT_DATA_GATHERED() throws IOException, InterruptedException, TimeoutException {
+        this.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode());
         final var event = Event.builder()
                 .eventType(EventType.INITIATED)
                 .eventOutcome(EventOutcome.INITIATE_SUCCESS)
@@ -156,6 +156,38 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         assertThat(payload.getMailingAddress()).isNotEmpty();
         assertThat(payload.getPenCordinatorEmail()).isNotEmpty();
         assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
+    }
+
+    @Test
+    public void testHandleEvent_givenBatchInSagaDataExistsNoMtchStud_shouldGatherReportDataAndBeMarkedGENERATE_PDF_REPORT() throws IOException, InterruptedException, TimeoutException {
+        this.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode());
+        final var event = Event.builder()
+                .eventType(EventType.INITIATED)
+                .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+                .sagaId(this.saga.get(0).getSagaId())
+                .build();
+        this.orchestrator.handleEvent(event);
+        final var sagaFromDB = this.sagaService.findSagaById(this.saga.get(0).getSagaId());
+        assertThat(sagaFromDB).isPresent();
+        assertThat(sagaFromDB.get().getSagaState()).isEqualTo(GENERATE_PDF_REPORT.toString());
+        final var sagaStates = this.sagaService.findAllSagaStates(sagaFromDB.get());
+        assertThat(sagaStates.size()).isEqualTo(4);
+        assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
+        assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
+        assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(GATHER_REPORT_DATA.toString());
+        assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.REPORT_DATA_GATHERED.toString());
+        assertThat(sagaStates.get(2).getSagaEventState()).isEqualTo(GET_STUDENTS.toString());
+        assertThat(sagaStates.get(2).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENTS_FOUND.toString());
+        assertThat(sagaStates.get(3).getSagaEventState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH.toString());
+        assertThat(sagaStates.get(3).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_REQUEST_BATCH_UPDATED.toString());
+        PenRequestBatchArchiveAndReturnSagaData payload = JsonUtil.getJsonObjectFromString(PenRequestBatchArchiveAndReturnSagaData.class, sagaFromDB.get().getPayload());
+        assertThat(payload.getFacsimile()).isNotEmpty();
+        assertThat(payload.getFromEmail()).isNotEmpty();
+        assertThat(payload.getTelephone()).isNotEmpty();
+        assertThat(payload.getMailingAddress()).isNotEmpty();
+        assertThat(payload.getPenCordinatorEmail()).isNotEmpty();
+        assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
+        assertThat(payload.getMatchedStudents().size()).isEqualTo(0);
     }
 
     @Test
