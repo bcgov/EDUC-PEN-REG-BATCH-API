@@ -117,7 +117,6 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
     private void gatherReportData(Event event, Saga saga, PenRequestBatchArchiveAndReturnSagaData penRequestBatchArchiveAndReturnSagaData) throws IOException, InterruptedException, TimeoutException {
         SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
         saga.setSagaState(GATHER_REPORT_DATA.toString());
-        saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnSagaData)); // save the updated payload to DB...
         this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
         var penRequestBatch = getPenRequestBatchService().findById(penRequestBatchArchiveAndReturnSagaData.getPenRequestBatchID());
@@ -143,7 +142,6 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
     private void getStudents(Event event, Saga saga, PenRequestBatchArchiveAndReturnSagaData penRequestBatchArchiveAndReturnSagaData) throws IOException {
         SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
         saga.setSagaState(GET_STUDENTS.toString());
-        saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnSagaData)); // save the updated payload to DB...
         this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
         Event nextEvent = Event.builder().sagaId(saga.getSagaId()).eventType(EventType.GET_STUDENTS).replyTo(this.getTopicToSubscribe()).build();
