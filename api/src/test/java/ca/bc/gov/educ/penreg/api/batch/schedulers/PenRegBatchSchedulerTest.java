@@ -8,6 +8,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.After;
@@ -75,6 +76,9 @@ public class PenRegBatchSchedulerTest {
   private PenWebBlobRepository penWebBlobRepository;
 
   @Autowired
+  private PenRequestBatchUtils penRequestBatchUtils;
+
+  @Autowired
   RestUtils restUtils;
 
   /**
@@ -84,6 +88,7 @@ public class PenRegBatchSchedulerTest {
    */
   @Before
   public void setUp() throws Exception {
+    this.penRequestBatchUtils.cleanDB();
     final List<PENWebBlobEntity> entities = this.createPlaceHolderRecords();
     this.penWebBlobRepository.saveAll(entities);
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
@@ -163,7 +168,7 @@ public class PenRegBatchSchedulerTest {
   private void waitForAsyncToFinishPenReqBatchStatusDuplicate() throws InterruptedException {
     int i = 0;
     while (true) {
-      if (i >= 200) {
+      if (i >= 2000) {
         break; // break out after trying for 10 seconds.
       }
       val duplicateRecord = this.repository.findByPenRequestBatchStatusCode(DUPLICATE.toString());
@@ -178,7 +183,7 @@ public class PenRegBatchSchedulerTest {
   private void waitForAsyncToFinish() throws InterruptedException {
     int i = 0;
     while (true) {
-      if (i >= 100) {
+      if (i >= 1000) {
         break; // break out after trying for 5 seconds.
       }
       val isStudentRecordPresent = this.studentRepository.findAll().isEmpty();
