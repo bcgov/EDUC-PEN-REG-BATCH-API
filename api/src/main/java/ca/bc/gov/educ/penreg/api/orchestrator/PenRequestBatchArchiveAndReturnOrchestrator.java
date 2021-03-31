@@ -139,7 +139,7 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
         this.handleEvent(nextEvent);
     }
 
-    private void getStudents(Event event, Saga saga, PenRequestBatchArchiveAndReturnSagaData penRequestBatchArchiveAndReturnSagaData) throws IOException {
+    private void getStudents(Event event, Saga saga, PenRequestBatchArchiveAndReturnSagaData penRequestBatchArchiveAndReturnSagaData) throws IOException, TimeoutException, InterruptedException {
         SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
         saga.setSagaState(GET_STUDENTS.toString());
         this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
@@ -150,9 +150,15 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseOrchestrato
                 .filter(student -> student.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode()))
                 .map(PenRequestBatchStudent::getStudentID).collect(Collectors.toList());
 
-        nextEvent.setEventPayload(JsonUtil.getJsonStringFromObject(studentIDs));
-        this.postMessageToTopic(SagaTopicsEnum.STUDENT_API_TOPIC.toString(), nextEvent);
-        log.info("message sent to STUDENT_API_TOPIC for {} Event. :: {}", GET_STUDENTS.toString(), saga.getSagaId());
+        if(studentIDs.isEmpty()) {
+            nextEvent.setEventOutcome(STUDENTS_FOUND);
+            nextEvent.setEventPayload("[]");
+            this.handleEvent(nextEvent);
+        } else {
+            nextEvent.setEventPayload(JsonUtil.getJsonStringFromObject(studentIDs));
+            this.postMessageToTopic(SagaTopicsEnum.STUDENT_API_TOPIC.toString(), nextEvent);
+            log.info("message sent to STUDENT_API_TOPIC for {} Event. :: {}", GET_STUDENTS.toString(), saga.getSagaId());
+        }
     }
 
     private void archivePenRequestBatch(Event event, Saga saga, PenRequestBatchArchiveAndReturnSagaData penRequestBatchArchiveAndReturnSagaData) throws IOException, InterruptedException, TimeoutException {
