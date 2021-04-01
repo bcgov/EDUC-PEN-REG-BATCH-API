@@ -113,6 +113,7 @@ public class PenRequestBatchAPIControllerTest {
     this.penRequestBatchStudentRepository.deleteAll();
     this.penRequestBatchHistoryRepository.deleteAll();
     this.penRequestBatchRepository.deleteAll();
+    this.penWebBlobRepository.deleteAll();
   }
 
   /**

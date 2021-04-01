@@ -7,6 +7,7 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.val;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,6 +43,16 @@ public class PenCoordinatorServiceTest {
     final List<PenCoordinator> structs = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
     this.coordinatorRepository.saveAll(structs.stream().map(PenCoordinatorMapper.mapper::toModel).collect(Collectors.toList()));
+    this.service.setPenCoordinatorMap(this.coordinatorRepository.findAll().stream()
+            .map(ca.bc.gov.educ.penreg.api.batch.mappers.PenCoordinatorMapper.mapper::toTrimmedPenCoordinator)
+            .collect(Collectors.toConcurrentMap(ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator::getMincode, Function.identity())));
+  }
+  /**
+   * Tear down.
+   */
+  @After
+  public void tearDown() {
+    this.coordinatorRepository.deleteAll();
   }
 
   @Test
