@@ -172,6 +172,7 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
     this.sagaEventRepository.deleteAll();
     this.repository.deleteAll();
     this.penRequestBatchRepository.deleteAll();
+    this.penRequestBatchStudentRepository.deleteAll();
   }
 
   @Test
