@@ -132,7 +132,7 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
                 .replyTo(this.getTopicToSubscribe())
                 .eventPayload(JsonUtil.getJsonStringFromObject(
                         ReportGenerationEvent.builder()
-                                .reportType("PDF")
+                                .reportType("PEN_REG_BATCH_RESPONSE_REPORT")
                                 .reportExtension("PDF")
                                 .reportName(penRequestBatchArchiveAndReturnSagaData.getPenRequestBatch().getSubmissionNumber())
                                 .data(reportMapper.toReportData(penRequestBatchArchiveAndReturnSagaData))
