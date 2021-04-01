@@ -7,6 +7,7 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.val;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,6 +42,13 @@ public class PenCoordinatorServiceTest {
     final List<PenCoordinator> structs = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
     this.coordinatorRepository.saveAll(structs.stream().map(PenCoordinatorMapper.mapper::toModel).collect(Collectors.toList()));
+  }
+  /**
+   * Tear down.
+   */
+  @After
+  public void tearDown() {
+    this.coordinatorRepository.deleteAll();
   }
 
   @Test
