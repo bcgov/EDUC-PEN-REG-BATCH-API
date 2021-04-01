@@ -81,7 +81,7 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
       .replyTo(this.getTopicToSubscribe())
       .eventPayload(JsonUtil.getJsonStringFromObject(
         ReportGenerationEvent.builder()
-          .reportType("PDF")
+          .reportType("PEN_REG_BATCH_RESPONSE_REPORT")
           .reportExtension("PDF")
           .reportName(penRequestBatchRepostReportsFilesSagaData.getPenRequestBatch().getSubmissionNumber())
           .data(reportMapper.toReportData(penRequestBatchRepostReportsFilesSagaData))
