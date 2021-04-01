@@ -9,11 +9,11 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
-import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
+import ca.bc.gov.educ.penreg.api.repository.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -33,6 +33,24 @@ import static java.util.stream.Collectors.toList;
 @Component
 @Profile("test")
 public class PenRequestBatchUtils {
+  @Autowired
+  private PenRequestBatchRepository repository;
+
+
+  @Autowired
+  private PenRequestBatchHistoryRepository penRequestBatchHistoryRepository;
+
+  /**
+   * The Student repository.
+   */
+  @Autowired
+  private PenRequestBatchStudentRepository studentRepository;
+
+  /**
+   * The Pen web blob repository.
+   */
+  @Autowired
+  private PenWebBlobRepository penWebBlobRepository;
   /**
    * The constant PEN_REQUEST_BATCH_API.
    */
@@ -163,4 +181,11 @@ public class PenRequestBatchUtils {
     return studentSagaRecords;
   }
 
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void cleanDB() {
+    this.studentRepository.deleteAll();
+    this.penRequestBatchHistoryRepository.deleteAll();
+    this.penWebBlobRepository.deleteAll();
+    this.repository.deleteAll();
+  }
 }

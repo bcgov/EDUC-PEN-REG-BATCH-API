@@ -4,6 +4,7 @@ import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.ArchiveAndReturnSagaResponse;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchRepostReportsFilesSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.Saga;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -62,4 +63,12 @@ public interface PenRequestBatchSagaEndpoint {
   @Tag(name = "Endpoint to start archive and return files saga.", description = "archive and return files saga")
   @Schema(name = "PenRequestBatchArchiveAndReturnSagaData", implementation = PenRequestBatchArchiveAndReturnAllSagaData.class)
   ResponseEntity<List<ArchiveAndReturnSagaResponse>> archiveAndReturnAllFiles(@Validated @RequestBody PenRequestBatchArchiveAndReturnAllSagaData penRequestBatchArchiveAndReturnAllSagaData);
+
+  @PostMapping("/repost-reports")
+  @PreAuthorize("hasAuthority('SCOPE_PEN_REQUEST_BATCH_REPOST_SAGA')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK."), @ApiResponse(responseCode = "409", description = "Conflict.")})
+  @Transactional
+  @Tag(name = "Endpoint to start repost reports saga.", description = "repost reports saga")
+  @Schema(name = "PenRequestBatchReturnFilesSagaData", implementation = PenRequestBatchRepostReportsFilesSagaData.class)
+  ResponseEntity<String> repostReports(@Validated @RequestBody PenRequestBatchRepostReportsFilesSagaData penRequestBatchRepostReportsSagaData);
 }

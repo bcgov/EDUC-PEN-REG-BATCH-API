@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.controller.v1;
 import ca.bc.gov.educ.penreg.api.constants.SagaEnum;
 import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchSagaEndpoint;
+import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
 import ca.bc.gov.educ.penreg.api.exception.SagaRuntimeException;
 import ca.bc.gov.educ.penreg.api.mappers.v1.ArchiveAndReturnSagaResponseMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.SagaMapper;
@@ -11,13 +12,13 @@ import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.BasePenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
-import ca.bc.gov.educ.penreg.api.struct.v1.ArchiveAndReturnSagaResponse;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
-import ca.bc.gov.educ.penreg.api.struct.v1.Saga;
+import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -81,10 +82,14 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
     return processBatchRequest(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA, penRequestBatchArchiveAndReturnAllSagaData);
   }
 
+  @Override
+  public ResponseEntity<String> repostReports(PenRequestBatchRepostReportsFilesSagaData penRequestBatchRepostReportsSagaData) {
+    return processBatchRequest(PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA, penRequestBatchRepostReportsSagaData);
+  }
+
   private ResponseEntity<String> processStudentRequest(SagaEnum sagaName, BasePenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
     var penRequestBatchStudentID = penRequestBatchStudentSagaData.getPenRequestBatchStudentID();
-    var sagaInProgress = getSagaService().findAllByPenRequestBatchStudentIDAndStatusIn(penRequestBatchStudentID,
-      sagaName.toString(), getStatusesFilter());
+    var sagaInProgress = getSagaService().findAllByPenRequestBatchStudentIDAndStatusIn(penRequestBatchStudentID, getStatusesFilter());
     if (!sagaInProgress.isEmpty()) {
       return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
@@ -100,22 +105,54 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
     }
   }
 
-  private ResponseEntity<List<ArchiveAndReturnSagaResponse>> processBatchRequest(SagaEnum sagaName, PenRequestBatchArchiveAndReturnAllSagaData penRequestBatchArchiveAndReturnAllSagaData) {
-    var penRequestBatchIDs = penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchIDs();
+  private ResponseEntity<String> processBatchRequest(SagaEnum sagaName, PenRequestBatchRepostReportsFilesSagaData penRequestBatchSagaData) {
+    var penRequestBatchID = penRequestBatchSagaData.getPenRequestBatchID();
 
-    var sagaInProgress = !this.getSagaService().findAllByPenRequestBatchStudentIDInAndStatusIn(penRequestBatchIDs, sagaName.toString(), this.getStatusesFilter()).isEmpty();
+    var sagaInProgress = !this.getSagaService().findAllByPenRequestBatchIDInAndStatusIn(List.of(penRequestBatchID), this.getStatusesFilter()).isEmpty();
 
     if (sagaInProgress) {
       return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
     try {
+      var saga = getOrchestratorMap()
+        .get(sagaName.toString())
+        .startSaga(JsonUtil.getJsonStringFromObject(penRequestBatchSagaData),
+          null, penRequestBatchID, penRequestBatchSagaData.getCreateUser());
+
+      return ResponseEntity.ok(saga.getSagaId().toString());
+    } catch (InterruptedException | TimeoutException | IOException e) {
+      Thread.currentThread().interrupt();
+      throw new SagaRuntimeException(e.getMessage());
+    }
+  }
+
+  private ResponseEntity<List<ArchiveAndReturnSagaResponse>> processBatchRequest(SagaEnum sagaName, PenRequestBatchArchiveAndReturnAllSagaData penRequestBatchArchiveAndReturnAllSagaData) {
+    var penRequestBatchIDs = penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchArchiveAndReturnSagaData()
+            .stream().map(PenRequestBatchArchiveAndReturnSagaData::getPenRequestBatchID).collect(Collectors.toList());
+
+    var sagaInProgress = !this.getSagaService().findAllByPenRequestBatchIDInAndStatusIn(penRequestBatchIDs, this.getStatusesFilter()).isEmpty();
+
+    if (sagaInProgress) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
+    try {
+      var updateUser = penRequestBatchArchiveAndReturnAllSagaData.getUpdateUser();
+      var payloads = penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchArchiveAndReturnSagaData().stream().map(sagaData -> {
+        sagaData.setUpdateUser(updateUser);
+        try {
+          String  payload = JsonUtil.getJsonStringFromObject(sagaData);
+          return Pair.of(sagaData.getPenRequestBatchID(), payload);
+        } catch (JsonProcessingException e) {
+          throw new InvalidParameterException(e.getMessage());
+        }
+      }).collect(Collectors.toList());
+
       var sagas = this.getOrchestratorMap()
-              .get(sagaName.toString())
-              .saveMultipleSagas(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnAllSagaData),
-                      penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchIDs(), penRequestBatchArchiveAndReturnAllSagaData.getCreateUser());
-      getOrchestratorMap()
-              .get(sagaName.toString())
-              .startMultipleSagas(sagas);
+        .get(sagaName.toString())
+        .saveMultipleSagas(payloads, penRequestBatchArchiveAndReturnAllSagaData.getCreateUser());
+      this.getOrchestratorMap()
+        .get(sagaName.toString())
+        .startMultipleSagas(sagas);
 
       return ResponseEntity.ok(sagas.stream().map(archiveAndReturnSagaResponseMapper::toStruct).collect(Collectors.toList()));
     } catch (InterruptedException | TimeoutException | IOException e) {

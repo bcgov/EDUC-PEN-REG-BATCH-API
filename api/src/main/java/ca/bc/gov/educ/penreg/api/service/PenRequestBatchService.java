@@ -2,13 +2,11 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
@@ -38,7 +36,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.ARCHIVED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REARCHIVED;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -70,6 +67,12 @@ public class PenRequestBatchService {
   private final PenRequestBatchStudentRepository penRequestBatchStudentRepository;
 
   /**
+   * the pen response file generator service
+   */
+  @Getter(PRIVATE)
+  private final ResponseFileGeneratorService responseFileGeneratorService;
+
+  /**
    * The Rest utils.
    */
   @Getter(PRIVATE)
@@ -82,10 +85,11 @@ public class PenRequestBatchService {
    * @param penWebBlobRepository the pen web blob repository
    */
   @Autowired
-  public PenRequestBatchService(final PenRequestBatchRepository repository, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils) {
+  public PenRequestBatchService(final PenRequestBatchRepository repository, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final ResponseFileGeneratorService responseFileGeneratorService, final RestUtils restUtils) {
     this.repository = repository;
     this.penWebBlobRepository = penWebBlobRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
+    this.responseFileGeneratorService = responseFileGeneratorService;
     this.restUtils = restUtils;
   }
 
@@ -167,9 +171,9 @@ public class PenRequestBatchService {
   public PenRequestBatchEntity updatePenRequestBatch(final PenRequestBatchEntity penRequestBatchEntity, final UUID penRequestBatchID) {
     final var penRequestBatchEntityOptional = this.getRepository().findById(penRequestBatchID);
     return penRequestBatchEntityOptional.map(penRequestBatchEntityDB -> {
-      checkAndPopulateStatusCode(penRequestBatchEntity, penRequestBatchEntityDB);
+      this.checkAndPopulateStatusCode(penRequestBatchEntity, penRequestBatchEntityDB);
       BeanUtils.copyProperties(penRequestBatchEntity, penRequestBatchEntityDB,
-              "penRequestBatchStudentEntities", "penRequestBatchHistoryEntities", "createUser", "createDate");
+          "penRequestBatchStudentEntities", "penRequestBatchHistoryEntities", "createUser", "createDate");
       penRequestBatchEntityDB.setPenRequestBatchID(penRequestBatchID);
       final PenRequestBatchHistoryEntity penRequestBatchHistory = historyMapper.toModelFromBatch(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
       penRequestBatchEntityDB.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
@@ -248,37 +252,25 @@ public class PenRequestBatchService {
     return this.repository.findById(penRequestBatchID);
   }
 
-  /**
-   * Create an IDS file for a pen request batch entity
-   *
-   * @param penRequestBatchEntity the pen request batch entity
-   * @return the pen web blob entity
-   */
+  public PENWebBlobEntity getPDFBlob(String pdfReport, PenRequestBatchEntity penRequestBatchEntity) {
+    return PENWebBlobEntity.builder()
+            .mincode(penRequestBatchEntity.getMincode())
+            .sourceApplication("PENWEB")
+            .fileName(penRequestBatchEntity.getMincode() + ".PDF")
+            .fileType("PDF")
+            .fileContents(pdfReport.getBytes())
+            .insertDateTime(LocalDateTime.now())
+            .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
+            .build();
+  }
+
   @Transactional(propagation = Propagation.MANDATORY)
-  public PENWebBlobEntity createIDSFile(final PenRequestBatchEntity penRequestBatchEntity) {
-    final var penRequestBatchStudentEntities = this.getPenRequestBatchStudentRepository().findAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIsInAndLocalIDNotNull(penRequestBatchEntity, Arrays.asList(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), PenRequestBatchStudentStatusCodes.USR_NEW_PEN.getCode(), PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode(), PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode()));
-
-    if (penRequestBatchStudentEntities.isEmpty()) {
-      return null;
-    }
-
-    final StringBuilder idsFile = new StringBuilder();
-
-    for (final PenRequestBatchStudentEntity entity : penRequestBatchStudentEntities) {
-      final var student = this.getRestUtils().getStudentByPEN(entity.getAssignedPEN());
-      if (student.isPresent()) {
-//        Uncomment and update this logic once trueNumber is added to student table
-//        if(student.get().getTrueNumber()) {
-//          student = getRestUtils().getStudentByStudentID(student.get().getTrueNumber());
-//        }
-//        if(student.isPresent()) {
-        idsFile.append("E03").append(student.get().getMincode()).append(String.format("%-12s", student.get().getLocalID()).replace(' ', '0')).append(student.get().getPen()).append(" ").append(student.get().getLegalLastName()).append("\n");
-//        }
-      }
-    }
-    final byte[] bFile = idsFile.toString().getBytes();
-
-    return this.getPenWebBlobRepository().save(PENWebBlobEntity.builder().mincode(penRequestBatchEntity.getMincode()).sourceApplication("PENWEB").fileName(penRequestBatchEntity.getMincode() + ".IDS").fileType("IDS").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(penRequestBatchEntity.getSubmissionNumber()).build());
+  public List<PENWebBlobEntity> saveReports(final String pdfReport, PenRequestBatchEntity penRequestBatchEntity) {
+    return Arrays.asList(
+      this.getPenWebBlobRepository().save(this.getPDFBlob(pdfReport, penRequestBatchEntity)),
+      this.getResponseFileGeneratorService().createIDSFile(penRequestBatchEntity),
+      this.getResponseFileGeneratorService().createTxtFile(penRequestBatchEntity)
+    );
   }
 
   @Transactional(propagation = Propagation.SUPPORTS)
@@ -308,8 +300,14 @@ public class PenRequestBatchService {
     long fixableCount = 0;
     long repeatCount = 0;
     for (val result : results) {
-      fixableCount += result.getFixableCount();
-      repeatCount += result.getRepeatCount();
+      if (result != null) {
+        if (result.getFixableCount() != null) {
+          fixableCount += result.getFixableCount();
+        }
+        if (result.getRepeatCount() != null) {
+          repeatCount += result.getRepeatCount();
+        }
+      }
     }
     builder.fixableCount(fixableCount);
     builder.repeatCount(repeatCount);
@@ -317,10 +315,10 @@ public class PenRequestBatchService {
     return builder.build();
   }
 
-  private void checkAndPopulateStatusCode(PenRequestBatchEntity requestPrbEntity, PenRequestBatchEntity currentPrbEntity) {
-    if ( StringUtils.equals(requestPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.ARCHIVED.getCode())
+  private void checkAndPopulateStatusCode(final PenRequestBatchEntity requestPrbEntity, final PenRequestBatchEntity currentPrbEntity) {
+    if (StringUtils.equals(requestPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.ARCHIVED.getCode())
         && (StringUtils.equals(currentPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED.getCode())
-          || StringUtils.equals(currentPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode())) ) {
+        || StringUtils.equals(currentPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode()))) {
       requestPrbEntity.setPenRequestBatchStatusCode(REARCHIVED.getCode());
     }
   }

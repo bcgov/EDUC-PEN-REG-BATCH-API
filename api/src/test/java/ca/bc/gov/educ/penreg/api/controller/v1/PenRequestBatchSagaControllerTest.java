@@ -16,10 +16,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA;
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -76,7 +80,7 @@ public class PenRequestBatchSagaControllerTest {
   }
   @Test
   public void testIssueNewPen_GivenValidID_ShouldReturnStatusOK() throws Exception {
-    var payload = placeholderPenRequestBatchActionsSagaData();
+    var payload = placeholderPenRequestBatchStudentActionsSagaData();
     var sagaFromDB = sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", payload, UUID.fromString(getPenRequestBatchStudentID),
         UUID.fromString(penRequestBatchID));
     this.mockMvc.perform(get("/api/v1/pen-request-batch-saga/" + sagaFromDB.getSagaId().toString())
@@ -99,13 +103,13 @@ public class PenRequestBatchSagaControllerTest {
     this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/new-pen")
             .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_NEW_PEN_SAGA")))
             .contentType(MediaType.APPLICATION_JSON)
-            .accept(MediaType.APPLICATION_JSON).content(placeholderPenRequestBatchActionsSagaData())).andDo(print())
+            .accept(MediaType.APPLICATION_JSON).content(placeholderPenRequestBatchStudentActionsSagaData())).andDo(print())
                 .andExpect(status().isOk()).andExpect(jsonPath("$").exists());
   }
 
   @Test
   public void testIssueNewPen_GivenOtherSagaWithSameStudentIdInProcess_ShouldReturnStatusConflict() throws Exception {
-    var payload = placeholderPenRequestBatchActionsSagaData();
+    var payload = placeholderPenRequestBatchStudentActionsSagaData();
     sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", payload, UUID.fromString(getPenRequestBatchStudentID),
         UUID.fromString(penRequestBatchID));
     this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/new-pen")
@@ -130,13 +134,13 @@ public class PenRequestBatchSagaControllerTest {
             .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_USER_MATCH_SAGA")))
             .contentType(MediaType.APPLICATION_JSON)
         .accept(MediaType.APPLICATION_JSON)
-        .content(placeholderPenRequestBatchActionsSagaData()))
+        .content(placeholderPenRequestBatchStudentActionsSagaData()))
                 .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$").exists());
   }
 
   @Test
   public void testProcessStudentRequestMatchedByUser_GivenOtherSagaWithSameStudentIdInProcess_ShouldReturnStatusConflict() throws Exception {
-    var payload = placeholderPenRequestBatchActionsSagaData();
+    var payload = placeholderPenRequestBatchStudentActionsSagaData();
     sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA.toString(), "Test", payload, UUID.fromString(getPenRequestBatchStudentID),
         UUID.fromString(penRequestBatchID));
     this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/user-match")
@@ -152,8 +156,51 @@ public class PenRequestBatchSagaControllerTest {
                 .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_USER_MATCH_SAGA")))
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
-                .content(placeholderPenRequestBatchActionsSagaData()))
+                .content(placeholderPenRequestBatchStudentActionsSagaData()))
                 .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$").exists());
+  }
+
+
+  @Test
+  public void testRepostReports_GivenInValidPayload_ShouldReturnStatusBadRequest() throws Exception {
+    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/repost-reports")
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_REPOST_SAGA")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .accept(MediaType.APPLICATION_JSON)
+      .content(placeholderInvalidPenRequestBatchActionsSagaData()))
+      .andDo(print()).andExpect(status().isBadRequest());
+  }
+
+  @Test
+  public void testRepostReports_GivenValidPayload_ShouldReturnStatusOk() throws Exception {
+    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/repost-reports")
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_REPOST_SAGA")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .accept(MediaType.APPLICATION_JSON)
+      .content(placeholderPenRequestBatchActionsSagaData(penRequestBatchID)))
+      .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$").exists());
+  }
+
+  @Test
+  public void testRepostReports_GivenOtherSagaWithSameBatchInProcess_ShouldReturnStatusConflict() throws Exception {
+    var payload = placeholderPenRequestBatchActionsSagaData(penRequestBatchID);
+    sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA.toString(), "Test", payload, null,
+      UUID.fromString(penRequestBatchID));
+    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/repost-reports")
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_REPOST_SAGA")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .accept(MediaType.APPLICATION_JSON)
+      .content(payload)).andDo(print()).andExpect(status().isConflict());
+  }
+
+  @Test
+  public void testArchiveAndReturnAllFiles_GivenValidPayload_ShouldReturnStatusOk() throws Exception {
+    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/archive-and-return")
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_ARCHIVE_SAGA")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .accept(MediaType.APPLICATION_JSON)
+      .content(placeholderMultiplePenRequestBatchActionsSagaData(List.of(UUID.randomUUID(), UUID.randomUUID()))))
+      .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(2)));
   }
 
 
@@ -164,7 +211,7 @@ public class PenRequestBatchSagaControllerTest {
         "  }";
   }
 
-  protected String placeholderPenRequestBatchActionsSagaData() {
+  protected String placeholderPenRequestBatchStudentActionsSagaData() {
     return " {\n" +
         "    \"createUser\": \"test\",\n" +
         "    \"updateUser\": \"test\",\n" +
@@ -172,5 +219,23 @@ public class PenRequestBatchSagaControllerTest {
         "    \"penRequestBatchStudentID\": \"" + getPenRequestBatchStudentID + "\",\n" +
         "    \"legalFirstName\": \"Jack\"\n" +
         "  }";
+  }
+
+  protected String placeholderPenRequestBatchActionsSagaData(String penRequestBatchID) {
+    return " {\n" +
+      "    \"createUser\": \"test\",\n" +
+      "    \"updateUser\": \"test\",\n" +
+      "    \"penRequestBatchID\": \"" + penRequestBatchID + "\",\n" +
+      "    \"schoolName\": \"Victoria High School\"\n" +
+      "  }";
+  }
+
+  protected String placeholderMultiplePenRequestBatchActionsSagaData(List<UUID> penRequestBatchIDs) {
+    return " {\n" +
+      "    \"createUser\": \"test\",\n" +
+      "    \"updateUser\": \"test\",\n" +
+      "    \"penRequestBatchArchiveAndReturnSagaData\": [" + penRequestBatchIDs.stream().map(v ->
+              placeholderPenRequestBatchActionsSagaData(v.toString())).collect(Collectors.joining(",")) + "]\n" +
+      "  }";
   }
 }

@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
+import ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -82,6 +83,11 @@ public class PenRequestBatchServiceTest {
           " \"updateUser\": \"test\"}"
   };
 
+  private static final String mockMincode = "{\n" +
+          "    \"districtNumber\": 102,\n" +
+          "    \"schoolNumber\": 10518\n" +
+          "  }";
+
   @After
   public void after() {
     this.prbStudentRepository.deleteAll();
@@ -89,32 +95,29 @@ public class PenRequestBatchServiceTest {
   }
 
   @Test
-  @Transactional
-  public void testCreateIDSFile_givenBatchFileHasCorrectStudents_shouldCreateIDSFile() throws IOException {
+  public void testGetPDFBlob_givenBatchFileHasCorrectData_shouldCreateReportBlob() throws IOException {
     this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
-        "mock_pen_req_batch_student_ids.json", 1);
-    when(this.restUtils.getStudentByPEN("123456789")).thenReturn(Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[0])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[1])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[2])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[3])));
+            "mock_pen_req_batch_student_ids.json", 1);
 
-    final var penWebBlob = this.prbService.createIDSFile(this.batchList.get(0));
+    final var penWebBlob = this.prbService.getPDFBlob("here is a pretend pdf", this.batchList.get(0));
 
     assertThat(penWebBlob).isNotNull();
-//    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
-//    assertThat(penRequestBatch.get().getFixableCount()).isZero();
   }
 
   @Test
   @Transactional
-  public void testCreateIDSFile_givenBatchFileHasBadStudents_shouldReturnNull() throws IOException {
+  public void testSaveReports_givenBatchFileHasCorrectData_shouldSaveReports() throws IOException {
     this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
-        "mock_pen_req_batch_student_ids_null.json", 1);
-    final var penWebBlob = this.prbService.createIDSFile(this.batchList.get(0));
+            "mock_pen_req_batch_student_ids.json", 1);
 
-    assertThat(penWebBlob).isNull();
-//    assertThat(penRequestBatch.get().getNewPenCount()).isEqualTo(3);
-//    assertThat(penRequestBatch.get().getFixableCount()).isZero();
+    when(this.restUtils.getStudentByPEN("123456789")).thenReturn(Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[0])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[1])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[2])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[3])));
+
+    final var penWebBlob = this.prbService.saveReports("here is a pretend pdf", this.batchList.get(0));
+
+    assertThat(penWebBlob).isNotNull();
+    assertThat(penWebBlob.size()).isEqualTo(3);
   }
 
-  @Test
   public void testGetStats_givenNoDataInDB_shouldReturnTheCountsAsZero() {
     val result = this.prbService.getStats();
     assertThat(result).isNotNull();

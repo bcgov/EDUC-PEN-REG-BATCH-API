@@ -93,11 +93,27 @@ public enum EventOutcome {
    */
   PEN_COORDINATOR_NOT_FOUND,
   /**
-   * IDS report generated event outcome
-   */
-  IDS_REPORT_GENERATED,
-  /**
    * Archive email sent event outcome
    */
-  ARCHIVE_EMAIL_SENT
+  ARCHIVE_EMAIL_SENT,
+  /**
+   * Archive pen request batch reports generated event outcome
+   */
+  ARCHIVE_PEN_REQUEST_BATCH_REPORTS_GENERATED,
+  /**
+   * Students found event outcome
+   */
+  STUDENTS_FOUND,
+  /**
+   * Students not found event outcome
+   */
+  STUDENTS_NOT_FOUND,
+  /**
+   * Report data gathered event outcome
+   */
+  REPORT_DATA_GATHERED,
+  /**
+   * Pdf report saved event outcome
+   */
+  REPORTS_SAVED
 }
