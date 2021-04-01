@@ -219,7 +219,7 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
   }
 
   @Test
-  public void testProcessPenMatchResultForF1() throws IOException,  TimeoutException {
+  public void testProcessPenMatchResultForF1() throws IOException {
     final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
 
     prbStudentEntity.setUpdateDate(LocalDateTime.now());
@@ -240,7 +240,7 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
   }
 
   @Test
-  public void testProcessPenMatchResultForD1() throws IOException,  TimeoutException {
+  public void testProcessPenMatchResultForD1() throws IOException {
     final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
 
     prbStudentEntity.setUpdateDate(LocalDateTime.now());
@@ -269,7 +269,7 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
   }
 
   @Test
-  public void testProcessPenMatchResultForDM() throws IOException,  TimeoutException {
+  public void testProcessPenMatchResultForDM() throws IOException {
     final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
 
     prbStudentEntity.setUpdateDate(LocalDateTime.now());
@@ -298,7 +298,7 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
   }
 
   @Test
-  public void testProcessPenMatchResultForD0() throws IOException,  TimeoutException {
+  public void testProcessPenMatchResultForD0() throws IOException {
     final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
 
     prbStudentEntity.setUpdateDate(LocalDateTime.now());
