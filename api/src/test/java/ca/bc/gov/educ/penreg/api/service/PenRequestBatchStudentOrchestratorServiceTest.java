@@ -2,6 +2,8 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.MatchAlgorithmStatusCode;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
@@ -26,6 +28,8 @@ import org.assertj.core.api.Assertions;
 import org.checkerframework.checker.nullness.Opt;
 import org.junit.*;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -67,30 +71,39 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
    */
   @ClassRule
   public static final SpringClassRule scr = new SpringClassRule();
-
+  /**
+   * The Event captor.
+   */
+  @Captor
+  ArgumentCaptor<Student> createStudentCaptor;
   /**
    * The Smr.
    */
   @Rule
   public final SpringMethodRule smr = new SpringMethodRule();
-
-  @Autowired
-  private PenRequestBatchRepository penRequestBatchRepository;
-
   private Saga saga;
 
   @Autowired
   private SagaService sagaService;
 
   @Autowired
+  private PenRequestBatchRepository penRequestBatchRepository;
+
+  @Autowired
   private PenRequestBatchStudentService prbStudentService;
+
+  @Autowired
+  private PenReqBatchStudentOrchestrator orchestrator;
+
+  @Autowired
+  private PenRequestBatchUtils penRequestBatchUtils;
+
+  @MockBean
+  RestUtils restUtils;
 
   private PenRequestBatchStudentSagaData sagaData;
 
   protected final String penRequestBatchID = UUID.randomUUID().toString();
-
-  @Autowired
-  private PenReqBatchStudentOrchestrator orchestrator;
 
 
   String studentID = UUID.randomUUID().toString();
@@ -110,6 +123,36 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
    */
   protected final String mincode = "01292001";
 
+  private static final String [] mockStudents = {
+          "{\"studentID\": \"987654321\",\n" +
+                  " \"pen\": \"123456789\",\n" +
+                  " \"legalLastName\": \"JOSEPH\",\n" +
+                  " \"mincode\": \"10210518\",\n" +
+                  " \"localID\": \"204630109987\",\n" +
+                  " \"createUser\": \"test\",\n" +
+                  " \"updateUser\": \"test\"}",
+          "{\"studentID\": \"987654321\",\n" +
+                  " \"pen\": \"123456789\",\n" +
+                  " \"legalLastName\": \"JOSEPH\",\n" +
+                  " \"mincode\": \"10210518\",\n" +
+                  " \"localID\": \"204630290\",\n" +
+                  " \"createUser\": \"test\",\n" +
+                  " \"updateUser\": \"test\"}",
+          "{\"studentID\": \"987654321\",\n" +
+                  " \"pen\": \"123456789\",\n" +
+                  " \"legalLastName\": \"JOSEPH\",\n" +
+                  " \"mincode\": \"10210518\",\n" +
+                  " \"localID\": \"2046293\",\n" +
+                  " \"createUser\": \"test\",\n" +
+                  " \"updateUser\": \"test\"}",
+          "{\"studentID\": \"987654321\",\n" +
+                  " \"pen\": \"123456789\",\n" +
+                  " \"legalLastName\": \"JOSEPH\",\n" +
+                  " \"mincode\": \"10210518\",\n" +
+                  " \"localID\": \"22102\",\n" +
+                  " \"createUser\": \"test\",\n" +
+                  " \"updateUser\": \"test\"}"
+  };
 
   /**
    * The Orchestrator service.
@@ -118,41 +161,16 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
   private PenRequestBatchStudentOrchestratorService orchestratorService;
   private UUID penRequestBatchStudentIDUUID;
 
-  @MockBean
+  @Autowired
   private PenRequestBatchStudentRepository penRequestBatchStudentRepository;
 
   private List<PenRequestBatchEntity> batchList;
-  private RestUtils restUtils;
 
   @Before
   public void setup() throws IOException {
-    final File mockPenReqBatch = new File("src/test/resources/mock_pen_req_batch.json");
-    final List<PenRequestBatch> penRequestBatches = new ObjectMapper().readValue(mockPenReqBatch, new TypeReference<>() {
-    });
-    final File mockPenReqBatchStudent = new File("src/test/resources/mock_pen_req_batch_student.json");
-    final List<PenRequestBatchStudent> penRequestBatchStudents = new ObjectMapper().readValue(mockPenReqBatchStudent, new TypeReference<>() {
-    });
-    final PenRequestBatchEntity entity = PenRequestBatchMapper.mapper.toModel(penRequestBatches.get(0));
-    for (final var prbStudent : penRequestBatchStudents) {
-      final var studentEntity = PenRequestBatchStudentMapper.mapper.toModel(prbStudent);
-      studentEntity.setCreateDate(LocalDateTime.now());
-      studentEntity.setCreateUser("TEST");
-      studentEntity.setUpdateUser("TEST");
-      studentEntity.setUpdateDate(LocalDateTime.now());
-      studentEntity.setBestMatchPEN("TEST");
-      studentEntity.setPenRequestBatchEntity(entity);
-      entity.getPenRequestBatchStudentEntities().add(studentEntity);
-    }
-    entity.setCreateDate(LocalDateTime.now());
-    entity.setUpdateDate(LocalDateTime.now());
-    entity.setCreateUser("TEST");
-    entity.setUpdateUser("TEST");
-    this.penRequestBatchRepository.save(entity);
+    penRequestBatchUtils.createBatchStudentsInSingleTransaction(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json", "mock_pen_req_batch_student_archived.json", 1 , null);
 
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json",
-            "mock_pen_req_batch_student_archived.json", 1);
-    this.penRequestBatchStudentIDUUID = this.batchList.get(0).getPenRequestBatchID();
-
+    List<PenRequestBatchEntity> batches = this.penRequestBatchRepository.findAll();
     final var payload = this.placeholderPenRequestBatchActionsSagaData();
     this.sagaData = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, payload);
     this.sagaData.setDob("19650101");
@@ -160,8 +178,8 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
     this.sagaData.setLocalID("20345678");
     this.sagaData.setGradeCode("01");
     this.sagaData.setStudentID(this.studentID);
-    this.sagaData.setPenRequestBatchID(entity.getPenRequestBatchID());
-    this.sagaData.setPenRequestBatchStudentID(entity.getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow().getPenRequestBatchStudentID());
+    this.sagaData.setPenRequestBatchID(batches.get(0).getPenRequestBatchID());
+    this.sagaData.setPenRequestBatchStudentID(batches.get(0).getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow().getPenRequestBatchStudentID());
     this.saga = this.sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), "Test", JsonUtil.getJsonStringFromObject(this.sagaData),
             UUID.fromString(this.penRequestBatchStudentID), UUID.fromString(this.penRequestBatchID));
 
@@ -201,9 +219,9 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
   }
 
   @Test
-  public void testProcessPenMatchResultForF1() throws IOException, InterruptedException, TimeoutException {
-    this.penRequestBatchStudentIDUUID = this.getFirstPenRequestBatchStudentID(INFOREQ.getCode());
+  public void testProcessPenMatchResultForF1() throws IOException,  TimeoutException {
     final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
+
     prbStudentEntity.setUpdateDate(LocalDateTime.now());
     final var eventPayload = new PenMatchResult();
     eventPayload.setPenStatus("F1");
@@ -216,7 +234,96 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
             .build();
     Optional<Event> eventOptionalTest = this.orchestratorService.processPenMatchResult(saga,this.sagaData,eventPayload);
     final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
-   // assertThat(sagaFromDB).isPresent();
+    assertThat(sagaFromDB).isPresent();
+    List<PenRequestBatchEntity> batches = this.penRequestBatchRepository.findAll();
+    assertThat(batches.get(0).getPenRequestBatchStudentEntities().stream().findFirst().get().getPenRequestBatchStudentStatusCode()).isEqualTo(PenRequestBatchStudentStatusCodes.FIXABLE.getCode());
+  }
+
+  @Test
+  public void testProcessPenMatchResultForD1() throws IOException,  TimeoutException {
+    final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
+
+    prbStudentEntity.setUpdateDate(LocalDateTime.now());
+    final var eventPayload = new PenMatchResult();
+    eventPayload.setPenStatus("D1");
+    PenMatchRecord record = new PenMatchRecord();
+    List<PenRequestBatchEntity> batches = this.penRequestBatchRepository.findAll();
+    PenRequestBatchStudentEntity studEntity = batches.get(0).getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow();
+    record.setStudentID(studEntity.getPenRequestBatchStudentID().toString());
+    when(this.restUtils.getStudentByStudentID(studEntity.getPenRequestBatchStudentID().toString())).thenReturn(Student.builder().studentID(studEntity.getPenRequestBatchStudentID().toString()).pen(TEST_PEN).build());
+    record.setMatchingPEN("123456789");
+    eventPayload.setMatchingRecords(new ArrayList<>());
+    eventPayload.getMatchingRecords().add(record);
+    final var event = Event.builder()
+            .eventType(PROCESS_PEN_MATCH)
+            .eventOutcome(EventOutcome.PEN_MATCH_PROCESSED)
+            .eventPayload(JsonUtil.getJsonStringFromObject(eventPayload))
+            .sagaId(this.saga.getSagaId())
+            .build();
+
+    Optional<Event> eventOptionalTest = this.orchestratorService.processPenMatchResult(saga,this.sagaData,eventPayload);
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    batches = this.penRequestBatchRepository.findAll();
+    assertThat(batches.get(0).getPenRequestBatchStudentEntities().stream().findFirst().get().getPenRequestBatchStudentStatusCode()).isEqualTo(PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode());
+  }
+
+  @Test
+  public void testProcessPenMatchResultForDM() throws IOException,  TimeoutException {
+    final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
+
+    prbStudentEntity.setUpdateDate(LocalDateTime.now());
+    final var eventPayload = new PenMatchResult();
+    eventPayload.setPenStatus("DM");
+    PenMatchRecord record = new PenMatchRecord();
+    List<PenRequestBatchEntity> batches = this.penRequestBatchRepository.findAll();
+    PenRequestBatchStudentEntity studEntity = batches.get(0).getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow();
+    record.setStudentID(studEntity.getPenRequestBatchStudentID().toString());
+    when(this.restUtils.getStudentByStudentID(studEntity.getPenRequestBatchStudentID().toString())).thenReturn(Student.builder().studentID(studEntity.getPenRequestBatchStudentID().toString()).pen(TEST_PEN).build());
+    record.setMatchingPEN("123456789");
+    eventPayload.setMatchingRecords(new ArrayList<>());
+    eventPayload.getMatchingRecords().add(record);
+    final var event = Event.builder()
+            .eventType(PROCESS_PEN_MATCH)
+            .eventOutcome(EventOutcome.PEN_MATCH_PROCESSED)
+            .eventPayload(JsonUtil.getJsonStringFromObject(eventPayload))
+            .sagaId(this.saga.getSagaId())
+            .build();
+
+    Optional<Event> eventOptionalTest = this.orchestratorService.processPenMatchResult(saga,this.sagaData,eventPayload);
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    batches = this.penRequestBatchRepository.findAll();
+    assertThat(batches.get(0).getPenRequestBatchStudentEntities().stream().findFirst().get().getPenRequestBatchStudentStatusCode()).isEqualTo(PenRequestBatchStudentStatusCodes.FIXABLE.getCode());
+  }
+
+  @Test
+  public void testProcessPenMatchResultForD0() throws IOException,  TimeoutException {
+    final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
+
+    prbStudentEntity.setUpdateDate(LocalDateTime.now());
+    final var eventPayload = new PenMatchResult();
+    eventPayload.setPenStatus("D0");
+    List<PenRequestBatchEntity> batches = this.penRequestBatchRepository.findAll();
+    PenRequestBatchStudentEntity studEntity = batches.get(0).getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow();
+    when(this.restUtils.getStudentByStudentID(studEntity.getPenRequestBatchStudentID().toString())).thenReturn(Student.builder().studentID(studEntity.getPenRequestBatchStudentID().toString()).pen(TEST_PEN).build());
+    when(this.restUtils.getNextPenNumberFromPenServiceAPI(this.saga.getSagaId().toString())).thenReturn(TEST_PEN);
+    when(this.restUtils.getStudentByPEN(TEST_PEN)).thenReturn(Optional.empty());
+    when(this.restUtils.createStudent(this.createStudentCaptor.capture())).thenReturn(Student.builder().studentID(this.studentID).pen(TEST_PEN).build());
+
+    eventPayload.setMatchingRecords(new ArrayList<>());
+    final var event = Event.builder()
+            .eventType(PROCESS_PEN_MATCH)
+            .eventOutcome(EventOutcome.PEN_MATCH_PROCESSED)
+            .eventPayload(JsonUtil.getJsonStringFromObject(eventPayload))
+            .sagaId(this.saga.getSagaId())
+            .build();
+
+    Optional<Event> eventOptionalTest = this.orchestratorService.processPenMatchResult(saga,this.sagaData,eventPayload);
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    batches = this.penRequestBatchRepository.findAll();
+    assertThat(batches.get(0).getPenRequestBatchStudentEntities().stream().findFirst().get().getPenRequestBatchStudentStatusCode()).isEqualTo(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode());
   }
 
 
