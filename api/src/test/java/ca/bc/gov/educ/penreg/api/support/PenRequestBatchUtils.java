@@ -1,38 +1,50 @@
 package ca.bc.gov.educ.penreg.api.support;
 
+import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
+import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper;
+import ca.bc.gov.educ.penreg.api.batch.processor.PenRegBatchProcessor;
+import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes;
 import ca.bc.gov.educ.penreg.api.constants.SagaEnum;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
-import ca.bc.gov.educ.penreg.api.model.v1.Saga;
+import ca.bc.gov.educ.penreg.api.model.v1.*;
 import ca.bc.gov.educ.penreg.api.repository.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.sf.flatpack.DataSet;
+import net.sf.flatpack.DefaultParserFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.File;
+import java.io.*;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventType.MARK_SAGA_COMPLETE;
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
 import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Component
 @Profile("test")
 public class PenRequestBatchUtils {
+  /**
+   * The Min.
+   */
+  static final int MIN = 1000000;
+  /**
+   * The Max.
+   */
+  static final int MAX = 9999999;
   @Autowired
   private PenRequestBatchRepository repository;
 
@@ -51,6 +63,9 @@ public class PenRequestBatchUtils {
    */
   @Autowired
   private PenWebBlobRepository penWebBlobRepository;
+
+  @Autowired
+  private PenRegBatchProcessor penRegBatchProcessor;
   /**
    * The constant PEN_REQUEST_BATCH_API.
    */
@@ -179,6 +194,54 @@ public class PenRequestBatchUtils {
         )).collect(toList());
     sagaRepository.saveAll(studentSagaRecords);
     return studentSagaRecords;
+  }
+
+  /**
+   * make sure the file is a valid file, free from formatting errors.
+   * it will return the submission number for future use.
+   *
+   * @param blobFileName the name of the file from resources folder.
+   */
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public String createBatchStudentsFromFile(final String blobFileName, final String studentStatusCode) throws java.io.IOException,
+      FileUnProcessableException {
+    try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
+      final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(blobFileName)).getFile());
+      final byte[] bFile = Files.readAllBytes(file.toPath());
+      final Optional<Reader> batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(bFile)));
+      final DataSet ds = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get()).setStoreRawDataToDataError(true).setStoreRawDataToDataSet(true).setNullEmptyStrings(true).parse();
+      final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+
+      final BatchFile batchFile = new BatchFile();
+      this.penRegBatchProcessor.populateBatchFile(UUID.randomUUID().toString(), ds, batchFile);
+
+      assertThat(batchFile.getBatchFileHeader()).isNotNull();
+      assertThat(batchFile.getBatchFileHeader().getMincode()).isNotNull();
+      final String submissionNumber = ("T" + randomNum).substring(0, 8);
+      final var tsw =
+          PENWebBlobEntity.builder().penWebBlobId(1L).mincode(batchFile.getBatchFileHeader().getMincode()).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName(blobFileName).fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(submissionNumber).build();
+      final PenRequestBatchEntity entity =
+          PenRequestBatchFileMapper.mapper.toPenReqBatchEntityLoaded(tsw, batchFile); // batch file can be processed
+      // further and persisted.
+      var counter = 1;
+      for (final var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.
+        final var penRequestBatchStudentEntity = PenRequestBatchFileMapper.mapper.toPenRequestBatchStudentEntity(student, entity);
+        penRequestBatchStudentEntity.setRecordNumber(counter++);
+        penRequestBatchStudentEntity.setPenRequestBatchStudentStatusCode(studentStatusCode);
+        entity.getPenRequestBatchStudentEntities().add(penRequestBatchStudentEntity);
+      }
+      final PenRequestBatchHistoryEntity penRequestBatchHistory =
+          PenRequestBatchHistoryMapper.mapper.toModelFromBatch(entity,
+              PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
+      entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
+      this.repository.save(entity);
+      return submissionNumber;
+    }
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void updateBatchInNewTransaction(final PenRequestBatchEntity penRequestBatchEntity) {
+    this.repository.save(penRequestBatchEntity);
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)

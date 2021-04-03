@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.batch.schedulers;
 
+import ca.bc.gov.educ.penreg.api.PenRegBatchApiApplication;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
@@ -9,6 +10,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
+import ca.bc.gov.educ.penreg.api.support.TestRedisConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.junit.After;
@@ -35,7 +37,7 @@ import static org.mockito.Mockito.when;
 /**
  * The type Pen reg batch scheduler test.
  */
-@SpringBootTest
+@SpringBootTest(classes = {TestRedisConfiguration.class, PenRegBatchApiApplication.class})
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Slf4j

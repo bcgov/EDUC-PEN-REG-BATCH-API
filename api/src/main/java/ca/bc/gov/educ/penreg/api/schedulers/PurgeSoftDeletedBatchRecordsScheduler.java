@@ -1,6 +1,5 @@
 package ca.bc.gov.educ.penreg.api.schedulers;
 
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import lombok.Getter;
@@ -37,7 +36,7 @@ public class PurgeSoftDeletedBatchRecordsScheduler {
    */
   @Scheduled(cron = "${scheduled.jobs.purge.soft.deleted.batch.records.cron}")
   @SchedulerLock(name = "PurgeSoftDeletedBatchRecordsLock",
-      lockAtLeastFor = "55s", lockAtMostFor = "57s")
+      lockAtLeastFor = "PT1H", lockAtMostFor = "PT1H") //midnight job so lock for an hour
   @Transactional
   public void pollBatchFilesAndPurgeSoftDeletedRecords() {
     LockAssert.assertLocked();

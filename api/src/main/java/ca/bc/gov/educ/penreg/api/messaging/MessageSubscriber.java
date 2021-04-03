@@ -38,9 +38,7 @@ public class MessageSubscriber {
   }
 
   public void subscribe(final String topic, final EventHandler eventHandler) {
-    if (!this.handlerMap.containsKey(topic)) {
-      this.handlerMap.put(topic, eventHandler);
-    }
+    this.handlerMap.computeIfAbsent(topic, k -> eventHandler);
     final String queue = topic.replace("_", "-");
     final var dispatcher = this.connection.createDispatcher(this.onMessage(eventHandler));
     dispatcher.subscribe(topic, queue);

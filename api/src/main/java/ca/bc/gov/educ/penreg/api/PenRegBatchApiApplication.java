@@ -38,10 +38,33 @@ public class PenRegBatchApiApplication {
    *
    * @param args the input arguments
    */
-  public static void main(String[] args) {
+  public static void main(final String[] args) {
     SpringApplication.run(PenRegBatchApiApplication.class, args);
   }
 
+  /**
+   * Lock provider For distributed lock, to avoid multiple pods executing the same scheduled task.
+   *
+   * @param jdbcTemplate       the jdbc template
+   * @param transactionManager the transaction manager
+   * @return the lock provider
+   */
+  @Bean
+  public LockProvider lockProvider(@Autowired final JdbcTemplate jdbcTemplate, @Autowired final PlatformTransactionManager transactionManager) {
+    return new JdbcTemplateLockProvider(jdbcTemplate, transactionManager, "PEN_REQUEST_BATCH_SHEDLOCK");
+  }
+
+  /**
+   * Thread pool task scheduler thread pool task scheduler.
+   *
+   * @return the thread pool task scheduler
+   */
+  @Bean
+  public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
+    final ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
+    threadPoolTaskScheduler.setPoolSize(5);
+    return threadPoolTaskScheduler;
+  }
 
   /**
    * The type Web security configuration.
@@ -66,41 +89,16 @@ public class PenRegBatchApiApplication {
      * @param web the web
      */
     @Override
-    public void configure(WebSecurity web) {
-      web.ignoring().antMatchers("/v3/api-docs/**",
-          "/actuator/health", "/actuator/prometheus",
-          "/swagger-ui/**");
+    public void configure(final WebSecurity web) {
+      web.ignoring()
+          .antMatchers("/v3/api-docs/**", "/actuator/health", "/actuator/prometheus", "/swagger-ui/**");
     }
+
     @Override
     protected void configure(final HttpSecurity http) throws Exception {
-      http
-              .authorizeRequests()
-              .anyRequest().authenticated().and()
-              .oauth2ResourceServer().jwt();
+      http.authorizeRequests()
+          .anyRequest().authenticated().and()
+          .oauth2ResourceServer().jwt();
     }
-  }
-
-  /**
-   * Lock provider For distributed lock, to avoid multiple pods executing the same scheduled task.
-   *
-   * @param jdbcTemplate       the jdbc template
-   * @param transactionManager the transaction manager
-   * @return the lock provider
-   */
-  @Bean
-  public LockProvider lockProvider(@Autowired JdbcTemplate jdbcTemplate, @Autowired PlatformTransactionManager transactionManager) {
-    return new JdbcTemplateLockProvider(jdbcTemplate, transactionManager, "PEN_REQUEST_BATCH_SHEDLOCK");
-  }
-
-  /**
-   * Thread pool task scheduler thread pool task scheduler.
-   *
-   * @return the thread pool task scheduler
-   */
-  @Bean
-  public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
-    ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
-    threadPoolTaskScheduler.setPoolSize(2);
-    return threadPoolTaskScheduler;
   }
 }

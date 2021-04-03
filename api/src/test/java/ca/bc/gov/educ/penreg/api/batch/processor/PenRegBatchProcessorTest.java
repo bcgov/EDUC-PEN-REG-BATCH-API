@@ -5,10 +5,8 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
@@ -21,7 +19,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,7 +48,6 @@ import static org.mockito.Mockito.when;
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Slf4j
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class PenRegBatchProcessorTest {
   /**
    * The Min.
@@ -79,14 +75,6 @@ public class PenRegBatchProcessorTest {
   private PenRequestBatchStudentRepository studentRepository;
 
   @Autowired
-  private PenRequestBatchHistoryRepository penRequestBatchHistoryRepository;
-  /**
-   * The Pen web blob repository.
-   */
-  @Autowired
-  private PenWebBlobRepository penWebBlobRepository;
-
-  @Autowired
   private PenRequestBatchUtils penRequestBatchUtils;
   /**
    * The Faker.
@@ -100,6 +88,7 @@ public class PenRegBatchProcessorTest {
   RestUtils restUtils;
   @Before
   public void before() {
+    this.penRequestBatchUtils.cleanDB();
     this.faker = new Faker(new Random(0));
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(new School()));
   }
@@ -719,12 +708,8 @@ public class PenRegBatchProcessorTest {
    * After.
    */
   @After
-  @Transactional
   public void after() {
-    this.studentRepository.deleteAll();
-    this.penRequestBatchHistoryRepository.deleteAll();
-    this.repository.deleteAll();
-    this.penWebBlobRepository.deleteAll();
+    this.penRequestBatchUtils.cleanDB();
   }
 
 }

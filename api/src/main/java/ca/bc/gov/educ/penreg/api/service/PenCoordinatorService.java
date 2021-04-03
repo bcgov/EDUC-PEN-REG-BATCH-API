@@ -11,6 +11,7 @@ import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.threads.EnhancedQueueExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,9 @@ public class PenCoordinatorService {
   @Setter
   private Map<Mincode, PenCoordinator> penCoordinatorMap;
 
+  @Value("${initialization.background.enabled}")
+  private Boolean isBackgroundInitializationEnabled;
+
   @Autowired
   public PenCoordinatorService(final PenCoordinatorRepository penCoordinatorRepository) {
     this.penCoordinatorRepository = penCoordinatorRepository;
@@ -43,8 +47,11 @@ public class PenCoordinatorService {
 
   @PostConstruct
   public void init() {
-    this.bgTaskExecutor.execute(() -> this.penCoordinatorMap = this.penCoordinatorRepository.findAll().stream().map(PenCoordinatorMapper.mapper::toTrimmedPenCoordinator).collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity())));
-
+    if (this.isBackgroundInitializationEnabled != null && this.isBackgroundInitializationEnabled) {
+      this.bgTaskExecutor.execute(() -> this.penCoordinatorMap = this.penCoordinatorRepository.findAll().stream().map(PenCoordinatorMapper.mapper::toTrimmedPenCoordinator).collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity())));
+    } else {
+      this.penCoordinatorMap = this.penCoordinatorRepository.findAll().stream().map(PenCoordinatorMapper.mapper::toTrimmedPenCoordinator).collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity()));
+    }
   }
 
   @Scheduled(cron = "0 0 0/4 * * *") // every 4 hours

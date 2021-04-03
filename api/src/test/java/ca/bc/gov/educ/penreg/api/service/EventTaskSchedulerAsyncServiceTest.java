@@ -1,9 +1,13 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.PenRegBatchApiApplication;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
+import ca.bc.gov.educ.penreg.api.support.TestRedisConfiguration;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,11 +18,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REPEATS_CHECKED;
 import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils.createBatchStudents;
 import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils.createSagaRecords;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@SpringBootTest(classes = {TestRedisConfiguration.class, PenRegBatchApiApplication.class})
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @Slf4j
@@ -30,6 +35,9 @@ public class EventTaskSchedulerAsyncServiceTest {
   private PenRequestBatchRepository penRequestBatchRepository;
 
   @Autowired
+  private PenRequestBatchHistoryRepository historyRepository;
+
+  @Autowired
   private EventTaskSchedulerAsyncService eventTaskSchedulerAsyncService;
 
   /**
@@ -37,23 +45,33 @@ public class EventTaskSchedulerAsyncServiceTest {
    */
   @After
   public void tearDown() {
-    penRequestBatchRepository.deleteAll();
-    sagaRepository.deleteAll();
+    this.penRequestBatchRepository.deleteAll();
+    this.sagaRepository.deleteAll();
   }
 
 
   @Test
   public void testMarkProcessedBatchesActive_GivenNewPen_ShouldUpdateCountInDB() throws IOException {
-    var batches = createBatchStudents(penRequestBatchRepository, "mock_pen_req_batch_repeats_checked.json",
-      "mock_pen_req_batch_student_repeats_checked.json", 1);
-    createSagaRecords(sagaRepository, batches);
-    eventTaskSchedulerAsyncService.markProcessedBatchesActive();
-    var batch = penRequestBatchRepository.findById(batches.get(0).getPenRequestBatchID());
+    final var batches = createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_repeats_checked.json",
+        "mock_pen_req_batch_student_repeats_checked.json", 1);
+    createSagaRecords(this.sagaRepository, batches);
+    this.eventTaskSchedulerAsyncService.markProcessedBatchesActive();
+
+    // history records.
+    final var batch = this.penRequestBatchRepository.findById(batches.get(0).getPenRequestBatchID());
+    assertThat(batch).isPresent();
     assertThat(batch.get().getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.ACTIVE.getCode());
     assertThat(batch.get().getErrorCount()).isEqualTo(1);
     assertThat(batch.get().getFixableCount()).isEqualTo(1);
     assertThat(batch.get().getMatchedCount()).isEqualTo(1);
     assertThat(batch.get().getNewPenCount()).isEqualTo(2);
+    val batchEntity = batch.get();
+    batchEntity.setPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
+    this.penRequestBatchRepository.save(batchEntity);
+    this.eventTaskSchedulerAsyncService.markProcessedBatchesActive(); //update to repeat and  call it twice to verify
+    // there are no two history records to indicate it was not processed twice
+    val historyEntities = this.historyRepository.findAllByPenRequestBatchEntity(batch.get());
+    assertThat(historyEntities).isNotEmpty().size().isEqualTo(1);
   }
 
 

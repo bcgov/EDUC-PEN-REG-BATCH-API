@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import static ca.bc.gov.educ.penreg.api.constants.EventType.PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
 import static lombok.AccessLevel.PRIVATE;
 
 @Service
@@ -36,7 +34,6 @@ public class EventPublisherService {
     if (event.getReplyChannel() != null) {
       this.getMessagePublisher().dispatchMessage(event.getReplyChannel(), this.penRequestBatchEventProcessed(event));
     }
-    this.getMessagePublisher().dispatchMessage(PEN_REQUEST_BATCH_API_TOPIC.toString(), this.createOutboxEvent(event));
   }
 
   private byte[] penRequestBatchEventProcessed(final PenRequestBatchEvent penRequestBatchEvent) throws JsonProcessingException {
@@ -48,8 +45,4 @@ public class EventPublisherService {
     return JsonUtil.getJsonStringFromObject(event).getBytes();
   }
 
-  private byte[] createOutboxEvent(final PenRequestBatchEvent penRequestBatchEvent) throws JsonProcessingException {
-    final Event event = Event.builder().eventType(PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED).eventPayload(penRequestBatchEvent.getEventId().toString()).build();
-    return JsonUtil.getJsonStringFromObject(event).getBytes();
-  }
 }

@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
@@ -25,14 +24,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_REQUEST_BATCH_STUDENT_UPDATED;
-import static ca.bc.gov.educ.penreg.api.constants.EventStatus.DB_COMMITTED;
-import static ca.bc.gov.educ.penreg.api.constants.EventStatus.MESSAGE_PUBLISHED;
-import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.READ_FROM_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.UPDATE_PEN_REQUEST_BATCH_STUDENT;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA;
@@ -101,19 +98,6 @@ public class EventHandlerServiceTest {
     this.penRequestBatchRepository.deleteAll();
   }
 
-  @Test
-  public void testHandleEvent_givenEventTypeSTUDENT_EVENT_OUTBOX_PROCESSED_shouldUpdateDBStatus() {
-    final var prbEvent = PenRequestBatchEvent.builder().eventType(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString())
-        .eventOutcome(PEN_REQUEST_BATCH_STUDENT_UPDATED.toString()).eventStatus(DB_COMMITTED.toString()).
-            eventPayload("{}").createDate(LocalDateTime.now()).createUser("TEST").build();
-    this.penRequestBatchEventRepository.save(prbEvent);
-    final var eventId = prbEvent.getEventId();
-    final var event = new Event(PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED, null, null, null, eventId.toString());
-    this.eventHandlerService.handleEvent(event);
-    final var prbEventUpdated = this.penRequestBatchEventRepository.findById(eventId);
-    assertThat(prbEventUpdated).isPresent();
-    assertThat(prbEventUpdated.get().getEventStatus()).isEqualTo(MESSAGE_PUBLISHED.toString());
-  }
 
   @Test
   public void testHandleEvent_givenEventTypeREAD_FROM_TOPIC_shouldStartPenRequestBatchStudentSaga() throws InterruptedException, IOException, TimeoutException {
@@ -162,8 +146,6 @@ public class EventHandlerServiceTest {
     assertThat(replyEvent.getEventPayload()).contains(USR_NEW_PEN.toString());
 
     verify(this.messagePublisher, atMostOnce()).dispatchMessage(eq(PEN_REQUEST_BATCH_API_TOPIC.toString()), this.eventCaptor.capture());
-    final var outboxEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
-    assertThat(outboxEvent.getEventType()).isEqualTo(PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED);
 
     final var penRequestBatch = this.penRequestBatchRepository.findById(UUID.fromString(this.penRequestBatchID));
     assertThat(penRequestBatch.orElseThrow().getNewPenCount()).isEqualTo(3);

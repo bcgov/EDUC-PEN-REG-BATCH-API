@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static ca.bc.gov.educ.penreg.api.constants.EventStatus.DB_COMMITTED;
+import static ca.bc.gov.educ.penreg.api.constants.EventStatus.MESSAGE_PUBLISHED;
 import static lombok.AccessLevel.PRIVATE;
 
 @Service
@@ -76,7 +76,7 @@ public class PenRequestBatchStudentEventService {
       log.info(RECORD_FOUND_FOR_SAGA_ID_EVENT_TYPE);
       log.trace(EVENT_PAYLOAD, event);
       penRequestBatchEvent = penRequestBatchEventOptional.get();
-      penRequestBatchEvent.setEventStatus(DB_COMMITTED.toString());
+      penRequestBatchEvent.setEventStatus(MESSAGE_PUBLISHED.toString());
     }
 
     this.getPenRequestBatchEventRepository().save(penRequestBatchEvent);
@@ -92,7 +92,7 @@ public class PenRequestBatchStudentEventService {
         .eventPayload(event.getEventPayload())
         .eventType(event.getEventType().toString())
         .sagaId(event.getSagaId())
-        .eventStatus(DB_COMMITTED.toString())
+        .eventStatus(MESSAGE_PUBLISHED.toString())
         .eventOutcome(event.getEventOutcome().toString())
         .replyChannel(event.getReplyTo())
         .build();

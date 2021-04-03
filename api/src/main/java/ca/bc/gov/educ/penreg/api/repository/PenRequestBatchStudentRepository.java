@@ -69,9 +69,13 @@ public interface PenRequestBatchStudentRepository extends CrudRepository<PenRequ
   /**
    * Finds all pen request batch student entities given a pen request batch entity, local id is not null, and pen request batch student status code is in list
    *
-   * @param penRequestBatchEntity - the pen request batch entity
+   * @param penRequestBatchEntity             - the pen request batch entity
    * @param penRequestBatchStudentStatusCodes - the list of pen request batch student status codes
    * @return - the list
    */
   List<PenRequestBatchStudentEntity> findAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIsInAndLocalIDNotNull(PenRequestBatchEntity penRequestBatchEntity, List<String> penRequestBatchStudentStatusCodes);
+
+  @Query("select t from PenRequestBatchStudentEntity t WHERE t.penRequestBatchEntity IN (select s from PenRequestBatchEntity s WHERE s.mincode = :mincode AND s.penRequestBatchStatusCode = :penRequestBatchStatusCode AND s.processDate >= :startDate) AND t.penRequestBatchStudentStatusCode NOT IN :penRequestBatchStudentStatusCodes")
+  List<PenRequestBatchStudentEntity> findAllPenRequestBatchStudentsForGivenCriteria(@Param("mincode") String mincode,
+                                                                                    @Param("penRequestBatchStatusCode") String penRequestBatchStatusCode, @Param("startDate") LocalDateTime startDate, List<String> penRequestBatchStudentStatusCodes);
 }

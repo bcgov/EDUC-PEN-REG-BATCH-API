@@ -1,12 +1,12 @@
 package ca.bc.gov.educ.penreg.api.batch.service;
 
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
+import ca.bc.gov.educ.penreg.api.PenRegBatchApiApplication;
+import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
+import ca.bc.gov.educ.penreg.api.support.TestRedisConfiguration;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
@@ -14,7 +14,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -23,14 +22,15 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.ARCHIVED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
-@SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@SpringBootTest(classes = {TestRedisConfiguration.class, PenRegBatchApiApplication.class})
 public class PenRequestBatchFileServiceTest {
   @Autowired
   RestUtils restUtils;
@@ -43,29 +43,19 @@ public class PenRequestBatchFileServiceTest {
    * The Student repository.
    */
   @Autowired
-  private PenRequestBatchStudentRepository studentRepository;
-  @Autowired
-  private PenRequestBatchHistoryRepository penRequestBatchHistoryRepository;
-  /**
-   * The Pen web blob repository.
-   */
-  @Autowired
-  private PenWebBlobRepository penWebBlobRepository;
-  @Autowired
   private PenRequestBatchUtils penRequestBatchUtils;
   @Autowired
   private PenRequestBatchFileService penRequestBatchFileService;
 
   @Before
   public void before() {
+    this.penRequestBatchUtils.cleanDB();
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(new School()));
   }
 
   @After
   public void tearDown() {
-    this.penRequestBatchHistoryRepository.deleteAll();
-    this.studentRepository.deleteAll();
-    this.repository.deleteAll();
+    this.penRequestBatchUtils.cleanDB();
   }
 
   @Test
@@ -82,6 +72,29 @@ public class PenRequestBatchFileServiceTest {
     assertThat(filteredSet.size()).isZero();
 
   }
+
+  @Test
+  public void testFilterDuplicatesAndRepeatRequests_givenRepeatedStudentsInALargeFile_shouldRemoveRepeatedStudentsFromReturnedSet() throws IOException, FileUnProcessableException {
+    when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
+    //sample_5000_records_OK
+    final String submissionNumber = this.penRequestBatchUtils.createBatchStudentsFromFile("sample_5000_records_OK" +
+        ".txt", ARCHIVED.getCode());
+    final String submissionNumber2 = this.penRequestBatchUtils.createBatchStudentsFromFile("sample_5000_records_OK" +
+        ".txt", LOADED.getCode());
+    val previousBatch = this.repository.findBySubmissionNumber(submissionNumber);
+    assertThat(previousBatch).isPresent();
+    val prvbatchEntity = previousBatch.get();
+    prvbatchEntity.setPenRequestBatchStatusCode(ARCHIVED.getCode());
+    prvbatchEntity.setProcessDate(LocalDateTime.now().minusDays(2));
+    this.penRequestBatchUtils.updateBatchInNewTransaction(prvbatchEntity);
+    final var result = this.repository.findBySubmissionNumber(submissionNumber2);
+    assertThat(result).isPresent();
+    val filteredSet = this.penRequestBatchFileService.filterDuplicatesAndRepeatRequests(UUID.randomUUID().toString(),
+        result.get());
+    assertThat(filteredSet.size()).isZero();
+
+  }
+
 
   private School createMockSchool() {
     final School school = new School();

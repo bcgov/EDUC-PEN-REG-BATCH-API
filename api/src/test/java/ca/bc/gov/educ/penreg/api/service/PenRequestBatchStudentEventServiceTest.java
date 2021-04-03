@@ -21,7 +21,6 @@ import java.util.UUID;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_REQUEST_BATCH_STUDENT_NOT_FOUND;
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_REQUEST_BATCH_STUDENT_UPDATED;
-import static ca.bc.gov.educ.penreg.api.constants.EventStatus.DB_COMMITTED;
 import static ca.bc.gov.educ.penreg.api.constants.EventStatus.MESSAGE_PUBLISHED;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.UPDATE_PEN_REQUEST_BATCH_STUDENT;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
@@ -84,7 +83,7 @@ public class PenRequestBatchStudentEventServiceTest {
     assertThat(penRequestBatchEvent.getEventOutcome()).isEqualTo(PEN_REQUEST_BATCH_STUDENT_UPDATED.toString());
     final var prbStudent = JsonUtil.getJsonObjectFromString(PenRequestBatchStudent.class, penRequestBatchEvent.getEventPayload());
     assertThat(prbStudent.getPenRequestBatchStudentStatusCode()).contains(USR_NEW_PEN.toString());
-    assertThat(penRequestBatchEvent.getEventStatus()).isEqualTo(DB_COMMITTED.toString());
+    assertThat(penRequestBatchEvent.getEventStatus()).isEqualTo(MESSAGE_PUBLISHED.toString());
     assertThat(penRequestBatchEvent.getReplyChannel()).isEqualTo(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC.toString());
 
 
@@ -105,7 +104,7 @@ public class PenRequestBatchStudentEventServiceTest {
     assertThat(penRequestBatchEvent.getSagaId()).isEqualTo(this.sagaID);
     assertThat(penRequestBatchEvent.getEventType()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
     assertThat(penRequestBatchEvent.getEventOutcome()).isEqualTo(PEN_REQUEST_BATCH_STUDENT_NOT_FOUND.toString());
-    assertThat(penRequestBatchEvent.getEventStatus()).isEqualTo(DB_COMMITTED.toString());
+    assertThat(penRequestBatchEvent.getEventStatus()).isEqualTo(MESSAGE_PUBLISHED.toString());
     assertThat(penRequestBatchEvent.getReplyChannel()).isEqualTo(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC.toString());
 
     final var prbStudentEventEntity = this.penRequestBatchEventRepository.findBySagaId(this.sagaID);
@@ -125,11 +124,11 @@ public class PenRequestBatchStudentEventServiceTest {
 
     assertThat(penRequestBatchEvent.getSagaId()).isEqualTo(this.sagaID);
     assertThat(penRequestBatchEvent.getEventId()).isEqualTo(existedPrbEvent.getEventId());
-    assertThat(penRequestBatchEvent.getEventStatus()).isEqualTo(DB_COMMITTED.toString());
+    assertThat(penRequestBatchEvent.getEventStatus()).isEqualTo(MESSAGE_PUBLISHED.toString());
 
     final var prbStudentEventEntity = this.penRequestBatchEventRepository.findBySagaId(this.sagaID);
     assertThat(prbStudentEventEntity.get().getEventId()).isEqualTo(penRequestBatchEvent.getEventId());
-    assertThat(prbStudentEventEntity.get().getEventStatus()).isEqualTo(DB_COMMITTED.toString());
+    assertThat(prbStudentEventEntity.get().getEventStatus()).isEqualTo(MESSAGE_PUBLISHED.toString());
   }
 
   protected String dummyPenRequestBatchStudentDataJson(final String status) {
