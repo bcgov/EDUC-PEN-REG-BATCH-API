@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.schedulers;
 
+import ca.bc.gov.educ.penreg.api.BaseTest;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
@@ -9,13 +10,8 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
-import org.junit.After;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -23,10 +19,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-@ActiveProfiles("test")
-public class PurgeSoftDeletedBatchRecordsSchedulerTest {
+public class PurgeSoftDeletedBatchRecordsSchedulerTest extends BaseTest {
 
   @Autowired
   PenRequestBatchRepository penRequestBatchRepository;
@@ -50,19 +43,10 @@ public class PurgeSoftDeletedBatchRecordsSchedulerTest {
    */
   private static final PenRequestBatchHistoryMapper historyMapper = PenRequestBatchHistoryMapper.mapper;
 
-  /**
-   * Tear down.
-   */
-  @After
-  public void tearDown() {
-    this.penRequestBatchStudentRepository.deleteAll();
-    this.penRequestBatchHistoryRepository.deleteAll();
-    this.penRequestBatchRepository.deleteAll();
-  }
 
   @Test
   public void pollBatchFilesAndPurgeSoftDeletedRecords_givenOldRecordsPresent_shouldBeDeleted() throws IOException {
-    List<PenRequestBatchEntity> prbEntities = createBatchStudents(2);
+    final List<PenRequestBatchEntity> prbEntities = this.createBatchStudents(2);
 
     final var softDeletedPrbEntity =  prbEntities.get(0);
     assertThat(softDeletedPrbEntity.getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.DELETED.getCode());
@@ -73,7 +57,7 @@ public class PurgeSoftDeletedBatchRecordsSchedulerTest {
     prbHistoryEntity.setUpdateDate(LocalDateTime.now().minusDays(3));
     prbHistoryEntity.setEventDate(LocalDateTime.now().minusDays(3));
     prbHistoryEntity.setPenRequestBatchEventCode(PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
-    penRequestBatchHistoryRepository.save(prbHistoryEntity);
+    this.penRequestBatchHistoryRepository.save(prbHistoryEntity);
 
     this.purgeSoftDeletedBatchRecordsScheduler.setSoftDeletedBatchRecordsRetentionDays(2);
     this.purgeSoftDeletedBatchRecordsScheduler.pollBatchFilesAndPurgeSoftDeletedRecords();

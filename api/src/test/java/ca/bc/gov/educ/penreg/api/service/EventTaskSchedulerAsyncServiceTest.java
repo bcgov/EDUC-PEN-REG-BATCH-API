@@ -1,20 +1,14 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.PenRegBatchApiApplication;
+import ca.bc.gov.educ.penreg.api.BaseTest;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
-import ca.bc.gov.educ.penreg.api.support.TestRedisConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.junit.After;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 
@@ -23,11 +17,8 @@ import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils.createBatch
 import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils.createSagaRecords;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(classes = {TestRedisConfiguration.class, PenRegBatchApiApplication.class})
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
 @Slf4j
-public class EventTaskSchedulerAsyncServiceTest {
+public class EventTaskSchedulerAsyncServiceTest extends BaseTest {
   @Autowired
   private SagaRepository sagaRepository;
 
@@ -40,14 +31,6 @@ public class EventTaskSchedulerAsyncServiceTest {
   @Autowired
   private EventTaskSchedulerAsyncService eventTaskSchedulerAsyncService;
 
-  /**
-   * Tear down.
-   */
-  @After
-  public void tearDown() {
-    this.penRequestBatchRepository.deleteAll();
-    this.sagaRepository.deleteAll();
-  }
 
 
   @Test

@@ -37,6 +37,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Component
 @Profile("test")
 public class PenRequestBatchUtils {
+  @Autowired
+  PenCoordinatorRepository coordinatorRepository;
+  @Autowired
+  PenRequestBatchStudentInfoRequestMacroRepository penRequestBatchStudentInfoRequestMacroRepository;
+  @Autowired
+  SagaRepository sagaRepository;
+
+  @Autowired
+  SagaEventRepository sagaEventRepository;
   /**
    * The Min.
    */
@@ -246,9 +255,14 @@ public class PenRequestBatchUtils {
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void cleanDB() {
+    this.coordinatorRepository.deleteAll();
+    this.penRequestBatchStudentInfoRequestMacroRepository.deleteAll();
+    this.sagaEventRepository.deleteAll();
+    this.sagaRepository.deleteAll();
     this.studentRepository.deleteAll();
     this.penRequestBatchHistoryRepository.deleteAll();
     this.penWebBlobRepository.deleteAll();
     this.repository.deleteAll();
+
   }
 }

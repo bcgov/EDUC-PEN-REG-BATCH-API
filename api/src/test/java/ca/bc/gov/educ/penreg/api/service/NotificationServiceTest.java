@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.BaseTest;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenCoordinatorMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.repository.PenCoordinatorRepository;
@@ -11,11 +12,7 @@ import io.nats.client.Message;
 import io.nats.client.Subscription;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -29,10 +26,7 @@ import java.util.stream.Collectors;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest
-public class NotificationServiceTest {
+public class NotificationServiceTest extends BaseTest {
 
   @Autowired
   NotificationService notificationService;

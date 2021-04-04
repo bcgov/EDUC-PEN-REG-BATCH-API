@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.BaseTest;
 import ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
@@ -8,28 +9,18 @@ import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import org.junit.After;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest
-public class ResponseFileGeneratorServiceTest {
+public class ResponseFileGeneratorServiceTest extends BaseTest {
 
   @Autowired
   private ResponseFileGeneratorService responseFileGeneratorService;
@@ -41,9 +32,9 @@ public class ResponseFileGeneratorServiceTest {
   @Autowired
   private PenRequestBatchStudentRepository prbStudentRepository;
 
-  @MockBean
+  @Autowired
   RestUtils restUtils;
-  @MockBean
+  @Autowired
   private PenCoordinatorService penCoordinatorService;
 
   private List<PenRequestBatchEntity> batchList;
@@ -91,11 +82,6 @@ public class ResponseFileGeneratorServiceTest {
           "    \"sendPenResultsVia\": \"E\"\n" +
           "  }";
 
-  @After
-  public void after() {
-    this.prbStudentRepository.deleteAll();
-    this.prbRepository.deleteAll();
-  }
 
   @Test
   @Transactional

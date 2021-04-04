@@ -14,18 +14,13 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.UUID;
 
@@ -39,9 +34,6 @@ import static org.mockito.Mockito.*;
 /**
  * The type Message publisher test.
  */
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest
 public class PenReqBatchNewPenOrchestratorTest extends BaseOrchestratorTest {
   /**
    * The Repository.
@@ -101,14 +93,6 @@ public class PenReqBatchNewPenOrchestratorTest extends BaseOrchestratorTest {
         UUID.fromString(this.penRequestBatchStudentID), UUID.fromString(this.penRequestBatchID));
   }
 
-  /**
-   * After.
-   */
-  @After
-  public void after() {
-    this.sagaEventRepository.deleteAll();
-    this.repository.deleteAll();
-  }
 
   /**
    * Test get next pen number.

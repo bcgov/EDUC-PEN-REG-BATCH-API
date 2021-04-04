@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.BaseTest;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
@@ -10,18 +11,13 @@ import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -41,10 +37,7 @@ import static org.mockito.Mockito.*;
 /**
  * The type Message publisher test.
  */
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest
-public class EventHandlerServiceTest {
+public class EventHandlerServiceTest extends BaseTest {
   @Autowired
   private SagaRepository repository;
   @Autowired
@@ -88,14 +81,6 @@ public class EventHandlerServiceTest {
 
     this.penRequestBatchID = UUID.randomUUID().toString();
     this.penRequestBatchStudentID = UUID.randomUUID().toString();
-  }
-
-  @After
-  public void after() {
-    this.sagaEventRepository.deleteAll();
-    this.repository.deleteAll();
-    this.penRequestBatchEventRepository.deleteAll();
-    this.penRequestBatchRepository.deleteAll();
   }
 
 

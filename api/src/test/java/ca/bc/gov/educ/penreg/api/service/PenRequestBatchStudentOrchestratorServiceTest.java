@@ -1,10 +1,10 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.BaseTest;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -12,16 +12,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,12 +31,9 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 /**
  * The type Pen request batch student orchestrator service test.
  */
-@SpringBootTest
 @RunWith(JUnitParamsRunner.class)
-@ActiveProfiles("test")
 @Slf4j
-@Transactional
-public class PenRequestBatchStudentOrchestratorServiceTest {
+public class PenRequestBatchStudentOrchestratorServiceTest extends BaseTest {
   /**
    * The constant scr.
    */
@@ -57,10 +52,8 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
   @Autowired
   private PenRequestBatchStudentOrchestratorService orchestratorService;
 
-  @MockBean
+  @Autowired
   private PenRequestBatchRepository penRequestBatchRepository;
-  @MockBean
-  private PenRequestBatchStudentRepository penRequestBatchStudentRepository;
 
   @Before
   public void setup() throws IOException {
@@ -87,11 +80,6 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
     this.penRequestBatchRepository.save(entity);
   }
 
-  @After
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void tearDown(){
-    this.penRequestBatchRepository.deleteAll();
-  }
   /**
    * Test are both field value equal.
    *

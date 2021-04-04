@@ -1,21 +1,15 @@
 package ca.bc.gov.educ.penreg.api.batch.service;
 
-import ca.bc.gov.educ.penreg.api.PenRegBatchApiApplication;
+import ca.bc.gov.educ.penreg.api.BaseTest;
 import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
-import ca.bc.gov.educ.penreg.api.support.TestRedisConfiguration;
 import lombok.val;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -28,10 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest(classes = {TestRedisConfiguration.class, PenRegBatchApiApplication.class})
-public class PenRequestBatchFileServiceTest {
+public class PenRequestBatchFileServiceTest extends BaseTest {
   @Autowired
   RestUtils restUtils;
   /**
@@ -49,14 +40,9 @@ public class PenRequestBatchFileServiceTest {
 
   @Before
   public void before() {
-    this.penRequestBatchUtils.cleanDB();
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(new School()));
   }
 
-  @After
-  public void tearDown() {
-    this.penRequestBatchUtils.cleanDB();
-  }
 
   @Test
   public void testFilterDuplicatesAndRepeatRequests_givenRepeatedStudentsInAFile_shouldRemoveRepeatedStudentsFromReturnedSet() throws IOException {

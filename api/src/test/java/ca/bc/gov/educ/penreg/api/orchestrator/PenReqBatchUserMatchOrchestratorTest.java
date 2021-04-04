@@ -17,17 +17,12 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.List;
@@ -42,9 +37,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest
 public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
 
 
@@ -110,14 +102,6 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
         UUID.fromString(this.penRequestBatchStudentID), UUID.fromString(this.penRequestBatchID));
   }
 
-  /**
-   * After.
-   */
-  @After
-  public void after() {
-    this.sagaEventRepository.deleteAll();
-    this.repository.deleteAll();
-  }
 
   @Test
   public void testGetStudentByPen_givenEventAndSagaData_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {

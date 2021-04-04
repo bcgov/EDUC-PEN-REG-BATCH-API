@@ -1,25 +1,19 @@
 package ca.bc.gov.educ.penreg.api.schedulers;
 
+import ca.bc.gov.educ.penreg.api.BaseTest;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.LocalDateTime;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-@ActiveProfiles("test")
-public class PurgeOldSagaRecordsSchedulerTest {
+public class PurgeOldSagaRecordsSchedulerTest extends BaseTest {
 
   @Autowired
   SagaRepository repository;

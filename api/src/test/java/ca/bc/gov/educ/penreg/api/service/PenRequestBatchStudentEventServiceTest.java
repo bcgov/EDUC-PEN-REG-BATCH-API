@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.BaseTest;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
@@ -7,14 +8,9 @@ import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -31,10 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * The type Message publisher test.
  */
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest
-public class PenRequestBatchStudentEventServiceTest {
+public class PenRequestBatchStudentEventServiceTest extends BaseTest {
   @Autowired
   private PenRequestBatchEventRepository penRequestBatchEventRepository;
   @Autowired
@@ -59,11 +52,6 @@ public class PenRequestBatchStudentEventServiceTest {
     this.payload = this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString());
   }
 
-  @After
-  public void after() {
-    this.penRequestBatchEventRepository.deleteAll();
-    this.penRequestBatchRepository.deleteAll();
-  }
 
   @Test
   public void testUpdatePenRequestBatchStudent_givenNewSagaIdAndEventType_shouldUpdatePrbStudentAndReturnPEN_REQUEST_BATCH_STUDENT_UPDATED() throws IOException {

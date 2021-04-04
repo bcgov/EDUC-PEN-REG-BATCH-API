@@ -1,19 +1,15 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.BaseTest;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
@@ -27,10 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * The type Message publisher test.
  */
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest
-public class PenRequestBatchStudentServiceTest {
+public class PenRequestBatchStudentServiceTest extends BaseTest {
   @Autowired
   private PenRequestBatchStudentService prbStudentService;
   @Autowired
@@ -49,10 +42,6 @@ public class PenRequestBatchStudentServiceTest {
     this.penRequestBatchID = this.batchList.get(0).getPenRequestBatchID();
   }
 
-  @After
-  public void after() {
-    this.penRequestBatchRepository.deleteAll();
-  }
 
   @Test
   @Transactional

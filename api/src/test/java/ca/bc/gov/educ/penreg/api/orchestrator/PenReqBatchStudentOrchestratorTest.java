@@ -16,17 +16,12 @@ import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.*;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
@@ -51,9 +46,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest
 public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
   /**
    * The Repository.
@@ -167,13 +159,6 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
 
   }
 
-  @After
-  public void tearDown() {
-    this.sagaEventRepository.deleteAll();
-    this.repository.deleteAll();
-    this.penRequestBatchRepository.deleteAll();
-    this.penRequestBatchStudentRepository.deleteAll();
-  }
 
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenType_shouldExecuteNextEventVALIDATE_STUDENT_DEMOGRAPHICS() throws InterruptedException, TimeoutException, IOException {

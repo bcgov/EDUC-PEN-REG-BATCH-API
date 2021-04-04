@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.batch.processor;
 
+import ca.bc.gov.educ.penreg.api.BaseTest;
 import ca.bc.gov.educ.penreg.api.compare.PenRequestBatchHistoryComparator;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
@@ -13,14 +14,9 @@ import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.github.javafaker.Faker;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
@@ -44,11 +40,8 @@ import static org.mockito.Mockito.when;
 /**
  * The type Pen reg batch processor test.
  */
-@SpringBootTest
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
 @Slf4j
-public class PenRegBatchProcessorTest {
+public class PenRegBatchProcessorTest extends BaseTest {
   /**
    * The Min.
    */
@@ -88,7 +81,6 @@ public class PenRegBatchProcessorTest {
   RestUtils restUtils;
   @Before
   public void before() {
-    this.penRequestBatchUtils.cleanDB();
     this.faker = new Faker(new Random(0));
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(new School()));
   }
@@ -704,13 +696,6 @@ public class PenRegBatchProcessorTest {
     return school;
   }
 
-  /**
-   * After.
-   */
-  @After
-  public void after() {
-    this.penRequestBatchUtils.cleanDB();
-  }
 
 }
 
