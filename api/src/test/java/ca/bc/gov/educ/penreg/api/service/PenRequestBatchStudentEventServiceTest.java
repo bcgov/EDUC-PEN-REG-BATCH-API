@@ -1,12 +1,12 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * The type Message publisher test.
  */
-public class PenRequestBatchStudentEventServiceTest extends BaseTest {
+public class PenRequestBatchStudentEventServiceTest extends BasePenRegAPITest {
   @Autowired
   private PenRequestBatchEventRepository penRequestBatchEventRepository;
   @Autowired
@@ -55,7 +55,7 @@ public class PenRequestBatchStudentEventServiceTest extends BaseTest {
 
   @Test
   public void testUpdatePenRequestBatchStudent_givenNewSagaIdAndEventType_shouldUpdatePrbStudentAndReturnPEN_REQUEST_BATCH_STUDENT_UPDATED() throws IOException {
-    final var batchList = PenRequestBatchUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json",
+    final var batchList = PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json",
         "mock_pen_req_batch_student_archived.json", 1);
     this.penRequestBatchID = batchList.get(0).getPenRequestBatchID().toString();
     this.penRequestBatchStudentID = batchList.get(0).getPenRequestBatchStudentEntities().stream()

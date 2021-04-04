@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
@@ -16,7 +16,7 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.Search;
 import ca.bc.gov.educ.penreg.api.struct.v1.SearchCriteria;
 import ca.bc.gov.educ.penreg.api.struct.v1.ValueType;
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * The type Pen request batch api controller test.
  */
-public class PenRequestBatchAPIControllerTest extends BaseTest {
+public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
   /**
    * The constant PEN_REQUEST_BATCH_API.
    */
@@ -124,7 +124,7 @@ public class PenRequestBatchAPIControllerTest extends BaseTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchTestUtils::populateAuditColumns).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("fixableCount").operation(FilterOperation.GREATER_THAN).value("10").valueType(ValueType.LONG).build();
     final List<SearchCriteria> criteriaList = new ArrayList<>();
@@ -154,7 +154,7 @@ public class PenRequestBatchAPIControllerTest extends BaseTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchTestUtils::populateAuditColumns).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("schoolGroupCode").operation(FilterOperation.EQUAL).value(SchoolGroupCodes.K12.getCode()).valueType(ValueType.STRING).build();
     final List<SearchCriteria> criteriaList = new ArrayList<>();
@@ -184,7 +184,7 @@ public class PenRequestBatchAPIControllerTest extends BaseTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchTestUtils::populateAuditColumns).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("schoolGroupCode").operation(FilterOperation.EQUAL).value(SchoolGroupCodes.K12.getCode()).valueType(ValueType.STRING).build();
     final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStatusCode").condition(OR).operation(FilterOperation.IN).value("LOADED,ACTIVE").valueType(ValueType.STRING).build();
@@ -222,7 +222,7 @@ public class PenRequestBatchAPIControllerTest extends BaseTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchTestUtils::populateAuditColumns).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("schoolGroupCode").operation(FilterOperation.EQUAL).value(SchoolGroupCodes.K12.getCode()).valueType(ValueType.STRING).build();
     final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStatusCode").condition(AND).operation(FilterOperation.IN).value("LOADED,ACTIVE").valueType(ValueType.STRING).build();
@@ -260,7 +260,7 @@ public class PenRequestBatchAPIControllerTest extends BaseTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchTestUtils::populateAuditColumns).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("schoolGroupCode").operation(FilterOperation.EQUAL).value(SchoolGroupCodes.K12.getCode()).valueType(ValueType.STRING).build();
     final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStatusCode").condition(AND).operation(FilterOperation.IN).value("LOADED,ACTIVE").valueType(ValueType.STRING).build();
@@ -298,7 +298,7 @@ public class PenRequestBatchAPIControllerTest extends BaseTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchTestUtils::populateAuditColumns).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("schoolGroupCode").operation(FilterOperation.EQUAL).value(SchoolGroupCodes.K12.getCode()).valueType(ValueType.STRING).build();
     final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStatusCode").condition(OR).operation(FilterOperation.IN).value("LOADED,ACTIVE").valueType(ValueType.STRING).build();
@@ -340,7 +340,7 @@ public class PenRequestBatchAPIControllerTest extends BaseTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchTestUtils::populateAuditColumns).collect(Collectors.toList());
     this.penRequestBatchRepository.saveAll(models);
     final SearchCriteria criteria = SearchCriteria.builder().key("schoolGroupCode").operation(FilterOperation.EQUAL).value(SchoolGroupCodes.K12.getCode()).valueType(ValueType.STRING).build();
     final SearchCriteria criteria2 = SearchCriteria.builder().key("penRequestBatchStatusCode").condition(OR).operation(FilterOperation.IN).value("LOADED,ACTIVE").valueType(ValueType.STRING).build();
@@ -598,7 +598,7 @@ public class PenRequestBatchAPIControllerTest extends BaseTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchTestUtils::populateAuditColumns).collect(Collectors.toList());
 
 
     final File student = new File(
@@ -606,7 +606,7 @@ public class PenRequestBatchAPIControllerTest extends BaseTest {
     );
     final List<PenRequestBatchStudentEntity> studentEntities = new ObjectMapper().readValue(student, new TypeReference<>() {
     });
-    final var students = studentEntities.stream().map(PenRequestBatchUtils::populateAuditColumns).peek(el -> el.setPenRequestBatchEntity(models.get(0))).collect(Collectors.toSet());
+    final var students = studentEntities.stream().map(PenRequestBatchTestUtils::populateAuditColumns).peek(el -> el.setPenRequestBatchEntity(models.get(0))).collect(Collectors.toSet());
 
     models.get(0).setPenRequestBatchStudentEntities(students);
     this.penRequestBatchRepository.saveAll(models);
@@ -680,7 +680,7 @@ public class PenRequestBatchAPIControllerTest extends BaseTest {
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(Collectors.toList());
+    final var models = entities.stream().map(mapper::toModel).collect(Collectors.toList()).stream().map(PenRequestBatchTestUtils::populateAuditColumns).collect(Collectors.toList());
     final var results = this.penRequestBatchRepository.saveAll(models);
     this.mockMvc.perform(get("/api/v1/pen-request-batch/" + results.iterator().next().getPenRequestBatchID())
             .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH"))))
@@ -718,7 +718,7 @@ public class PenRequestBatchAPIControllerTest extends BaseTest {
     final var models = entities.stream().peek(x -> {
       x.setInsertDate(LocalDateTime.now().toString());
       x.setExtractDate(LocalDateTime.now().toString());
-    }).map(PenRequestBatchMapper.mapper::toModel).collect(toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(toList());
+    }).map(PenRequestBatchMapper.mapper::toModel).collect(toList()).stream().map(PenRequestBatchTestUtils::populateAuditColumns).collect(toList());
 
     this.penRequestBatchRepository.saveAll(models);
 
@@ -779,7 +779,7 @@ public class PenRequestBatchAPIControllerTest extends BaseTest {
    * @throws IOException the io exception
    */
   private List<PenRequestBatchEntity> createBatchStudents(final Integer total) throws IOException {
-    return PenRequestBatchUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch.json",
+    return PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch.json",
         "mock_pen_req_batch_student.json", total);
   }
 

@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentInfoRequestMacroMapper;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentInfoRequestMacroRepository;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentInfoRequestMacroService;
@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * The type Pen request batch api controller test.
  */
-public class PenRequestBatchStudentInfoRequestMacroControllerTest extends BaseTest {
+public class PenRequestBatchStudentInfoRequestMacroControllerTest extends BasePenRegAPITest {
   private static final PenRequestBatchStudentInfoRequestMacroMapper mapper = PenRequestBatchStudentInfoRequestMacroMapper.mapper;
   @Autowired
   PenRequestBatchStudentInfoRequestMacroController controller;

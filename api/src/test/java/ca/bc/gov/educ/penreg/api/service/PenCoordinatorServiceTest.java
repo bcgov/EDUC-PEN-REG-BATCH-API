@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenCoordinatorMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.Mincode;
 import ca.bc.gov.educ.penreg.api.repository.PenCoordinatorRepository;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-public class PenCoordinatorServiceTest extends BaseTest {
+public class PenCoordinatorServiceTest extends BasePenRegAPITest {
 
   @Autowired
   PenCoordinatorRepository coordinatorRepository;

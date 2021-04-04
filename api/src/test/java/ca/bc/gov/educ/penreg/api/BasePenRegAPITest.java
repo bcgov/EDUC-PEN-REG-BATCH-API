@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api;
 
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.support.TestRedisConfiguration;
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -14,12 +14,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest(classes = {TestRedisConfiguration.class, PenRegBatchApiApplication.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-public abstract class BaseTest {
+public abstract class BasePenRegAPITest {
   @Autowired
-  private PenRequestBatchUtils penRequestBatchUtils;
+  private PenRequestBatchTestUtils penRequestBatchTestUtils;
 
   @Before
   public void resetState() {
-    this.penRequestBatchUtils.cleanDB();
+    this.penRequestBatchTestUtils.cleanDB();
   }
 }

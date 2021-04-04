@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.health;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import io.nats.client.Connection;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +9,7 @@ import org.springframework.boot.actuate.health.Status;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-public class PenRegBatchAPICustomHealthCheckTest extends BaseTest {
+public class PenRegBatchAPICustomHealthCheckTest extends BasePenRegAPITest {
 
   @Autowired
   Connection natsConnection;

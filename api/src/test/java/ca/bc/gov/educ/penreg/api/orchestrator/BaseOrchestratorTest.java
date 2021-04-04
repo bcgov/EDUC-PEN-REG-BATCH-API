@@ -1,12 +1,12 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 
 import java.util.UUID;
 
-public abstract class BaseOrchestratorTest extends BaseTest {
+public abstract class BaseOrchestratorTest extends BasePenRegAPITest {
   protected static final String TEST_PEN = "123456789";
   /**
    * The Pen request batch id.

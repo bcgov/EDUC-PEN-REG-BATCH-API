@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Component
 @Profile("test")
-public class PenRequestBatchUtils {
+public class PenRequestBatchTestUtils {
   @Autowired
   PenCoordinatorRepository coordinatorRepository;
   @Autowired
@@ -147,20 +147,20 @@ public class PenRequestBatchUtils {
   public static List<PenRequestBatchEntity> createBatchStudents(final PenRequestBatchRepository penRequestBatchRepository, final String batchFileName,
                                                                 final String batchStudentFileName, final Integer total, final Consumer<PenRequestBatchEntity> batchConsumer) throws java.io.IOException {
     final File file = new File(
-        Objects.requireNonNull(PenRequestBatchUtils.class.getClassLoader().getResource(batchFileName)).getFile()
+        Objects.requireNonNull(PenRequestBatchTestUtils.class.getClassLoader().getResource(batchFileName)).getFile()
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    final var models = entities.stream().map(mapper::toModel).collect(toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(toList());
+    final var models = entities.stream().map(mapper::toModel).collect(toList()).stream().map(PenRequestBatchTestUtils::populateAuditColumns).collect(toList());
 
     for (int i = 0; i < total && i < models.size(); i++) {
       final File student = new File(
-          Objects.requireNonNull(PenRequestBatchUtils.class.getClassLoader().getResource(batchStudentFileName)).getFile()
+          Objects.requireNonNull(PenRequestBatchTestUtils.class.getClassLoader().getResource(batchStudentFileName)).getFile()
       );
       final List<PenRequestBatchStudentEntity> studentEntities = new ObjectMapper().readValue(student, new TypeReference<>() {
       });
       final PenRequestBatchEntity batch = models.get(i);
-      final var students = studentEntities.stream().map(PenRequestBatchUtils::populateAuditColumns).peek(el -> el.setPenRequestBatchEntity(batch)).collect(Collectors.toSet());
+      final var students = studentEntities.stream().map(PenRequestBatchTestUtils::populateAuditColumns).peek(el -> el.setPenRequestBatchEntity(batch)).collect(Collectors.toSet());
 
       if (batchConsumer != null) {
         batchConsumer.accept(batch);

@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenCoordinatorMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.repository.PenCoordinatorRepository;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class NotificationServiceTest extends BaseTest {
+public class NotificationServiceTest extends BasePenRegAPITest {
 
   @Autowired
   NotificationService notificationService;

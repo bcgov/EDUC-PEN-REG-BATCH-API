@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * The type Pen request batch saga controller test.
  */
-public class PenRequestBatchSagaControllerTest extends BaseTest {
+public class PenRequestBatchSagaControllerTest extends BasePenRegAPITest {
 
   @Autowired
   PenRequestBatchSagaController controller;

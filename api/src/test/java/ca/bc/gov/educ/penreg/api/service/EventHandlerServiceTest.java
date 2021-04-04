@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
@@ -9,7 +9,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +37,7 @@ import static org.mockito.Mockito.*;
 /**
  * The type Message publisher test.
  */
-public class EventHandlerServiceTest extends BaseTest {
+public class EventHandlerServiceTest extends BasePenRegAPITest {
   @Autowired
   private SagaRepository repository;
   @Autowired
@@ -113,7 +113,7 @@ public class EventHandlerServiceTest extends BaseTest {
   @Test
   public void testHandleEvent_givenEventTypeUPDATE_PEN_REQUEST_BATCH_STUDENT_shouldUpdatePrbStudentAndSendEvent() throws IOException {
     final var sagaID = UUID.randomUUID();
-    final var batchList = PenRequestBatchUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json",
+    final var batchList = PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json",
         "mock_pen_req_batch_student_archived.json", 1);
     this.penRequestBatchID = batchList.get(0).getPenRequestBatchID().toString();
     this.penRequestBatchStudentID = batchList.get(0).getPenRequestBatchStudentEntities().stream()
@@ -143,7 +143,7 @@ public class EventHandlerServiceTest extends BaseTest {
   @Test
   public void testHandleEvent_givenEventTypeUPDATE_PEN_REQUEST_BATCH_STUDENT_and_FailedToSendEvent_shouldUpdatePrbStudent() throws IOException {
     final var sagaID = UUID.randomUUID();
-    final var batchList = PenRequestBatchUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json",
+    final var batchList = PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json",
         "mock_pen_req_batch_student_archived.json", 1);
     this.penRequestBatchID = batchList.get(0).getPenRequestBatchID().toString();
     this.penRequestBatchStudentID = batchList.get(0).getPenRequestBatchStudentEntities().stream()

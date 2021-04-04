@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.batch.validator;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -19,7 +19,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
-public class PenRequestBatchFileValidatorTest extends BaseTest {
+public class PenRequestBatchFileValidatorTest extends BasePenRegAPITest {
   @Autowired
   private PenRequestBatchFileValidator penRequestBatchFileValidator;
 

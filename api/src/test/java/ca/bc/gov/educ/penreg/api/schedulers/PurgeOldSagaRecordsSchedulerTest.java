@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.schedulers;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class PurgeOldSagaRecordsSchedulerTest extends BaseTest {
+public class PurgeOldSagaRecordsSchedulerTest extends BasePenRegAPITest {
 
   @Autowired
   SagaRepository repository;

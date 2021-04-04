@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
@@ -33,7 +33,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  */
 @RunWith(JUnitParamsRunner.class)
 @Slf4j
-public class PenRequestBatchStudentOrchestratorServiceTest extends BaseTest {
+public class PenRequestBatchStudentOrchestratorServiceTest extends BasePenRegAPITest {
   /**
    * The constant scr.
    */

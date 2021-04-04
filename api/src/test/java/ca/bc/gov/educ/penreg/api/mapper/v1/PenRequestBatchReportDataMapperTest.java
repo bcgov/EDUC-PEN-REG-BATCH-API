@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.mapper.v1;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchReportDataMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
@@ -8,7 +8,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class PenRequestBatchReportDataMapperTest extends BaseTest {
+public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
 
   private static final PenRequestBatchReportDataMapper reportMapper = PenRequestBatchReportDataMapper.mapper;
   private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
@@ -35,7 +35,7 @@ public class PenRequestBatchReportDataMapperTest extends BaseTest {
 
   @Test
   public void testToReportUserMatchedListItem_GivenAllValues_ShouldMapSuccessfully() throws IOException {
-    final var batchEntities = PenRequestBatchUtils.createBatchStudents(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_archived_with_pen.json", 1,
+    final var batchEntities = PenRequestBatchTestUtils.createBatchStudents(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_archived_with_pen.json", 1,
         (batch) -> batch.setProcessDate(LocalDateTime.parse("2021-03-23T13:04:48.840098")));
 
     final var student1 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130002").dob("19900704").genderCode("M").legalFirstName("Mike").pen("123456785").legalLastName("Joe").legalMiddleNames("Tim").usualFirstName("Bob").usualLastName("Smithy").usualMiddleNames("Smalls").mincode(batchEntities.get(0).getMincode()).demogCode("C").build();

@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
@@ -13,12 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REPEATS_CHECKED;
-import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils.createBatchStudents;
-import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils.createSagaRecords;
+import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils.createBatchStudents;
+import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils.createSagaRecords;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
-public class EventTaskSchedulerAsyncServiceTest extends BaseTest {
+public class EventTaskSchedulerAsyncServiceTest extends BasePenRegAPITest {
   @Autowired
   private SagaRepository sagaRepository;
 

@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.schedulers;
 
-import ca.bc.gov.educ.penreg.api.BaseTest;
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
@@ -9,7 +9,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -19,7 +19,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class PurgeSoftDeletedBatchRecordsSchedulerTest extends BaseTest {
+public class PurgeSoftDeletedBatchRecordsSchedulerTest extends BasePenRegAPITest {
 
   @Autowired
   PenRequestBatchRepository penRequestBatchRepository;
@@ -85,13 +85,13 @@ public class PurgeSoftDeletedBatchRecordsSchedulerTest extends BaseTest {
    * @throws IOException the io exception
    */
   private List<PenRequestBatchEntity> createBatchStudents(final Integer total) throws IOException {
-    return PenRequestBatchUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch.json",
-            "mock_pen_req_batch_student.json", total,
-            (batch) -> {
-              if (batch.getSubmissionNumber().equals("T-534093")) {
-                batch.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.DELETED.getCode());
-                batch.setCreateDate(LocalDateTime.now().minusDays(3));
-              }
-            });
+    return PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch.json",
+        "mock_pen_req_batch_student.json", total,
+        (batch) -> {
+          if (batch.getSubmissionNumber().equals("T-534093")) {
+            batch.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.DELETED.getCode());
+            batch.setCreateDate(LocalDateTime.now().minusDays(3));
+          }
+        });
   }
 }
