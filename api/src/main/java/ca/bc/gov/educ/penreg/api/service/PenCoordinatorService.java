@@ -54,7 +54,7 @@ public class PenCoordinatorService {
     }
   }
 
-  @Scheduled(cron = "0 0 0/4 * * *") // every 4 hours
+  @Scheduled(cron = "${schedule.jobs.load.pen.coordinators.cron}") // 0 0 0/4 * * * every 4 hours
   public void scheduled() {
     final Lock writeLock = this.penCoordinatorMapLock.writeLock();
     try {
