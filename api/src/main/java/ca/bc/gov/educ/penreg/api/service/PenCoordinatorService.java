@@ -47,6 +47,10 @@ public class PenCoordinatorService {
 
   @PostConstruct
   public void init() {
+    this.loadPenCoordinatorDataIntoMemory();
+  }
+
+  private void loadPenCoordinatorDataIntoMemory() {
     if (this.isBackgroundInitializationEnabled != null && this.isBackgroundInitializationEnabled) {
       this.bgTaskExecutor.execute(() -> this.penCoordinatorMap = this.penCoordinatorRepository.findAll().stream().map(PenCoordinatorMapper.mapper::toTrimmedPenCoordinator).collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity())));
     } else {
@@ -59,7 +63,7 @@ public class PenCoordinatorService {
     final Lock writeLock = this.penCoordinatorMapLock.writeLock();
     try {
       writeLock.lock();
-      this.init();
+      this.loadPenCoordinatorDataIntoMemory();
     } finally {
       writeLock.unlock();
     }

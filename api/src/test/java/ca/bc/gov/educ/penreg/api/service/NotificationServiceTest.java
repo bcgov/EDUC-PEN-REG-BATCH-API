@@ -10,17 +10,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Connection;
 import io.nats.client.Message;
 import io.nats.client.Subscription;
+import io.nats.client.impl.Headers;
+import io.nats.client.impl.NatsJetStreamMetaData;
+import io.nats.client.support.Status;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -68,8 +73,33 @@ public class NotificationServiceTest extends BasePenRegAPITest {
       }
 
       @Override
+      public boolean hasHeaders() {
+        return false;
+      }
+
+      @Override
+      public Headers getHeaders() {
+        return null;
+      }
+
+      @Override
+      public boolean isStatusMessage() {
+        return false;
+      }
+
+      @Override
+      public Status getStatus() {
+        return null;
+      }
+
+      @Override
       public byte[] getData() {
         return message.getBytes(StandardCharsets.UTF_8);
+      }
+
+      @Override
+      public boolean isUtf8mode() {
+        return false;
       }
 
       @Override
@@ -85,6 +115,41 @@ public class NotificationServiceTest extends BasePenRegAPITest {
       @Override
       public Connection getConnection() {
         return null;
+      }
+
+      @Override
+      public NatsJetStreamMetaData metaData() {
+        return null;
+      }
+
+      @Override
+      public void ack() {
+
+      }
+
+      @Override
+      public void ackSync(final Duration duration) throws TimeoutException, InterruptedException {
+
+      }
+
+      @Override
+      public void nak() {
+
+      }
+
+      @Override
+      public void term() {
+
+      }
+
+      @Override
+      public void inProgress() {
+
+      }
+
+      @Override
+      public boolean isJetStream() {
+        return false;
       }
     });
   }
