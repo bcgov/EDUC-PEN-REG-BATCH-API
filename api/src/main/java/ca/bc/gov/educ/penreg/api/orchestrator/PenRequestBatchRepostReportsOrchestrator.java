@@ -7,11 +7,11 @@ import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
 import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
-import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchRepostReportsFilesSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportGenerationEvent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
@@ -69,7 +68,7 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
           .end(GATHER_REPORT_DATA, PEN_REQUEST_BATCH_NOT_FOUND, this::logPenRequestBatchNotFound);
     }
 
-  private void generatePDFReport(Event event, Saga saga, PenRequestBatchRepostReportsFilesSagaData penRequestBatchRepostReportsFilesSagaData) throws IOException, InterruptedException, TimeoutException {
+  private void generatePDFReport(Event event, Saga saga, PenRequestBatchRepostReportsFilesSagaData penRequestBatchRepostReportsFilesSagaData) throws IOException {
     SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(GENERATE_PEN_REQUEST_BATCH_REPORTS.toString());
     List<Student> matchedStudents = obMapper.readValue(event.getEventPayload(), new TypeReference<>(){});
@@ -80,7 +79,13 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
     Event nextEvent = Event.builder().sagaId(saga.getSagaId())
       .eventType(GENERATE_PEN_REQUEST_BATCH_REPORTS)
       .replyTo(this.getTopicToSubscribe())
-      .eventPayload(JsonUtil.getJsonStringFromObject(reportMapper.toReportData(penRequestBatchRepostReportsFilesSagaData)))
+      .eventPayload(JsonUtil.getJsonStringFromObject(
+        ReportGenerationEvent.builder()
+          .reportType("PEN_REG_BATCH_RESPONSE_REPORT")
+          .reportExtension("pdf")
+          .reportName(penRequestBatchRepostReportsFilesSagaData.getPenRequestBatch().getSubmissionNumber())
+          .data(reportMapper.toReportData(penRequestBatchRepostReportsFilesSagaData))
+          .build()))
       .build();
     this.postMessageToTopic(SagaTopicsEnum.PEN_REPORT_GENERATION_API_TOPIC.toString(), nextEvent);
     log.info("message sent to PEN_REPORT_GENERATION_API_TOPIC for {} Event. :: {}", GENERATE_PEN_REQUEST_BATCH_REPORTS.toString(), saga.getSagaId());

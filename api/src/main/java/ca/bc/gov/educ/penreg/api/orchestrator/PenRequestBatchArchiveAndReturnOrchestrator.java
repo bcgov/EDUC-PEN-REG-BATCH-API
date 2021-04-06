@@ -12,6 +12,7 @@ import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportGenerationEvent;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -129,7 +130,13 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
         Event nextEvent = Event.builder().sagaId(saga.getSagaId())
                 .eventType(GENERATE_PEN_REQUEST_BATCH_REPORTS)
                 .replyTo(this.getTopicToSubscribe())
-                .eventPayload(JsonUtil.getJsonStringFromObject(reportMapper.toReportData(penRequestBatchArchiveAndReturnSagaData)))
+                .eventPayload(JsonUtil.getJsonStringFromObject(
+                        ReportGenerationEvent.builder()
+                                .reportType("PEN_REG_BATCH_RESPONSE_REPORT")
+                                .reportExtension("pdf")
+                                .reportName(penRequestBatchArchiveAndReturnSagaData.getPenRequestBatch().getSubmissionNumber())
+                                .data(reportMapper.toReportData(penRequestBatchArchiveAndReturnSagaData))
+                                .build()))
                 .build();
         this.postMessageToTopic(SagaTopicsEnum.PEN_REPORT_GENERATION_API_TOPIC.toString(), nextEvent);
         log.info("message sent to PEN_REPORT_GENERATION_API_TOPIC for {} Event. :: {}", GENERATE_PEN_REQUEST_BATCH_REPORTS.toString(), saga.getSagaId());

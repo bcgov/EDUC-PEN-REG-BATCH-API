@@ -9,6 +9,7 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaDa
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,14 @@ public class PenRequestBatchReportDataMapperTest {
     private static final PenRequestBatchReportDataMapper reportMapper = PenRequestBatchReportDataMapper.mapper;
     private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
     private static final PenRequestBatchStudentMapper studentMapper = PenRequestBatchStudentMapper.mapper;
+
+    /**
+     * teardown
+     */
+    @After
+    public void after() {
+        this.repository.deleteAll();
+    }
 
     @Test
     public void testToReportUserMatchedListItem_GivenAllValues_ShouldMapSuccessfully() throws IOException {
