@@ -10,4 +10,6 @@ import lombok.EqualsAndHashCode;
 public class NotificationEvent extends Event{
   private String sagaStatus;
   private String sagaName;
+  private String penRequestBatchStudentID;
+  private String penRequestBatchID;
 }
