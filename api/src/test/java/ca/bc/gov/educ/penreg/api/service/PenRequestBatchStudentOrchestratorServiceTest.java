@@ -9,6 +9,7 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
+import ca.bc.gov.educ.penreg.api.orchestrator.BaseOrchestratorTest;
 import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -63,7 +64,7 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 @Slf4j
 @Transactional
-public class PenRequestBatchStudentOrchestratorServiceTest {
+public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestratorTest {
 
   protected static final String TEST_PEN = "123456789";
   /**
@@ -188,7 +189,7 @@ public class PenRequestBatchStudentOrchestratorServiceTest {
   @After
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void tearDown(){
-    this.penRequestBatchRepository.deleteAll();
+    penRequestBatchUtils.cleanDB();
   }
   /**
    * Test are both field value equal.
