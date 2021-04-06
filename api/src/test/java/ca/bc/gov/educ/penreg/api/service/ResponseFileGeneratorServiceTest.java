@@ -1,35 +1,26 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import org.junit.After;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest
-public class ResponseFileGeneratorServiceTest {
+public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
   @Autowired
   private ResponseFileGeneratorService responseFileGeneratorService;
@@ -41,9 +32,9 @@ public class ResponseFileGeneratorServiceTest {
   @Autowired
   private PenRequestBatchStudentRepository prbStudentRepository;
 
-  @MockBean
+  @Autowired
   RestUtils restUtils;
-  @MockBean
+  @Autowired
   private PenCoordinatorService penCoordinatorService;
 
   private List<PenRequestBatchEntity> batchList;
@@ -91,17 +82,12 @@ public class ResponseFileGeneratorServiceTest {
           "    \"sendPenResultsVia\": \"E\"\n" +
           "  }";
 
-  @After
-  public void after() {
-    this.prbStudentRepository.deleteAll();
-    this.prbRepository.deleteAll();
-  }
 
   @Test
   @Transactional
   public void testCreateIDSFile_givenBatchFileHasCorrectStudents_shouldCreateIDSFile() throws IOException {
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
-            "mock_pen_req_batch_student_ids.json", 1);
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+        "mock_pen_req_batch_student_ids.json", 1);
     when(this.restUtils.getStudentByPEN("123456789")).thenReturn(Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[0])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[1])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[2])), Optional.of(JsonUtil.getJsonObjectFromString(Student.class, mockStudents[3])));
 
     final var penWebBlob = this.responseFileGeneratorService.createIDSFile(this.batchList.get(0));
@@ -112,8 +98,8 @@ public class ResponseFileGeneratorServiceTest {
   @Test
   @Transactional
   public void testCreateIDSFile_givenBatchFileHasBadStudents_shouldReturnNull() throws IOException {
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
-            "mock_pen_req_batch_student_ids_null.json", 1);
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+        "mock_pen_req_batch_student_ids_null.json", 1);
     final var penWebBlob = this.responseFileGeneratorService.createIDSFile(this.batchList.get(0));
 
     assertThat(penWebBlob).isNull();
@@ -124,8 +110,8 @@ public class ResponseFileGeneratorServiceTest {
   @Test
   @Transactional
   public void testCreateTxtFile_givenBatchFileHasErrorStudents_shouldCreateTxtFile() throws IOException {
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_txt.json",
-            "mock_pen_req_batch_student_txt.json", 1);
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_txt.json",
+        "mock_pen_req_batch_student_txt.json", 1);
     when(this.penCoordinatorService.getPenCoordinatorByMinCode("10210518")).thenReturn(Optional.of(JsonUtil.getJsonObjectFromString(PenCoordinator.class, mockCoordinator)));
 
     final var penWebBlob = this.responseFileGeneratorService.createTxtFile(this.batchList.get(0));

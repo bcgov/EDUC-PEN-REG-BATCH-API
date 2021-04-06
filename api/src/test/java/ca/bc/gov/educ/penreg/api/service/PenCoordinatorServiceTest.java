@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenCoordinatorMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.Mincode;
 import ca.bc.gov.educ.penreg.api.repository.PenCoordinatorRepository;
@@ -7,14 +8,9 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.val;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,10 +22,7 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest
-public class PenCoordinatorServiceTest {
+public class PenCoordinatorServiceTest extends BasePenRegAPITest {
 
   @Autowired
   PenCoordinatorRepository coordinatorRepository;
@@ -46,13 +39,6 @@ public class PenCoordinatorServiceTest {
     this.service.setPenCoordinatorMap(this.coordinatorRepository.findAll().stream()
             .map(ca.bc.gov.educ.penreg.api.batch.mappers.PenCoordinatorMapper.mapper::toTrimmedPenCoordinator)
             .collect(Collectors.toConcurrentMap(ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator::getMincode, Function.identity())));
-  }
-  /**
-   * Tear down.
-   */
-  @After
-  public void tearDown() {
-    this.coordinatorRepository.deleteAll();
   }
 
   @Test

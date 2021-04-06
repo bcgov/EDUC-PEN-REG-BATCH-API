@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.batch.validator;
 
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -7,11 +8,7 @@ import net.sf.flatpack.DataSet;
 import net.sf.flatpack.DefaultParserFactory;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -21,11 +18,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@ActiveProfiles("test")
-@RunWith(SpringRunner.class)
 @Slf4j
-public class PenRequestBatchFileValidatorTest {
+public class PenRequestBatchFileValidatorTest extends BasePenRegAPITest {
   @Autowired
   private PenRequestBatchFileValidator penRequestBatchFileValidator;
 

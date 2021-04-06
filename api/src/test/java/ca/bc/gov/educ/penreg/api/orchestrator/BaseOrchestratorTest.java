@@ -1,11 +1,12 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 
 import java.util.UUID;
 
-public abstract class BaseOrchestratorTest {
+public abstract class BaseOrchestratorTest extends BasePenRegAPITest {
   protected static final String TEST_PEN = "123456789";
   /**
    * The Pen request batch id.
@@ -35,12 +36,12 @@ public abstract class BaseOrchestratorTest {
     return " {\n" +
         "    \"createUser\": \"test\",\n" +
         "    \"updateUser\": \"test\",\n" +
-        "    \"penRequestBatchID\": \"" + penRequestBatchID + "\",\n" +
-        "    \"penRequestBatchStudentID\": \"" + penRequestBatchStudentID + "\",\n" +
+        "    \"penRequestBatchID\": \"" + this.penRequestBatchID + "\",\n" +
+        "    \"penRequestBatchStudentID\": \"" + this.penRequestBatchStudentID + "\",\n" +
         "    \"legalFirstName\": \"Jack\",\n" +
-        "    \"mincode\": \"" + mincode + "\",\n" +
+        "    \"mincode\": \"" + this.mincode + "\",\n" +
         "    \"genderCode\": \"X\",\n" +
-        "    \"matchedStudentIDList\": [\"" + twinStudentID + "\"]\n" +
+        "    \"matchedStudentIDList\": [\"" + this.twinStudentID + "\"]\n" +
         "  }";
   }
 
@@ -50,10 +51,10 @@ public abstract class BaseOrchestratorTest {
    * @param json the json
    * @return the pen request batch new pen saga data from json string
    */
-  protected PenRequestBatchUserActionsSagaData getPenRequestBatchUserActionsSagaDataFromJsonString(String json) {
+  protected PenRequestBatchUserActionsSagaData getPenRequestBatchUserActionsSagaDataFromJsonString(final String json) {
     try {
       return JsonUtil.getJsonObjectFromString(PenRequestBatchUserActionsSagaData.class, json);
-    } catch (Exception e) {
+    } catch (final Exception e) {
       throw new RuntimeException(e);
     }
   }

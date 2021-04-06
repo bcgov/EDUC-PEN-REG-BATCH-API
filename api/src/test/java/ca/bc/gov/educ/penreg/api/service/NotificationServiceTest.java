@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenCoordinatorMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.repository.PenCoordinatorRepository;
@@ -9,30 +10,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Connection;
 import io.nats.client.Message;
 import io.nats.client.Subscription;
+import io.nats.client.impl.Headers;
+import io.nats.client.impl.NatsJetStreamMetaData;
+import io.nats.client.support.Status;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest
-public class NotificationServiceTest {
+public class NotificationServiceTest extends BasePenRegAPITest {
 
   @Autowired
   NotificationService notificationService;
@@ -74,8 +73,33 @@ public class NotificationServiceTest {
       }
 
       @Override
+      public boolean hasHeaders() {
+        return false;
+      }
+
+      @Override
+      public Headers getHeaders() {
+        return null;
+      }
+
+      @Override
+      public boolean isStatusMessage() {
+        return false;
+      }
+
+      @Override
+      public Status getStatus() {
+        return null;
+      }
+
+      @Override
       public byte[] getData() {
         return message.getBytes(StandardCharsets.UTF_8);
+      }
+
+      @Override
+      public boolean isUtf8mode() {
+        return false;
       }
 
       @Override
@@ -91,6 +115,41 @@ public class NotificationServiceTest {
       @Override
       public Connection getConnection() {
         return null;
+      }
+
+      @Override
+      public NatsJetStreamMetaData metaData() {
+        return null;
+      }
+
+      @Override
+      public void ack() {
+
+      }
+
+      @Override
+      public void ackSync(final Duration duration) throws TimeoutException, InterruptedException {
+
+      }
+
+      @Override
+      public void nak() {
+
+      }
+
+      @Override
+      public void term() {
+
+      }
+
+      @Override
+      public void inProgress() {
+
+      }
+
+      @Override
+      public boolean isJetStream() {
+        return false;
       }
     });
   }

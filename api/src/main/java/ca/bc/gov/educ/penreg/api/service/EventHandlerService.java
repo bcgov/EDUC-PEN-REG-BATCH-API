@@ -13,16 +13,13 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
-import static ca.bc.gov.educ.penreg.api.constants.EventStatus.MESSAGE_PUBLISHED;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
 import static lombok.AccessLevel.PRIVATE;
@@ -100,11 +97,6 @@ public class EventHandlerService implements EventHandler {
   public void handleEvent(final Event event) {
     try {
       switch (event.getEventType()) {
-        case PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED:
-          log.info("received outbox processed event :: ");
-          log.trace(PAYLOAD_LOG, event.getEventPayload());
-          this.handlePenRequestBatchOutboxProcessedEvent(event.getEventPayload());
-          break;
         case READ_FROM_TOPIC:
           log.info("received read from topic event :: ");
           log.trace(PAYLOAD_LOG, event.getEventPayload());
@@ -171,18 +163,5 @@ public class EventHandlerService implements EventHandler {
     this.getEventPublisherService().send(penRequestBatchEvent);
   }
 
-  /**
-   * Handle pen request batch outbox processed event.
-   *
-   * @param eventId the event id
-   */
-  private void handlePenRequestBatchOutboxProcessedEvent(final String eventId) {
-    val eventFromDB = this.getPenRequestBatchEventRepository().findById(UUID.fromString(eventId));
-    if (eventFromDB.isPresent()) {
-      val studEvent = eventFromDB.get();
-      studEvent.setEventStatus(MESSAGE_PUBLISHED.toString());
-      this.getPenRequestBatchEventRepository().save(studEvent);
-    }
-  }
 
 }
