@@ -52,10 +52,14 @@ public class PenCoordinatorService {
 
   private void loadPenCoordinatorDataIntoMemory() {
     if (this.isBackgroundInitializationEnabled != null && this.isBackgroundInitializationEnabled) {
-      this.bgTaskExecutor.execute(() -> this.penCoordinatorMap = this.penCoordinatorRepository.findAll().stream().map(PenCoordinatorMapper.mapper::toTrimmedPenCoordinator).collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity())));
+      this.bgTaskExecutor.execute(this::populatePenCoordinatorMap);
     } else {
-      this.penCoordinatorMap = this.penCoordinatorRepository.findAll().stream().map(PenCoordinatorMapper.mapper::toTrimmedPenCoordinator).collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity()));
+      this.populatePenCoordinatorMap();
     }
+  }
+
+  private void populatePenCoordinatorMap() {
+    this.penCoordinatorMap = this.penCoordinatorRepository.findAll().stream().map(PenCoordinatorMapper.mapper::toTrimmedPenCoordinator).collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity()));
   }
 
   @Scheduled(cron = "${schedule.jobs.load.pen.coordinators.cron}") // 0 0 0/4 * * * every 4 hours
