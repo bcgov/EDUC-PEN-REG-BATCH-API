@@ -188,6 +188,9 @@ public class PenRequestBatchStudentOrchestratorService {
     final var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
     penMatchRecordOptional.ifPresent(penMatchRecord -> penRequestBatchStudent.setQuestionableMatchStudentId(UUID.fromString(penMatchRecord.getStudentID())));
     penRequestBatchStudent.setPenRequestBatchStudentStatusCode(FIXABLE.getCode());
+    if(!penMatchResult.getMatchingRecords().isEmpty()) {
+      penRequestBatchStudent.setBestMatchPEN(penMatchResult.getMatchingRecords().get(0).getMatchingPEN());
+    }
     this.getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
     return Event.builder().sagaId(saga.getSagaId())
         .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
@@ -204,6 +207,9 @@ public class PenRequestBatchStudentOrchestratorService {
    */
   private Event handleDefault(final Saga saga, final PenRequestBatchStudentEntity penRequestBatchStudent, final PenMatchResult penMatchResult) {
     penRequestBatchStudent.setPenRequestBatchStudentStatusCode(FIXABLE.getCode());
+    if(!penMatchResult.getMatchingRecords().isEmpty()) {
+      penRequestBatchStudent.setBestMatchPEN(penMatchResult.getMatchingRecords().get(0).getMatchingPEN());
+    }
     this.getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
     return Event.builder().sagaId(saga.getSagaId())
         .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
