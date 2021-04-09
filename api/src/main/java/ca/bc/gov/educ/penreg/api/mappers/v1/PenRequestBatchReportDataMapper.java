@@ -20,7 +20,7 @@ public interface PenRequestBatchReportDataMapper {
     @Mapping(target = "sysMatchedList", ignore = true)
     @Mapping(target="fascimile", source="facsimile")
     @Mapping(target = "penCordinatorEmail", source = "fromEmail")
-    @Mapping(target = "mincode", source = "data.penRequestBatch.mincode")
+    @Mapping(target = "mincode", expression = "java(data.getPenRequestBatch().getMincode().substring(0, 3) + \" \" + data.getPenRequestBatch().getMincode().substring(3))")
     @Mapping(target = "submissionNumber", source = "data.penRequestBatch.submissionNumber")
     @Mapping(target = "reviewer", source = "data.penRequestBatch.updateUser")
     @Mapping(target = "processDate", ignore = true)
