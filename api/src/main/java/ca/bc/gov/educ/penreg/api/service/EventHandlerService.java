@@ -107,6 +107,11 @@ public class EventHandlerService implements EventHandler {
           log.trace(PAYLOAD_LOG, event.getEventPayload());
           this.handleUpdatePrbStudentEvent(event);
           break;
+        case ARCHIVE_PEN_REQUEST_BATCH:
+          log.info("received archive pen request batch event :: ");
+          log.trace(PAYLOAD_LOG, event.getEventPayload());
+          this.handleArchivePenRequestBatchEvent(event);
+          break;
         default:
           log.info("silently ignoring other events.");
           break;
@@ -163,5 +168,15 @@ public class EventHandlerService implements EventHandler {
     this.getEventPublisherService().send(penRequestBatchEvent);
   }
 
+  /**
+   * Handle archive pen request batch event
+   *
+   * @param event the archive pen request batch event
+   * @throws JsonProcessingException the json processing exception
+   */
+  private void handleArchivePenRequestBatchEvent(final Event event) throws JsonProcessingException {
+    final PenRequestBatchEvent penRequestBatchEvent = this.getPrbStudentEventService().archivePenRequestBatch(event);
+    this.getEventPublisherService().send(penRequestBatchEvent);
+  }
 
 }

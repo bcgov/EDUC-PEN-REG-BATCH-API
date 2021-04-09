@@ -24,13 +24,13 @@ import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_REQUEST_BATCH_STUDENT_UPDATED;
-import static ca.bc.gov.educ.penreg.api.constants.EventType.READ_FROM_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.EventType.UPDATE_PEN_REQUEST_BATCH_STUDENT;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_REQUEST_BATCH_UPDATED;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -158,6 +158,62 @@ public class EventHandlerServiceTest extends BasePenRegAPITest {
     assertThat(penRequestBatch.orElseThrow().getNewPenCount()).isEqualTo(3);
   }
 
+  /**
+   * Test handle ARCHIVE_PEN_REQUEST_BATCH event.
+   *
+   */
+  @Test
+  public void testHandleEvent_givenEventTypeARCHIVE_PEN_REQUEST_BATCH_and_ARCHIVED_Batch_shouldUpdateBatchAndSendEvent() throws IOException {
+    final var sagaID = UUID.randomUUID();
+    final var batchList = PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json",
+      "mock_pen_req_batch_student_archived.json", 1);
+    this.penRequestBatchID = batchList.get(0).getPenRequestBatchID().toString();
+    this.penRequestBatchStudentID = batchList.get(0).getPenRequestBatchStudentEntities().stream()
+      .filter(student -> student.getPenRequestBatchStudentStatusCode().equals(FIXABLE.getCode())).findFirst().orElseThrow().getPenRequestBatchStudentID().toString();
+    final var payload = this.dummyPenRequestBatchArchiveDataJson();
+    final var event = new Event(ARCHIVE_PEN_REQUEST_BATCH, PEN_REQUEST_BATCH_UPDATED, sagaID, PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_TOPIC.toString(), payload);
+
+    this.eventHandlerService.handleEvent(event);
+    verify(this.messagePublisher, atMostOnce()).dispatchMessage(eq(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_TOPIC.toString()), this.eventCaptor.capture());
+
+    final var replyEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
+    assertThat(replyEvent.getSagaId()).isEqualTo(sagaID);
+    assertThat(replyEvent.getEventType()).isEqualTo(ARCHIVE_PEN_REQUEST_BATCH);
+    assertThat(replyEvent.getEventOutcome()).isEqualTo(PEN_REQUEST_BATCH_UPDATED);
+    assertThat(replyEvent.getEventPayload()).contains(ARCHIVED.toString());
+
+    final var penRequestBatch = this.penRequestBatchRepository.findById(UUID.fromString(this.penRequestBatchID));
+    assertThat(penRequestBatch.orElseThrow().getPenRequestBatchStatusCode()).isEqualTo(ARCHIVED.toString());
+  }
+
+  /**
+   * Test handle ARCHIVE_PEN_REQUEST_BATCH event.
+   *
+   */
+  @Test
+  public void testHandleEvent_givenEventTypeARCHIVE_PEN_REQUEST_BATCH_and_UNARCHIVED_Batch_shouldUpdateBatchAndSendEvent() throws IOException {
+    final var sagaID = UUID.randomUUID();
+    final var batchList = PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_unarchived.json",
+      "mock_pen_req_batch_student_archived.json", 1);
+    this.penRequestBatchID = batchList.get(0).getPenRequestBatchID().toString();
+    this.penRequestBatchStudentID = batchList.get(0).getPenRequestBatchStudentEntities().stream()
+      .filter(student -> student.getPenRequestBatchStudentStatusCode().equals(FIXABLE.getCode())).findFirst().orElseThrow().getPenRequestBatchStudentID().toString();
+    final var payload = this.dummyPenRequestBatchArchiveDataJson();
+    final var event = new Event(ARCHIVE_PEN_REQUEST_BATCH, PEN_REQUEST_BATCH_UPDATED, sagaID, PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_TOPIC.toString(), payload);
+
+    this.eventHandlerService.handleEvent(event);
+    verify(this.messagePublisher, atMostOnce()).dispatchMessage(eq(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_TOPIC.toString()), this.eventCaptor.capture());
+
+    final var replyEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
+    assertThat(replyEvent.getSagaId()).isEqualTo(sagaID);
+    assertThat(replyEvent.getEventType()).isEqualTo(ARCHIVE_PEN_REQUEST_BATCH);
+    assertThat(replyEvent.getEventOutcome()).isEqualTo(PEN_REQUEST_BATCH_UPDATED);
+    assertThat(replyEvent.getEventPayload()).contains(REARCHIVED.toString());
+
+    final var penRequestBatch = this.penRequestBatchRepository.findById(UUID.fromString(this.penRequestBatchID));
+    assertThat(penRequestBatch.orElseThrow().getPenRequestBatchStatusCode()).isEqualTo(REARCHIVED.toString());
+  }
+
   protected String dummyPenRequestBatchStudentSagaDataJson() {
     return " {\n" +
         "    \"createUser\": \"test\",\n" +
@@ -180,5 +236,12 @@ public class EventHandlerServiceTest extends BasePenRegAPITest {
         "    \"penRequestBatchStudentStatusCode\": \"" + status + "\",\n" +
         "    \"genderCode\": \"X\"\n" +
         "  }";
+  }
+
+  protected String dummyPenRequestBatchArchiveDataJson() {
+    return " {\n" +
+      "    \"updateUser\": \"test\",\n" +
+      "    \"penRequestBatchID\": \"" + this.penRequestBatchID + "\"\n" +
+      "  }";
   }
 }

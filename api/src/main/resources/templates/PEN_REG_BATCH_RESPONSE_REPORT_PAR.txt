@@ -1,0 +1,95 @@
+Attention: [(${d.reviewer})]
+
+This report summarizes all of the students submitted in your latest PEN submission. Please review this report and
+update your Student Information System and files before your next data submission.
+
+The records from your PEN request are grouped into sections based on the accuracy of the data match.  Records listed
+in the PENDING section require action before PENS can be assigned. For a detailed explanation of the report
+groupings view the sample report on our web site at
+https://www2.gov.bc.ca/gov/content/education-training/administration/kindergarten-to-grade-12/pen
+
+If you have students reported in the DIFFERENCES section of this report, please review and make the necessary
+corrections (where the School data is wrong). However, If the Ministry’s data requires updating, then please forward
+the current legal identification to us for the student and we will update the demographic information in the PEN
+system.
+
+INTERPRETATION:
+Sch: This line reports the student demographic record as submitted in your PEN submission.
+Min: This line reports the student demographic information as currently stored in the Ministry PEN system.
+
+Please feel free to contact us at:
+   EMAIL: [(${d.penCordinatorEmail})]
+Mailing Address: [(${d.mailingAddress})]
+Telephone: [(${d.telephone})] Facsimile: [(${d.fascimile})]
+MyEducation Users NOTE: If you see the same student show each day on your PEN Activity Report as Exact Match, or If a
+PEN is not populated into MyEducation within 2 working days, this means you probably have a Duplicate Pupil ID in
+the MyEducation system.  Contact your MyEd Helpdesk or the PEN staff for assistance.
+----------------------------------------------------------------------------------------------------------------------
+[# th:if="${d.pendingList.size() > 0}"]
+PENDING - The following records have not been processed because the submitted records contain invalid characters or
+incomplete demographic information.  Please correct the student demographic information in your Student
+Administration system then re-submit your PEN Request. If your student demographic information was submitted
+correctly, please forward legal documentation to the PEN Coordinator at [(${d.penCordinatorEmail})]
+
+       PEN    Legal Surname             Legal Given Name          Legal Middle Names        Birth Date Gn School Id
+    --------- ------------------------- ------------------------- ------------------------- ---------- -- ------------
+[# th:each="pending : ${d.pendingList}"]
+[# th:with="surname=${T(org.apache.commons.lang3.StringUtils).rightPad(pending.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(pending.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(pending.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(pending.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(pending.gender, 2)}" ]SCH Pending   [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${pending.schoolID})][/]
+               Usual Name: [(${pending.usualName})]
+   [(${pending.reason})]
+
+[/]----------------------------------------------------------------------------------------------------------------------[/]
+[# th:if="${d.newPenList.size() > 0}"]
+NEW PEN ASSIGNED - The record submitted did not match any of the Official Ministry Records.  The data you submitted
+will be posted and become an Official Ministry Record.
+
+       PEN    Legal Surname             Legal Given Name          Legal Middle Names        Birth Date Gn School Id
+    --------- ------------------------- ------------------------- ------------------------- ---------- -- ------------
+[# th:each="newPen : ${d.newPenList}"]
+[# th:with="pen=${T(org.apache.commons.lang3.StringUtils).rightPad(newPen.pen, 9)},surname=${T(org.apache.commons.lang3.StringUtils).rightPad(newPen.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(newPen.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(newPen.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(newPen.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(newPen.gender, 2)}" ]Min [(${pen})] [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${newPen.schoolID})][/]
+               Usual Name: [(${newPen.usualName})]
+
+[/]----------------------------------------------------------------------------------------------------------------------[/]
+[# th:if="${d.sysMatchedList.size() > 0}"]
+EXACT MATCH - The record you submitted has matched an Official Ministry Record.
+
+       PEN    Legal Surname             Legal Given Name          Legal Middle Names        Birth Date Gn School Id
+    --------- ------------------------- ------------------------- ------------------------- ---------- -- ------------
+[# th:each="sysMatched : ${d.sysMatchedList}"]
+[# th:with="pen=${T(org.apache.commons.lang3.StringUtils).rightPad(sysMatched.pen, 9)},surname=${T(org.apache.commons.lang3.StringUtils).rightPad(sysMatched.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(sysMatched.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(sysMatched.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(sysMatched.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(sysMatched.gender, 2)}" ]SCH [(${pen})] [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${sysMatched.schoolID})][/]
+               Usual Name: [(${sysMatched.usualName})]
+MIN SAME
+
+[/]----------------------------------------------------------------------------------------------------------------------[/]
+[# th:if="${d.diffList.size() > 0}"]
+DIFFERENCES – The information in the Official Ministry record is different than the record you have submitted. PLEASE
+FAX the PEN Coordinator any legal documentation that indicates the information in the record you have submitted is
+correct. Also, listed in this section are any 'changed' PENs.  Please replace your current PEN section with the
+Official Ministry PEN.
+
+       PEN    Legal Surname             Legal Given Name          Legal Middle Names        Birth Date Gn School Id
+    --------- ------------------------- ------------------------- ------------------------- ---------- -- ------------
+[# th:each="diff : ${d.diffList}"]
+[# th:with="pen=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.school.pen, 9)},surname=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.school.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.school.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.school.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.school.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.school.gender, 2)}" ]SCH [(${pen})] [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${diff.school.schoolID})][/]
+               Usual Name: [(${diff.school.usualName})]
+[# th:with="pen=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.pen, 9)},surname=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.gender, 2)}" ]MIN [(${pen})] [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${diff.min.schoolID})][/]
+               Usual Name: [(${diff.min.usualName})]
+
+[/]----------------------------------------------------------------------------------------------------------------------[/]
+[# th:if="${d.confirmedList.size() > 0}"]
+CONFIRMED – The record you submitted has matched an Official Ministry Record, however your record differs from the
+Official Ministry Record which has been confirmed with legal documentation. PLEASE update your record with the
+information from the Official Ministry Record or fax the PEN Coordinator any legal documentation that indicates the
+record you submitted is correct.
+
+       PEN    Legal Surname             Legal Given Name          Legal Middle Names        Birth Date Gn School Id
+    --------- ------------------------- ------------------------- ------------------------- ---------- -- ------------
+[# th:each="confirmed : ${d.confirmedList}"]
+[# th:with="pen=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.pen, 9)},surname=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.gender, 2)}" ]SCH [(${pen})] [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${confirmed.school.schoolID})][/]
+[# th:with="pen=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.pen, 9)},surname=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.gender, 2)}" ]MIN [(${pen})] [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${confirmed.min.schoolID})][/]
+   PEN Previously Requested by: [{confirmed.school.previousRequestBy}]
+
+[/]----------------------------------------------------------------------------------------------------------------------[/]
+The PEN request file was processed by the PEN system on [(${d.processDate})] at [(${d.processTime})], PENWEB Submission #[(${d.submissionNumber})]
+
+END OF REPORT

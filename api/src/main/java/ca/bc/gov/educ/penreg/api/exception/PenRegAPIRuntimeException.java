@@ -19,4 +19,8 @@ public class PenRegAPIRuntimeException extends RuntimeException {
 		super(message);
 	}
 
+  public PenRegAPIRuntimeException(Throwable exception) {
+    super(exception);
+  }
+
 }

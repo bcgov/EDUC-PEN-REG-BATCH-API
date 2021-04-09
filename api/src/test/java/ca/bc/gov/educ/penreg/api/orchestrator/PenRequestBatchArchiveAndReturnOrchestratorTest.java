@@ -37,10 +37,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -165,6 +162,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
           .facsimile("5555555555")
           .telephone("2222222222")
           .penRequestBatchID(penRequestBatchEntity.getPenRequestBatchID())
+          .updateUser("test user")
           .build();
       this.saga.get(0).setPayload(JsonUtil.getJsonStringFromObject(payload));
       this.sagaService.updateAttachedEntityDuringSagaProcess(this.saga.get(0));
@@ -179,13 +177,11 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
       this.orchestrator.handleEvent(event);
       final var sagaFromDB = this.sagaService.findSagaById(this.saga.get(0).getSagaId());
         assertThat(sagaFromDB).isPresent();
-        assertThat(sagaFromDB.get().getSagaState()).isEqualTo(EventType.GENERATE_PEN_REQUEST_BATCH_REPORTS.toString());
+        assertThat(sagaFromDB.get().getSagaState()).isEqualTo(EventType.ARCHIVE_PEN_REQUEST_BATCH.toString());
         final var sagaStates = this.sagaService.findAllSagaStates(sagaFromDB.get());
-        assertThat(sagaStates.size()).isEqualTo(2);
+        assertThat(sagaStates.size()).isEqualTo(1);
         assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(GET_STUDENTS.toString());
         assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENTS_FOUND.toString());
-        assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH.toString());
-        assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_REQUEST_BATCH_UPDATED.toString());
 
     }
 
@@ -320,6 +316,10 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     penRequestBatchStudentEntity.setGenderCode("M");
     penRequestBatchStudentEntity.setLocalID("20345678");
     penRequestBatchStudentEntity.setGradeCode("01");
+    if(penRequestBatchStudentStatusCode.equals(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode())) {
+      penRequestBatchStudentEntity.setAssignedPEN("123456789");
+      penRequestBatchStudentEntity.setStudentID(UUID.randomUUID());
+    }
     final PenRequestBatchEntity entity = new PenRequestBatchEntity();
     entity.setCreateDate(LocalDateTime.now());
     entity.setUpdateDate(LocalDateTime.now());
@@ -337,6 +337,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     entity.setExtractDate(LocalDateTime.now());
     entity.setCreateDate(LocalDateTime.now());
     entity.setUpdateDate(LocalDateTime.now());
+    entity.setProcessDate(LocalDateTime.now());
     entity.setSourceStudentCount(1L);
     entity.setStudentCount(1L);
     entity.setSourceApplication("PEN");
