@@ -5,6 +5,8 @@ import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.Set;
+
 /**
  * Class holds all application properties
  *
@@ -66,5 +68,8 @@ public class ApplicationProperties {
 
   @Value("${number.records.for.batch.hold}")
   private int numRecordsForBatchHold;
+
+  @Value("${skip.validation.for.district.codes}")
+  private Set<String> districtCodesToNotValidate;
 
 }

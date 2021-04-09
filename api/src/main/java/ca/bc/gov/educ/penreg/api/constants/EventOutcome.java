@@ -115,5 +115,9 @@ public enum EventOutcome {
   /**
    * Pdf report saved event outcome
    */
-  REPORTS_SAVED
+  REPORTS_SAVED,
+  /**
+   * no need of validation for certain district codes.
+   */
+  SKIP_VALIDATION
 }
