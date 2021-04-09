@@ -1,6 +1,5 @@
 package ca.bc.gov.educ.penreg.api.schedulers;
 
-import ca.bc.gov.educ.penreg.api.batch.schedulers.PenRegBatchScheduler;
 import ca.bc.gov.educ.penreg.api.service.EventTaskSchedulerAsyncService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,6 @@ import static lombok.AccessLevel.PRIVATE;
  */
 @Component
 @Slf4j
-@SuppressWarnings("java:S2142")
 public class EventTaskScheduler {
   /**
    * The Task scheduler async service.
@@ -29,10 +27,10 @@ public class EventTaskScheduler {
   /**
    * Instantiates a new Event task scheduler.
    *
-   * @param taskSchedulerAsyncService      the task scheduler async service
+   * @param taskSchedulerAsyncService the task scheduler async service
    */
   @Autowired
-  public EventTaskScheduler(EventTaskSchedulerAsyncService taskSchedulerAsyncService) {
+  public EventTaskScheduler(final EventTaskSchedulerAsyncService taskSchedulerAsyncService) {
     this.taskSchedulerAsyncService = taskSchedulerAsyncService;
   }
 
@@ -46,52 +44,47 @@ public class EventTaskScheduler {
   @Transactional
   public void findAndProcessPendingSagaEvents() {
     LockAssert.assertLocked();
-    getTaskSchedulerAsyncService().findAndProcessUncompletedSagas();
+    this.getTaskSchedulerAsyncService().findAndProcessUncompletedSagas();
   }
 
   /**
+   * This is for edge case scenario when a pod processing the repeat checked batches dies before publishing all
+   * student requests for further processing.
    * Process repeats checked pen request batches.
    */
   @Scheduled(cron = "${scheduled.jobs.extract.unprocessed.students.cron}")
   @SchedulerLock(name = "EXTRACT_UNPROCESSED_STUDENT_RECORDS",
       lockAtLeastFor = "${scheduled.jobs.extract.unprocessed.students.cron.lockAtLeastFor}", lockAtMostFor = "${scheduled.jobs.extract.unprocessed.students.cron.lockAtMostFor}")
   @Transactional
-  public void processLoadedPenRequestBatches() {
+  public void publishRepeatCheckedStudentsForFurtherProcessing() {
     LockAssert.assertLocked();
-    getTaskSchedulerAsyncService().publishUnprocessedStudentRecords();
+    this.getTaskSchedulerAsyncService().publishRepeatCheckedStudentsForFurtherProcessing();
   }
 
   /**
    * Find all the pen request batch that has been processed and update their status and add history record.
    */
-  @Scheduled(cron = "0 0/1 * * * *") // every 1 minutes
+  @Scheduled(cron = "${scheduled.jobs.mark.processed.batches.active.cron}") // every 1 minutes "0 0/1 * * * *"
   @SchedulerLock(name = "MARK_PROCESSED_BATCHES_ACTIVE",
-      lockAtLeastFor = "50s", lockAtMostFor = "52s")
+      lockAtLeastFor = "${scheduled.jobs.mark.processed.batches.active.cron.lockAtLeastFor}", lockAtMostFor = "${scheduled.jobs.mark.processed.batches.active.cron.lockAtMostFor}")
   @Transactional
   public void markProcessedPenRequestBatchesActive() {
     LockAssert.assertLocked();
-    getTaskSchedulerAsyncService().markProcessedBatchesActive();
+    this.getTaskSchedulerAsyncService().markProcessedBatchesActive();
   }
 
   /**
-   * This is for edge case scenarios when the pod which was processing the batch file dies before persisting the repeat check updates.
-   * please look at timing of this {@link PenRegBatchScheduler#extractUnProcessedFilesFromPenWebBlobs()}
-   * as the timing of thi scheduler
-   * Process all loaded pen request batches.
+   * This is EITHER for the edge case scenarios when the pod which was processing the batch file dies before persisting
+   * the repeat check updates.
+   * OR when the file was held for certain condition and it was released by pen coordinator for further processing.
    */
-  @Scheduled(cron = "0 0/12 * * * *") //every 12 minutes, it is dependent on the other scheduler timing.
-  @SchedulerLock(name = "PROCESS_LOADED_BATCHES_FOR_REPEATS", lockAtLeastFor = "PT10M", lockAtMostFor = "PT11M")
+  @Scheduled(cron = "${scheduled.jobs.process.loaded.batches.for.repeats.cron}") // every 1 minutes "0 0/1 * * * *"
+  @SchedulerLock(name = "PROCESS_LOADED_BATCHES_FOR_REPEATS", lockAtLeastFor = "${scheduled.jobs.process.loaded.batches.for.repeats.cron.lockAtLeastFor}", lockAtMostFor = "${scheduled.jobs.process.loaded.batches.for.repeats.cron.lockAtMostFor}")
   @Transactional
   public void processLoadedPenRequestBatchesForRepeats() {
     LockAssert.assertLocked();
-    getTaskSchedulerAsyncService().processLoadedPenRequestBatchesForDuplicatesAndRepeats();
+    this.getTaskSchedulerAsyncService().checkLoadedStudentRecordsForDuplicatesAndRepeatsAndPublishForFurtherProcessing();
   }
 
-  @Scheduled(cron = "0/1 * * * * *")
-  @SchedulerLock(name = "EventTablePoller", lockAtLeastFor = "900ms", lockAtMostFor = "950ms")
-  public void pollEventTableAndPublish() {
-    LockAssert.assertLocked();
-    getTaskSchedulerAsyncService().pollEventTableAndPublish();
-  }
 
 }

@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.mapper.v1;
 
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchReportDataMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
@@ -7,15 +8,9 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -26,63 +21,54 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@Slf4j
-public class PenRequestBatchReportDataMapperTest {
+public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
 
-    @Autowired
-    private PenRequestBatchRepository repository;
+  private static final PenRequestBatchReportDataMapper reportMapper = PenRequestBatchReportDataMapper.mapper;
+  private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
+  private static final PenRequestBatchStudentMapper studentMapper = PenRequestBatchStudentMapper.mapper;
+  @Autowired
+  private PenRequestBatchRepository repository;
 
-    private static final PenRequestBatchReportDataMapper reportMapper = PenRequestBatchReportDataMapper.mapper;
-    private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
-    private static final PenRequestBatchStudentMapper studentMapper = PenRequestBatchStudentMapper.mapper;
+  /**
+   * teardown
+   */
 
-    /**
-     * teardown
-     */
-    @After
-    public void after() {
-        this.repository.deleteAll();
-    }
+  @Test
+  public void testToReportUserMatchedListItem_GivenAllValues_ShouldMapSuccessfully() throws IOException {
+    final var batchEntities = PenRequestBatchTestUtils.createBatchStudents(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_archived_with_pen.json", 1,
+        (batch) -> batch.setProcessDate(LocalDateTime.parse("2021-03-23T13:04:48.840098")));
 
-    @Test
-    public void testToReportUserMatchedListItem_GivenAllValues_ShouldMapSuccessfully() throws IOException {
-        var batchEntities = PenRequestBatchUtils.createBatchStudents(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_archived_with_pen.json", 1,
-                (batch) -> batch.setProcessDate(LocalDateTime.parse("2021-03-23T13:04:48.840098")));
+    final var student1 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130002").dob("19900704").genderCode("M").legalFirstName("Mike").pen("123456785").legalLastName("Joe").legalMiddleNames("Tim").usualFirstName("Bob").usualLastName("Smithy").usualMiddleNames("Smalls").mincode(batchEntities.get(0).getMincode()).demogCode("C").build();
+    final var student2 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130003").dob("19900703").genderCode("F").legalFirstName("Ted").pen("123456780").legalLastName("Jones").legalMiddleNames("Jim").usualFirstName("Steal").usualLastName("Mr").usualMiddleNames("Yo Girl").mincode(batchEntities.get(0).getMincode()).demogCode("A").build();
+    final List<Student> students = new ArrayList<>();
+    students.add(student1);
+    students.add(student2);
 
-        var student1 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130002").dob("19900704").genderCode("M").legalFirstName("Mike").pen("123456785").legalLastName("Joe").legalMiddleNames("Tim").usualFirstName("Bob").usualLastName("Smithy").usualMiddleNames("Smalls").mincode(batchEntities.get(0).getMincode()).demogCode("C").build();
-        var student2 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130003").dob("19900703").genderCode("F").legalFirstName("Ted").pen("123456780").legalLastName("Jones").legalMiddleNames("Jim").usualFirstName("Steal").usualLastName("Mr").usualMiddleNames("Yo Girl").mincode(batchEntities.get(0).getMincode()).demogCode("A").build();
-        List<Student> students = new ArrayList<>();
-        students.add(student1);
-        students.add(student2);
+    final var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder().facsimile("3333333333").telephone("5555555555").fromEmail("test@abc.com").mailingAddress("mailing address").penCordinatorEmail("test@email.com").schoolName("Cataline").penRequestBatch(mapper.toStructure(batchEntities.get(0))).penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList())).students(students).build();
 
-        var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder().facsimile("3333333333").telephone("5555555555").fromEmail("test@abc.com").mailingAddress("mailing address").penCordinatorEmail("test@email.com").schoolName("Cataline").penRequestBatch(mapper.toStructure(batchEntities.get(0))).penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList())).students(students).build();
+    final PenRequestBatchReportData reportData = reportMapper.toReportData(sagaData);
 
-        PenRequestBatchReportData reportData = reportMapper.toReportData(sagaData);
+    assertThat(reportData.getProcessDate()).isEqualTo("2021-03-23");
+    assertThat(reportData.getProcessTime()).isEqualTo("13:04:48");
+    assertThat(reportData.getSubmissionNumber()).isEqualTo(batchEntities.get(0).getSubmissionNumber());
+    assertThat(reportData.getReportDate()).isEqualTo(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
+    assertThat(reportData.getReviewer()).isEqualTo(batchEntities.get(0).getUpdateUser());
+    assertThat(reportData.getMincode()).isEqualTo(batchEntities.get(0).getMincode());
+    assertThat(reportData.getSchoolName()).isEqualTo("Cataline");
+    assertThat(reportData.getFascimile()).isEqualTo("3333333333");
+    assertThat(reportData.getTelephone()).isEqualTo("5555555555");
+    assertThat(reportData.getMailingAddress()).isEqualTo("mailing address");
+    assertThat(reportData.getPenCordinatorEmail()).isEqualTo("test@abc.com");
 
-        assertThat(reportData.getProcessDate()).isEqualTo("2021-03-23");
-        assertThat(reportData.getProcessTime()).isEqualTo("13:04:48");
-        assertThat(reportData.getSubmissionNumber()).isEqualTo(batchEntities.get(0).getSubmissionNumber());
-        assertThat(reportData.getReportDate()).isEqualTo(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
-        assertThat(reportData.getReviewer()).isEqualTo(batchEntities.get(0).getUpdateUser());
-        assertThat(reportData.getMincode()).isEqualTo(batchEntities.get(0).getMincode());
-        assertThat(reportData.getSchoolName()).isEqualTo("Cataline");
-        assertThat(reportData.getFascimile()).isEqualTo("3333333333");
-        assertThat(reportData.getTelephone()).isEqualTo("5555555555");
-        assertThat(reportData.getMailingAddress()).isEqualTo("mailing address");
-        assertThat(reportData.getPenCordinatorEmail()).isEqualTo("test@abc.com");
-
-        assertThat(reportData.getDiffList().size()).isEqualTo(1);
-        assertThat(reportData.getDiffList().get(0).getMin().getBirthDate()).isEqualTo("19900703");
-        assertThat(reportData.getDiffList().get(0).getMin().getGender()).isEqualTo("F");
-        assertThat(reportData.getDiffList().get(0).getMin().getGivenName()).isEqualTo("Ted");
-        assertThat(reportData.getDiffList().get(0).getMin().getLegalMiddleNames()).isEqualTo("Jim");
-        assertThat(reportData.getDiffList().get(0).getMin().getPen()).isEqualTo("123456780");
-        assertThat(reportData.getDiffList().get(0).getMin().getReason()).isEqualTo(null);
-        assertThat(reportData.getDiffList().get(0).getMin().getSchoolID()).isEqualTo(batchEntities.get(0).getMincode());
-        assertThat(reportData.getDiffList().get(0).getMin().getSurname()).isEqualTo("Jones");
+    assertThat(reportData.getDiffList().size()).isEqualTo(1);
+    assertThat(reportData.getDiffList().get(0).getMin().getBirthDate()).isEqualTo("19900703");
+    assertThat(reportData.getDiffList().get(0).getMin().getGender()).isEqualTo("F");
+    assertThat(reportData.getDiffList().get(0).getMin().getGivenName()).isEqualTo("Ted");
+    assertThat(reportData.getDiffList().get(0).getMin().getLegalMiddleNames()).isEqualTo("Jim");
+    assertThat(reportData.getDiffList().get(0).getMin().getPen()).isEqualTo("123456780");
+    assertThat(reportData.getDiffList().get(0).getMin().getReason()).isEqualTo(null);
+    assertThat(reportData.getDiffList().get(0).getMin().getSchoolID()).isEqualTo(batchEntities.get(0).getMincode());
+    assertThat(reportData.getDiffList().get(0).getMin().getSurname()).isEqualTo("Jones");
         assertThat(reportData.getDiffList().get(0).getMin().getUsualName()).isEqualTo("Mr, Steal, Yo Girl");
 
         assertThat(reportData.getDiffList().size()).isEqualTo(1);

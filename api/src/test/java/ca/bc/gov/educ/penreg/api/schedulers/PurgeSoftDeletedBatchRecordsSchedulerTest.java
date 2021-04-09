@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.schedulers;
 
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
@@ -8,14 +9,9 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
-import org.junit.After;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -23,10 +19,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-@ActiveProfiles("test")
-public class PurgeSoftDeletedBatchRecordsSchedulerTest {
+public class PurgeSoftDeletedBatchRecordsSchedulerTest extends BasePenRegAPITest {
 
   @Autowired
   PenRequestBatchRepository penRequestBatchRepository;
@@ -50,19 +43,10 @@ public class PurgeSoftDeletedBatchRecordsSchedulerTest {
    */
   private static final PenRequestBatchHistoryMapper historyMapper = PenRequestBatchHistoryMapper.mapper;
 
-  /**
-   * Tear down.
-   */
-  @After
-  public void tearDown() {
-    this.penRequestBatchStudentRepository.deleteAll();
-    this.penRequestBatchHistoryRepository.deleteAll();
-    this.penRequestBatchRepository.deleteAll();
-  }
 
   @Test
   public void pollBatchFilesAndPurgeSoftDeletedRecords_givenOldRecordsPresent_shouldBeDeleted() throws IOException {
-    List<PenRequestBatchEntity> prbEntities = createBatchStudents(2);
+    final List<PenRequestBatchEntity> prbEntities = this.createBatchStudents(2);
 
     final var softDeletedPrbEntity =  prbEntities.get(0);
     assertThat(softDeletedPrbEntity.getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.DELETED.getCode());
@@ -73,7 +57,7 @@ public class PurgeSoftDeletedBatchRecordsSchedulerTest {
     prbHistoryEntity.setUpdateDate(LocalDateTime.now().minusDays(3));
     prbHistoryEntity.setEventDate(LocalDateTime.now().minusDays(3));
     prbHistoryEntity.setPenRequestBatchEventCode(PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
-    penRequestBatchHistoryRepository.save(prbHistoryEntity);
+    this.penRequestBatchHistoryRepository.save(prbHistoryEntity);
 
     this.purgeSoftDeletedBatchRecordsScheduler.setSoftDeletedBatchRecordsRetentionDays(2);
     this.purgeSoftDeletedBatchRecordsScheduler.pollBatchFilesAndPurgeSoftDeletedRecords();
@@ -101,13 +85,13 @@ public class PurgeSoftDeletedBatchRecordsSchedulerTest {
    * @throws IOException the io exception
    */
   private List<PenRequestBatchEntity> createBatchStudents(final Integer total) throws IOException {
-    return PenRequestBatchUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch.json",
-            "mock_pen_req_batch_student.json", total,
-            (batch) -> {
-              if (batch.getSubmissionNumber().equals("T-534093")) {
-                batch.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.DELETED.getCode());
-                batch.setCreateDate(LocalDateTime.now().minusDays(3));
-              }
-            });
+    return PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch.json",
+        "mock_pen_req_batch_student.json", total,
+        (batch) -> {
+          if (batch.getSubmissionNumber().equals("T-534093")) {
+            batch.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.DELETED.getCode());
+            batch.setCreateDate(LocalDateTime.now().minusDays(3));
+          }
+        });
   }
 }

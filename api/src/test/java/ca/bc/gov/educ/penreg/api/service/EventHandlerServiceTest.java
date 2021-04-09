@@ -1,7 +1,7 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.PenReqBatchStudentOrchestrator;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
@@ -9,30 +9,23 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_REQUEST_BATCH_STUDENT_UPDATED;
-import static ca.bc.gov.educ.penreg.api.constants.EventStatus.DB_COMMITTED;
-import static ca.bc.gov.educ.penreg.api.constants.EventStatus.MESSAGE_PUBLISHED;
-import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.READ_FROM_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.UPDATE_PEN_REQUEST_BATCH_STUDENT;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA;
@@ -44,10 +37,7 @@ import static org.mockito.Mockito.*;
 /**
  * The type Message publisher test.
  */
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest
-public class EventHandlerServiceTest {
+public class EventHandlerServiceTest extends BasePenRegAPITest {
   @Autowired
   private SagaRepository repository;
   @Autowired
@@ -93,27 +83,6 @@ public class EventHandlerServiceTest {
     this.penRequestBatchStudentID = UUID.randomUUID().toString();
   }
 
-  @After
-  public void after() {
-    this.sagaEventRepository.deleteAll();
-    this.repository.deleteAll();
-    this.penRequestBatchEventRepository.deleteAll();
-    this.penRequestBatchRepository.deleteAll();
-  }
-
-  @Test
-  public void testHandleEvent_givenEventTypeSTUDENT_EVENT_OUTBOX_PROCESSED_shouldUpdateDBStatus() {
-    final var prbEvent = PenRequestBatchEvent.builder().eventType(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString())
-        .eventOutcome(PEN_REQUEST_BATCH_STUDENT_UPDATED.toString()).eventStatus(DB_COMMITTED.toString()).
-            eventPayload("{}").createDate(LocalDateTime.now()).createUser("TEST").build();
-    this.penRequestBatchEventRepository.save(prbEvent);
-    final var eventId = prbEvent.getEventId();
-    final var event = new Event(PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED, null, null, null, eventId.toString());
-    this.eventHandlerService.handleEvent(event);
-    final var prbEventUpdated = this.penRequestBatchEventRepository.findById(eventId);
-    assertThat(prbEventUpdated).isPresent();
-    assertThat(prbEventUpdated.get().getEventStatus()).isEqualTo(MESSAGE_PUBLISHED.toString());
-  }
 
   @Test
   public void testHandleEvent_givenEventTypeREAD_FROM_TOPIC_shouldStartPenRequestBatchStudentSaga() throws InterruptedException, IOException, TimeoutException {
@@ -144,7 +113,7 @@ public class EventHandlerServiceTest {
   @Test
   public void testHandleEvent_givenEventTypeUPDATE_PEN_REQUEST_BATCH_STUDENT_shouldUpdatePrbStudentAndSendEvent() throws IOException {
     final var sagaID = UUID.randomUUID();
-    final var batchList = PenRequestBatchUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json",
+    final var batchList = PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json",
         "mock_pen_req_batch_student_archived.json", 1);
     this.penRequestBatchID = batchList.get(0).getPenRequestBatchID().toString();
     this.penRequestBatchStudentID = batchList.get(0).getPenRequestBatchStudentEntities().stream()
@@ -162,8 +131,6 @@ public class EventHandlerServiceTest {
     assertThat(replyEvent.getEventPayload()).contains(USR_NEW_PEN.toString());
 
     verify(this.messagePublisher, atMostOnce()).dispatchMessage(eq(PEN_REQUEST_BATCH_API_TOPIC.toString()), this.eventCaptor.capture());
-    final var outboxEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
-    assertThat(outboxEvent.getEventType()).isEqualTo(PEN_REQUEST_BATCH_EVENT_OUTBOX_PROCESSED);
 
     final var penRequestBatch = this.penRequestBatchRepository.findById(UUID.fromString(this.penRequestBatchID));
     assertThat(penRequestBatch.orElseThrow().getNewPenCount()).isEqualTo(3);
@@ -176,7 +143,7 @@ public class EventHandlerServiceTest {
   @Test
   public void testHandleEvent_givenEventTypeUPDATE_PEN_REQUEST_BATCH_STUDENT_and_FailedToSendEvent_shouldUpdatePrbStudent() throws IOException {
     final var sagaID = UUID.randomUUID();
-    final var batchList = PenRequestBatchUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json",
+    final var batchList = PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_archived.json",
         "mock_pen_req_batch_student_archived.json", 1);
     this.penRequestBatchID = batchList.get(0).getPenRequestBatchID().toString();
     this.penRequestBatchStudentID = batchList.get(0).getPenRequestBatchStudentEntities().stream()

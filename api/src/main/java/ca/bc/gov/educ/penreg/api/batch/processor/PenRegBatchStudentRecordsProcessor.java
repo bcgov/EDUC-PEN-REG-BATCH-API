@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.batch.processor;
 import ca.bc.gov.educ.penreg.api.batch.service.PenRequestBatchFileService;
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
+import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.struct.Event;
@@ -10,12 +11,16 @@ import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.concurrent.TimeUnit;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
 import static lombok.AccessLevel.PRIVATE;
@@ -36,6 +41,10 @@ public class PenRegBatchStudentRecordsProcessor {
   @Getter(PRIVATE)
   private final PenRequestBatchFileService penRequestBatchFileService;
 
+  /**
+   * The String redis template.
+   */
+  private final StringRedisTemplate stringRedisTemplate;
 
   /**
    * Instantiates a new Pen reg batch student records processor.
@@ -44,9 +53,12 @@ public class PenRegBatchStudentRecordsProcessor {
    * @param penRequestBatchFileService the pen request batch file service
    */
   @Autowired
-  public PenRegBatchStudentRecordsProcessor(final MessagePublisher messagePublisher, final PenRequestBatchFileService penRequestBatchFileService) {
+  public PenRegBatchStudentRecordsProcessor(final MessagePublisher messagePublisher,
+                                            final PenRequestBatchFileService penRequestBatchFileService,
+                                            final RedisConnectionFactory redisConnectionFactory) {
     this.messagePublisher = messagePublisher;
     this.penRequestBatchFileService = penRequestBatchFileService;
+    this.stringRedisTemplate = new StringRedisTemplate(redisConnectionFactory);
   }
 
   /**
@@ -57,29 +69,26 @@ public class PenRegBatchStudentRecordsProcessor {
    * @param batchStudentSagaDataSet the student entities
    */
   public void publishUnprocessedStudentRecordsForProcessing(final Set<PenRequestBatchStudentSagaData> batchStudentSagaDataSet) {
-    batchStudentSagaDataSet.forEach(this.sendIndividualStudentAsMessageToTopic());
+    batchStudentSagaDataSet.forEach(this::sendIndividualStudentAsMessageToTopic);
   }
+
 
   /**
    * Send individual student as message to topic consumer.
-   *
-   * @return the consumer
    */
-  private Consumer<PenRequestBatchStudentSagaData> sendIndividualStudentAsMessageToTopic() {
-    return penRequestBatchStudentSagaData -> {
-      final var eventPayload = JsonUtil.getJsonString(penRequestBatchStudentSagaData);
-      if (eventPayload.isPresent()) {
-        final Event event = Event.builder().eventType(EventType.READ_FROM_TOPIC).eventOutcome(EventOutcome.READ_FROM_TOPIC_SUCCESS).eventPayload(eventPayload.get()).build();
-        final var eventString = JsonUtil.getJsonString(event);
-        if (eventString.isPresent()) {
-          this.messagePublisher.dispatchMessage(PEN_REQUEST_BATCH_API_TOPIC.toString(), eventString.get().getBytes());
-        } else {
-          log.error("Event Sting is empty, skipping the publish to topic :: {}", penRequestBatchStudentSagaData);
-        }
+  private void sendIndividualStudentAsMessageToTopic(final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
+    final var eventPayload = JsonUtil.getJsonString(penRequestBatchStudentSagaData);
+    if (eventPayload.isPresent()) {
+      final Event event = Event.builder().eventType(EventType.READ_FROM_TOPIC).eventOutcome(EventOutcome.READ_FROM_TOPIC_SUCCESS).eventPayload(eventPayload.get()).build();
+      final var eventString = JsonUtil.getJsonString(event);
+      if (eventString.isPresent()) {
+        this.messagePublisher.dispatchMessage(PEN_REQUEST_BATCH_API_TOPIC.toString(), eventString.get().getBytes());
       } else {
-        log.error("Event payload is empty, skipping the publish to topic :: {}", penRequestBatchStudentSagaData);
+        log.error("Event Sting is empty, skipping the publish to topic :: {}", penRequestBatchStudentSagaData);
       }
-    };
+    } else {
+      log.error("Event payload is empty, skipping the publish to topic :: {}", penRequestBatchStudentSagaData);
+    }
   }
 
   /**
@@ -87,8 +96,22 @@ public class PenRegBatchStudentRecordsProcessor {
    *
    * @param penRequestBatchEntities the list of pen request batch entities
    */
-  public void checkLoadedStudentRecordsForDuplicatesAndRepeats(final List<PenRequestBatchEntity> penRequestBatchEntities) {
-    penRequestBatchEntities.forEach(penRequestBatchEntity -> this.getPenRequestBatchFileService().filterDuplicatesAndRepeatRequests(penRequestBatchEntity.getPenRequestBatchID().toString(), penRequestBatchEntity));
+  public void checkLoadedStudentRecordsForDuplicatesAndRepeatsAndPublishForFurtherProcessing(final List<PenRequestBatchEntity> penRequestBatchEntities) {
+    for (val prbEntity : penRequestBatchEntities) {
+      final String redisKey = prbEntity.getPenRequestBatchID().toString().concat(
+          "::checkLoadedStudentRecordsForDuplicatesAndRepeatsAndPublishForFurtherProcessing");
+      val valueFromRedis = this.stringRedisTemplate.opsForValue().get(redisKey);
+      if (StringUtils.isBlank(valueFromRedis)) { // skip if it is already in redis
+        this.stringRedisTemplate.opsForValue().set(redisKey, "true", 5, TimeUnit.MINUTES);
+        val prbStudentEntities =
+            this.getPenRequestBatchFileService()
+                .filterDuplicatesAndRepeatRequests(prbEntity.getPenRequestBatchID().toString(), prbEntity);
+        this.publishUnprocessedStudentRecordsForProcessing(PenRegBatchHelper.createSagaDataFromStudentRequestsAndBatch(prbStudentEntities, prbEntity));
+      }
+
+    }
+
+
   }
 
 }

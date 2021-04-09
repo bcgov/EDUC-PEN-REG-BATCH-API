@@ -305,6 +305,10 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
       finalEvent.setEventOutcome(SAGA_COMPLETED);
       finalEvent.setSagaStatus(COMPLETED.toString());
       finalEvent.setSagaName(this.getSagaName());
+      finalEvent.setPenRequestBatchID(saga.getPenRequestBatchID().toString());
+      if(saga.getPenRequestBatchStudentID() != null) {
+        finalEvent.setPenRequestBatchStudentID(saga.getPenRequestBatchStudentID().toString());
+      }
       this.postMessageToTopic(this.getTopicToSubscribe(), finalEvent);
     }
 
@@ -362,7 +366,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @throws TimeoutException     if connection to messaging system times out.
    */
   @Override
-  @Async
+  @Async("taskExecutor")
   @Transactional
   public void replaySaga(final Saga saga) throws IOException, InterruptedException, TimeoutException {
     final var eventStates = this.getSagaService().findAllSagaStates(saga);
@@ -492,30 +496,32 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
   /**
    * Start to execute sagas
    *
-   * @param payloads                  the pen request batch ids and the event payloads
-   * @param userName                 the user who created the saga
+   * @param payloads the pen request batch ids and the event payloads
+   * @param userName the user who created the saga
    * @return saga record
    */
+  @Override
   @Transactional
-  public List<Saga> saveMultipleSagas(@NotNull List<Pair<UUID, String>> payloads, String userName) {
-    return getSagaService().createMultipleBatchSagaRecordsInDB(getSagaName(), userName, payloads);
+  public List<Saga> saveMultipleSagas(@NotNull final List<Pair<UUID, String>> payloads, final String userName) {
+    return this.getSagaService().createMultipleBatchSagaRecordsInDB(this.getSagaName(), userName, payloads);
   }
 
+  @Override
   @Async("subscriberExecutor")
   @Transactional
-  public void startMultipleSagas(List<Saga> sagas) {
-    for(Saga saga : sagas) {
+  public void startMultipleSagas(final List<Saga> sagas) {
+    for (final Saga saga : sagas) {
       try {
-        handleEvent(Event.builder()
-                .eventType(EventType.INITIATED)
-                .eventOutcome(EventOutcome.INITIATE_SUCCESS)
-                .sagaId(saga.getSagaId())
-                .eventPayload(saga.getPayload())
-                .build());
-      } catch (InterruptedException e) {
+        this.handleEvent(Event.builder()
+            .eventType(EventType.INITIATED)
+            .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+            .sagaId(saga.getSagaId())
+            .eventPayload(saga.getPayload())
+            .build());
+      } catch (final InterruptedException e) {
         log.error("There was an unexpected exception attempting to start multiple sagas", e);
         Thread.currentThread().interrupt();
-      } catch (IOException | TimeoutException e) {
+      } catch (final IOException | TimeoutException e) {
         log.error("There was an unexpected exception attempting to start multiple sagas", e);
       }
     }

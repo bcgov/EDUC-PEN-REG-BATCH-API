@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
@@ -8,18 +9,14 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
+import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.val;
-import org.junit.After;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.transaction.Transactional;
 import java.io.File;
@@ -32,10 +29,7 @@ import java.util.Optional;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@SpringBootTest
-public class PenRequestBatchServiceTest {
+public class PenRequestBatchServiceTest extends BasePenRegAPITest {
 
   @Autowired
   private PenRequestBatchService prbService;
@@ -43,7 +37,7 @@ public class PenRequestBatchServiceTest {
   private PenRequestBatchRepository prbRepository;
   @Autowired
   private PenRequestBatchStudentRepository prbStudentRepository;
-  @MockBean
+  @Autowired
   RestUtils restUtils;
 
   private List<PenRequestBatchEntity> batchList;
@@ -84,11 +78,6 @@ public class PenRequestBatchServiceTest {
           "    \"schoolNumber\": 10518\n" +
           "  }";
 
-  @After
-  public void after() {
-    this.prbStudentRepository.deleteAll();
-    this.prbRepository.deleteAll();
-  }
 
   public void testGetStats_givenNoDataInDB_shouldReturnTheCountsAsZero() {
     val result = this.prbService.getStats();
@@ -120,7 +109,7 @@ public class PenRequestBatchServiceTest {
     final var models = entities.stream().peek(x -> {
       x.setInsertDate(LocalDateTime.now().toString());
       x.setExtractDate(LocalDateTime.now().toString());
-    }).map(PenRequestBatchMapper.mapper::toModel).collect(toList()).stream().map(PenRequestBatchUtils::populateAuditColumns).collect(toList());
+    }).map(PenRequestBatchMapper.mapper::toModel).collect(toList()).stream().map(PenRequestBatchTestUtils::populateAuditColumns).collect(toList());
 
     this.prbRepository.saveAll(models);
     val result = this.prbService.getStats();
@@ -145,25 +134,25 @@ public class PenRequestBatchServiceTest {
   @Test
   @Transactional
   public void testUnArchivedStatus_givenDataInDB_shouldBeUpdatedToReArchivedStatus() throws IOException {
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
-            "mock_pen_req_batch_student_ids.json", 1);
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+        "mock_pen_req_batch_student_ids.json", 1);
 
     assertThat(this.batchList).isNotEmpty();
-    Optional<PenRequestBatchEntity> prbFileOptional = this.prbRepository.findById(this.batchList.get(0).getPenRequestBatchID());
+    final Optional<PenRequestBatchEntity> prbFileOptional = this.prbRepository.findById(this.batchList.get(0).getPenRequestBatchID());
     assertThat(prbFileOptional.isPresent()).isTrue();
     prbFileOptional.get().setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.UNARCHIVED.getCode());
     this.prbRepository.saveAndFlush(prbFileOptional.get());
 
-    Optional<PenRequestBatchEntity> prbFileDBOptional = this.prbRepository.findById(this.batchList.get(0).getPenRequestBatchID());
+    final Optional<PenRequestBatchEntity> prbFileDBOptional = this.prbRepository.findById(this.batchList.get(0).getPenRequestBatchID());
     assertThat(prbFileDBOptional.isPresent()).isTrue();
     assertThat(prbFileDBOptional.get().getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.UNARCHIVED.getCode());
 
-    PenRequestBatchEntity requestPrbFile = new PenRequestBatchEntity();
+    final PenRequestBatchEntity requestPrbFile = new PenRequestBatchEntity();
     BeanUtils.copyProperties(prbFileDBOptional.get(), requestPrbFile);
     requestPrbFile.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ARCHIVED.getCode());
     this.prbService.updatePenRequestBatch(requestPrbFile, prbFileDBOptional.get().getPenRequestBatchID());
 
-    PenRequestBatchEntity returnedPrbFile = this.prbRepository.getOne(prbFileDBOptional.get().getPenRequestBatchID());
+    final PenRequestBatchEntity returnedPrbFile = this.prbRepository.getOne(prbFileDBOptional.get().getPenRequestBatchID());
     assertThat(returnedPrbFile.getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.REARCHIVED.getCode());
   }
 

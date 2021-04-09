@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.batch.schedulers;
 
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
@@ -8,17 +9,12 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
-import lombok.extern.slf4j.Slf4j;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,11 +31,8 @@ import static org.mockito.Mockito.when;
 /**
  * The type Pen reg batch scheduler test.
  */
-@SpringBootTest
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
-@Slf4j
-public class PenRegBatchSchedulerTest {
+
+public class PenRegBatchSchedulerTest extends BasePenRegAPITest {
   /**
    * The Min.
    */
@@ -76,7 +69,7 @@ public class PenRegBatchSchedulerTest {
   private PenWebBlobRepository penWebBlobRepository;
 
   @Autowired
-  private PenRequestBatchUtils penRequestBatchUtils;
+  private PenRequestBatchTestUtils penRequestBatchTestUtils;
 
   @Autowired
   RestUtils restUtils;
@@ -88,7 +81,6 @@ public class PenRegBatchSchedulerTest {
    */
   @Before
   public void setUp() throws Exception {
-    this.penRequestBatchUtils.cleanDB();
     final List<PENWebBlobEntity> entities = this.createPlaceHolderRecords();
     this.penWebBlobRepository.saveAll(entities);
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));

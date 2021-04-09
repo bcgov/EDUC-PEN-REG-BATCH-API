@@ -1,29 +1,22 @@
 package ca.bc.gov.educ.penreg.api.batch.processor;
 
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.compare.PenRequestBatchHistoryComparator;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.github.javafaker.Faker;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
@@ -47,12 +40,8 @@ import static org.mockito.Mockito.when;
 /**
  * The type Pen reg batch processor test.
  */
-@SpringBootTest
-@RunWith(SpringRunner.class)
-@ActiveProfiles("test")
 @Slf4j
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class PenRegBatchProcessorTest {
+public class PenRegBatchProcessorTest extends BasePenRegAPITest {
   /**
    * The Min.
    */
@@ -79,15 +68,7 @@ public class PenRegBatchProcessorTest {
   private PenRequestBatchStudentRepository studentRepository;
 
   @Autowired
-  private PenRequestBatchHistoryRepository penRequestBatchHistoryRepository;
-  /**
-   * The Pen web blob repository.
-   */
-  @Autowired
-  private PenWebBlobRepository penWebBlobRepository;
-
-  @Autowired
-  private PenRequestBatchUtils penRequestBatchUtils;
+  private PenRequestBatchTestUtils penRequestBatchTestUtils;
   /**
    * The Faker.
    */
@@ -309,7 +290,7 @@ public class PenRegBatchProcessorTest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given30RowValidFileAndExistingRecords_ShouldShowRepeats() throws IOException {
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
-    this.penRequestBatchUtils.createBatchStudentsInSingleTransaction(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
+    this.penRequestBatchTestUtils.createBatchStudentsInSingleTransaction(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
         (batch) -> batch.setProcessDate(LocalDateTime.now().minusDays(3)));
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
@@ -348,8 +329,8 @@ public class PenRegBatchProcessorTest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenExistingRecordThatIsAlsoDuplicate_ShouldShowDuplicate() throws IOException {
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
-    this.penRequestBatchUtils.createBatchStudentsInSingleTransaction(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
-            (batch) -> batch.setProcessDate(LocalDateTime.now().minusDays(3)));
+    this.penRequestBatchTestUtils.createBatchStudentsInSingleTransaction(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
+        (batch) -> batch.setProcessDate(LocalDateTime.now().minusDays(3)));
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_Duplicate_And_Repeat.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
     final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
@@ -378,13 +359,13 @@ public class PenRegBatchProcessorTest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given30RowValidFileAndExistingRecords_ShouldShowRepeatsMoreThanOne() throws IOException {
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
-    this.penRequestBatchUtils.createBatchStudentsInSingleTransaction(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
-            (batch) -> batch.setProcessDate(LocalDateTime.now().minusDays(3)));
-    this.penRequestBatchUtils.createBatchStudentsInSingleTransaction(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
-            (batch) -> {
-                batch.setSubmissionNumber("T-534094");
-                batch.setProcessDate(LocalDateTime.now().minusDays(3));
-            });
+    this.penRequestBatchTestUtils.createBatchStudentsInSingleTransaction(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
+        (batch) -> batch.setProcessDate(LocalDateTime.now().minusDays(3)));
+    this.penRequestBatchTestUtils.createBatchStudentsInSingleTransaction(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_repeat.json", 1,
+        (batch) -> {
+          batch.setSubmissionNumber("T-534094");
+          batch.setProcessDate(LocalDateTime.now().minusDays(3));
+        });
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
     final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
@@ -715,17 +696,6 @@ public class PenRegBatchProcessorTest {
     return school;
   }
 
-  /**
-   * After.
-   */
-  @After
-  @Transactional
-  public void after() {
-    this.studentRepository.deleteAll();
-    this.penRequestBatchHistoryRepository.deleteAll();
-    this.repository.deleteAll();
-    this.penWebBlobRepository.deleteAll();
-  }
 
 }
 

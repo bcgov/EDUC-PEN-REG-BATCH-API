@@ -2,7 +2,6 @@ package ca.bc.gov.educ.penreg.api.batch.processor;
 
 import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper;
-import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchStudentSagaDataMapper;
 import ca.bc.gov.educ.penreg.api.batch.service.DuplicateFileCheckService;
 import ca.bc.gov.educ.penreg.api.batch.service.PenRequestBatchFileService;
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
@@ -12,6 +11,7 @@ import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
 import ca.bc.gov.educ.penreg.api.batch.validator.PenRequestBatchFileValidator;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
+import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
@@ -29,6 +29,7 @@ import net.sf.flatpack.DataSet;
 import net.sf.flatpack.DefaultParserFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,10 +59,6 @@ public class PenRegBatchProcessor {
    * The constant mapper.
    */
   private static final PenRequestBatchFileMapper mapper = PenRequestBatchFileMapper.mapper;
-  /**
-   * The constant studentSagaDataMapper.
-   */
-  private static final PenRequestBatchStudentSagaDataMapper studentSagaDataMapper = PenRequestBatchStudentSagaDataMapper.mapper;
   /**
    * The Pen reg batch student records processor.
    */
@@ -139,6 +136,7 @@ public class PenRegBatchProcessor {
    * @param penWebBlobEntity the pen web blob entity
    */
   @Transactional
+  @Async("penWebBlobExtractor")
   public void processPenRegBatchFileFromPenWebBlob(@NonNull final PENWebBlobEntity penWebBlobEntity) {
     final Stopwatch stopwatch = Stopwatch.createStarted();
     final var guid = UUID.randomUUID().toString(); // this guid will be used throughout the logs for easy tracking.
@@ -160,6 +158,7 @@ public class PenRegBatchProcessor {
       log.error("Exception while processing the file with guid :: {} :: Exception :: {}", guid, e);
     } finally {
       batchFileReaderOptional.ifPresent(this::closeBatchFileReader);
+      stopwatch.stop();
       log.info("Time taken is :: {} milli seconds", stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
   }
@@ -207,9 +206,7 @@ public class PenRegBatchProcessor {
     val notifySchoolForFileFormatErrorsOptional = this.notifySchoolForFileFormatErrors(guid, penWebBlobEntity, fileUnProcessableException);
     final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityForBusinessException(penWebBlobEntity, fileUnProcessableException.getReason(), fileUnProcessableException.getPenRequestBatchStatusCode(), batchFile, fileUnProcessableException.getFileError() == HELD_BACK_FOR_SIZE); // batch file can be processed further and persisted.
     final Optional<School> school = this.restUtils.getSchoolByMincode(penWebBlobEntity.getMincode());
-    if (school.isPresent()) {
-      entity.setSchoolName(school.get().getSchoolName());
-    }
+    school.ifPresent(value -> entity.setSchoolName(value.getSchoolName()));
     entity.setMincode(penWebBlobEntity.getMincode());
     //wait here if notification was sent, if there was any error this file will be picked up again as it wont be persisted.
     if (notifySchoolForFileFormatErrorsOptional.isPresent()) {
@@ -307,13 +304,7 @@ public class PenRegBatchProcessor {
     this.getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
     if (entity.getPenRequestBatchID() != null) { // this could happen when the same submission number is picked up again, system should not process the same submission.
       // the entity was saved in propagation new context , so system needs to get it again from DB to have an attached entity bound to the current thread.
-      final var studentEntitiesToBeProcessed = this.getPenRequestBatchFileService().filterDuplicatesAndRepeatRequests(guid, entity);
-      return studentEntitiesToBeProcessed.stream()
-          .map(studentSagaDataMapper::toPenReqBatchStudentSagaData)
-          .peek(element -> {
-            element.setMincode(entity.getMincode());
-            element.setPenRequestBatchID(entity.getPenRequestBatchID());
-          }).collect(Collectors.toSet());
+      return PenRegBatchHelper.createSagaDataFromStudentRequestsAndBatch(this.getPenRequestBatchFileService().filterDuplicatesAndRepeatRequests(guid, entity), entity);
     }
     return new HashSet<>();
   }
@@ -327,7 +318,7 @@ public class PenRegBatchProcessor {
    * @param batchFile the batch file
    * @throws FileUnProcessableException the file un processable exception
    */
-  private void populateBatchFile(final String guid, final DataSet ds, final BatchFile batchFile) throws FileUnProcessableException {
+  public void populateBatchFile(final String guid, final DataSet ds, final BatchFile batchFile) throws FileUnProcessableException {
     long index = 0;
     while (ds.next()) {
       if (ds.isRecordID(HEADER.getName()) || ds.isRecordID(TRAILER.getName())) {

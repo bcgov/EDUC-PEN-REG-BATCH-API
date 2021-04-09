@@ -14,6 +14,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentStatusCodeRepository;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.NonNull;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
@@ -29,10 +31,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -170,10 +169,10 @@ public class PenRequestBatchStudentService {
             this.changeSummaryCount(penRequestBatch, currentStatus, false);
             penRequestBatch.setUpdateUser(penRequestBatchStudent.getUpdateUser());
             penRequestBatch.setUpdateDate(penRequestBatchStudent.getUpdateDate());
-            saveBatch(penRequestBatch,isUnArchivedChanged);
+            this.saveBatch(penRequestBatch, isUnArchivedChanged);
             this.logCounts(penRequestBatch, "Updated");
           } else if (isUnArchivedChanged) {
-            saveBatch(penRequestBatch,true);
+            this.saveBatch(penRequestBatch, true);
           }
           return savedPrbStudent;
         } else {
@@ -188,10 +187,10 @@ public class PenRequestBatchStudentService {
     }
   }
 
-  private void saveBatch(final PenRequestBatchEntity penRequestBatch, final boolean isUnArchivedChanged){
+  private void saveBatch(final PenRequestBatchEntity penRequestBatch, final boolean isUnArchivedChanged) {
     if (!isUnArchivedChanged) {
       this.penRequestBatchRepository.save(penRequestBatch);
-    }else{
+    } else {
       this.penRequestBatchService.savePenRequestBatch(penRequestBatch);
     }
   }
@@ -320,4 +319,37 @@ public class PenRequestBatchStudentService {
     return this.getRepository().findById(penRequestBatchStudentID);
   }
 
+  public Map<String, List<PenRequestBatchStudentEntity>> populateRepeatCheckMap(@NonNull final PenRequestBatchEntity penRequestBatchEntity) {
+    final Map<String, List<PenRequestBatchStudentEntity>> repeatedEntityMap = new HashMap<>();
+    final int repeatTimeWindow;
+    if (penRequestBatchEntity.getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())) {
+      repeatTimeWindow = this.getApplicationProperties().getRepeatTimeWindowPSI();
+    } else {
+      repeatTimeWindow = this.getApplicationProperties().getRepeatTimeWindowK12();
+    }
+    final LocalDateTime startDate = LocalDateTime.now().minusDays(repeatTimeWindow);
+    val result = this.repository.findAllPenRequestBatchStudentsForGivenCriteria(penRequestBatchEntity.getMincode(),
+        PenRequestBatchStatusCodes.ARCHIVED.getCode(), startDate,
+        Arrays.asList(FIXABLE.getCode(), ERROR.getCode(), LOADED.getCode()));
+    if (result.isEmpty()) {
+      return Collections.emptyMap();
+    }
+    for (val prbStudentEntity : result) {
+      final String key = this.constructKeyGivenBatchStudent(prbStudentEntity);
+      if (repeatedEntityMap.containsKey(key)) {
+        val entries = repeatedEntityMap.get(key);
+        entries.add(prbStudentEntity);
+        repeatedEntityMap.put(key, entries);
+      } else {
+        val entries = new ArrayList<PenRequestBatchStudentEntity>();
+        entries.add(prbStudentEntity);
+        repeatedEntityMap.put(key, entries);
+      }
+    }
+    return repeatedEntityMap;
+  }
+
+  public String constructKeyGivenBatchStudent(@NonNull final PenRequestBatchStudentEntity prbsEntity) {
+    return prbsEntity.getLocalID() + prbsEntity.getSubmittedPen() + prbsEntity.getLegalFirstName() + prbsEntity.getLegalMiddleNames() + prbsEntity.getLegalLastName() + prbsEntity.getUsualFirstName() + prbsEntity.getUsualMiddleNames() + prbsEntity.getUsualLastName() + prbsEntity.getDob() + prbsEntity.getGenderCode() + prbsEntity.getGradeCode() + prbsEntity.getPostalCode();
+  }
 }

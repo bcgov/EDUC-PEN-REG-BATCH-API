@@ -8,6 +8,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
+import com.google.common.base.Stopwatch;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -135,6 +137,7 @@ public class PenRequestBatchFileService {
   @Retryable(value = {Exception.class}, backoff = @Backoff(multiplier = 2, delay = 2000))
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public Set<PenRequestBatchStudentEntity> filterDuplicatesAndRepeatRequests(@NonNull final String guid, final PenRequestBatchEntity penRequestBatchEntity) {
+    final Stopwatch stopwatch = Stopwatch.createStarted();
     final var filteredStudentEntities = new HashSet<PenRequestBatchStudentEntity>();
     final Optional<PenRequestBatchEntity> penRequestBatchEntityOptional =
         this.findEntity(penRequestBatchEntity.getPenRequestBatchID()); // need to grab it from DB, so that this
@@ -145,30 +148,31 @@ public class PenRequestBatchFileService {
           penRequestBatchEntityFromDB.getPenRequestBatchStudentEntities(); // it will make a DB call here, get the
       // child entities lazily loaded.
       long numRepeats = 0;
-
+      final Map<String, List<PenRequestBatchStudentEntity>> repeatCheckMap =
+          this.penRequestBatchStudentService.populateRepeatCheckMap(penRequestBatchEntityFromDB);
       this.checkBatchForDuplicateRequests(studentEntities, filteredStudentEntities);
 
-      for (final PenRequestBatchStudentEntity penRequestBatchStudent : studentEntities) {
-        if (PenRequestBatchStudentStatusCodes.DUPLICATE.getCode().equals(penRequestBatchStudent.getPenRequestBatchStudentStatusCode())) {
-          continue; // no need to do any checking for DUPLICATE student requests, continue further.
-        }
-        final List<PenRequestBatchStudentEntity> repeatRequests = this.penRequestBatchStudentService.findAllRepeatsGivenBatchStudent(penRequestBatchStudent);
-        log.trace("{} :: Checking following penRequestBatchStudent for repeats :: {}", guid, penRequestBatchStudent);
-        log.debug("{} :: Found {} repeat records for prb student record :: {}", guid, repeatRequests.size(), penRequestBatchStudent.getPenRequestBatchStudentID());
-        if (!repeatRequests.isEmpty()) {
-          filteredStudentEntities.remove(penRequestBatchStudent); // if it is a repeat remove it from the list to be
-          this.updatePenRequestBatchStudentRequest(repeatRequests, penRequestBatchStudent);
-          // further processed.
-          numRepeats++;
+      if (repeatCheckMap.size() > 0) {
+        for (final PenRequestBatchStudentEntity penRequestBatchStudent : studentEntities) {
+          if (PenRequestBatchStudentStatusCodes.DUPLICATE.getCode().equals(penRequestBatchStudent.getPenRequestBatchStudentStatusCode())) {
+            continue; // no need to do any checking for DUPLICATE student requests, continue further.
+          }
+          final String repeatCheckKey =
+              this.penRequestBatchStudentService.constructKeyGivenBatchStudent(penRequestBatchStudent);
+          if (repeatCheckMap.containsKey(repeatCheckKey)) {
+            filteredStudentEntities.remove(penRequestBatchStudent); // if it is a repeat remove it from the list to be further processed.
+            this.updatePenRequestBatchStudentRequest(repeatCheckMap.get(repeatCheckKey), penRequestBatchStudent);
+            numRepeats++;
+          }
         }
       }
       log.debug("{} :: Found {} total repeats", guid, numRepeats);
       penRequestBatchEntityFromDB.setRepeatCount(numRepeats);
       penRequestBatchEntityFromDB.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.REPEATS_CHECKED.getCode());
       this.getPenRequestBatchService().savePenRequestBatch(penRequestBatchEntityFromDB); // finally update the
-      // attached entity here, all the child entities will also be persisted as they are also hibernate attached
-      //entities.
     }
+    stopwatch.stop();
+    log.info("completed the method in {} ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
     return filteredStudentEntities;
   }
 
