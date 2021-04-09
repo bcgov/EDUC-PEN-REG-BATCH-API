@@ -38,8 +38,8 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     final var batchEntities = PenRequestBatchTestUtils.createBatchStudents(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_archived_with_pen.json", 1,
         (batch) -> batch.setProcessDate(LocalDateTime.parse("2021-03-23T13:04:48.840098")));
 
-    final var student1 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130002").dob("19900704").genderCode("M").legalFirstName("Mike").pen("123456785").legalLastName("Joe").legalMiddleNames("Tim").usualFirstName("Bob").usualLastName("Smithy").usualMiddleNames("Smalls").mincode(batchEntities.get(0).getMincode()).demogCode("C").build();
-    final var student2 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130003").dob("19900703").genderCode("F").legalFirstName("Ted").pen("123456780").legalLastName("Jones").legalMiddleNames("Jim").usualFirstName("Steal").usualLastName("Mr").usualMiddleNames("Yo Girl").mincode(batchEntities.get(0).getMincode()).demogCode("A").build();
+    final var student1 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130002").dob("1990-07-04").genderCode("M").legalFirstName("Mike").pen("123456785").legalLastName("Joe").legalMiddleNames("Tim").usualFirstName("Bob").usualLastName("Smithy").usualMiddleNames("Smalls").mincode(batchEntities.get(0).getMincode()).demogCode("C").build();
+    final var student2 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130003").dob("1990-07-03").genderCode("F").legalFirstName("Ted").pen("123456780").legalLastName("Jones").legalMiddleNames("Jim").usualFirstName("Steal").usualLastName("Mr").usualMiddleNames("Yo Girl").mincode(batchEntities.get(0).getMincode()).demogCode("A").build();
     final List<Student> students = new ArrayList<>();
     students.add(student1);
     students.add(student2);
