@@ -7,6 +7,7 @@ import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
+import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentOrchestratorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
@@ -21,6 +22,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -51,6 +53,10 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    */
   private static final PenStudentDemogValidationMapper validationMapper = PenStudentDemogValidationMapper.mapper;
   /**
+   * The Application properties.
+   */
+  private final ApplicationProperties applicationProperties;
+  /**
    * The Pen request batch student orchestrator service.
    */
   @Getter(PRIVATE)
@@ -61,13 +67,15 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    *
    * @param sagaService                               the saga service
    * @param messagePublisher                          the message publisher
+   * @param applicationProperties                     the application properties
    * @param penRequestBatchStudentOrchestratorService the pen request batch student orchestrator service
    */
   @Autowired
   public PenReqBatchStudentOrchestrator(final SagaService sagaService, final MessagePublisher messagePublisher,
-                                        final PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService) {
+                                        final ApplicationProperties applicationProperties, final PenRequestBatchStudentOrchestratorService penRequestBatchStudentOrchestratorService) {
     super(sagaService, messagePublisher, PenRequestBatchStudentSagaData.class,
         PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString());
+    this.applicationProperties = applicationProperties;
     this.setShouldSendNotificationEvent(false);
     this.penRequestBatchStudentOrchestratorService = penRequestBatchStudentOrchestratorService;
   }
@@ -79,6 +87,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
   public void populateStepsToExecuteMap() {
     this.stepBuilder()
         .begin(VALIDATE_STUDENT_DEMOGRAPHICS, this::validateStudentDemographics)
+        .step(VALIDATE_STUDENT_DEMOGRAPHICS, SKIP_VALIDATION, PROCESS_PEN_MATCH, this::processPenMatch)
         .step(VALIDATE_STUDENT_DEMOGRAPHICS, VALIDATION_SUCCESS_NO_ERROR_WARNING, PROCESS_PEN_MATCH, this::processPenMatch)
         .step(VALIDATE_STUDENT_DEMOGRAPHICS, VALIDATION_SUCCESS_WITH_ONLY_WARNING, PROCESS_PEN_MATCH, this::processPenMatch)
         .end(VALIDATE_STUDENT_DEMOGRAPHICS, VALIDATION_SUCCESS_WITH_ERROR, this::completePenRequestBatchStudentSaga)
@@ -96,29 +105,46 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
    * @param penRequestBatchStudentSagaData the pen request batch student saga data
    * @throws JsonProcessingException the json processing exception
    */
-  protected void validateStudentDemographics(final Event event, final Saga saga, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) throws JsonProcessingException {
+  protected void validateStudentDemographics(final Event event, final Saga saga, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) throws IOException, InterruptedException, TimeoutException {
     final var scrubbedSagaData = this.getPenRequestBatchStudentOrchestratorService()
         .scrubPayload(penRequestBatchStudentSagaData);
     final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(VALIDATE_STUDENT_DEMOGRAPHICS.toString());
     saga.setPayload(JsonUtil.getJsonStringFromObject(scrubbedSagaData)); // update the payload with scrubbed values to use it in the saga process...
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
+    if (this.isValidationStepRequired(penRequestBatchStudentSagaData.getMincode())) {
+      final var validationPayload = validationMapper.toStudentDemogValidationPayload(scrubbedSagaData);
 
-    final var validationPayload = validationMapper.toStudentDemogValidationPayload(scrubbedSagaData);
-
-    validationPayload.setTransactionID(saga.getSagaId().toString());
-    final var eventPayload = JsonUtil.getJsonString(validationPayload);
-    if (eventPayload.isPresent()) {
-      final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-          .eventType(VALIDATE_STUDENT_DEMOGRAPHICS)
-          .replyTo(this.getTopicToSubscribe())
-          .eventPayload(eventPayload.get())
-          .build();
-      this.postMessageToTopic(PEN_SERVICES_API_TOPIC.toString(), nextEvent);
-      log.info("message sent to PEN_SERVICES_API_TOPIC for VALIDATE_STUDENT_DEMOGRAPHICS Event. :: {}", saga.getSagaId());
+      validationPayload.setTransactionID(saga.getSagaId().toString());
+      final var eventPayload = JsonUtil.getJsonString(validationPayload);
+      if (eventPayload.isPresent()) {
+        final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
+            .eventType(VALIDATE_STUDENT_DEMOGRAPHICS)
+            .replyTo(this.getTopicToSubscribe())
+            .eventPayload(eventPayload.get())
+            .build();
+        this.postMessageToTopic(PEN_SERVICES_API_TOPIC.toString(), nextEvent);
+        log.info("message sent to PEN_SERVICES_API_TOPIC for VALIDATE_STUDENT_DEMOGRAPHICS Event. :: {}", saga.getSagaId());
+      } else {
+        log.error("event payload is not present this should not have happened. :: {}", saga.getSagaId());
+      }
     } else {
-      log.error("event payload is not present this should not have happened. :: {}", saga.getSagaId());
+      this.handleEvent(Event.builder().sagaId(saga.getSagaId())
+          .eventType(VALIDATE_STUDENT_DEMOGRAPHICS).eventOutcome(SKIP_VALIDATION)
+          .build());
     }
+
+  }
+
+  /**
+   * For certain district codes the validation is not required.
+   *
+   * @param mincode the mincode of the batch file.
+   * @return true or false
+   */
+  protected boolean isValidationStepRequired(@NonNull final String mincode) {
+    final String districtCode = StringUtils.substring(mincode, 0, 3);
+    return !this.applicationProperties.getDistrictCodesToNotValidate().contains(districtCode);
   }
 
 
