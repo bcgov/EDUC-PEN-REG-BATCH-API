@@ -31,7 +31,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -250,27 +249,6 @@ public class PenRequestBatchService {
    */
   public Optional<PenRequestBatchEntity> findById(final UUID penRequestBatchID) {
     return this.repository.findById(penRequestBatchID);
-  }
-
-  public PENWebBlobEntity getPDFBlob(String pdfReport, PenRequestBatchEntity penRequestBatchEntity) {
-    return PENWebBlobEntity.builder()
-            .mincode(penRequestBatchEntity.getMincode())
-            .sourceApplication("PENWEB")
-            .fileName(penRequestBatchEntity.getMincode() + ".PDF")
-            .fileType("PDF")
-            .fileContents(pdfReport.getBytes())
-            .insertDateTime(LocalDateTime.now())
-            .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
-            .build();
-  }
-
-  @Transactional(propagation = Propagation.MANDATORY)
-  public List<PENWebBlobEntity> saveReports(final String pdfReport, PenRequestBatchEntity penRequestBatchEntity) {
-    return Arrays.asList(
-      this.getPenWebBlobRepository().save(this.getPDFBlob(pdfReport, penRequestBatchEntity)),
-      this.getResponseFileGeneratorService().createIDSFile(penRequestBatchEntity),
-      this.getResponseFileGeneratorService().createTxtFile(penRequestBatchEntity)
-    );
   }
 
   @Transactional(propagation = Propagation.SUPPORTS)

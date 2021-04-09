@@ -45,7 +45,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
         List<ReportListItem> sysMatchedList = new ArrayList<>();
         List<ReportUserMatchedListItem> diffList = new ArrayList<>();
         List<ReportUserMatchedListItem> confirmedList = new ArrayList<>();
-        Map<String, Student> userMatchedStudents = data.getMatchedStudents().stream()
+        Map<String, Student> students = data.getStudents().stream()
                 .collect(Collectors.toMap(Student::getStudentID, student -> student));
         for(PenRequestBatchStudent penRequestBatchStudent : data.getPenRequestBatchStudents()) {
             switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.codeOfValue(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
@@ -58,13 +58,13 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
                     break;
                 case SYS_NEW_PEN:
                 case USR_NEW_PEN:
-                    newPenList.add(listItemMapper.toReportListItem(penRequestBatchStudent));
+                    newPenList.add(listItemMapper.toReportListItem(students.get(penRequestBatchStudent.getStudentID())));
                     break;
                 case SYS_MATCHED:
                     sysMatchedList.add(listItemMapper.toReportListItem(penRequestBatchStudent));
                     break;
                 case USR_MATCHED:
-                    Student matchedStudent = userMatchedStudents.get(penRequestBatchStudent.getStudentID());
+                    Student matchedStudent = students.get(penRequestBatchStudent.getStudentID());
                     if(matchedStudent != null && matchedStudent.getDemogCode() != null && matchedStudent.getDemogCode().equals(StudentDemogCode.CONFIRMED.getCode())) {
                         confirmedList.add(listItemMapper.toReportUserMatchedListItem(penRequestBatchStudent, matchedStudent));
                     } else {

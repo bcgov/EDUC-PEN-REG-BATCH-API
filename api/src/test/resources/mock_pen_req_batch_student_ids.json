@@ -62,7 +62,8 @@
     "genderCode": "M",
     "gradeCode": "EL",
     "postalCode": "V0J1P0",
-    "assignedPEN": "123456789"
+    "assignedPEN": "123456789",
+    "studentID": "a0690c7c-98ab-11eb-a8b3-0242ac130003"
   },
   {
     "penRequestBatchStudentStatusCode": "MATCHEDUSR",
@@ -78,7 +79,8 @@
     "genderCode": "M",
     "gradeCode": "EL",
     "postalCode": "V0J1P0",
-    "assignedPEN": "123456789"
+    "assignedPEN": "123456789",
+    "studentID": "a0690c7c-98ab-11eb-a8b3-0242ac130004"
   },
   {
     "penRequestBatchStudentStatusCode": "NEWPENSYS",
@@ -94,7 +96,8 @@
     "genderCode": "M",
     "gradeCode": "EL",
     "postalCode": "V0J1P0",
-    "assignedPEN": "123456789"
+    "assignedPEN": "123456789",
+    "studentID": "a0690c7c-98ab-11eb-a8b3-0242ac130005"
   },
   {
     "penRequestBatchStudentStatusCode": "NEWPENSYS",
@@ -110,7 +113,8 @@
     "genderCode": "M",
     "gradeCode": "GR",
     "postalCode": "V8G1A7",
-    "assignedPEN": "123456789"
+    "assignedPEN": "123456789",
+    "studentID": "a0690c7c-98ab-11eb-a8b3-0242ac130006"
   },
   {
     "penRequestBatchStudentStatusCode": "REPEAT",

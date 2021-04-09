@@ -14,6 +14,7 @@ import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -160,38 +161,6 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     }
 
     @Test
-    public void testHandleEvent_givenBatchInSagaDataExistsNoMtchStud_shouldGatherReportDataAndBeMarkedGENERATE_PDF_REPORT() throws IOException, InterruptedException, TimeoutException {
-        this.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode());
-        final var event = Event.builder()
-                .eventType(EventType.INITIATED)
-                .eventOutcome(EventOutcome.INITIATE_SUCCESS)
-                .sagaId(this.saga.get(0).getSagaId())
-                .build();
-        this.orchestrator.handleEvent(event);
-        final var sagaFromDB = this.sagaService.findSagaById(this.saga.get(0).getSagaId());
-        assertThat(sagaFromDB).isPresent();
-        assertThat(sagaFromDB.get().getSagaState()).isEqualTo(GENERATE_PEN_REQUEST_BATCH_REPORTS.toString());
-        final var sagaStates = this.sagaService.findAllSagaStates(sagaFromDB.get());
-        assertThat(sagaStates.size()).isEqualTo(4);
-        assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
-        assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
-        assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(GATHER_REPORT_DATA.toString());
-        assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.REPORT_DATA_GATHERED.toString());
-        assertThat(sagaStates.get(2).getSagaEventState()).isEqualTo(GET_STUDENTS.toString());
-        assertThat(sagaStates.get(2).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENTS_FOUND.toString());
-        assertThat(sagaStates.get(3).getSagaEventState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH.toString());
-        assertThat(sagaStates.get(3).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_REQUEST_BATCH_UPDATED.toString());
-        PenRequestBatchArchiveAndReturnSagaData payload = JsonUtil.getJsonObjectFromString(PenRequestBatchArchiveAndReturnSagaData.class, sagaFromDB.get().getPayload());
-        assertThat(payload.getFacsimile()).isNotEmpty();
-        assertThat(payload.getFromEmail()).isNotEmpty();
-        assertThat(payload.getTelephone()).isNotEmpty();
-        assertThat(payload.getMailingAddress()).isNotEmpty();
-        assertThat(payload.getPenCordinatorEmail()).isNotEmpty();
-        assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
-        assertThat(payload.getMatchedStudents().size()).isEqualTo(0);
-    }
-
-    @Test
     public void testHandleEvent_givenSTUDENTS_FOUNDEventAndCorrectSagaAndEventData_shouldBeMarkedPEN_REQUEST_BATCH_UPDATED() throws IOException, InterruptedException, TimeoutException {
         PenRequestBatchEntity penRequestBatchEntity = createBatchEntity("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode());
         PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
@@ -239,6 +208,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
                 .fromEmail("test@email.com")
                 .facsimile("5555555555")
                 .telephone("2222222222")
+                .students(PenRequestBatchUtils.createStudents(penRequestBatchEntity))
                 .penRequestBatchID(penRequestBatchEntity.getPenRequestBatchID())
                 .build();
         this.saga.get(0).setPayload(JsonUtil.getJsonStringFromObject(payload));
@@ -277,6 +247,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
                 .fromEmail("test@email.com")
                 .facsimile("5555555555")
                 .telephone("2222222222")
+                .students(PenRequestBatchUtils.createStudents(penRequestBatchEntity))
                 .penRequestBatchID(penRequestBatchEntity.getPenRequestBatchID())
                 .build();
         this.saga.get(0).setPayload(JsonUtil.getJsonStringFromObject(payload));

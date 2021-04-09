@@ -12,6 +12,7 @@ import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
 import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
 import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
+import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.v1.BasePenRequestBatchReturnFilesSagaData;
@@ -45,6 +46,9 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     private final PenCoordinatorService penCoordinatorService;
 
     @Getter(PROTECTED)
+    private final ResponseFileGeneratorService responseFileGeneratorService;
+
+    @Getter(PROTECTED)
     private final PenCoordinatorProperties penCoordinatorProperties;
 
     protected static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
@@ -75,11 +79,13 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
                                        Class<T> clazz, String sagaName, String topicToSubscribe,
                                        PenRequestBatchService penRequestBatchService,
                                        PenCoordinatorService penCoordinatorService,
-                                       PenCoordinatorProperties penCoordinatorProperties) {
+                                       PenCoordinatorProperties penCoordinatorProperties,
+                                       ResponseFileGeneratorService responseFileGeneratorService) {
         super(sagaService, messagePublisher, clazz, sagaName, topicToSubscribe);
         this.penRequestBatchService = penRequestBatchService;
         this.penCoordinatorService = penCoordinatorService;
         this.penCoordinatorProperties = penCoordinatorProperties;
+        this.responseFileGeneratorService = responseFileGeneratorService;
     }
 
     protected void gatherReportData(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws IOException, InterruptedException, TimeoutException {
@@ -115,7 +121,6 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
         Event nextEvent = Event.builder().sagaId(saga.getSagaId()).eventType(EventType.GET_STUDENTS).replyTo(this.getTopicToSubscribe()).build();
 
         List<String> studentIDs = penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().stream()
-          .filter(student -> student.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode()))
           .map(PenRequestBatchStudent::getStudentID).collect(Collectors.toList());
 
         if(studentIDs.isEmpty()) {
@@ -135,8 +140,8 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
         saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchReturnFilesSagaData)); // save the updated payload to DB...
         this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
-        getPenRequestBatchService().saveReports(event.getEventPayload(),
-          mapper.toModel(penRequestBatchReturnFilesSagaData.getPenRequestBatch()));
+        getResponseFileGeneratorService().saveReports(event.getEventPayload(),
+          mapper.toModel(penRequestBatchReturnFilesSagaData.getPenRequestBatch()), penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents(), penRequestBatchReturnFilesSagaData.getStudents());
 
         Event nextEvent = Event.builder().sagaId(saga.getSagaId())
           .eventType(SAVE_REPORTS)

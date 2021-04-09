@@ -10,6 +10,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.repository.*;
+import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,8 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -147,6 +150,29 @@ public class PenRequestBatchUtils {
     penRequestBatchRepository.saveAll(models);
 
     return models;
+  }
+
+  public static List<Student> createStudents(final PenRequestBatchEntity penRequestBatchEntity) {
+
+    List<Student> students = new ArrayList<>();
+    for(PenRequestBatchStudentEntity penRequestBatchStudentEntity : penRequestBatchEntity.getPenRequestBatchStudentEntities()) {
+      students.add(Student.builder()
+        .mincode(penRequestBatchEntity.getMincode())
+        .genderCode(penRequestBatchStudentEntity.getGenderCode())
+        .gradeCode(penRequestBatchStudentEntity.getGradeCode())
+        .legalFirstName(penRequestBatchStudentEntity.getLegalFirstName())
+        .legalLastName(penRequestBatchStudentEntity.getLegalLastName())
+        .legalMiddleNames(penRequestBatchStudentEntity.getLegalMiddleNames())
+        .dob(penRequestBatchStudentEntity.getDob())
+        .localID(penRequestBatchStudentEntity.getLocalID())
+        .pen(penRequestBatchStudentEntity.getAssignedPEN())
+        .studentID(UUID.randomUUID().toString())
+        .build());
+      if(penRequestBatchStudentEntity.getStudentID()!=null){
+        students.get(students.size()-1).setStudentID(penRequestBatchStudentEntity.getStudentID().toString());
+      }
+    }
+    return students;
   }
 
   public static List<PenRequestBatchEntity> createBatchStudents(final PenRequestBatchRepository penRequestBatchRepository, final String batchFileName,

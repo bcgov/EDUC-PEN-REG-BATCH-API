@@ -58,7 +58,7 @@ public class PenRequestBatchReportDataMapperTest {
         students.add(student1);
         students.add(student2);
 
-        var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder().facsimile("3333333333").telephone("5555555555").fromEmail("test@abc.com").mailingAddress("mailing address").penCordinatorEmail("test@email.com").schoolName("Cataline").penRequestBatch(mapper.toStructure(batchEntities.get(0))).penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList())).matchedStudents(students).build();
+        var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder().facsimile("3333333333").telephone("5555555555").fromEmail("test@abc.com").mailingAddress("mailing address").penCordinatorEmail("test@email.com").schoolName("Cataline").penRequestBatch(mapper.toStructure(batchEntities.get(0))).penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList())).students(students).build();
 
         PenRequestBatchReportData reportData = reportMapper.toReportData(sagaData);
 

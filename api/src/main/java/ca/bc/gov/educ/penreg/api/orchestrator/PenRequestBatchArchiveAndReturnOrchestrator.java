@@ -9,10 +9,11 @@ import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
 import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
+import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportGenerationEvent;
+import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportGenerationEventPayload;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -49,10 +50,11 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
     public PenRequestBatchArchiveAndReturnOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
                                                        PenRequestBatchService penRequestBatchService,
                                                        PenCoordinatorService penCoordinatorService,
-                                                       PenCoordinatorProperties penCoordinatorProperties) {
+                                                       PenCoordinatorProperties penCoordinatorProperties,
+                                                       ResponseFileGeneratorService responseFileGeneratorService) {
         super(sagaService, messagePublisher, PenRequestBatchArchiveAndReturnSagaData.class,
           PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString(), PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_TOPIC.toString(),
-          penRequestBatchService, penCoordinatorService, penCoordinatorProperties);
+          penRequestBatchService, penCoordinatorService, penCoordinatorProperties, responseFileGeneratorService);
     }
 
     /**
@@ -82,8 +84,8 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
     private void archivePenRequestBatch(Event event, Saga saga, PenRequestBatchArchiveAndReturnSagaData penRequestBatchArchiveAndReturnSagaData) throws IOException, InterruptedException, TimeoutException {
         SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
         saga.setSagaState(UPDATE_PEN_REQUEST_BATCH.toString());
-        List<Student> matchedStudents = obMapper.readValue(event.getEventPayload(), new TypeReference<>(){});
-        penRequestBatchArchiveAndReturnSagaData.setMatchedStudents(matchedStudents);
+        List<Student> students = obMapper.readValue(event.getEventPayload(), new TypeReference<>(){});
+        penRequestBatchArchiveAndReturnSagaData.setStudents(students);
         saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnSagaData)); // save the updated payload to DB...
         this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
@@ -131,7 +133,7 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
                 .eventType(GENERATE_PEN_REQUEST_BATCH_REPORTS)
                 .replyTo(this.getTopicToSubscribe())
                 .eventPayload(JsonUtil.getJsonStringFromObject(
-                        ReportGenerationEvent.builder()
+                        ReportGenerationEventPayload.builder()
                                 .reportType("PEN_REG_BATCH_RESPONSE_REPORT")
                                 .reportExtension("pdf")
                                 .reportName(penRequestBatchArchiveAndReturnSagaData.getPenRequestBatch().getSubmissionNumber())

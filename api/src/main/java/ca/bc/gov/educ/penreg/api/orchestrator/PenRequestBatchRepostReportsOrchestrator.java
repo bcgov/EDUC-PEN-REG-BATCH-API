@@ -7,11 +7,12 @@ import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
 import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
+import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchRepostReportsFilesSagaData;
-import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportGenerationEvent;
+import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportGenerationEventPayload;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
@@ -41,10 +42,11 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
     public PenRequestBatchRepostReportsOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
                                                     PenRequestBatchService penRequestBatchService,
                                                     PenCoordinatorService penCoordinatorService,
-                                                    PenCoordinatorProperties penCoordinatorProperties) {
+                                                    PenCoordinatorProperties penCoordinatorProperties,
+                                                    ResponseFileGeneratorService responseFileGeneratorService) {
         super(sagaService, messagePublisher, PenRequestBatchRepostReportsFilesSagaData.class,
           PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA.toString(), PEN_REQUEST_BATCH_REPOST_REPORTS_TOPIC.toString(),
-          penRequestBatchService, penCoordinatorService, penCoordinatorProperties);
+          penRequestBatchService, penCoordinatorService, penCoordinatorProperties, responseFileGeneratorService);
     }
 
     /**
@@ -71,8 +73,8 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
   private void generatePDFReport(Event event, Saga saga, PenRequestBatchRepostReportsFilesSagaData penRequestBatchRepostReportsFilesSagaData) throws IOException {
     SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(GENERATE_PEN_REQUEST_BATCH_REPORTS.toString());
-    List<Student> matchedStudents = obMapper.readValue(event.getEventPayload(), new TypeReference<>(){});
-    penRequestBatchRepostReportsFilesSagaData.setMatchedStudents(matchedStudents);
+    List<Student> students = obMapper.readValue(event.getEventPayload(), new TypeReference<>(){});
+    penRequestBatchRepostReportsFilesSagaData.setStudents(students);
     saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchRepostReportsFilesSagaData)); // save the updated payload to DB...
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
@@ -80,7 +82,7 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
       .eventType(GENERATE_PEN_REQUEST_BATCH_REPORTS)
       .replyTo(this.getTopicToSubscribe())
       .eventPayload(JsonUtil.getJsonStringFromObject(
-        ReportGenerationEvent.builder()
+        ReportGenerationEventPayload.builder()
           .reportType("PEN_REG_BATCH_RESPONSE_REPORT")
           .reportExtension("pdf")
           .reportName(penRequestBatchRepostReportsFilesSagaData.getPenRequestBatch().getSubmissionNumber())

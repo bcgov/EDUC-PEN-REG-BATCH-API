@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReportGenerationEvent {
+public class ReportGenerationEventPayload {
     String reportType;
     String reportExtension;
     String reportName;
