@@ -11,6 +11,7 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.*;
 import ca.bc.gov.educ.penreg.api.repository.*;
+import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -171,6 +172,29 @@ public class PenRequestBatchTestUtils {
     penRequestBatchRepository.saveAll(models);
 
     return models;
+  }
+
+  public static List<Student> createStudents(final PenRequestBatchEntity penRequestBatchEntity) {
+
+    List<Student> students = new ArrayList<>();
+    for(PenRequestBatchStudentEntity penRequestBatchStudentEntity : penRequestBatchEntity.getPenRequestBatchStudentEntities()) {
+      students.add(Student.builder()
+        .mincode(penRequestBatchEntity.getMincode())
+        .genderCode(penRequestBatchStudentEntity.getGenderCode())
+        .gradeCode(penRequestBatchStudentEntity.getGradeCode())
+        .legalFirstName(penRequestBatchStudentEntity.getLegalFirstName())
+        .legalLastName(penRequestBatchStudentEntity.getLegalLastName())
+        .legalMiddleNames(penRequestBatchStudentEntity.getLegalMiddleNames())
+        .dob(penRequestBatchStudentEntity.getDob())
+        .localID(penRequestBatchStudentEntity.getLocalID())
+        .pen(penRequestBatchStudentEntity.getAssignedPEN())
+        .studentID(UUID.randomUUID().toString())
+        .build());
+      if(penRequestBatchStudentEntity.getStudentID()!=null){
+        students.get(students.size()-1).setStudentID(penRequestBatchStudentEntity.getStudentID().toString());
+      }
+    }
+    return students;
   }
 
   public static List<PenRequestBatchEntity> createBatchStudents(final PenRequestBatchRepository penRequestBatchRepository, final String batchFileName,

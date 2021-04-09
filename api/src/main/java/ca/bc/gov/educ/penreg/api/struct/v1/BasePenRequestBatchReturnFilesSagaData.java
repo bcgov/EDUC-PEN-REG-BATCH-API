@@ -32,7 +32,7 @@ public class BasePenRequestBatchReturnFilesSagaData extends BaseRequest {
      */
     PenRequestBatch penRequestBatch;
     List<PenRequestBatchStudent> penRequestBatchStudents;
-    List<Student> matchedStudents;
+    List<Student> students;
     String penCordinatorEmail;
 
     String fromEmail;
