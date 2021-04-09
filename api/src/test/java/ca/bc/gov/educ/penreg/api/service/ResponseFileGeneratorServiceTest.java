@@ -7,11 +7,10 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
-import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.transaction.Transactional;
@@ -22,6 +21,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
@@ -40,7 +40,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
   @Autowired
   RestUtils restUtils;
-  @Autowired
+  @Mock
   private PenCoordinatorService penCoordinatorService;
 
   private List<PenRequestBatchEntity> batchList;
@@ -91,7 +91,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
   @Test
   public void testGetPDFBlob_givenBatchFileHasCorrectData_shouldCreateReportBlob() throws IOException {
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
             "mock_pen_req_batch_student_ids.json", 1);
     final var penWebBlob = this.responseFileGeneratorService.getPDFBlob("here is a pretend pdf", this.batchList.get(0));
     assertThat(penWebBlob).isNotNull();
@@ -99,10 +99,10 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
   @Test
   public void testgetIDSBlob_givenBatchFileHasCorrectStudents_shouldCreateIDSBlob() throws IOException {
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
             "mock_pen_req_batch_student_ids.json", 1);
 
-    final var students = PenRequestBatchUtils.createStudents(batchList.get(0));
+    final var students = PenRequestBatchTestUtils.createStudents(batchList.get(0));
     final var penWebBlob = this.responseFileGeneratorService.getIDSBlob(this.batchList.get(0), this.batchList.get(0).getPenRequestBatchStudentEntities().stream().map(mapper::toStructure).collect(Collectors.toList()), students);
     assertThat(new String(penWebBlob.getFileContents(), StandardCharsets.UTF_8)).contains("E0310210518204630109987123456789 JOSEPH\n");
     assertThat(new String(penWebBlob.getFileContents(), StandardCharsets.UTF_8)).contains("E0310210518000204630290123456789 JOSEPH\n");
@@ -112,10 +112,10 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
   @Test
   public void testgetIDSBlob_givenBatchFileHasCorrectWrongStudents_shouldCreateEmptyIDSBlob() throws IOException {
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
             "mock_pen_req_batch_student_ids_null.json", 1);
 
-    final var students = PenRequestBatchUtils.createStudents(batchList.get(0));
+    final var students = PenRequestBatchTestUtils.createStudents(batchList.get(0));
     final var penWebBlob = this.responseFileGeneratorService.getIDSBlob(this.batchList.get(0), this.batchList.get(0).getPenRequestBatchStudentEntities().stream().map(mapper::toStructure).collect(Collectors.toList()), students);
     assertThat(new String(penWebBlob.getFileContents(), StandardCharsets.UTF_8)).isEqualTo("No NEW PENS have been assigned by this PEN request");
   }
@@ -123,9 +123,9 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
   @Test
   @Transactional
   public void testGetTxtFile_givenBatchFileHasErrorStudents_shouldCreateTxtFile() throws IOException {
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_txt.json",
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_txt.json",
             "mock_pen_req_batch_student_txt.json", 1);
-    when(this.penCoordinatorService.getPenCoordinatorByMinCode("10210518")).thenReturn(Optional.of(JsonUtil.getJsonObjectFromString(PenCoordinator.class, mockCoordinator)));
+    doReturn(Optional.of(JsonUtil.getJsonObjectFromString(PenCoordinator.class, mockCoordinator))).when(this.penCoordinatorService).getPenCoordinatorByMinCode("10210518");
 
     final var penWebBlob = this.responseFileGeneratorService.getTxtBlob(this.batchList.get(0), this.batchList.get(0).getPenRequestBatchStudentEntities().stream().map(mapper::toStructure).collect(Collectors.toList()));
     assertThat(penWebBlob).isNotNull();
@@ -138,10 +138,10 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
   @Test
   @Transactional
   public void testSaveReports_givenPSIBatch_shouldCreatePSIReports() throws IOException {
-    this.batchList = PenRequestBatchUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
             "mock_pen_req_batch_student_ids.json", 1);
 
-    final var students = PenRequestBatchUtils.createStudents(batchList.get(0));
+    final var students = PenRequestBatchTestUtils.createStudents(batchList.get(0));
     this.responseFileGeneratorService.saveReports("Here's a fake pdf file", this.batchList.get(0), this.batchList.get(0).getPenRequestBatchStudentEntities().stream().map(mapper::toStructure).collect(Collectors.toList()), students);
 
     final var penWebBlobsDB = this.prbService.findPenWebBlobBySubmissionNumber(batchList.get(0).getSubmissionNumber());
