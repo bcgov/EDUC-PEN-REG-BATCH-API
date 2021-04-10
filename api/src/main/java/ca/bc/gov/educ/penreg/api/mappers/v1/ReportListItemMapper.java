@@ -13,19 +13,19 @@ public interface ReportListItemMapper {
 
     ReportListItemMapper mapper = Mappers.getMapper(ReportListItemMapper.class);
 
-    @Mapping(target = "birthDate", expression = "java(java.time.LocalDate.parse(penRequestBatchStudent.getDob(), java.time.format.DateTimeFormatter.ofPattern(\"yyyyMMdd\")).format(java.time.format.DateTimeFormatter.ofPattern(\"yyyy/MM/dd\")))")
+    @Mapping(target = "birthDate", expression = "java(penRequestBatchStudent.getDob() == null || penRequestBatchStudent.getDob().isEmpty() ? \"\" : java.time.LocalDate.parse(penRequestBatchStudent.getDob(), java.time.format.DateTimeFormatter.ofPattern(\"yyyyMMdd\")).format(java.time.format.DateTimeFormatter.ofPattern(\"yyyy/MM/dd\")))")
     @Mapping(source = "genderCode", target = "gender")
     @Mapping(source = "assignedPEN", target = "pen")
-    @Mapping(target = "schoolID", expression = "java(penRequestBatchStudent.getMincode().substring(0, 3) + \" \" + penRequestBatchStudent.getMincode().substring(3))")
+    @Mapping(target = "schoolID", expression = "java(penRequestBatchStudent.getMincode() == null || penRequestBatchStudent.getMincode().isEmpty() ? \"\" : penRequestBatchStudent.getMincode().substring(0, 3) + \" \" + penRequestBatchStudent.getMincode().substring(3))")
     @Mapping(source = "legalFirstName", target = "givenName")
     @Mapping(source = "legalLastName", target = "surname")
     @Mapping(target = "usualName", expression = "java(java.util.stream.Stream.of(penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames()).filter(x -> x != null && !x.isEmpty()).collect(java.util.stream.Collectors.joining(\", \")))")
     @Mapping(source = "infoRequest", target = "reason")
     ReportListItem toReportListItem(PenRequestBatchStudent penRequestBatchStudent);
 
-    @Mapping(target = "birthDate", expression = "java(java.time.LocalDate.parse(student.getDob(), java.time.format.DateTimeFormatter.ofPattern(\"yyyyMMdd\")).format(java.time.format.DateTimeFormatter.ofPattern(\"yyyy/MM/dd\")))")
+    @Mapping(target = "birthDate", expression = "java(student.getDob() == null || student.getDob().isEmpty() ? \"\" : java.time.LocalDate.parse(student.getDob()).format(java.time.format.DateTimeFormatter.ofPattern(\"yyyy/MM/dd\")))")
     @Mapping(source = "genderCode", target = "gender")
-    @Mapping(target = "schoolID", expression = "java(student.getMincode().substring(0, 3) + \" \" + student.getMincode().substring(3))")
+    @Mapping(target = "schoolID", expression = "java(student.getMincode() == null || student.getMincode().isEmpty() ? \"\" : student.getMincode().substring(0, 3) + \" \" + student.getMincode().substring(3))")
     @Mapping(source = "legalFirstName", target = "givenName")
     @Mapping(source = "legalLastName", target = "surname")
     @Mapping(target = "usualName", expression = "java(java.util.stream.Stream.of(student.getUsualLastName(), student.getUsualFirstName(), student.getUsualMiddleNames()).filter(x -> x != null && !x.isEmpty()).collect(java.util.stream.Collectors.joining(\", \")))")
