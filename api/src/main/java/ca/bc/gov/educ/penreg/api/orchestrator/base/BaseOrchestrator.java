@@ -441,7 +441,8 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
   @Async("subscriberExecutor")
   @Transactional
   public void handleEvent(@NotNull final Event event) throws InterruptedException, IOException, TimeoutException {
-    log.info("executing saga event {}", event);
+    log.info("executing saga event {}", event.getEventType());
+    log.trace("Full event :: {}", event);
     if (this.sagaEventExecutionNotRequired(event)) {
       log.trace("Execution is not required for this message returning EVENT is :: {}", event.toString());
       return;
@@ -584,7 +585,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
     if (!saga.getSagaState().equalsIgnoreCase(COMPLETED.toString())
         && this.isNotProcessedEvent(event.getEventType(), saga, this.nextStepsToExecute.keySet())) {
       log.info(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.getNextEventType(), event.getEventType(), saga.getSagaId());
-      log.debug("Event for SAGA_ID :: {} is :: {}", saga.getSagaId(), event.toString());
+      log.trace("Full event for SAGA_ID :: {} is :: {}", saga.getSagaId(), event.toString());
       this.invokeNextEvent(event, saga, sagaData, sagaEventState);
     } else {
       log.info("ignoring this message as we have already processed it or it is completed. {}", event.toString()); // it is expected to receive duplicate message in saga pattern, system should be designed to handle duplicates.
