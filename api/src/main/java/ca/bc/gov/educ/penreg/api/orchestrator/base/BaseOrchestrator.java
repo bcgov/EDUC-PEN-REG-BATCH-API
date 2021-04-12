@@ -583,7 +583,8 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
   protected void process(@NotNull final Event event, final Saga saga, final T sagaData, final SagaEventState<T> sagaEventState) throws InterruptedException, TimeoutException, IOException {
     if (!saga.getSagaState().equalsIgnoreCase(COMPLETED.toString())
         && this.isNotProcessedEvent(event.getEventType(), saga, this.nextStepsToExecute.keySet())) {
-      log.info(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.getNextEventType(), event.toString(), saga.getSagaId());
+      log.info(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.getNextEventType(), event.getEventType(), saga.getSagaId());
+      log.debug("Event for SAGA_ID :: {} is :: {}", saga.getSagaId(), event.toString());
       this.invokeNextEvent(event, saga, sagaData, sagaEventState);
     } else {
       log.info("ignoring this message as we have already processed it or it is completed. {}", event.toString()); // it is expected to receive duplicate message in saga pattern, system should be designed to handle duplicates.
