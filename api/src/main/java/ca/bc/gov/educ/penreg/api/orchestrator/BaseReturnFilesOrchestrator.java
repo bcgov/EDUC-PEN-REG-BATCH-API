@@ -167,12 +167,12 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
           .build();
 
         //set toEmail and email type depending on whether a penCoordinator exists for the mincode
-        if(penRequestBatchReturnFilesSagaData.getPenCordinatorEmail() != null) {
-            nextEvent.setEventType(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT);
-            penRequestBatchArchivedEmailEvent.setToEmail(penRequestBatchReturnFilesSagaData.getPenCordinatorEmail());
-        } else {
+        if(eventType.equals(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT)) {
             nextEvent.setEventType(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT);
             penRequestBatchArchivedEmailEvent.setToEmail(this.getPenCoordinatorProperties().getFromEmail());
+        } else {
+            nextEvent.setEventType(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT);
+            penRequestBatchArchivedEmailEvent.setToEmail(penRequestBatchReturnFilesSagaData.getPenCordinatorEmail());
         }
         nextEvent.setEventPayload(JsonUtil.getJsonStringFromObject(penRequestBatchArchivedEmailEvent));
 
@@ -181,11 +181,11 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     }
 
     protected boolean hasPenCoordinatorEmail(BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) {
-        return penRequestBatchReturnFilesSagaData.getPenCordinatorEmail() != null;
+        return !this.hasNoPenCoordinatorEmail(penRequestBatchReturnFilesSagaData);
     }
 
     protected boolean hasNoPenCoordinatorEmail(BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) {
-        return !this.hasPenCoordinatorEmail(penRequestBatchReturnFilesSagaData);
+        return penRequestBatchReturnFilesSagaData.getPenCordinatorEmail() == null || penRequestBatchReturnFilesSagaData.getPenCordinatorEmail().isEmpty();
     }
 
     protected void sendHasNoCoordinatorEmail(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws JsonProcessingException {
