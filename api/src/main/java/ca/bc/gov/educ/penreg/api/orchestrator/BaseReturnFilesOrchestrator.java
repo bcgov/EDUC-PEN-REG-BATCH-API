@@ -143,7 +143,8 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
           mapper.toModel(penRequestBatchReturnFilesSagaData.getPenRequestBatch()),
           penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents(),
           penRequestBatchReturnFilesSagaData.getStudents(),
-          reportMapper.toReportData(penRequestBatchReturnFilesSagaData));
+          reportMapper.toReportData(penRequestBatchReturnFilesSagaData),
+          saga.getSagaName().contains("PEN_REQUEST_BATCH_REPOST_REPORTS"));
 
         Event nextEvent = Event.builder().sagaId(saga.getSagaId())
           .eventType(SAVE_REPORTS)

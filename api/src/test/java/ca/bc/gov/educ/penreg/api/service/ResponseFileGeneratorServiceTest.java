@@ -151,10 +151,26 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
     final var students = PenRequestBatchTestUtils.createStudents(batchList.get(0));
     this.responseFileGeneratorService.saveReports("Here's a fake pdf file", this.batchList.get(0),
       this.batchList.get(0).getPenRequestBatchStudentEntities().stream().map(mapper::toStructure).collect(Collectors.toList()), students,
-      getPenRequestBatchReportData(this.batchList.get(0)));
+      getPenRequestBatchReportData(this.batchList.get(0)), false);
 
     final var penWebBlobsDB = this.prbService.findPenWebBlobBySubmissionNumber(batchList.get(0).getSubmissionNumber());
     assertThat(penWebBlobsDB.size()).isEqualTo(4);
+  }
+
+  @Test
+  @Transactional
+  public void testSaveReports_givenRepostReport_and_SubmissionNumber_With_M_shouldJustCreatePDFReport() throws IOException {
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+      "mock_pen_req_batch_student_ids.json", 1);
+
+    final var students = PenRequestBatchTestUtils.createStudents(batchList.get(0));
+    this.batchList.get(0).setSubmissionNumber("M001");
+    this.responseFileGeneratorService.saveReports("Here's a fake pdf file", this.batchList.get(0),
+      this.batchList.get(0).getPenRequestBatchStudentEntities().stream().map(mapper::toStructure).collect(Collectors.toList()), students,
+      getPenRequestBatchReportData(this.batchList.get(0)), true);
+
+    final var penWebBlobsDB = this.prbService.findPenWebBlobBySubmissionNumber(batchList.get(0).getSubmissionNumber());
+    assertThat(penWebBlobsDB.size()).isEqualTo(1);
   }
 
   @Test
