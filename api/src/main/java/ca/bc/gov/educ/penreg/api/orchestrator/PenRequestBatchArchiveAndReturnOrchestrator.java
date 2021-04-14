@@ -28,7 +28,6 @@ import java.util.concurrent.TimeoutException;
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA;
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 
 @Slf4j

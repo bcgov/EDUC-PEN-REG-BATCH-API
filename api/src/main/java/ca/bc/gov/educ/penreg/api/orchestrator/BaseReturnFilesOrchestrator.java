@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA;
 import static lombok.AccessLevel.PROTECTED;
 
 @Slf4j
