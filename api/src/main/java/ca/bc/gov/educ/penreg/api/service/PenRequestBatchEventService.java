@@ -34,7 +34,7 @@ import static lombok.AccessLevel.PRIVATE;
 
 @Service
 @Slf4j
-public class PenRequestBatchStudentEventService {
+public class PenRequestBatchEventService {
 
   public static final String NO_RECORD_SAGA_ID_EVENT_TYPE = "no record found for the saga id and event type combination, processing.";
   public static final String RECORD_FOUND_FOR_SAGA_ID_EVENT_TYPE = "record found for the saga id and event type combination, might be a duplicate or replay," +
@@ -60,10 +60,10 @@ public class PenRequestBatchStudentEventService {
   final ResponseFileGeneratorService responseFileGeneratorService;
 
   @Autowired
-  public PenRequestBatchStudentEventService(final PenRequestBatchEventRepository penRequestBatchEventRepository,
-                                            final PenRequestBatchStudentService prbStudentService,
-                                            final PenRequestBatchService penRequestBatchService,
-                                            final ResponseFileGeneratorService responseFileGeneratorService) {
+  public PenRequestBatchEventService(final PenRequestBatchEventRepository penRequestBatchEventRepository,
+                                     final PenRequestBatchStudentService prbStudentService,
+                                     final PenRequestBatchService penRequestBatchService,
+                                     final ResponseFileGeneratorService responseFileGeneratorService) {
     this.prbStudentService = prbStudentService;
     this.penRequestBatchEventRepository = penRequestBatchEventRepository;
     this.penRequestBatchService = penRequestBatchService;

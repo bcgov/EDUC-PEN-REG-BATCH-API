@@ -190,20 +190,21 @@ public class ResponseFileGeneratorService {
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void savePDFReport(final String pdfReport, PenRequestBatchEntity penRequestBatchEntity) {
+    this.getPenWebBlobRepository().save(this.getPDFBlob(pdfReport, penRequestBatchEntity));
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void saveReports(final String pdfReport, PenRequestBatchEntity penRequestBatchEntity, List<PenRequestBatchStudent> penRequestBatchStudents,
-                          List<Student> students, PenRequestBatchReportData reportData, boolean repostReports) {
-    if(repostReports && penRequestBatchEntity.getSubmissionNumber().startsWith("M")) {
-      this.getPenWebBlobRepository().save(this.getPDFBlob(pdfReport, penRequestBatchEntity));
-    } else {
-      List<PENWebBlobEntity> reports = new ArrayList<>(Arrays.asList(
-        this.getPDFBlob(pdfReport, penRequestBatchEntity),
-        this.getIDSBlob(penRequestBatchEntity, penRequestBatchStudents, students),
-        this.getPARBlob(reportData, penRequestBatchEntity)));
-      if(penRequestBatchEntity.getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())) {
-        reports.add(this.getTxtBlob(penRequestBatchEntity, penRequestBatchStudents));
-      }
-      this.getPenWebBlobRepository().saveAll(reports);
+                          List<Student> students, PenRequestBatchReportData reportData) {
+    List<PENWebBlobEntity> reports = new ArrayList<>(Arrays.asList(
+      this.getPDFBlob(pdfReport, penRequestBatchEntity),
+      this.getIDSBlob(penRequestBatchEntity, penRequestBatchStudents, students),
+      this.getPARBlob(reportData, penRequestBatchEntity)));
+    if (penRequestBatchEntity.getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())) {
+      reports.add(this.getTxtBlob(penRequestBatchEntity, penRequestBatchStudents));
     }
+    this.getPenWebBlobRepository().saveAll(reports);
   }
 
   /**

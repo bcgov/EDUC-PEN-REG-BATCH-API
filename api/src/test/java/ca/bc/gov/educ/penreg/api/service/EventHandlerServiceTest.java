@@ -49,7 +49,7 @@ public class EventHandlerServiceTest extends BasePenRegAPITest {
   @Autowired
   private PenRequestBatchStudentService prbStudentService;
   @Autowired
-  private PenRequestBatchStudentEventService prbStudentEventService;
+  private PenRequestBatchEventService prbStudentEventService;
   @Autowired
   private PenRequestBatchRepository penRequestBatchRepository;
 

@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * The type Message publisher test.
  */
-public class PenRequestBatchStudentEventServiceTest extends BasePenRegAPITest {
+public class PenRequestBatchEventServiceTest extends BasePenRegAPITest {
   @Autowired
   private PenRequestBatchEventRepository penRequestBatchEventRepository;
   @Autowired
@@ -35,7 +35,7 @@ public class PenRequestBatchStudentEventServiceTest extends BasePenRegAPITest {
   @Autowired
   private PenRequestBatchRepository penRequestBatchRepository;
   @Autowired
-  private PenRequestBatchStudentEventService penRequestBatchStudentEventService;
+  private PenRequestBatchEventService penRequestBatchEventService;
 
   private String penRequestBatchID;
 
@@ -64,7 +64,7 @@ public class PenRequestBatchStudentEventServiceTest extends BasePenRegAPITest {
     final var payload = this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString());
     final var event = new Event(UPDATE_PEN_REQUEST_BATCH_STUDENT, null, this.sagaID, PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC.toString(), payload);
 
-    final var penRequestBatchEvent = this.penRequestBatchStudentEventService.updatePenRequestBatchStudent(event);
+    final var penRequestBatchEvent = this.penRequestBatchEventService.updatePenRequestBatchStudent(event);
 
     assertThat(penRequestBatchEvent.getSagaId()).isEqualTo(this.sagaID);
     assertThat(penRequestBatchEvent.getEventType()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
@@ -87,7 +87,7 @@ public class PenRequestBatchStudentEventServiceTest extends BasePenRegAPITest {
     final var payload = this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString());
     final var event = new Event(UPDATE_PEN_REQUEST_BATCH_STUDENT, null, this.sagaID, PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC.toString(), payload);
 
-    final var penRequestBatchEvent = this.penRequestBatchStudentEventService.updatePenRequestBatchStudent(event);
+    final var penRequestBatchEvent = this.penRequestBatchEventService.updatePenRequestBatchStudent(event);
 
     assertThat(penRequestBatchEvent.getSagaId()).isEqualTo(this.sagaID);
     assertThat(penRequestBatchEvent.getEventType()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
@@ -108,7 +108,7 @@ public class PenRequestBatchStudentEventServiceTest extends BasePenRegAPITest {
 
     final var event = new Event(UPDATE_PEN_REQUEST_BATCH_STUDENT, null, this.sagaID, PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC.toString(), this.payload);
 
-    final var penRequestBatchEvent = this.penRequestBatchStudentEventService.updatePenRequestBatchStudent(event);
+    final var penRequestBatchEvent = this.penRequestBatchEventService.updatePenRequestBatchStudent(event);
 
     assertThat(penRequestBatchEvent.getSagaId()).isEqualTo(this.sagaID);
     assertThat(penRequestBatchEvent.getEventId()).isEqualTo(existedPrbEvent.getEventId());

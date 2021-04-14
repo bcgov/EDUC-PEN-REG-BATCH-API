@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA;
 import static lombok.AccessLevel.PROTECTED;
 
 @Slf4j
@@ -132,25 +133,6 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
             this.postMessageToTopic(SagaTopicsEnum.STUDENT_API_TOPIC.toString(), nextEvent);
             log.info("message sent to STUDENT_API_TOPIC for {} Event. :: {}", GET_STUDENTS.toString(), saga.getSagaId());
         }
-    }
-
-    protected void saveReports(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws IOException, InterruptedException, TimeoutException {
-        SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
-        saga.setSagaState(SAVE_REPORTS.toString());
-        this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-
-        getResponseFileGeneratorService().saveReports(event.getEventPayload(),
-          mapper.toModel(penRequestBatchReturnFilesSagaData.getPenRequestBatch()),
-          penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents(),
-          penRequestBatchReturnFilesSagaData.getStudents(),
-          reportMapper.toReportData(penRequestBatchReturnFilesSagaData),
-          saga.getSagaName().contains("PEN_REQUEST_BATCH_REPOST_REPORTS"));
-
-        Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-          .eventType(SAVE_REPORTS)
-          .eventOutcome(REPORTS_SAVED)
-          .build();
-        this.handleEvent(nextEvent);
     }
 
     protected void sendArchivedEmail(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData, EventType eventType) throws JsonProcessingException {

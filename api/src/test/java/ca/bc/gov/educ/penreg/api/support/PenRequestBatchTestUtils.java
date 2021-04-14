@@ -4,21 +4,25 @@ import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper;
 import ca.bc.gov.educ.penreg.api.batch.processor.PenRegBatchProcessor;
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes;
-import ca.bc.gov.educ.penreg.api.constants.SagaEnum;
+import ca.bc.gov.educ.penreg.api.constants.*;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.*;
 import ca.bc.gov.educ.penreg.api.repository.*;
+import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
+import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.sf.flatpack.DataSet;
 import net.sf.flatpack.DefaultParserFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +37,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventType.MARK_SAGA_COMPLETE;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -78,6 +84,10 @@ public class PenRequestBatchTestUtils {
 
   @Autowired
   private PenRegBatchProcessor penRegBatchProcessor;
+
+  @Autowired
+  private SagaService sagaService;
+
   /**
    * The constant PEN_REQUEST_BATCH_API.
    */
@@ -290,5 +300,65 @@ public class PenRequestBatchTestUtils {
     this.penWebBlobRepository.deleteAll();
     this.repository.deleteAll();
 
+  }
+
+  public PenRequestBatchEntity createBatchEntity(final String mincode, final String submissionNumber, final String penRequestBatchStudentStatusCode, final String pen) {
+    final PenRequestBatchStudentEntity penRequestBatchStudentEntity = new PenRequestBatchStudentEntity();
+    penRequestBatchStudentEntity.setPenRequestBatchStudentStatusCode(penRequestBatchStudentStatusCode);
+    penRequestBatchStudentEntity.setCreateDate(LocalDateTime.now());
+    penRequestBatchStudentEntity.setUpdateDate(LocalDateTime.now());
+    penRequestBatchStudentEntity.setCreateUser("TEST");
+    penRequestBatchStudentEntity.setUpdateUser("TEST");
+    penRequestBatchStudentEntity.setAssignedPEN(pen);
+    penRequestBatchStudentEntity.setDob("19650101");
+    penRequestBatchStudentEntity.setGenderCode("M");
+    penRequestBatchStudentEntity.setLocalID("20345678");
+    penRequestBatchStudentEntity.setGradeCode("01");
+    if(penRequestBatchStudentStatusCode.equals(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode())) {
+      penRequestBatchStudentEntity.setAssignedPEN("123456789");
+      penRequestBatchStudentEntity.setStudentID(UUID.randomUUID());
+    }
+    final PenRequestBatchEntity entity = new PenRequestBatchEntity();
+    entity.setCreateDate(LocalDateTime.now());
+    entity.setUpdateDate(LocalDateTime.now());
+    entity.setCreateUser("TEST");
+    entity.setUpdateUser("TEST");
+    entity.setPenRequestBatchStatusCode(LOADED.getCode());
+    entity.setSubmissionNumber(submissionNumber);
+    entity.setPenRequestBatchTypeCode(PenRequestBatchTypeCode.SCHOOL.getCode());
+    entity.setSchoolGroupCode("K12");
+    entity.setFileName("test");
+    entity.setFileType("PEN");
+    entity.setMincode(mincode);
+    entity.setMinistryPRBSourceCode("PEN_WEB");
+    entity.setInsertDate(LocalDateTime.now());
+    entity.setExtractDate(LocalDateTime.now());
+    entity.setCreateDate(LocalDateTime.now());
+    entity.setUpdateDate(LocalDateTime.now());
+    entity.setProcessDate(LocalDateTime.now());
+    entity.setSourceStudentCount(1L);
+    entity.setStudentCount(1L);
+    entity.setSourceApplication("PEN");
+    entity.setPenRequestBatchProcessTypeCode(PenRequestBatchProcessTypeCodes.FLAT_FILE.getCode());
+    penRequestBatchStudentEntity.setPenRequestBatchEntity(entity);
+    entity.getPenRequestBatchStudentEntities().add(penRequestBatchStudentEntity);
+    this.repository.save(entity);
+    return entity;
+  }
+
+  public List<Saga> createSaga(final String mincode, final String submissionNumber, final String penRequestBatchStudentStatusCode, final String pen) throws JsonProcessingException {
+    final PenRequestBatchEntity entity = this.createBatchEntity(mincode, submissionNumber, penRequestBatchStudentStatusCode, pen);
+    final List<PenRequestBatchArchiveAndReturnSagaData> penRequestBatchIDList = Collections.singletonList(PenRequestBatchArchiveAndReturnSagaData.builder()
+      .penRequestBatchID(entity.getPenRequestBatchID()).schoolName("Cataline").build());
+
+    final var payload = " {\n" +
+      "    \"createUser\": \"test\",\n" +
+      "    \"updateUser\": \"test\"\n" +
+      "  }";
+
+    final PenRequestBatchArchiveAndReturnAllSagaData sagaData = JsonUtil.getJsonObjectFromString(PenRequestBatchArchiveAndReturnAllSagaData.class, payload);
+    sagaData.setPenRequestBatchArchiveAndReturnSagaData(penRequestBatchIDList);
+    return this.sagaService.createMultipleBatchSagaRecordsInDB(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString(), "Test",
+      List.of(Pair.of(entity.getPenRequestBatchID(), JsonUtil.getJsonStringFromObject(penRequestBatchIDList.get(0)))));
   }
 }

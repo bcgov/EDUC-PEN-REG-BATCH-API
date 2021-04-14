@@ -57,7 +57,7 @@ public class EventHandlerService implements EventHandler {
    * The Prb student event service.
    */
   @Getter(PRIVATE)
-  private final PenRequestBatchStudentEventService prbStudentEventService;
+  private final PenRequestBatchEventService prbStudentEventService;
 
   /**
    * The Event publisher service.
@@ -78,7 +78,7 @@ public class EventHandlerService implements EventHandler {
   public EventHandlerService(final SagaService sagaService,
                              final PenReqBatchStudentOrchestrator penReqBatchStudentOrchestrator,
                              final PenRequestBatchEventRepository penRequestBatchEventRepository,
-                             final PenRequestBatchStudentEventService prbStudentEventService,
+                             final PenRequestBatchEventService prbStudentEventService,
                              final EventPublisherService eventPublisherService) {
     this.prbStudentEventService = prbStudentEventService;
     this.penRequestBatchEventRepository = penRequestBatchEventRepository;
