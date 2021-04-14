@@ -10,6 +10,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -18,10 +19,10 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring5.SpringTemplateEngine;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -39,6 +40,7 @@ import static lombok.AccessLevel.PRIVATE;
 public class ResponseFileGeneratorService {
 
   public static final String SOURCE_APPLICATION = "PENWEB";
+  private static final int PAR_FILE_PAGE_LINES = 52;
   /**
    * the pen coordinator service
    */
@@ -63,12 +65,19 @@ public class ResponseFileGeneratorService {
   @Getter(PRIVATE)
   private final RestUtils restUtils;
 
+  /**
+   * the Thymeleaf template engine
+   */
+  @Getter(PRIVATE)
+  private SpringTemplateEngine templateEngine;
+
   @Autowired
-  public ResponseFileGeneratorService(final PenCoordinatorService penCoordinatorService, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils) {
+  public ResponseFileGeneratorService(final PenCoordinatorService penCoordinatorService, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils, final SpringTemplateEngine templateEngine) {
     this.penCoordinatorService = penCoordinatorService;
     this.penWebBlobRepository = penWebBlobRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
     this.restUtils = restUtils;
+    this.templateEngine = templateEngine;
   }
   /**
    * Create an IDS file for a pen request batch entity
@@ -180,15 +189,55 @@ public class ResponseFileGeneratorService {
             .build();
   }
 
-  @Transactional(propagation = Propagation.MANDATORY)
-  public void saveReports(final String pdfReport, PenRequestBatchEntity penRequestBatchEntity, List<PenRequestBatchStudent> penRequestBatchStudents, List<Student> students) {
-    List<PENWebBlobEntity> reports = new ArrayList<>(Arrays.asList(
-            this.getPDFBlob(pdfReport, penRequestBatchEntity),
-            this.getIDSBlob(penRequestBatchEntity, penRequestBatchStudents, students)));
-    if(penRequestBatchEntity.getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())) {
-      reports.add(this.getTxtBlob(penRequestBatchEntity, penRequestBatchStudents));
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void saveReports(final String pdfReport, PenRequestBatchEntity penRequestBatchEntity, List<PenRequestBatchStudent> penRequestBatchStudents,
+                          List<Student> students, PenRequestBatchReportData reportData, boolean repostReports) {
+    if(repostReports && penRequestBatchEntity.getSubmissionNumber().startsWith("M")) {
+      this.getPenWebBlobRepository().save(this.getPDFBlob(pdfReport, penRequestBatchEntity));
+    } else {
+      List<PENWebBlobEntity> reports = new ArrayList<>(Arrays.asList(
+        this.getPDFBlob(pdfReport, penRequestBatchEntity),
+        this.getIDSBlob(penRequestBatchEntity, penRequestBatchStudents, students),
+        this.getPARBlob(reportData, penRequestBatchEntity)));
+      if(penRequestBatchEntity.getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())) {
+        reports.add(this.getTxtBlob(penRequestBatchEntity, penRequestBatchStudents));
+      }
+      this.getPenWebBlobRepository().saveAll(reports);
     }
-    this.getPenWebBlobRepository().saveAll(reports);
+  }
+
+  /**
+   * Create an PAR file for a pen request batch entity
+   *
+   * @param reportData the pen request batch report data
+   * @return the pen web blob entity
+   */
+  public PENWebBlobEntity getPARBlob(final PenRequestBatchReportData reportData, final PenRequestBatchEntity penRequestBatchEntity) {
+    final Context ctx = new Context();
+    ctx.setVariable("d", reportData);
+    String content;
+
+    content = this.templateEngine.process("PEN_REG_BATCH_RESPONSE_REPORT_PAR.txt", ctx);
+    var lines = content.lines().collect(Collectors.toList());
+
+    var pages = lines.size() / PAR_FILE_PAGE_LINES + 1;
+    for (int i = 0; i < pages; i++) {
+      ctx.setVariable("pageNumber", String.valueOf(i + 1));
+      var header = this.templateEngine.process("PEN_REG_BATCH_RESPONSE_REPORT_PAR_HEADER.txt", ctx);
+      lines.add((PAR_FILE_PAGE_LINES + 1) * i, (i > 0 ? "\n" : "") + header);
+    }
+
+    content = String.join("\n", lines);
+
+    return PENWebBlobEntity.builder()
+      .mincode(penRequestBatchEntity.getMincode())
+      .sourceApplication(SOURCE_APPLICATION)
+      .fileName(penRequestBatchEntity.getMincode() + ".PAR")
+      .fileType("PAR")
+      .fileContents(content.getBytes())
+      .insertDateTime(LocalDateTime.now())
+      .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
+      .build();
   }
 
   private String createHeader(final PenRequestBatchEntity penRequestBatchEntity, String applicationCode) {

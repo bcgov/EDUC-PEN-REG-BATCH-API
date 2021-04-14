@@ -25,7 +25,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -185,7 +187,7 @@ public class PenRequestBatchTestUtils {
         .legalFirstName(penRequestBatchStudentEntity.getLegalFirstName())
         .legalLastName(penRequestBatchStudentEntity.getLegalLastName())
         .legalMiddleNames(penRequestBatchStudentEntity.getLegalMiddleNames())
-        .dob(penRequestBatchStudentEntity.getDob())
+        .dob(penRequestBatchStudentEntity.getDob() == null || penRequestBatchStudentEntity.getDob().isBlank() ? "" : LocalDate.parse(penRequestBatchStudentEntity.getDob(), DateTimeFormatter.ofPattern("yyyyMMdd")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
         .localID(penRequestBatchStudentEntity.getLocalID())
         .pen(penRequestBatchStudentEntity.getAssignedPEN())
         .studentID(UUID.randomUUID().toString())

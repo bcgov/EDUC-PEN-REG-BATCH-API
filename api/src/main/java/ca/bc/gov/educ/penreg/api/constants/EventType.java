@@ -89,7 +89,11 @@ public enum EventType {
    */
   GATHER_REPORT_DATA,
   /**
-   * Save pdf report event type
+   * Save reports event type
    */
-  SAVE_REPORTS
+  SAVE_REPORTS,
+  /**
+   * Archive pen request batch file event type
+   */
+  ARCHIVE_PEN_REQUEST_BATCH
 }

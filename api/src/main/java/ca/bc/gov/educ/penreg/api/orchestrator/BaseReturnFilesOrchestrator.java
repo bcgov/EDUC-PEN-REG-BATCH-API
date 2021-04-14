@@ -137,11 +137,14 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     protected void saveReports(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws IOException, InterruptedException, TimeoutException {
         SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
         saga.setSagaState(SAVE_REPORTS.toString());
-        saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchReturnFilesSagaData)); // save the updated payload to DB...
         this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
         getResponseFileGeneratorService().saveReports(event.getEventPayload(),
-          mapper.toModel(penRequestBatchReturnFilesSagaData.getPenRequestBatch()), penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents(), penRequestBatchReturnFilesSagaData.getStudents());
+          mapper.toModel(penRequestBatchReturnFilesSagaData.getPenRequestBatch()),
+          penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents(),
+          penRequestBatchReturnFilesSagaData.getStudents(),
+          reportMapper.toReportData(penRequestBatchReturnFilesSagaData),
+          saga.getSagaName().contains("PEN_REQUEST_BATCH_REPOST_REPORTS"));
 
         Event nextEvent = Event.builder().sagaId(saga.getSagaId())
           .eventType(SAVE_REPORTS)
@@ -153,7 +156,6 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     protected void sendArchivedEmail(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData, EventType eventType) throws JsonProcessingException {
         SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
         saga.setSagaState(eventType.toString());
-        saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchReturnFilesSagaData)); // save the updated payload to DB...
         this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
         PenRequestBatchArchivedEmailEvent penRequestBatchArchivedEmailEvent = PenRequestBatchArchivedEmailEvent.builder()
