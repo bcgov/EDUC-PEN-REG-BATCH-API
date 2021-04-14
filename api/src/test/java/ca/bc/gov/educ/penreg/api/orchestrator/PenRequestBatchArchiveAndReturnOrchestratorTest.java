@@ -105,13 +105,16 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     @Autowired
     RestTemplate restTemplate;
 
+    @Autowired
+    private PenRequestBatchTestUtils penRequestBatchTestUtils;
+
     PenRequestBatchMapper batchMapper = PenRequestBatchMapper.mapper;
     PenRequestBatchStudentMapper batchStudentMapper = PenRequestBatchStudentMapper.mapper;
 
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
-        this.createSaga("19337120", "12345678", LOADED.getCode());
+      this.saga = penRequestBatchTestUtils.createSaga("19337120", "12345678", LOADED.getCode(), TEST_PEN);
         final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-pen-coordinator.json")).getFile());
         final List<ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator> structs = new ObjectMapper().readValue(file, new TypeReference<>() {
         });
@@ -125,7 +128,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
 
     @Test
     public void testHandleEvent_givenBatchInSagaDataExistsAndUsrMtchStudent_shouldGatherReportDataAndBeMarkedREPORT_DATA_GATHERED() throws IOException, InterruptedException, TimeoutException {
-        this.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode());
+      penRequestBatchTestUtils.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode(), TEST_PEN);
         final var event = Event.builder()
                 .eventType(EventType.INITIATED)
                 .eventOutcome(EventOutcome.INITIATE_SUCCESS)
@@ -151,8 +154,8 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     }
 
     @Test
-    public void testHandleEvent_givenSTUDENTS_FOUNDEventAndCorrectSagaAndEventData_shouldBeMarkedPEN_REQUEST_BATCH_UPDATED() throws IOException, InterruptedException, TimeoutException {
-      final PenRequestBatchEntity penRequestBatchEntity = this.createBatchEntity("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode());
+    public void testHandleEvent_givenSTUDENTS_FOUNDEventAndCorrectSagaAndEventData_shouldBeMarkedARCHIVE_PEN_REQUEST_BATCH() throws IOException, InterruptedException, TimeoutException {
+      final PenRequestBatchEntity penRequestBatchEntity = penRequestBatchTestUtils.createBatchEntity("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), TEST_PEN);
       final PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
           .penRequestBatch(this.batchMapper.toStructure(penRequestBatchEntity))
           .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(this.batchStudentMapper::toStructure).collect(Collectors.toList()))
@@ -188,7 +191,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     @Test
     public void testSendHasCoordinatorEmail_givenEventAndSagaDataHasPenCoordinatorEmail_shouldBeMarkedNOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT() throws InterruptedException, TimeoutException, IOException {
         final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
-        PenRequestBatchEntity penRequestBatchEntity = createBatchEntity("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode());
+        PenRequestBatchEntity penRequestBatchEntity = penRequestBatchTestUtils.createBatchEntity("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), TEST_PEN);
         PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
                 .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
                 .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
@@ -228,7 +231,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     @Test
     public void testSendHasCoordinatorEmail_givenEventAndSagaDataNoPenCoordinatorEmail_shouldBeMarkedNOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT() throws InterruptedException, TimeoutException, IOException {
         final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
-        PenRequestBatchEntity penRequestBatchEntity = createBatchEntity("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode());
+        PenRequestBatchEntity penRequestBatchEntity = penRequestBatchTestUtils.createBatchEntity("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), TEST_PEN);
         PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
                 .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
                 .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
@@ -267,7 +270,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     @Test
     public void testSendHasCoordinatorEmail_givenEventAndSagaDataEmptyPenCoordinatorEmail_shouldBeMarkedNOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT() throws InterruptedException, TimeoutException, IOException {
         final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
-        PenRequestBatchEntity penRequestBatchEntity = createBatchEntity("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode());
+        PenRequestBatchEntity penRequestBatchEntity = penRequestBatchTestUtils.createBatchEntity("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), TEST_PEN);
         PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
                 .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
                 .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
@@ -304,63 +307,4 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.REPORTS_SAVED.toString());
     }
 
-  private PenRequestBatchEntity createBatchEntity(final String mincode, final String submissionNumber, final String penRequestBatchStudentStatusCode) {
-    final PenRequestBatchStudentEntity penRequestBatchStudentEntity = new PenRequestBatchStudentEntity();
-    penRequestBatchStudentEntity.setPenRequestBatchStudentStatusCode(penRequestBatchStudentStatusCode);
-    penRequestBatchStudentEntity.setCreateDate(LocalDateTime.now());
-    penRequestBatchStudentEntity.setUpdateDate(LocalDateTime.now());
-    penRequestBatchStudentEntity.setCreateUser("TEST");
-    penRequestBatchStudentEntity.setUpdateUser("TEST");
-    penRequestBatchStudentEntity.setAssignedPEN(TEST_PEN);
-    penRequestBatchStudentEntity.setDob("19650101");
-    penRequestBatchStudentEntity.setGenderCode("M");
-    penRequestBatchStudentEntity.setLocalID("20345678");
-    penRequestBatchStudentEntity.setGradeCode("01");
-    if(penRequestBatchStudentStatusCode.equals(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode())) {
-      penRequestBatchStudentEntity.setAssignedPEN("123456789");
-      penRequestBatchStudentEntity.setStudentID(UUID.randomUUID());
-    }
-    final PenRequestBatchEntity entity = new PenRequestBatchEntity();
-    entity.setCreateDate(LocalDateTime.now());
-    entity.setUpdateDate(LocalDateTime.now());
-    entity.setCreateUser("TEST");
-    entity.setUpdateUser("TEST");
-    entity.setPenRequestBatchStatusCode(LOADED.getCode());
-    entity.setSubmissionNumber(submissionNumber);
-    entity.setPenRequestBatchTypeCode(PenRequestBatchTypeCode.SCHOOL.getCode());
-    entity.setSchoolGroupCode("K12");
-    entity.setFileName("test");
-    entity.setFileType("PEN");
-    entity.setMincode(mincode);
-    entity.setMinistryPRBSourceCode("PEN_WEB");
-    entity.setInsertDate(LocalDateTime.now());
-    entity.setExtractDate(LocalDateTime.now());
-    entity.setCreateDate(LocalDateTime.now());
-    entity.setUpdateDate(LocalDateTime.now());
-    entity.setProcessDate(LocalDateTime.now());
-    entity.setSourceStudentCount(1L);
-    entity.setStudentCount(1L);
-    entity.setSourceApplication("PEN");
-    entity.setPenRequestBatchProcessTypeCode(PenRequestBatchProcessTypeCodes.FLAT_FILE.getCode());
-    penRequestBatchStudentEntity.setPenRequestBatchEntity(entity);
-    entity.getPenRequestBatchStudentEntities().add(penRequestBatchStudentEntity);
-    this.penRequestBatchRepository.save(entity);
-    return entity;
-  }
-
-  private void createSaga(final String mincode, final String submissionNumber, final String penRequestBatchStudentStatusCode) throws JsonProcessingException {
-    final PenRequestBatchEntity entity = this.createBatchEntity(mincode, submissionNumber, penRequestBatchStudentStatusCode);
-    final List<PenRequestBatchArchiveAndReturnSagaData> penRequestBatchIDList = Collections.singletonList(PenRequestBatchArchiveAndReturnSagaData.builder()
-        .penRequestBatchID(entity.getPenRequestBatchID()).schoolName("Cataline").build());
-
-    final var payload = " {\n" +
-        "    \"createUser\": \"test\",\n" +
-        "    \"updateUser\": \"test\"\n" +
-        "  }";
-
-    final PenRequestBatchArchiveAndReturnAllSagaData sagaData = JsonUtil.getJsonObjectFromString(PenRequestBatchArchiveAndReturnAllSagaData.class, payload);
-    sagaData.setPenRequestBatchArchiveAndReturnSagaData(penRequestBatchIDList);
-    this.saga = this.sagaService.createMultipleBatchSagaRecordsInDB(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString(), "Test",
-        List.of(Pair.of(entity.getPenRequestBatchID(), JsonUtil.getJsonStringFromObject(penRequestBatchIDList.get(0)))));
-  }
 }

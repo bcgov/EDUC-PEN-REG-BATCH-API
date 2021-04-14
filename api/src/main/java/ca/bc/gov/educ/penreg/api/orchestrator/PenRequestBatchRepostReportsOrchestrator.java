@@ -11,6 +11,7 @@ import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.v1.BasePenRequestBatchReturnFilesSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchRepostReportsFilesSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportGenerationEventPayload;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
@@ -91,6 +93,29 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
       .build();
     this.postMessageToTopic(SagaTopicsEnum.PEN_REPORT_GENERATION_API_TOPIC.toString(), nextEvent);
     log.info("message sent to PEN_REPORT_GENERATION_API_TOPIC for {} Event. :: {}", GENERATE_PEN_REQUEST_BATCH_REPORTS.toString(), saga.getSagaId());
+  }
+
+  protected void saveReports(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws IOException, InterruptedException, TimeoutException {
+    SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
+    saga.setSagaState(SAVE_REPORTS.toString());
+    this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
+
+    var penRequestBatchEntity = mapper.toModel(penRequestBatchReturnFilesSagaData.getPenRequestBatch());
+    if(penRequestBatchEntity.getSubmissionNumber().startsWith("M")) {
+      getResponseFileGeneratorService().savePDFReport(event.getEventPayload(), penRequestBatchEntity);
+    } else {
+      getResponseFileGeneratorService().saveReports(event.getEventPayload(),
+        penRequestBatchEntity,
+        penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents(),
+        penRequestBatchReturnFilesSagaData.getStudents(),
+        reportMapper.toReportData(penRequestBatchReturnFilesSagaData));
+    }
+
+    Event nextEvent = Event.builder().sagaId(saga.getSagaId())
+      .eventType(SAVE_REPORTS)
+      .eventOutcome(REPORTS_SAVED)
+      .build();
+    this.handleEvent(nextEvent);
   }
 
 }

@@ -57,7 +57,7 @@ public class EventHandlerService implements EventHandler {
    * The Prb student event service.
    */
   @Getter(PRIVATE)
-  private final PenRequestBatchStudentEventService prbStudentEventService;
+  private final PenRequestBatchEventService penRequestBatchEventService;
 
   /**
    * The Event publisher service.
@@ -71,16 +71,16 @@ public class EventHandlerService implements EventHandler {
    * @param sagaService                    the saga service
    * @param penReqBatchStudentOrchestrator the pen req batch student orchestrator
    * @param penRequestBatchEventRepository the pen request batch event repository
-   * @param prbStudentEventService         the prb student event service
+   * @param penRequestBatchEventService         the prb student event service
    * @param eventPublisherService          the event publisher service
    */
   @Autowired
   public EventHandlerService(final SagaService sagaService,
                              final PenReqBatchStudentOrchestrator penReqBatchStudentOrchestrator,
                              final PenRequestBatchEventRepository penRequestBatchEventRepository,
-                             final PenRequestBatchStudentEventService prbStudentEventService,
+                             final PenRequestBatchEventService penRequestBatchEventService,
                              final EventPublisherService eventPublisherService) {
-    this.prbStudentEventService = prbStudentEventService;
+    this.penRequestBatchEventService = penRequestBatchEventService;
     this.penRequestBatchEventRepository = penRequestBatchEventRepository;
     this.sagaService = sagaService;
     this.penReqBatchStudentOrchestrator = penReqBatchStudentOrchestrator;
@@ -164,7 +164,7 @@ public class EventHandlerService implements EventHandler {
    * @throws JsonProcessingException the json processing exception
    */
   private void handleUpdatePrbStudentEvent(final Event event) throws JsonProcessingException {
-    final PenRequestBatchEvent penRequestBatchEvent = this.getPrbStudentEventService().updatePenRequestBatchStudent(event);
+    final PenRequestBatchEvent penRequestBatchEvent = this.getPenRequestBatchEventService().updatePenRequestBatchStudent(event);
     this.getEventPublisherService().send(penRequestBatchEvent);
   }
 
@@ -175,7 +175,7 @@ public class EventHandlerService implements EventHandler {
    * @throws JsonProcessingException the json processing exception
    */
   private void handleArchivePenRequestBatchEvent(final Event event) throws JsonProcessingException {
-    final PenRequestBatchEvent penRequestBatchEvent = this.getPrbStudentEventService().archivePenRequestBatch(event);
+    final PenRequestBatchEvent penRequestBatchEvent = this.getPenRequestBatchEventService().archivePenRequestBatch(event);
     this.getEventPublisherService().send(penRequestBatchEvent);
   }
 
