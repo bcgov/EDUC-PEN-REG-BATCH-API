@@ -99,6 +99,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
         if(penRequestBatch.isPresent()) {
             List<PenRequestBatchStudent> studentRequests = penRequestBatch.get().getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList());
             penRequestBatchReturnFilesSagaData.setPenRequestBatchStudents(studentRequests);
+            penRequestBatchReturnFilesSagaData.setPenRequestBatch(mapper.toStructure(penRequestBatch.get()));
             penRequestBatchReturnFilesSagaData.setPenCordinatorEmail(this.getPenCoordinatorEmail(penRequestBatch.get()));
             penRequestBatchReturnFilesSagaData.setFromEmail(penCoordinatorProperties.getFromEmail());
             penRequestBatchReturnFilesSagaData.setTelephone(penCoordinatorProperties.getTelephone());
