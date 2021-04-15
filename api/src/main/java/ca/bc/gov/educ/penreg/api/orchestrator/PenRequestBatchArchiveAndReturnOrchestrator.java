@@ -12,6 +12,7 @@ import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.BasePenRequestBatchReturnFilesSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchive;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportGenerationEventPayload;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
@@ -77,7 +78,7 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
                 .end(GATHER_REPORT_DATA, PEN_REQUEST_BATCH_NOT_FOUND, this::logPenRequestBatchNotFound);
     }
 
-    private void archivePenRequestBatch(Event event, Saga saga, PenRequestBatchArchiveAndReturnSagaData penRequestBatchArchiveAndReturnSagaData) throws IOException, InterruptedException, TimeoutException {
+    private void archivePenRequestBatch(Event event, Saga saga, PenRequestBatchArchiveAndReturnSagaData penRequestBatchArchiveAndReturnSagaData) throws IOException {
         SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
         saga.setSagaState(ARCHIVE_PEN_REQUEST_BATCH.toString());
         List<Student> students = obMapper.readValue(event.getEventPayload(), new TypeReference<>(){});
@@ -102,6 +103,8 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
     private void generatePDFReport(Event event, Saga saga, PenRequestBatchArchiveAndReturnSagaData penRequestBatchArchiveAndReturnSagaData) throws JsonProcessingException {
         SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
         saga.setSagaState(GENERATE_PEN_REQUEST_BATCH_REPORTS.toString());
+        penRequestBatchArchiveAndReturnSagaData.setPenRequestBatch(JsonUtil.getJsonObjectFromString(PenRequestBatch.class, event.getEventPayload()));
+        saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnSagaData)); // save the updated payload to DB...
         this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
         Event nextEvent = Event.builder().sagaId(saga.getSagaId())
