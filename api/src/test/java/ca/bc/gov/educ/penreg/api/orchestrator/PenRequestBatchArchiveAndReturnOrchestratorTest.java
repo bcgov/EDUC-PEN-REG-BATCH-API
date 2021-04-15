@@ -151,6 +151,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         assertThat(payload.getMailingAddress()).isNotEmpty();
         assertThat(payload.getPenCordinatorEmail()).isNotEmpty();
         assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
+        assertThat(payload.getPenRequestBatch()).isNotNull();
     }
 
     @Test
