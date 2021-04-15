@@ -42,11 +42,11 @@ import static lombok.AccessLevel.PRIVATE;
 @Service
 @Slf4j
 public class PenRequestBatchStudentOrchestratorService {
+  public static final String ALGORITHM = "ALGORITHM";
   /**
    * The constant studentMapper.
    */
   private static final StudentMapper studentMapper = StudentMapper.mapper;
-  public static final String ALGORITHM = "ALGORITHM";
   /**
    * The Pen request batch service.
    */
@@ -188,7 +188,7 @@ public class PenRequestBatchStudentOrchestratorService {
     final var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
     penMatchRecordOptional.ifPresent(penMatchRecord -> penRequestBatchStudent.setQuestionableMatchStudentId(UUID.fromString(penMatchRecord.getStudentID())));
     penRequestBatchStudent.setPenRequestBatchStudentStatusCode(FIXABLE.getCode());
-    if(!penMatchResult.getMatchingRecords().isEmpty()) {
+    if (!penMatchResult.getMatchingRecords().isEmpty()) {
       penRequestBatchStudent.setBestMatchPEN(penMatchResult.getMatchingRecords().get(0).getMatchingPEN());
     }
     this.getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
@@ -207,7 +207,7 @@ public class PenRequestBatchStudentOrchestratorService {
    */
   private Event handleDefault(final Saga saga, final PenRequestBatchStudentEntity penRequestBatchStudent, final PenMatchResult penMatchResult) {
     penRequestBatchStudent.setPenRequestBatchStudentStatusCode(FIXABLE.getCode());
-    if(!penMatchResult.getMatchingRecords().isEmpty()) {
+    if (!penMatchResult.getMatchingRecords().isEmpty()) {
       penRequestBatchStudent.setBestMatchPEN(penMatchResult.getMatchingRecords().get(0).getMatchingPEN());
     }
     this.getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
@@ -261,10 +261,10 @@ public class PenRequestBatchStudentOrchestratorService {
   }
 
   /**
-   *       case AA:
-   *       case B1:
-   *       case C1:
-   *       case D1:
+   * case AA:
+   * case B1:
+   * case C1:
+   * case D1:
    *
    * @param saga                   the saga
    * @param penMatchResult         the pen match result
@@ -324,21 +324,63 @@ public class PenRequestBatchStudentOrchestratorService {
    */
   private void updateStudentData(final Student studentFromStudentAPI, final PenRequestBatchStudentEntity penRequestBatchStudent, final PenRequestBatchEntity penRequestBatchEntity) {
     studentFromStudentAPI.setMincode(penRequestBatchEntity.getMincode());
-    studentFromStudentAPI.setLocalID(penRequestBatchStudent.getLocalID());
-    studentFromStudentAPI.setGradeCode(penRequestBatchStudent.getGradeCode());
+    // updated as part of https://gww.jira.educ.gov.bc.ca/browse/PEN-1347
+    studentFromStudentAPI.setLocalID(StringUtils.remove(penRequestBatchStudent.getLocalID(), ' '));
+    this.updateGradeCodeAndGradeYear(studentFromStudentAPI, penRequestBatchStudent);
     studentFromStudentAPI.setPostalCode(penRequestBatchStudent.getPostalCode());
 
-    //Added as part of PEN-1007; Update the usual given & surnames if provided and not blank
-    if (StringUtils.isNotBlank(penRequestBatchStudent.getUsualFirstName())) {
-      studentFromStudentAPI.setUsualFirstName(penRequestBatchStudent.getUsualFirstName());
-    }
-
-    if(StringUtils.isNotBlank(penRequestBatchStudent.getUsualLastName())){
-      studentFromStudentAPI.setUsualLastName(penRequestBatchStudent.getUsualLastName());
-    }
+    this.updateUsualNameFields(studentFromStudentAPI, penRequestBatchStudent);
 
     studentFromStudentAPI.setHistoryActivityCode(StudentHistoryActivityCode.REQ_MATCH.getCode());
     studentFromStudentAPI.setUpdateUser(ALGORITHM);
+  }
+
+  /**
+   * updated for https://gww.jira.educ.gov.bc.ca/browse/PEN-1348
+   * When district number is 102, apply the following logic for grade code & grade year.
+   * If PEN Request grade code is null, and STUDENT record grade code is null do nothing
+   * If PEN Request grade code has value, set it in the STUDENT record
+   * Set the STUD_GRADE_YEAR to the current year (if after June 30) or the previous year (if before June 30)
+   */
+
+
+  private void updateGradeCodeAndGradeYear(final Student studentFromStudentAPI, final PenRequestBatchStudentEntity penRequestBatchStudent) {
+    if (StringUtils.startsWith(penRequestBatchStudent.getPenRequestBatchEntity().getMincode(), "102")) {
+      if (StringUtils.isNotBlank(penRequestBatchStudent.getGradeCode()) && StringUtils.isNotBlank(studentFromStudentAPI.getGradeCode())) {
+        studentFromStudentAPI.setGradeCode(penRequestBatchStudent.getGradeCode());
+        final LocalDateTime localDateTime = LocalDateTime.now();
+        if (localDateTime.getMonthValue() > 6) {
+          studentFromStudentAPI.setGradeYear(String.valueOf(localDateTime.getYear()));
+        } else {
+          studentFromStudentAPI.setGradeYear(String.valueOf(localDateTime.getYear() - 1));
+        }
+      }
+    } else {
+      studentFromStudentAPI.setGradeCode(penRequestBatchStudent.getGradeCode());
+    }
+  }
+
+  //Added as part of PEN-1007; Update the usual given & surnames if provided and not blank
+  // updated as part of https://gww.jira.educ.gov.bc.ca/browse/PEN-1346
+  private void updateUsualNameFields(final Student studentFromStudentAPI, final PenRequestBatchStudentEntity penRequestBatchStudent) {
+
+    if (StringUtils.equalsIgnoreCase(penRequestBatchStudent.getLegalFirstName(), penRequestBatchStudent.getUsualFirstName())) {
+      studentFromStudentAPI.setUsualFirstName(null);
+    } else if (StringUtils.isNotBlank(penRequestBatchStudent.getUsualFirstName())) {
+      studentFromStudentAPI.setUsualFirstName(penRequestBatchStudent.getUsualFirstName());
+    }
+
+    if (StringUtils.equalsIgnoreCase(penRequestBatchStudent.getLegalLastName(), penRequestBatchStudent.getUsualLastName())) {
+      studentFromStudentAPI.setUsualLastName(null);
+    } else if (StringUtils.isNotBlank(penRequestBatchStudent.getUsualLastName())) {
+      studentFromStudentAPI.setUsualLastName(penRequestBatchStudent.getUsualLastName());
+    }
+
+    if (StringUtils.equalsIgnoreCase(penRequestBatchStudent.getLegalMiddleNames(), penRequestBatchStudent.getUsualMiddleNames())) {
+      studentFromStudentAPI.setUsualMiddleNames(null);
+    } else if (StringUtils.isNotBlank(penRequestBatchStudent.getLegalMiddleNames())) {
+      studentFromStudentAPI.setUsualMiddleNames(penRequestBatchStudent.getUsualMiddleNames());
+    }
   }
 
   /**
@@ -482,4 +524,5 @@ public class PenRequestBatchStudentOrchestratorService {
   protected String scrubNameField(final String nameFieldValue) {
     return nameFieldValue.trim().toUpperCase().replace("\t", " ").replace(".", "").replaceAll("\\s{2,}", " ");
   }
+
 }
