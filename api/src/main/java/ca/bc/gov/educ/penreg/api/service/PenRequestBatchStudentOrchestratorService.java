@@ -337,7 +337,7 @@ public class PenRequestBatchStudentOrchestratorService {
 
   /**
    * updated for https://gww.jira.educ.gov.bc.ca/browse/PEN-1348
-   * When district number is 102, apply the following logic for grade code & grade year.
+   * When district number is <b> NOT </b> 102, apply the following logic for grade code & grade year.
    * If PEN Request grade code is null, and STUDENT record grade code is null do nothing
    * If PEN Request grade code has value, set it in the STUDENT record
    * Set the STUD_GRADE_YEAR to the current year (if after June 30) or the previous year (if before June 30)
@@ -345,7 +345,7 @@ public class PenRequestBatchStudentOrchestratorService {
 
 
   private void updateGradeCodeAndGradeYear(final Student studentFromStudentAPI, final PenRequestBatchStudentEntity penRequestBatchStudent) {
-    if (StringUtils.startsWith(penRequestBatchStudent.getPenRequestBatchEntity().getMincode(), "102")) {
+    if (!StringUtils.startsWith(penRequestBatchStudent.getPenRequestBatchEntity().getMincode(), "102")) {
       if (StringUtils.isNotBlank(penRequestBatchStudent.getGradeCode()) && StringUtils.isNotBlank(studentFromStudentAPI.getGradeCode())) {
         studentFromStudentAPI.setGradeCode(penRequestBatchStudent.getGradeCode());
         final LocalDateTime localDateTime = LocalDateTime.now();
@@ -355,8 +355,6 @@ public class PenRequestBatchStudentOrchestratorService {
           studentFromStudentAPI.setGradeYear(String.valueOf(localDateTime.getYear() - 1));
         }
       }
-    } else {
-      studentFromStudentAPI.setGradeCode(penRequestBatchStudent.getGradeCode());
     }
   }
 
