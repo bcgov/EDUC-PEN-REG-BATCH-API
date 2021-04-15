@@ -236,8 +236,14 @@ public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestra
     assertThat(studentUpdate.getUsualLastName()).isNull();
     assertThat(studentUpdate.getUsualMiddleNames()).isNull();
     assertThat(studentUpdate.getUsualFirstName()).isNull();
-    assertThat(studentUpdate.getGradeCode()).isEqualTo("12");
-    assertThat(studentUpdate.getGradeYear()).isNotNull();
+    if (!firstBatchRecord.getMincode().startsWith("102")) {
+      assertThat(studentUpdate.getGradeCode()).isEqualTo("12");
+      assertThat(studentUpdate.getGradeYear()).isNotNull();
+    } else {
+      assertThat(studentUpdate.getGradeCode()).isEqualTo("10");
+      assertThat(studentUpdate.getGradeYear()).isNull();
+    }
+
     final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     val updatedBatch = this.penRequestBatchRepository.findById(firstBatchRecord.getPenRequestBatchID());
