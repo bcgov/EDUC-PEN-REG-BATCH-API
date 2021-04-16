@@ -7,7 +7,6 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.repository.PenCoordinatorRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
@@ -18,11 +17,9 @@ import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
@@ -31,12 +28,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
@@ -44,7 +39,6 @@ import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -113,46 +107,76 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
 
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.openMocks(this);
+      MockitoAnnotations.openMocks(this);
       this.saga = penRequestBatchTestUtils.createSaga("19337120", "12345678", LOADED.getCode(), TEST_PEN);
-        final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-pen-coordinator.json")).getFile());
-        final List<ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator> structs = new ObjectMapper().readValue(file, new TypeReference<>() {
-        });
-        this.penCoordinatorRepository.saveAll(structs.stream().map(PenCoordinatorMapper.mapper::toModel).collect(Collectors.toList()));
-        this.penCoordinatorService.setPenCoordinatorMap(this.penCoordinatorRepository.findAll().stream()
-          .map(ca.bc.gov.educ.penreg.api.batch.mappers.PenCoordinatorMapper.mapper::toTrimmedPenCoordinator)
-          .collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity())));
+      final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-pen-coordinator.json")).getFile());
+      final List<ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator> structs = new ObjectMapper().readValue(file, new TypeReference<>() {
+      });
+      this.penCoordinatorRepository.saveAll(structs.stream().map(PenCoordinatorMapper.mapper::toModel).collect(Collectors.toList()));
+      this.penCoordinatorService.setPenCoordinatorMap(this.penCoordinatorRepository.findAll().stream()
+        .map(ca.bc.gov.educ.penreg.api.batch.mappers.PenCoordinatorMapper.mapper::toTrimmedPenCoordinator)
+        .collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity())));
     }
 
 
+  @Test
+  public void testHandleEvent_givenBatchInSagaDataExistsAndUsrMtchStudent_shouldArchivePenRequestBatchAndBeMarkedSTUDENTS_FOUND() throws IOException, InterruptedException, TimeoutException {
+    this.saga = penRequestBatchTestUtils.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode(), TEST_PEN);
+    final var event = Event.builder()
+      .eventType(EventType.INITIATED)
+      .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+      .sagaId(this.saga.get(0).getSagaId())
+      .build();
+    this.orchestrator.handleEvent(event);
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.get(0).getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    assertThat(sagaFromDB.get().getSagaState()).isEqualTo(ARCHIVE_PEN_REQUEST_BATCH.toString());
+    final var sagaStates = this.sagaService.findAllSagaStates(sagaFromDB.get());
+    assertThat(sagaStates.size()).isEqualTo(3);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
+    assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(GATHER_REPORT_DATA.toString());
+    assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.REPORT_DATA_GATHERED.toString());
+    assertThat(sagaStates.get(2).getSagaEventState()).isEqualTo(GET_STUDENTS.toString());
+    assertThat(sagaStates.get(2).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENTS_FOUND.toString());
+    final PenRequestBatchArchiveAndReturnSagaData payload = JsonUtil.getJsonObjectFromString(PenRequestBatchArchiveAndReturnSagaData.class, sagaFromDB.get().getPayload());
+    assertThat(payload.getFacsimile()).isNotEmpty();
+    assertThat(payload.getFromEmail()).isNotEmpty();
+    assertThat(payload.getTelephone()).isNotEmpty();
+    assertThat(payload.getMailingAddress()).isNotEmpty();
+    assertThat(payload.getPenCordinatorEmail()).isNotEmpty();
+    assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
+    assertThat(payload.getPenRequestBatch()).isNotNull();
+  }
 
-    @Test
-    public void testHandleEvent_givenBatchInSagaDataExistsAndUsrMtchStudent_shouldGatherReportDataAndBeMarkedREPORT_DATA_GATHERED() throws IOException, InterruptedException, TimeoutException {
-      penRequestBatchTestUtils.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode(), TEST_PEN);
-        final var event = Event.builder()
-                .eventType(EventType.INITIATED)
-                .eventOutcome(EventOutcome.INITIATE_SUCCESS)
-                .sagaId(this.saga.get(0).getSagaId())
-                .build();
-        this.orchestrator.handleEvent(event);
-        final var sagaFromDB = this.sagaService.findSagaById(this.saga.get(0).getSagaId());
-        assertThat(sagaFromDB).isPresent();
-        assertThat(sagaFromDB.get().getSagaState()).isEqualTo(GET_STUDENTS.toString());
-        final var sagaStates = this.sagaService.findAllSagaStates(sagaFromDB.get());
-        assertThat(sagaStates.size()).isEqualTo(2);
-        assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
-        assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
-        assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(GATHER_REPORT_DATA.toString());
-        assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.REPORT_DATA_GATHERED.toString());
-      final PenRequestBatchArchiveAndReturnSagaData payload = JsonUtil.getJsonObjectFromString(PenRequestBatchArchiveAndReturnSagaData.class, sagaFromDB.get().getPayload());
-        assertThat(payload.getFacsimile()).isNotEmpty();
-        assertThat(payload.getFromEmail()).isNotEmpty();
-        assertThat(payload.getTelephone()).isNotEmpty();
-        assertThat(payload.getMailingAddress()).isNotEmpty();
-        assertThat(payload.getPenCordinatorEmail()).isNotEmpty();
-        assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
-        assertThat(payload.getPenRequestBatch()).isNotNull();
-    }
+  @Test
+  public void testHandleEvent_givenBatchInSagaDataExistsAndSysNewPenStudent_shouldGatherReportDataAndBeMarkedREPORT_DATA_GATHERED() throws IOException, InterruptedException, TimeoutException {
+    this.saga = penRequestBatchTestUtils.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), TEST_PEN);
+    final var event = Event.builder()
+      .eventType(EventType.INITIATED)
+      .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+      .sagaId(this.saga.get(0).getSagaId())
+      .build();
+    this.orchestrator.handleEvent(event);
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.get(0).getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    assertThat(sagaFromDB.get().getSagaState()).isEqualTo(GET_STUDENTS.toString());
+    final var sagaStates = this.sagaService.findAllSagaStates(sagaFromDB.get());
+    assertThat(sagaStates.size()).isEqualTo(2);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
+    assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(GATHER_REPORT_DATA.toString());
+    assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.REPORT_DATA_GATHERED.toString());
+    final PenRequestBatchArchiveAndReturnSagaData payload = JsonUtil.getJsonObjectFromString(PenRequestBatchArchiveAndReturnSagaData.class, sagaFromDB.get().getPayload());
+    assertThat(payload.getFacsimile()).isNotEmpty();
+    assertThat(payload.getFromEmail()).isNotEmpty();
+    assertThat(payload.getTelephone()).isNotEmpty();
+    assertThat(payload.getMailingAddress()).isNotEmpty();
+    assertThat(payload.getPenCordinatorEmail()).isNotEmpty();
+    assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
+    assertThat(payload.getPenRequestBatch()).isNotNull();
+  }
+
 
     @Test
     public void testHandleEvent_givenSTUDENTS_FOUNDEventAndCorrectSagaAndEventData_shouldBeMarkedARCHIVE_PEN_REQUEST_BATCH() throws IOException, InterruptedException, TimeoutException {
