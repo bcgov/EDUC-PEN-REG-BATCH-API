@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -122,7 +123,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
         Event nextEvent = Event.builder().sagaId(saga.getSagaId()).eventType(EventType.GET_STUDENTS).replyTo(this.getTopicToSubscribe()).build();
 
         List<String> studentIDs = penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().stream()
-          .map(PenRequestBatchStudent::getStudentID).collect(Collectors.toList());
+          .map(PenRequestBatchStudent::getStudentID).filter(Objects::nonNull).collect(Collectors.toList());
 
         if(studentIDs.isEmpty()) {
             nextEvent.setEventOutcome(STUDENTS_FOUND);
