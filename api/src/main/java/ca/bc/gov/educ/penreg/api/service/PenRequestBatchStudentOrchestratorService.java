@@ -346,7 +346,8 @@ public class PenRequestBatchStudentOrchestratorService {
 
   private void updateGradeCodeAndGradeYear(final Student studentFromStudentAPI, final PenRequestBatchStudentEntity penRequestBatchStudent) {
     if (!StringUtils.startsWith(penRequestBatchStudent.getPenRequestBatchEntity().getMincode(), "102")) {
-      if (StringUtils.isNotBlank(penRequestBatchStudent.getGradeCode()) && StringUtils.isNotBlank(studentFromStudentAPI.getGradeCode())) {
+      if ((StringUtils.isNotBlank(penRequestBatchStudent.getGradeCode()) && StringUtils.isNotBlank(studentFromStudentAPI.getGradeCode()))
+          || (StringUtils.isNotBlank(penRequestBatchStudent.getGradeCode()))) {
         studentFromStudentAPI.setGradeCode(penRequestBatchStudent.getGradeCode());
         final LocalDateTime localDateTime = LocalDateTime.now();
         if (localDateTime.getMonthValue() > 6) {
