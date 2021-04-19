@@ -131,7 +131,8 @@
     "genderCode": "M",
     "gradeCode": "EL",
     "postalCode": "V0J1P0",
-    "assignedPEN": "123456786"
+    "assignedPEN": "123456786",
+    "studentID": "566ee980-8e5f-11eb-8dcd-0242ac130003"
   },
   {
     "penRequestBatchStudentStatusCode": "NEWPENSYS",
@@ -147,7 +148,8 @@
     "genderCode": "M",
     "gradeCode": "GR",
     "postalCode": "V8G1A7",
-    "assignedPEN": "123456787"
+    "assignedPEN": "123456787",
+    "studentID": "566ee980-8e5f-11eb-8dcd-0242ac130002"
   },
   {
     "penRequestBatchStudentStatusCode": "REPEAT",
