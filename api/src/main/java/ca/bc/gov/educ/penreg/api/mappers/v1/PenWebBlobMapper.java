@@ -4,6 +4,7 @@ import ca.bc.gov.educ.penreg.api.mappers.LocalDateTimeMapper;
 import ca.bc.gov.educ.penreg.api.mappers.UUIDMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.struct.v1.PENWebBlob;
+import ca.bc.gov.educ.penreg.api.struct.v1.PENWebBlobMetadata;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -41,6 +42,14 @@ public interface PenWebBlobMapper {
    */
   @Mapping(target = "fileContents", source="penWebBlobEntity.fileContents", qualifiedByName = "blobToString")
   PENWebBlob toStructure(PENWebBlobEntity penWebBlobEntity);
+
+  /**
+   * To structure pen web blob metadata.
+   *
+   * @param penWebBlobEntity the pen web blob entity
+   * @return the pen web blob metadata
+   */
+  PENWebBlobMetadata toMetadataStructure(PENWebBlobEntity penWebBlobEntity);
 
   @Named("blobToString")
   default String getFileContentsAsFormattedString(byte[] fileContents) {

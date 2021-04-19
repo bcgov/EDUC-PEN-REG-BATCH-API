@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
@@ -140,6 +141,26 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
     assertThat(penWebBlob.getPenWebBlobId()).isEqualTo(penWebBlob.getPenWebBlobId());
     assertThat(penWebBlob.getFileName()).isEqualTo(penWebBlob.getMincode() + ".TXT");
     assertThat(penWebBlob.getFileContents().length > 0).isTrue();
+  }
+
+  @Test
+  @Transactional
+  public void testGetTxtFile_givenBatchFileHasNoErrorStudents_shouldCreateEmptyTxtFile() throws IOException {
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_txt.json",
+      "mock_pen_req_batch_student_txt.json", 1);
+    doReturn(Optional.of(JsonUtil.getJsonObjectFromString(PenCoordinator.class, mockCoordinator))).when(this.penCoordinatorService).getPenCoordinatorByMinCode("10210518");
+
+    var prbStudents = this.batchList.get(0).getPenRequestBatchStudentEntities().stream()
+      .filter(prbStudent -> !prbStudent.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode()) &&
+        !prbStudent.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.INFOREQ.getCode()))
+      .map(mapper::toStructure).collect(Collectors.toList());
+
+    final var penWebBlob = this.responseFileGeneratorService.getTxtBlob(this.batchList.get(0), prbStudents);
+    assertThat(penWebBlob).isNotNull();
+
+    assertThat(penWebBlob.getPenWebBlobId()).isEqualTo(penWebBlob.getPenWebBlobId());
+    assertThat(penWebBlob.getFileName()).isEqualTo(penWebBlob.getMincode() + ".TXT");
+    assertThat(penWebBlob.getFileContents()).isEqualTo("No errors have been identified in this request".getBytes());
   }
 
   @Test
