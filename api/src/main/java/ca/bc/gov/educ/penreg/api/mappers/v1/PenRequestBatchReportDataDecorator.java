@@ -11,10 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -45,8 +42,12 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
         List<ReportListItem> sysMatchedList = new ArrayList<>();
         List<ReportUserMatchedListItem> diffList = new ArrayList<>();
         List<ReportUserMatchedListItem> confirmedList = new ArrayList<>();
-        Map<String, Student> students = data.getStudents().stream()
-                .collect(Collectors.toMap(Student::getStudentID, student -> student));
+        Map<String, Student> students = new HashMap<>();
+
+        if(data.getStudents() != null && !data.getStudents().isEmpty()) {
+          students = data.getStudents().stream()
+              .collect(Collectors.toMap(Student::getStudentID, student -> student));
+        }
         for(PenRequestBatchStudent penRequestBatchStudent : data.getPenRequestBatchStudents()) {
             switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.codeOfValue(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
                 case DUPLICATE:
@@ -58,12 +59,20 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
                     break;
                 case SYS_NEW_PEN:
                 case USR_NEW_PEN:
+                  if(students.get(penRequestBatchStudent.getStudentID()) == null) {
+                    log.error("Error attempting to create report data. Students list should not be null for USR_NEW_PEN status.");
+                    break;
+                  }
                     newPenList.add(listItemMapper.toReportListItem(students.get(penRequestBatchStudent.getStudentID())));
                     break;
                 case SYS_MATCHED:
                     sysMatchedList.add(listItemMapper.toReportListItem(penRequestBatchStudent));
                     break;
                 case USR_MATCHED:
+                  if(students.get(penRequestBatchStudent.getStudentID()) == null) {
+                    log.error("Error attempting to create report data. Students list should not be null for USR_MATCHED status.");
+                    break;
+                  }
                     Student matchedStudent = students.get(penRequestBatchStudent.getStudentID());
                     if(matchedStudent != null && matchedStudent.getDemogCode() != null && matchedStudent.getDemogCode().equals(StudentDemogCode.CONFIRMED.getCode())) {
                         confirmedList.add(listItemMapper.toReportUserMatchedListItem(penRequestBatchStudent, matchedStudent));

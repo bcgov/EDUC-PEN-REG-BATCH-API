@@ -4,37 +4,39 @@ import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportListItem;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportUserMatchedListItem;
+import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 @Mapper
+@DecoratedWith(ReportListItemDecorator.class)
 public interface ReportListItemMapper {
 
     ReportListItemMapper mapper = Mappers.getMapper(ReportListItemMapper.class);
 
-    @Mapping(target = "birthDate", expression = "java(penRequestBatchStudent.getDob() == null || penRequestBatchStudent.getDob().isEmpty() ? \"\" : java.time.LocalDate.parse(penRequestBatchStudent.getDob(), java.time.format.DateTimeFormatter.ofPattern(\"yyyyMMdd\")).format(java.time.format.DateTimeFormatter.ofPattern(\"yyyy/MM/dd\")))")
+    @Mapping(target = "birthDate", ignore = true)
     @Mapping(source = "genderCode", target = "gender", defaultValue = "")
     @Mapping(source = "assignedPEN", target = "pen", defaultValue = "")
     @Mapping(source = "mincode", target = "schoolID", defaultValue = "")
     @Mapping(source = "legalFirstName", target = "givenName", defaultValue = "")
     @Mapping(source = "legalLastName", target = "surname", defaultValue = "")
     @Mapping(source = "legalMiddleNames", target = "legalMiddleNames", defaultValue = "")
-    @Mapping(target = "usualName", expression = "java(java.util.stream.Stream.of(penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames()).filter(x -> x != null && !x.isEmpty()).collect(java.util.stream.Collectors.joining(\", \")))")
+    @Mapping(target = "usualName", ignore = true)
     @Mapping(source = "infoRequest", target = "reason")
     ReportListItem toReportListItem(PenRequestBatchStudent penRequestBatchStudent);
 
-    @Mapping(target = "birthDate", expression = "java(student.getDob() == null || student.getDob().isEmpty() ? \"\" : java.time.LocalDate.parse(student.getDob()).format(java.time.format.DateTimeFormatter.ofPattern(\"yyyy/MM/dd\")))")
+    @Mapping(target = "birthDate", ignore = true)
     @Mapping(source = "genderCode", target = "gender", defaultValue = "")
     @Mapping(source = "mincode", target = "schoolID", defaultValue = "")
     @Mapping(source = "legalFirstName", target = "givenName", defaultValue = "")
     @Mapping(source = "legalLastName", target = "surname", defaultValue = "")
     @Mapping(source = "legalMiddleNames", target = "legalMiddleNames", defaultValue = "")
-    @Mapping(target = "usualName", expression = "java(java.util.stream.Stream.of(student.getUsualLastName(), student.getUsualFirstName(), student.getUsualMiddleNames()).filter(x -> x != null && !x.isEmpty()).collect(java.util.stream.Collectors.joining(\", \")))")
+    @Mapping(target = "usualName", ignore = true)
     @Mapping(ignore = true, target = "reason")
     ReportListItem toReportListItem(Student student);
 
-    @Mapping(target = "min", expression = "java(toReportListItem(student))")
-    @Mapping(target = "school", expression = "java(toReportListItem(penRequestBatchStudent))")
+    @Mapping(target = "min", ignore = true)
+    @Mapping(target = "school", ignore = true)
     ReportUserMatchedListItem toReportUserMatchedListItem(PenRequestBatchStudent penRequestBatchStudent, Student student);
 }
