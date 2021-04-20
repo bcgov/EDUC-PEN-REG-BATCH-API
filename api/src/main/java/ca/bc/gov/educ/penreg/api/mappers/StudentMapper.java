@@ -34,7 +34,7 @@ public interface StudentMapper {
   @Mapping(target = "pen", ignore = true)
   @Mapping(target = "mincode", source="penRequestBatchStudentSagaData.mincode")
   @Mapping(target = "memo", ignore = true)
-  @Mapping(target = "localID", source="penRequestBatchStudentSagaData.localID")
+  @Mapping(target = "localID", expression="java(ca.bc.gov.educ.penreg.api.util.LocalIDUtil.changeBadLocalID(penRequestBatchStudentSagaData.getLocalID()))")
   @Mapping(target = "legalMiddleNames", source="penRequestBatchStudentSagaData.legalMiddleNames")
   @Mapping(target = "legalLastName", source="penRequestBatchStudentSagaData.legalLastName")
   @Mapping(target = "legalFirstName", source="penRequestBatchStudentSagaData.legalFirstName")
