@@ -5,7 +5,7 @@ import ca.bc.gov.educ.penreg.api.constants.BadLocalID;
 import java.util.EnumSet;
 
 
-public class LocalIDUtil {
+public final class LocalIDUtil {
 
     /**
      * Instantiates a new local id util.
