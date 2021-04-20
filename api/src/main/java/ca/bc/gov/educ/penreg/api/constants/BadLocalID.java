@@ -1,17 +1,3 @@
-//package ca.bc.gov.educ.penreg.api.constants;
-///* These LocalID are bad, change to null before passing to DB */
-//public enum BadLocalID {
-//    BK("BK"),
-//    HE("N#A");
-//
-//    public final String label;
-//
-//    private BadLocalID(String label) {
-//        this.label = label;
-//    }
-//}
-
-
 package ca.bc.gov.educ.penreg.api.constants;
 
 import lombok.Getter;
