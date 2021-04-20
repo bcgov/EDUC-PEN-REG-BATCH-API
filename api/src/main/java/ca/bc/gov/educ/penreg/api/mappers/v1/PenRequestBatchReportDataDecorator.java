@@ -36,64 +36,65 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
      */
     @Override
     public PenRequestBatchReportData toReportData(final BasePenRequestBatchReturnFilesSagaData data) {
-        final var reportData = this.delegate.toReportData(data);
-        List<ReportListItem> pendingList = new ArrayList<>();
-        List<ReportListItem> newPenList = new ArrayList<>();
-        List<ReportListItem> sysMatchedList = new ArrayList<>();
-        List<ReportUserMatchedListItem> diffList = new ArrayList<>();
-        List<ReportUserMatchedListItem> confirmedList = new ArrayList<>();
-        Map<String, Student> students = new HashMap<>();
+      final var reportData = this.delegate.toReportData(data);
+      List<ReportListItem> pendingList = new ArrayList<>();
+      List<ReportListItem> newPenList = new ArrayList<>();
+      List<ReportListItem> sysMatchedList = new ArrayList<>();
+      List<ReportUserMatchedListItem> diffList = new ArrayList<>();
+      List<ReportUserMatchedListItem> confirmedList = new ArrayList<>();
+      Map<String, Student> students = new HashMap<>();
 
-        if(data.getStudents() != null && !data.getStudents().isEmpty()) {
-          students = data.getStudents().stream()
-              .collect(Collectors.toMap(Student::getStudentID, student -> student));
-        }
-        for(PenRequestBatchStudent penRequestBatchStudent : data.getPenRequestBatchStudents()) {
-            switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.codeOfValue(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
-                case DUPLICATE:
-                case ERROR:
-                case REPEAT:
-                case INFOREQ:
-                case FIXABLE:
-                    pendingList.add(listItemMapper.toReportListItem(penRequestBatchStudent));
-                    break;
-                case SYS_NEW_PEN:
-                case USR_NEW_PEN:
-                  if(students.get(penRequestBatchStudent.getStudentID()) == null) {
-                    log.error("Error attempting to create report data. Students list should not be null for USR_NEW_PEN status.");
-                    break;
-                  }
-                    newPenList.add(listItemMapper.toReportListItem(students.get(penRequestBatchStudent.getStudentID())));
-                    break;
-                case SYS_MATCHED:
-                    sysMatchedList.add(listItemMapper.toReportListItem(penRequestBatchStudent));
-                    break;
-                case USR_MATCHED:
-                  if(students.get(penRequestBatchStudent.getStudentID()) == null) {
-                    log.error("Error attempting to create report data. Students list should not be null for USR_MATCHED status.");
-                    break;
-                  }
-                    Student matchedStudent = students.get(penRequestBatchStudent.getStudentID());
-                    if(matchedStudent != null && matchedStudent.getDemogCode() != null && matchedStudent.getDemogCode().equals(StudentDemogCode.CONFIRMED.getCode())) {
-                        confirmedList.add(listItemMapper.toReportUserMatchedListItem(penRequestBatchStudent, matchedStudent));
-                    } else {
-                        diffList.add(listItemMapper.toReportUserMatchedListItem(penRequestBatchStudent, matchedStudent));
-                    }
-                    break;
-                default:
-                    log.error("Unexpected pen request batch student error code encountered while attempting generate report data :: " + penRequestBatchStudent.getPenRequestBatchStudentStatusCode());
-                    break;
+      if (data.getStudents() != null && !data.getStudents().isEmpty()) {
+        students = data.getStudents().stream()
+          .collect(Collectors.toMap(Student::getStudentID, student -> student));
+      }
+      for (PenRequestBatchStudent penRequestBatchStudent : data.getPenRequestBatchStudents()) {
+        switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.codeOfValue(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
+          case DUPLICATE:
+          case ERROR:
+          case REPEAT:
+          case INFOREQ:
+          case FIXABLE:
+            pendingList.add(listItemMapper.toReportListItem(penRequestBatchStudent));
+            break;
+          case SYS_NEW_PEN:
+          case USR_NEW_PEN:
+            if (students.get(penRequestBatchStudent.getStudentID()) == null) {
+              log.error("Error attempting to create report data. Students list should not be null for USR_NEW_PEN status.");
+              break;
             }
-            reportData.setSysMatchedList(sysMatchedList);
-            reportData.setPendingList(pendingList);
-            reportData.setNewPenList(newPenList);
-            reportData.setDiffList(diffList);
-            reportData.setConfirmedList(confirmedList);
-
-            reportData.setProcessDate(LocalDateTime.parse(data.getPenRequestBatch().getProcessDate()).format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
-            reportData.setProcessTime(LocalDateTime.parse(data.getPenRequestBatch().getProcessDate()).format(DateTimeFormatter.ofPattern("HH:mm")));
-            reportData.setReportDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
+            newPenList.add(listItemMapper.toReportListItem(students.get(penRequestBatchStudent.getStudentID())));
+            break;
+          case SYS_MATCHED:
+            sysMatchedList.add(listItemMapper.toReportListItem(penRequestBatchStudent));
+            break;
+          case USR_MATCHED:
+            if (students.get(penRequestBatchStudent.getStudentID()) == null) {
+              log.error("Error attempting to create report data. Students list should not be null for USR_MATCHED status.");
+              break;
+            }
+            Student matchedStudent = students.get(penRequestBatchStudent.getStudentID());
+            if (matchedStudent != null && matchedStudent.getDemogCode() != null && matchedStudent.getDemogCode().equals(StudentDemogCode.CONFIRMED.getCode())) {
+              confirmedList.add(listItemMapper.toReportUserMatchedListItem(penRequestBatchStudent, matchedStudent));
+            } else {
+              diffList.add(listItemMapper.toReportUserMatchedListItem(penRequestBatchStudent, matchedStudent));
+            }
+            break;
+          default:
+            log.error("Unexpected pen request batch student error code encountered while attempting generate report data :: " + penRequestBatchStudent.getPenRequestBatchStudentStatusCode());
+            break;
         }
-        return reportData;
+      }
+
+      reportData.setSysMatchedList(sysMatchedList);
+      reportData.setPendingList(pendingList);
+      reportData.setNewPenList(newPenList);
+      reportData.setDiffList(diffList);
+      reportData.setConfirmedList(confirmedList);
+
+      reportData.setProcessDate(LocalDateTime.parse(data.getPenRequestBatch().getProcessDate()).format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
+      reportData.setProcessTime(LocalDateTime.parse(data.getPenRequestBatch().getProcessDate()).format(DateTimeFormatter.ofPattern("HH:mm")));
+      reportData.setReportDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
+      return reportData;
     }
 }
