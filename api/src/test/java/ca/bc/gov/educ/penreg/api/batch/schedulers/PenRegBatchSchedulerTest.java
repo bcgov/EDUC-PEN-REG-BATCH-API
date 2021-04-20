@@ -15,6 +15,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
@@ -139,6 +140,7 @@ public class PenRegBatchSchedulerTest extends BasePenRegAPITest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
+  @Transactional
   public void testExtractUnProcessedFilesFromTSW_GivenRowsInTSWithExtractDateNull_ShouldBeProcessed() throws InterruptedException {
     this.penRegBatchScheduler.extractUnProcessedFilesFromPenWebBlobs();
     this.waitForAsyncToFinish();
@@ -146,6 +148,7 @@ public class PenRegBatchSchedulerTest extends BasePenRegAPITest {
   }
 
   @Test
+  @Transactional
   public void testExtractUnProcessedFilesFromTSW_GivenMultipleRowsInTSWithSameFileButDifferentSubmissionNumber_ShouldBeProcessedAndMarkedAsDuplicate() throws InterruptedException, IOException {
     this.penWebBlobRepository.deleteAll();
     val penWebBlobs = this.loadSameFileTwice();
