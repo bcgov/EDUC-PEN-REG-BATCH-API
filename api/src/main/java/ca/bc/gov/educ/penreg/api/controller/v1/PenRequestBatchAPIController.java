@@ -299,6 +299,18 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   }
 
   /**
+   * Gets list of pen web blob metadata by submission number.
+   *
+   * @param submissionNumber the submission number
+   * @return the list of pen web blob metadata by submission number
+   */
+  @Override
+  public List<PENWebBlobMetadata> getPenWebBlobMetadata(final String submissionNumber) {
+    var  blobEntities = this.getService().findPenWebBlobBySubmissionNumber(submissionNumber);
+    return blobEntities.stream().map(penWebBlobMapper::toMetadataStructure).collect(Collectors.toList());
+  }
+
+  /**
    * Update pen web blob pen web blob.
    *
    * @param penWebBlob   the pen web blob

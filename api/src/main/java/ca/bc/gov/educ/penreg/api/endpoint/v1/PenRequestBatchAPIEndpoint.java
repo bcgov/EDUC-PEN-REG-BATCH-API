@@ -193,6 +193,20 @@ public interface PenRequestBatchAPIEndpoint {
   List<PENWebBlob> getPenWebBlobs(@RequestParam("submissionNumber") String submissionNumber, @RequestParam(name="fileType", required=false) String fileType);
 
   /**
+   * Gets list of pen web blob metadata by submission number.
+   *
+   * @param submissionNumber the submission number
+   * @return the list of pen web blob metadata by submission number
+   */
+  @GetMapping("/source-metadata")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH_BLOB')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
+  @Transactional(readOnly = true)
+  @Tag(name = "Endpoint to get source metadata list by Submission number.", description = "Endpoint to get source metadata list of Pen request batch by submission number.")
+  @ArraySchema(schema = @Schema(name = "PENWebBlob", implementation = PENWebBlob.class))
+  List<PENWebBlobMetadata> getPenWebBlobMetadata(@RequestParam("submissionNumber") String submissionNumber);
+
+  /**
    * Update pen web blob pen web blob.
    *
    * @param penWebBlob the pen web blob

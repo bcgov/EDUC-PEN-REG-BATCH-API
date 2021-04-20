@@ -95,27 +95,4 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
     log.info("message sent to PEN_REPORT_GENERATION_API_TOPIC for {} Event. :: {}", GENERATE_PEN_REQUEST_BATCH_REPORTS.toString(), saga.getSagaId());
   }
 
-  protected void saveReports(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws IOException, InterruptedException, TimeoutException {
-    SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
-    saga.setSagaState(SAVE_REPORTS.toString());
-    this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-
-    var penRequestBatchEntity = mapper.toModel(penRequestBatchReturnFilesSagaData.getPenRequestBatch());
-    if(penRequestBatchEntity.getSubmissionNumber().startsWith("M")) {
-      getResponseFileGeneratorService().savePDFReport(event.getEventPayload(), penRequestBatchEntity);
-    } else {
-      getResponseFileGeneratorService().saveReports(event.getEventPayload(),
-        penRequestBatchEntity,
-        penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents(),
-        penRequestBatchReturnFilesSagaData.getStudents(),
-        reportMapper.toReportData(penRequestBatchReturnFilesSagaData));
-    }
-
-    Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-      .eventType(SAVE_REPORTS)
-      .eventOutcome(REPORTS_SAVED)
-      .build();
-    this.handleEvent(nextEvent);
-  }
-
 }

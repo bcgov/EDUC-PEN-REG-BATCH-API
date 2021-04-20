@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PENWebBlob  {
+public class PENWebBlobMetadata {
   /**
    * The Pen web blob id.
    */
@@ -31,10 +31,6 @@ public class PENWebBlob  {
    * The File type.
    */
   private String fileType;
-  /**
-   * The File contents.
-   */
-  private String fileContents;
   /**
    * The Insert date time.
    */

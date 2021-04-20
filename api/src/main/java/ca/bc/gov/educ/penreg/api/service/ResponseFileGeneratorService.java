@@ -41,6 +41,7 @@ public class ResponseFileGeneratorService {
 
   public static final String SOURCE_APPLICATION = "PENWEB";
   private static final int PAR_FILE_PAGE_LINES = 52;
+  private static final byte[] EMPTY_TXT_FILE_CONTENT = "No errors have been identified in this request".getBytes();
   /**
    * the pen coordinator service
    */
@@ -165,6 +166,8 @@ public class ResponseFileGeneratorService {
       // BTR footer
       txtFile.append(createFooter(penRequestBatchEntity));
       bFile = txtFile.toString().getBytes();
+    } else {
+      bFile = EMPTY_TXT_FILE_CONTENT;
     }
     return PENWebBlobEntity.builder()
             .mincode(penRequestBatchEntity.getMincode())
@@ -199,9 +202,9 @@ public class ResponseFileGeneratorService {
                           List<Student> students, PenRequestBatchReportData reportData) {
     List<PENWebBlobEntity> reports = new ArrayList<>(Arrays.asList(
       this.getPDFBlob(pdfReport, penRequestBatchEntity),
-      this.getIDSBlob(penRequestBatchEntity, penRequestBatchStudents, students),
-      this.getPARBlob(reportData, penRequestBatchEntity)));
+      this.getIDSBlob(penRequestBatchEntity, penRequestBatchStudents, students)));
     if (penRequestBatchEntity.getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())) {
+      reports.add(this.getPARBlob(reportData, penRequestBatchEntity));
       reports.add(this.getTxtBlob(penRequestBatchEntity, penRequestBatchStudents));
     }
     this.getPenWebBlobRepository().saveAll(reports);

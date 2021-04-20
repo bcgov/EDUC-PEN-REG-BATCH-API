@@ -771,6 +771,35 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
       .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(0)));
   }
 
+  @Test
+  public void testGetPenWebBlobMetadata_GivenSubmissionNumber_ShouldReturnStatusOk() throws Exception {
+    final var submissionNumber = "T-534093";
+    this.createPENWebBlobs(submissionNumber);
+
+    this.mockMvc
+      .perform(get("/api/v1/pen-request-batch/source-metadata")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_BLOB")))
+        .param("submissionNumber", submissionNumber)
+        .contentType(APPLICATION_JSON))
+      .andDo(print()).andExpect(status().isOk())
+      .andExpect(jsonPath("$", hasSize(2)))
+      .andExpect(jsonPath("$.fileContents").doesNotExist());
+  }
+
+  @Test
+  public void testGetPenWebBlobMetadata_GivenInvalidSubmissionNumberAndFileType_ShouldReturnEmptyList() throws Exception {
+    final var submissionNumber = "T-534093";
+    this.createPENWebBlobs(submissionNumber);
+
+    this.mockMvc
+      .perform(get("/api/v1/pen-request-batch/source-metadata")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH_BLOB")))
+        .param("submissionNumber", "T-000000")
+        .param("fileType", "PEN")
+        .contentType(APPLICATION_JSON))
+      .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(0)));
+  }
+
   /**
    * Create batch students list.
    *

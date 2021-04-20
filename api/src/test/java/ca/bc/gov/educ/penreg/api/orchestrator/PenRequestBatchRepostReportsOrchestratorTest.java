@@ -202,7 +202,7 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
     assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(EventType.SAVE_REPORTS.toString());
     assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.REPORTS_SAVED.toString());
     final var penWebBlobsDB = this.prbService.findPenWebBlobBySubmissionNumber(penRequestBatchEntity.getSubmissionNumber());
-    assertThat(penWebBlobsDB.size()).isEqualTo(1);
+    assertThat(penWebBlobsDB.size()).isEqualTo(2);
   }
 
   @Test
@@ -244,7 +244,7 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
     assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(EventType.SAVE_REPORTS.toString());
     assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.REPORTS_SAVED.toString());
     final var penWebBlobsDB = this.prbService.findPenWebBlobBySubmissionNumber(penRequestBatchEntity.getSubmissionNumber());
-    assertThat(penWebBlobsDB.size()).isEqualTo(3);
+    assertThat(penWebBlobsDB.size()).isEqualTo(2);
   }
 
 }
