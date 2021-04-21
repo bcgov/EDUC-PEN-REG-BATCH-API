@@ -203,4 +203,14 @@ public class PenRequestBatchFileService {
   public Optional<PenRequestBatchEntity> findEntity(final UUID penRequestBatchID) {
     return this.getPenRequestBatchService().findById(penRequestBatchID);
   }
+
+  /**
+   * this is used to associate the object with current thread as hibernate attached entity for lazy loading.
+   *
+   * @param penWebBlobId the pkl of the table.
+   * @return the entity if present
+   */
+  public Optional<PENWebBlobEntity> getPenWebBlob(final long penWebBlobId) {
+    return this.penWebBlobRepository.findById(penWebBlobId);
+  }
 }

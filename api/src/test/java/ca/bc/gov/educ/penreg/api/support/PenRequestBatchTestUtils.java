@@ -188,18 +188,18 @@ public class PenRequestBatchTestUtils {
 
   public static List<Student> createStudents(final PenRequestBatchEntity penRequestBatchEntity) {
 
-    List<Student> students = new ArrayList<>();
-    for(PenRequestBatchStudentEntity penRequestBatchStudentEntity : penRequestBatchEntity.getPenRequestBatchStudentEntities()) {
+    final List<Student> students = new ArrayList<>();
+    for (final PenRequestBatchStudentEntity penRequestBatchStudentEntity : penRequestBatchEntity.getPenRequestBatchStudentEntities()) {
       students.add(Student.builder()
-        .mincode(penRequestBatchEntity.getMincode())
-        .genderCode(penRequestBatchStudentEntity.getGenderCode())
-        .gradeCode(penRequestBatchStudentEntity.getGradeCode())
-        .legalFirstName(penRequestBatchStudentEntity.getLegalFirstName())
-        .legalLastName(penRequestBatchStudentEntity.getLegalLastName())
-        .legalMiddleNames(penRequestBatchStudentEntity.getLegalMiddleNames())
-        .dob(penRequestBatchStudentEntity.getDob() == null || penRequestBatchStudentEntity.getDob().isBlank() ? "" : LocalDate.parse(penRequestBatchStudentEntity.getDob(), DateTimeFormatter.ofPattern("yyyyMMdd")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-        .localID(penRequestBatchStudentEntity.getLocalID())
-        .pen(penRequestBatchStudentEntity.getAssignedPEN())
+          .mincode(penRequestBatchEntity.getMincode())
+          .genderCode(penRequestBatchStudentEntity.getGenderCode())
+          .gradeCode(penRequestBatchStudentEntity.getGradeCode())
+          .legalFirstName(penRequestBatchStudentEntity.getLegalFirstName())
+          .legalLastName(penRequestBatchStudentEntity.getLegalLastName())
+          .legalMiddleNames(penRequestBatchStudentEntity.getLegalMiddleNames())
+          .dob(penRequestBatchStudentEntity.getDob() == null || penRequestBatchStudentEntity.getDob().isBlank() ? "" : LocalDate.parse(penRequestBatchStudentEntity.getDob(), DateTimeFormatter.ofPattern("yyyyMMdd")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+          .localID(penRequestBatchStudentEntity.getLocalID())
+          .pen(penRequestBatchStudentEntity.getAssignedPEN())
         .studentID(UUID.randomUUID().toString())
         .build());
       if(penRequestBatchStudentEntity.getStudentID()!=null){
@@ -352,13 +352,18 @@ public class PenRequestBatchTestUtils {
       .penRequestBatchID(entity.getPenRequestBatchID()).schoolName("Cataline").build());
 
     final var payload = " {\n" +
-      "    \"createUser\": \"test\",\n" +
-      "    \"updateUser\": \"test\"\n" +
-      "  }";
+        "    \"createUser\": \"test\",\n" +
+        "    \"updateUser\": \"test\"\n" +
+        "  }";
 
     final PenRequestBatchArchiveAndReturnAllSagaData sagaData = JsonUtil.getJsonObjectFromString(PenRequestBatchArchiveAndReturnAllSagaData.class, payload);
     sagaData.setPenRequestBatchArchiveAndReturnSagaData(penRequestBatchIDList);
     return this.sagaService.createMultipleBatchSagaRecordsInDB(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString(), "Test",
-      List.of(Pair.of(entity.getPenRequestBatchID(), JsonUtil.getJsonStringFromObject(penRequestBatchIDList.get(0)))));
+        List.of(Pair.of(entity.getPenRequestBatchID(), JsonUtil.getJsonStringFromObject(penRequestBatchIDList.get(0)))));
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public PENWebBlobEntity savePenWebBlob(final PENWebBlobEntity penWebBlobEntity) {
+    return this.penWebBlobRepository.save(penWebBlobEntity);
   }
 }
