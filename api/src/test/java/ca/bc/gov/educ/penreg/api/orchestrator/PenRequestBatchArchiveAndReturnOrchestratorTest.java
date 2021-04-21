@@ -233,7 +233,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         final var event = Event.builder()
                 .eventType(EventType.GENERATE_PEN_REQUEST_BATCH_REPORTS)
                 .eventOutcome(EventOutcome.ARCHIVE_PEN_REQUEST_BATCH_REPORTS_GENERATED)
-                .eventPayload("Heres a pdf report")
+                .eventPayload(Base64.getEncoder().encodeToString("Heres a pdf report".getBytes()))
                 .sagaId(this.saga.get(0).getSagaId())
                 .build();
         this.orchestrator.handleEvent(event);
@@ -272,7 +272,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         final var event = Event.builder()
                 .eventType(EventType.GENERATE_PEN_REQUEST_BATCH_REPORTS)
                 .eventOutcome(EventOutcome.ARCHIVE_PEN_REQUEST_BATCH_REPORTS_GENERATED)
-                .eventPayload("Heres a pdf report")
+                .eventPayload(Base64.getEncoder().encodeToString("Heres a pdf report".getBytes()))
                 .sagaId(this.saga.get(0).getSagaId())
                 .build();
         this.orchestrator.handleEvent(event);
@@ -312,7 +312,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         final var event = Event.builder()
                 .eventType(EventType.GENERATE_PEN_REQUEST_BATCH_REPORTS)
                 .eventOutcome(EventOutcome.ARCHIVE_PEN_REQUEST_BATCH_REPORTS_GENERATED)
-                .eventPayload("Heres a pdf report")
+                .eventPayload(Base64.getEncoder().encodeToString("Heres a pdf report".getBytes()))
                 .sagaId(this.saga.get(0).getSagaId())
                 .build();
         this.orchestrator.handleEvent(event);
