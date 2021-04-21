@@ -133,11 +133,12 @@ public class PenRegBatchProcessor {
    * 1. <p>The data comes from TSW table so if the the data from the TSW table cant be read error is logged and email is sent.</p>
    * 2. <p>If The data is successfully retrieved from TSW table and file header cant be parsed, system will create only the header record and persist it.
    *
-   * @param penWebBlobEntity the pen web blob entity
+   * @param penWebBlob the pen web blob entity
    */
   @Transactional
   @Async("penWebBlobExtractor")
-  public void processPenRegBatchFileFromPenWebBlob(@NonNull final PENWebBlobEntity penWebBlobEntity) {
+  public void processPenRegBatchFileFromPenWebBlob(@NonNull final PENWebBlobEntity penWebBlob) {
+    val penWebBlobEntity = this.penRequestBatchFileService.getPenWebBlob(penWebBlob.getPenWebBlobId()).orElseThrow(); // do a get to associate the object with current thread for lazy loading.
     final Stopwatch stopwatch = Stopwatch.createStarted();
     final var guid = UUID.randomUUID().toString(); // this guid will be used throughout the logs for easy tracking.
     log.info("Started processing row from Pen Web Blobs with submission Number :: {} and guid :: {}", penWebBlobEntity.getSubmissionNumber(), guid);
