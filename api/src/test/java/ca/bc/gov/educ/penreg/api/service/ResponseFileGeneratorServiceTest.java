@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -101,7 +102,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
   public void testGetPDFBlob_givenBatchFileHasCorrectData_shouldCreateReportBlob() throws IOException {
     this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
             "mock_pen_req_batch_student_ids.json", 1);
-    final var penWebBlob = this.responseFileGeneratorService.getPDFBlob("here is a pretend pdf", this.batchList.get(0));
+    final var penWebBlob = this.responseFileGeneratorService.getPDFBlob(Base64.getEncoder().encodeToString("here is a pretend pdf".getBytes()), this.batchList.get(0));
     assertThat(penWebBlob).isNotNull();
   }
 
@@ -170,7 +171,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
             "mock_pen_req_batch_student_ids.json", 1);
 
     final var students = PenRequestBatchTestUtils.createStudents(batchList.get(0));
-    this.responseFileGeneratorService.saveReports("Here's a fake pdf file", this.batchList.get(0),
+    this.responseFileGeneratorService.saveReports(Base64.getEncoder().encodeToString("Here's a fake pdf file".getBytes()), this.batchList.get(0),
       this.batchList.get(0).getPenRequestBatchStudentEntities().stream().map(mapper::toStructure).collect(Collectors.toList()), students,
       getPenRequestBatchReportData(this.batchList.get(0)));
 
@@ -186,7 +187,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
     final var students = PenRequestBatchTestUtils.createStudents(batchList.get(0));
     this.batchList.get(0).setSubmissionNumber("M001");
-    this.responseFileGeneratorService.savePDFReport("Here's a fake pdf file", this.batchList.get(0));
+    this.responseFileGeneratorService.savePDFReport(Base64.getEncoder().encodeToString("Here's a fake pdf file".getBytes()), this.batchList.get(0));
 
     final var penWebBlobsDB = this.prbService.findPenWebBlobBySubmissionNumber(batchList.get(0).getSubmissionNumber());
     assertThat(penWebBlobsDB.size()).isEqualTo(1);

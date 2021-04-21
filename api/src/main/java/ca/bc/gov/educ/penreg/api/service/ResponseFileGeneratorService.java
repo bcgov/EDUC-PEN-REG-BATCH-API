@@ -23,6 +23,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring5.SpringTemplateEngine;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -186,7 +187,7 @@ public class ResponseFileGeneratorService {
             .sourceApplication(SOURCE_APPLICATION)
             .fileName(penRequestBatchEntity.getMincode() + ".PDF")
             .fileType("PDF")
-            .fileContents(pdfReport.getBytes())
+            .fileContents(Base64.getDecoder().decode(pdfReport.getBytes(StandardCharsets.UTF_8)))
             .insertDateTime(LocalDateTime.now())
             .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
             .build();
