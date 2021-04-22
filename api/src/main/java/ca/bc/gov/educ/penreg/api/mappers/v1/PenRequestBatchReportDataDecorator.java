@@ -92,9 +92,10 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       reportData.setDiffList(diffList);
       reportData.setConfirmedList(confirmedList);
 
-      reportData.setProcessDate(LocalDateTime.parse(data.getPenRequestBatch().getProcessDate()).format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
-      reportData.setProcessTime(LocalDateTime.parse(data.getPenRequestBatch().getProcessDate()).format(DateTimeFormatter.ofPattern("HH:mm")));
-      reportData.setReportDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
+      var processDateTime = LocalDateTime.parse(data.getPenRequestBatch().getProcessDate());
+      reportData.setProcessDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
+      reportData.setProcessTime(processDateTime.format(DateTimeFormatter.ofPattern("HH:mm")));
+      reportData.setReportDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
       return reportData;
     }
 }

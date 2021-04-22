@@ -26,6 +26,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -247,14 +248,13 @@ public class ResponseFileGeneratorService {
 
   private String createHeader(final PenRequestBatchEntity penRequestBatchEntity, String applicationCode) {
     final StringBuilder header = new StringBuilder();
-    final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
     // retrieved from PEN_COORDINATOR table
     Optional<PenCoordinator> penCoordinator = this.getPenCoordinatorService().getPenCoordinatorByMinCode(penRequestBatchEntity.getMincode());
 
     header.append("FFI")
             .append(String.format("%-8.8s", print(penRequestBatchEntity.getMincode())))
             .append(String.format("%-40.40s", print(penRequestBatchEntity.getSchoolName())))
-            .append(String.format("%-8.8s", dateFormat.format(new Date())))
+            .append(String.format("%-8.8s", penRequestBatchEntity.getProcessDate().format(DateTimeFormatter.ofPattern("yyyyMMdd"))))
             .append(String.format("%-100.100s", print(penCoordinator.isPresent()? penCoordinator.get().getPenCoordinatorEmail() : "")))
             .append(String.format("%-10.10s", print(penCoordinator.map(coordinator -> coordinator.getPenCoordinatorFax().replaceAll("[^0-9]+", "")).orElse(""))))
             .append(String.format("%-40.40s", print(penCoordinator.isPresent()? penCoordinator.get().getPenCoordinatorName() : "")))

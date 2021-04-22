@@ -47,7 +47,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getProcessDate()).isEqualTo("2021/03/23");
     assertThat(reportData.getProcessTime()).isEqualTo("13:04");
     assertThat(reportData.getSubmissionNumber()).isEqualTo(batchEntities.get(0).getSubmissionNumber());
-    assertThat(reportData.getReportDate()).isEqualTo(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
+    assertThat(reportData.getReportDate()).isEqualTo("2021-MAR-23");
     assertThat(reportData.getReviewer()).isEqualTo(batchEntities.get(0).getUpdateUser());
     assertThat(reportData.getMincode()).isEqualTo(formatMincode(batchEntities.get(0).getMincode()));
     assertThat(reportData.getSchoolName()).isEqualTo("Cataline");
@@ -151,7 +151,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getProcessDate()).isEqualTo("2021/03/23");
     assertThat(reportData.getProcessTime()).isEqualTo("13:04");
     assertThat(reportData.getSubmissionNumber()).isEqualTo(batchEntities.get(0).getSubmissionNumber());
-    assertThat(reportData.getReportDate()).isEqualTo(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
+    assertThat(reportData.getReportDate()).isEqualTo("2021-MAR-23");
     assertThat(reportData.getReviewer()).isEqualTo(batchEntities.get(0).getUpdateUser());
     assertThat(reportData.getMincode()).isEqualTo(formatMincode(batchEntities.get(0).getMincode()));
     assertThat(reportData.getSchoolName()).isEqualTo("Cataline");
