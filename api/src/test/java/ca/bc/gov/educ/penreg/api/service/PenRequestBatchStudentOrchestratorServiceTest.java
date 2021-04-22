@@ -286,7 +286,7 @@ public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestra
 
     // now check for student updates if it happened for sys match
     final Student studentUpdate = argument.getValue();
-
+    assertThat(studentUpdate.getLocalID()).isNull();
     // localID after update should not match any of the bad localID
     for (BadLocalID info : EnumSet.allOf(BadLocalID.class)) {
       assertThat(info.getLabel().equals(studentUpdate.getLocalID())).isEqualTo(false);
