@@ -15,6 +15,7 @@ import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import ca.bc.gov.educ.penreg.api.util.LocalIDUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -325,7 +326,8 @@ public class PenRequestBatchStudentOrchestratorService {
   private void updateStudentData(final Student studentFromStudentAPI, final PenRequestBatchStudentEntity penRequestBatchStudent, final PenRequestBatchEntity penRequestBatchEntity) {
     studentFromStudentAPI.setMincode(penRequestBatchEntity.getMincode());
     // updated as part of https://gww.jira.educ.gov.bc.ca/browse/PEN-1347
-    studentFromStudentAPI.setLocalID(StringUtils.remove(penRequestBatchStudent.getLocalID(), ' '));
+    final var changesBadLocalIDIfExistBeforeSetValue = LocalIDUtil.changeBadLocalID(StringUtils.remove(penRequestBatchStudent.getLocalID(), ' '));
+    studentFromStudentAPI.setLocalID(changesBadLocalIDIfExistBeforeSetValue);
     this.updateGradeCodeAndGradeYear(studentFromStudentAPI, penRequestBatchStudent);
     studentFromStudentAPI.setPostalCode(penRequestBatchStudent.getPostalCode());
 

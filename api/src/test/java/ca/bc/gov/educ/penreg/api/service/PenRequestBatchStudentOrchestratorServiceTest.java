@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.service;
 
 
+import ca.bc.gov.educ.penreg.api.constants.BadLocalID;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
@@ -32,10 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA;
@@ -249,6 +247,50 @@ public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestra
     val updatedBatch = this.penRequestBatchRepository.findById(firstBatchRecord.getPenRequestBatchID());
     assertThat(updatedBatch).isPresent();
     assertThat(updatedBatch.get().getPenRequestBatchStudentEntities().stream().filter(entity -> entity.getPenRequestBatchStudentID().equals(studEntity.getPenRequestBatchStudentID())).findFirst().orElseThrow().getPenRequestBatchStudentStatusCode()).isEqualTo(PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode());
+  }
+
+
+  @Test
+  public void testProcessPenMatchResult_givenSystemMatchScenarioWithBadLocalID_studentLocalIDShouldBeUpdatedWithNull() throws IOException {
+    final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
+
+    prbStudentEntity.setUpdateDate(LocalDateTime.now());
+    final var eventPayload = new PenMatchResult();
+    eventPayload.setPenStatus("D1");
+    final PenMatchRecord record = new PenMatchRecord();
+    final List<PenRequestBatchEntity> batches = this.penRequestBatchRepository.findAll();
+    val firstBatchRecord = batches.get(0);
+    final PenRequestBatchStudentEntity studEntity = firstBatchRecord.getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow();
+
+    studEntity.setLocalID("N#A");
+    this.penRequestBatchRepository.save(firstBatchRecord);
+    record.setStudentID(studEntity.getPenRequestBatchStudentID().toString());
+    when(this.restUtils.getStudentByStudentID(studEntity.getPenRequestBatchStudentID().toString()))
+            .thenReturn(Student.builder()
+                    .studentID(studEntity.getPenRequestBatchStudentID().toString())
+                    .legalFirstName(studEntity.getLegalFirstName())
+                    .legalLastName(studEntity.getLegalLastName())
+                    .legalMiddleNames(studEntity.getLegalMiddleNames())
+                    .usualFirstName(studEntity.getUsualFirstName())
+                    .usualLastName(studEntity.getUsualLastName())
+                    .usualMiddleNames(studEntity.getUsualMiddleNames())
+                    .gradeCode("10")
+                    .pen(TEST_PEN)
+                    .build());
+    record.setMatchingPEN("123456789");
+    eventPayload.setMatchingRecords(new ArrayList<>());
+    eventPayload.getMatchingRecords().add(record);
+    final ArgumentCaptor<Student> argument = ArgumentCaptor.forClass(Student.class);
+    doNothing().when(this.restUtils).updateStudent(argument.capture());
+    this.orchestratorService.processPenMatchResult(this.saga, this.sagaData, eventPayload);
+
+    // now check for student updates if it happened for sys match
+    final Student studentUpdate = argument.getValue();
+
+    // localID after update should not match any of the bad localID
+    for (BadLocalID info : EnumSet.allOf(BadLocalID.class)) {
+      assertThat(info.getLabel().equals(studentUpdate.getLocalID())).isEqualTo(false);
+    }
   }
 
   @Test
