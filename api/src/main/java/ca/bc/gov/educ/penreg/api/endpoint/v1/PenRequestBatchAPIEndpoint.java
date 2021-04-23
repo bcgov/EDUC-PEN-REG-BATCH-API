@@ -2,6 +2,8 @@ package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
+import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmission;
+import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmissionResult;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -267,4 +269,25 @@ public interface PenRequestBatchAPIEndpoint {
   @Tag(name = "Endpoint to get the List of stats of Pen Request Batch.", description = "Endpoint to get the List of stats of Pen Request Batch.")
   @Schema(name = "PenRequestBatchStats", implementation = PenRequestBatchStats.class)
   PenRequestBatchStats readPenRequestBatchStats();
+
+
+  @PostMapping("/pen-request-batch-submission")
+  @PreAuthorize("hasAuthority('SCOPE_WRITE_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "CREATED"), @ApiResponse(responseCode = "400", description = "BAD REQUEST")})
+  @ResponseStatus(CREATED)
+  @Transactional
+  @Tag(name = "Endpoint to create Pen Request Batch Submission, used for external clients to the ministry.",
+    description = "This endpoint will allow external client to submit a batch request via api call. If the api call was success it will return a guid {batchSubmissionID} for further tracking")
+  @Schema(name = "PenRequestBatchSubmission", implementation = PenRequestBatchSubmission.class)
+  ResponseEntity<UUID> createNewBatchSubmission(@RequestBody PenRequestBatchSubmission penRequestBatchSubmission);
+
+  @GetMapping("/pen-request-batch-submission/{batchSubmissionID}/result")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "202", description = "ACCEPTED"), @ApiResponse(responseCode = "404", description =
+    "NOT FOUND")})
+  @Transactional
+  @Tag(name = "Endpoint to get Pen Request Batch Submission results, used for external clients to the ministry.",
+    description = "This endpoint will allow external client to query the results of a batch earlier submitted.")
+  @Schema(name = "PenRequestBatchSubmissionResult", implementation = PenRequestBatchSubmissionResult.class)
+  ResponseEntity<PenRequestBatchSubmissionResult> batchSubmissionResult(@PathVariable UUID batchSubmissionID);
 }

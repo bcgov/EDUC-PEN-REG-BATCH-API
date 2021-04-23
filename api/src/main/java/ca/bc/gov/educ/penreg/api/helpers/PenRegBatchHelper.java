@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.helpers;
 
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchStudentSagaDataMapper;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
@@ -8,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.lang.NonNull;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,6 +19,14 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public final class PenRegBatchHelper {
+  private static final Set<String> statusesMeansToComplete = new HashSet<>();
+
+  static {
+    statusesMeansToComplete.add(PenRequestBatchStatusCodes.LOAD_FAIL.getCode());
+    statusesMeansToComplete.add(PenRequestBatchStatusCodes.ARCHIVED.getCode());
+    statusesMeansToComplete.add(PenRequestBatchStatusCodes.REARCHIVED.getCode());
+  }
+
   private PenRegBatchHelper() {
 
   }
@@ -42,5 +52,9 @@ public final class PenRegBatchHelper {
     element.setMincode(penRequestBatchEntity.getMincode());
     element.setPenRequestBatchID(penRequestBatchEntity.getPenRequestBatchID());
     return element;
+  }
+
+  public static boolean isPRBStatusConsideredComplete(final String statusCode) {
+    return statusesMeansToComplete.contains(statusCode);
   }
 }
