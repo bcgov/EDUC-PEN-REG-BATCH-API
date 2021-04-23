@@ -1,9 +1,17 @@
 package ca.bc.gov.educ.penreg.api.rest;
 
+import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
+import ca.bc.gov.educ.penreg.api.constants.EventType;
+import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
+import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -15,7 +23,17 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
 
 /**
  * This class is used for REST calls
@@ -26,9 +44,8 @@ import java.util.Optional;
 @Slf4j
 public class RestUtils {
 
-
-  private static final String CONTENT_TYPE="Content-Type";
-
+  private static final String CONTENT_TYPE = "Content-Type";
+  private final ObjectMapper obMapper = new ObjectMapper();
   /**
    * The Props.
    */
@@ -38,15 +55,18 @@ public class RestUtils {
 
   private final WebClient webClient;
 
+  private final MessagePublisher messagePublisher;
+
   /**
    * Instantiates a new Rest utils.
    *
    * @param props the props
    */
   @Autowired
-  public RestUtils(final ApplicationProperties props, final WebClient webClient) {
+  public RestUtils(final ApplicationProperties props, final WebClient webClient, final MessagePublisher messagePublisher) {
     this.props = props;
     this.webClient = webClient;
+    this.messagePublisher = messagePublisher;
   }
 
   /**
@@ -165,5 +185,22 @@ public class RestUtils {
       }
     }
     return school;
+  }
+
+  /**
+   * this method calls student-api via NATS, a synchronous req/reply pattern.
+   *
+   * @param studentIDs the student ids to be fetched.
+   * @return the student objects
+   */
+  public List<Student> getStudentsByStudentIDs(List<UUID> studentIDs) throws IOException, ExecutionException, InterruptedException, TimeoutException {
+    Event event = Event.builder().sagaId(UUID.randomUUID()).eventType(EventType.GET_STUDENTS).eventPayload(JsonUtil.getJsonStringFromObject(studentIDs)).build();
+    val responseEvent = JsonUtil.getJsonObjectFromByteArray(Event.class,
+      this.messagePublisher.requestMessage(STUDENT_API_TOPIC.toString(), JsonUtil.getJsonString(event).orElseThrow().getBytes(StandardCharsets.UTF_8)).get(30, TimeUnit.SECONDS).getData());
+    if (responseEvent.getEventOutcome() == EventOutcome.STUDENT_NOT_FOUND) {
+      return Collections.emptyList();
+    }
+    return obMapper.readValue(event.getEventPayload(), new TypeReference<>() {
+    });
   }
 }

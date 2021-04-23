@@ -3,15 +3,18 @@ package ca.bc.gov.educ.penreg.api.service;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
+import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
+import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStat;
 import lombok.Getter;
 import lombok.NonNull;
@@ -31,9 +34,14 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REARCHIVED;
 import static lombok.AccessLevel.PRIVATE;
@@ -195,7 +203,7 @@ public class PenRequestBatchService {
    * Find pen web blobs by submission number and file type.
    *
    * @param submissionNumber the submission number
-   * @param fileType the file type
+   * @param fileType         the file type
    * @return the list
    */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -299,5 +307,18 @@ public class PenRequestBatchService {
         || StringUtils.equals(currentPrbEntity.getPenRequestBatchStatusCode(), PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode()))) {
       requestPrbEntity.setPenRequestBatchStatusCode(REARCHIVED.getCode());
     }
+  }
+
+  public Map<String, Student> populateStudentDataFromBatch(PenRequestBatchEntity penRequestBatch) throws IOException, ExecutionException, InterruptedException, TimeoutException {
+    List<UUID> studentIDs = penRequestBatch.getPenRequestBatchStudentEntities().stream()
+        .map(PenRequestBatchStudentEntity::getStudentID).filter(Objects::nonNull).collect(Collectors.toList());
+    if (!studentIDs.isEmpty()) {
+      val result = this.restUtils.getStudentsByStudentIDs(studentIDs);
+      if (result.isEmpty()) {
+        throw new PenRegAPIRuntimeException("got blank response from student api which is not expected :: " + penRequestBatch.getPenRequestBatchID());
+      }
+      return result.stream().collect(Collectors.toConcurrentMap(Student::getStudentID, Function.identity()));
+    }
+    return Collections.emptyMap();
   }
 }

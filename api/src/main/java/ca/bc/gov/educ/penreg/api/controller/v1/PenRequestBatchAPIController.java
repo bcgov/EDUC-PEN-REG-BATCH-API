@@ -4,14 +4,17 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes;
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchAPIEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
+import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.filter.Associations;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchFilterSpecs;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchStudentFilterSpecs;
+import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenWebBlobMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.StudentStatusCodeMapper;
+import ca.bc.gov.educ.penreg.api.mappers.v1.external.PenRequestBatchResultDataMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
@@ -19,16 +22,20 @@ import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
+import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmission;
+import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmissionResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -61,6 +68,8 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * The constant mapper.
    */
   private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
+
+  private static final PenRequestBatchResultDataMapper batchResultMapper = PenRequestBatchResultDataMapper.mapper;
   /**
    * The constant studentMapper.
    */
@@ -182,7 +191,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
       throw new InvalidParameterException(e.getMessage());
     }
 
-    if(associationNames.hasSearchAssociations()) {
+    if (associationNames.hasSearchAssociations()) {
       return this.getService().findAllByPenRequestBatchStudent(penRegBatchSpecs, pageNumber, pageSize, sorts).thenApplyAsync(page -> page.map(pair -> {
         final var batch = mapper.toSearchStructure(pair.getFirst());
         batch.setSearchedCount(pair.getSecond());
@@ -190,7 +199,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
       }));
     } else {
       return this.getService().findAll(penRegBatchSpecs, pageNumber, pageSize, sorts).thenApplyAsync(page ->
-          page.map(mapper::toSearchStructure));
+        page.map(mapper::toSearchStructure));
     }
   }
 
@@ -200,6 +209,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * @param penRegBatchSpecs the pen reg batch specs
    * @param i                the
    * @param search           the search
+   * @param associationNames the association names
    * @return the specifications
    */
   private Specification<PenRequestBatchEntity> getSpecifications(Specification<PenRequestBatchEntity> penRegBatchSpecs, final int i, final Search search, final Associations associationNames) {
@@ -284,13 +294,13 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * Gets list of pen web blob by submission number and file type.
    *
    * @param submissionNumber the submission number
-   * @param fileType the file type
+   * @param fileType         the file type
    * @return the list of pen web blob by submission number and file type
    */
   @Override
   public List<PENWebBlob> getPenWebBlobs(final String submissionNumber, final String fileType) {
-    List<PENWebBlobEntity> blobEntities;
-    if(fileType == null) {
+    final List<PENWebBlobEntity> blobEntities;
+    if (fileType == null) {
       blobEntities = this.getService().findPenWebBlobBySubmissionNumber(submissionNumber);
     } else {
       blobEntities = this.getService().findPenWebBlobBySubmissionNumberAndFileType(submissionNumber, fileType);
@@ -306,7 +316,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    */
   @Override
   public List<PENWebBlobMetadata> getPenWebBlobMetadata(final String submissionNumber) {
-    var  blobEntities = this.getService().findPenWebBlobBySubmissionNumber(submissionNumber);
+    final var blobEntities = this.getService().findPenWebBlobBySubmissionNumber(submissionNumber);
     return blobEntities.stream().map(penWebBlobMapper::toMetadataStructure).collect(Collectors.toList());
   }
 
@@ -381,9 +391,57 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     return this.getStudentService().getAllStudentStatusCodes().stream().map(studentStatusCodeMapper::toStruct).collect(Collectors.toList());
   }
 
+  /**
+   * Read pen request batch stats pen request batch stats.
+   *
+   * @return the pen request batch stats
+   */
   @Override
   public PenRequestBatchStats readPenRequestBatchStats() {
     return this.getService().getStats();
+  }
+
+  /**
+   * this is called from external clients to the ministry , so it is expected the intermediate backing api will validate the payload before passing it on here.
+   *
+   * @param penRequestBatchSubmission the pen request batch submission
+   * @return response entity
+   */
+  @Override
+  public ResponseEntity<UUID> createNewBatchSubmission(final PenRequestBatchSubmission penRequestBatchSubmission) {
+    val batchEntity = mapper.toModel(penRequestBatchSubmission);
+    this.populateAuditColumns(batchEntity);
+    for (val reqStudent : penRequestBatchSubmission.getStudents()) {
+      val studentEntity = studentMapper.toModel(reqStudent);
+      studentEntity.setPenRequestBatchEntity(batchEntity);
+      studentEntity.setCreateDate(batchEntity.getCreateDate());
+      studentEntity.setUpdateDate(batchEntity.getUpdateDate());
+      studentEntity.setCreateUser(batchEntity.getCreateUser());
+      studentEntity.setUpdateUser(batchEntity.getUpdateUser());
+      batchEntity.getPenRequestBatchStudentEntities().add(studentEntity);
+    }
+
+    return ResponseEntity.status(HttpStatus.CREATED).body(this.service.savePenRequestBatch(batchEntity).getPenRequestBatchID());
+  }
+
+  /**
+   * Batch submission result response entity.
+   *
+   * @param batchSubmissionID the batch submission id this is pen request batch id.
+   * @return the response entity
+   */
+  @Override
+  public ResponseEntity<PenRequestBatchSubmissionResult> batchSubmissionResult(final UUID batchSubmissionID) {
+    val penRequestBatch = this.service.getPenRequestBatchEntityByID(batchSubmissionID).orElseThrow(EntityNotFoundException::new);
+    if (PenRegBatchHelper.isPRBStatusConsideredComplete(penRequestBatch.getPenRequestBatchStatusCode())) {
+      try {
+        return ResponseEntity.ok(batchResultMapper.toResult(penRequestBatch, this.service.populateStudentDataFromBatch(penRequestBatch)));
+      } catch (final Exception e) {
+        log.error("Exception ex :: ", e);
+        throw new PenRegAPIRuntimeException(e.getMessage());
+      }
+    }
+    return ResponseEntity.status(HttpStatus.ACCEPTED).build();
   }
 
   /**
@@ -419,7 +477,8 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   /**
    * Gets pen request batch entity specification.
    *
-   * @param criteriaList the criteria list
+   * @param criteriaList     the criteria list
+   * @param associationNames the association names
    * @return the pen request batch entity specification
    */
   private Specification<PenRequestBatchEntity> getPenRequestBatchEntitySpecification(final List<SearchCriteria> criteriaList, final Associations associationNames) {
@@ -464,10 +523,11 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   /**
    * Gets type specification.
    *
-   * @param key             the key
-   * @param filterOperation the filter operation
-   * @param value           the value
-   * @param valueType       the value type
+   * @param key              the key
+   * @param filterOperation  the filter operation
+   * @param value            the value
+   * @param valueType        the value type
+   * @param associationNames the association names
    * @return the type specification
    */
   private Specification<PenRequestBatchEntity> getTypeSpecification(final String key, final FilterOperation filterOperation, final String value, final ValueType valueType, final Associations associationNames) {

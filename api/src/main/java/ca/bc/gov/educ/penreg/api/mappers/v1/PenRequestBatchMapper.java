@@ -6,8 +6,10 @@ import ca.bc.gov.educ.penreg.api.mappers.UUIDMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchSearch;
+import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmission;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 /**
@@ -46,5 +48,9 @@ public interface PenRequestBatchMapper {
   @InheritInverseConfiguration
   PenRequestBatchEntity toModel(PenRequestBatch penRequestBatch);
 
-
+  @Mapping(target = "updateDate", ignore = true)
+  @Mapping(target = "createDate", ignore = true)
+  @Mapping(target = "penRequestBatchStudentEntities", ignore = true)
+  @Mapping(target = "penRequestBatchHistoryEntities", ignore = true)
+  PenRequestBatchEntity toModel(PenRequestBatchSubmission penRequestBatchSubmission);
 }
