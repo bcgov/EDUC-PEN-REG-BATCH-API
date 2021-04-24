@@ -47,8 +47,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Profile("test")
 public class PenRequestBatchTestUtils {
   @Autowired
-  PenCoordinatorRepository coordinatorRepository;
-  @Autowired
   PenRequestBatchStudentInfoRequestMacroRepository penRequestBatchStudentInfoRequestMacroRepository;
   @Autowired
   SagaRepository sagaRepository;
@@ -291,7 +289,6 @@ public class PenRequestBatchTestUtils {
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void cleanDB() {
-    this.coordinatorRepository.deleteAll();
     this.penRequestBatchStudentInfoRequestMacroRepository.deleteAll();
     this.sagaEventRepository.deleteAll();
     this.sagaRepository.deleteAll();

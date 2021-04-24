@@ -1,71 +1,66 @@
 package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
-import ca.bc.gov.educ.penreg.api.mappers.v1.PenCoordinatorMapper;
-import ca.bc.gov.educ.penreg.api.model.v1.Mincode;
-import ca.bc.gov.educ.penreg.api.repository.PenCoordinatorRepository;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 
 public class PenCoordinatorServiceTest extends BasePenRegAPITest {
 
-  @Autowired
-  PenCoordinatorRepository coordinatorRepository;
+  private final Map<String, PenCoordinator> penCoordinatorMap = new ConcurrentHashMap<>();
 
   @Autowired
   PenCoordinatorService service;
 
+  @Autowired
+  RestUtils restUtils;
+
   @Before
   public void setup() throws IOException {
+    Mockito.reset(restUtils);
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-pen-coordinator.json")).getFile());
     final List<PenCoordinator> structs = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    this.coordinatorRepository.saveAll(structs.stream().map(PenCoordinatorMapper.mapper::toModel).collect(Collectors.toList()));
-    this.service.setPenCoordinatorMap(this.coordinatorRepository.findAll().stream()
-            .map(ca.bc.gov.educ.penreg.api.batch.mappers.PenCoordinatorMapper.mapper::toTrimmedPenCoordinator)
-            .collect(Collectors.toConcurrentMap(ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator::getMincode, Function.identity())));
+    penCoordinatorMap.putAll(structs.stream().collect(Collectors.toConcurrentMap(key -> String.valueOf(key.getDistrictNumber()).concat(String.valueOf(key.getSchoolNumber())), Function.identity())));
   }
 
   @Test
   public void testGetPenCoordinator_givenDifferentInputs_shouldProduceOutput() {
-    this.service.init();
+    String mincode = "123546789";
+    when(this.restUtils.getPenCoordinator(mincode)).thenReturn(Optional.ofNullable(penCoordinatorMap.get(mincode)));
     val data = this.service.getPenCoordinatorByMinCode("123546789");
     assertThat(data).isEmpty();
+    when(this.restUtils.getPenCoordinator("19337120")).thenReturn(Optional.ofNullable(penCoordinatorMap.get("19337120")));
     val dataOptional = this.service.getPenCoordinatorByMinCode("19337120");
     assertThat(dataOptional).isPresent();
   }
 
   @Test
   public void testGetPenCoordinatorEmail_givenDifferentInputs_shouldProduceOutput() {
-    this.service.init();
-    val data = this.service.getPenCoordinatorEmailByMinCode("123546789");
-    assertThat(data).isEmpty();
+    when(this.restUtils.getPenCoordinator("19337120")).thenReturn(Optional.ofNullable(penCoordinatorMap.get("19337120")));
     val dataOptional = this.service.getPenCoordinatorEmailByMinCode("19337120");
     assertThat(dataOptional).isPresent();
     assertThat(dataOptional.get()).isEqualTo("jhamberston0@va.gov");
   }
 
-  @Test
-  public void testGetPenCoordinatorEmail_givenDifferentInputsOfMincodeObject_shouldProduceOutput() {
-    this.service.init();
-    val data = this.service.getPenCoordinatorByMinCode(Mincode.builder().districtNumber(123).schoolNumber(45678).build());
-    assertThat(data).isEmpty();
-    val dataOptional = this.service.getPenCoordinatorByMinCode(Mincode.builder().districtNumber(193).schoolNumber(37120).build());
-    assertThat(dataOptional).isPresent();
-  }
 }

@@ -7,6 +7,7 @@ import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -78,11 +79,11 @@ public class RestUtils {
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Student getStudentByStudentID(final String studentID) {
     return this.webClient.get()
-        .uri(this.props.getStudentApiURL(), uri -> uri.path("/{studentID}").build(studentID))
-        .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-        .retrieve()
-        .bodyToMono(Student.class)
-        .block();
+      .uri(this.props.getStudentApiURL(), uri -> uri.path("/{studentID}").build(studentID))
+      .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+      .retrieve()
+      .bodyToMono(Student.class)
+      .block();
   }
 
   /**
@@ -93,12 +94,12 @@ public class RestUtils {
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public void updateStudent(final Student studentFromStudentAPI) {
     this.webClient.put()
-        .uri(this.props.getStudentApiURL(), uri -> uri.path("/{studentID}").build(studentFromStudentAPI.getStudentID()))
-        .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-        .body(Mono.just(studentFromStudentAPI), Student.class)
-        .retrieve()
-        .bodyToMono(Student.class)
-        .block();
+      .uri(this.props.getStudentApiURL(), uri -> uri.path("/{studentID}").build(studentFromStudentAPI.getStudentID()))
+      .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+      .body(Mono.just(studentFromStudentAPI), Student.class)
+      .retrieve()
+      .bodyToMono(Student.class)
+      .block();
   }
 
 
@@ -111,12 +112,12 @@ public class RestUtils {
   //@Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Student createStudent(final Student student) {
     return this.webClient.post()
-        .uri(this.props.getStudentApiURL())
-        .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-        .body(Mono.just(student), Student.class)
-        .retrieve()
-        .bodyToMono(Student.class)
-        .block();
+      .uri(this.props.getStudentApiURL())
+      .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+      .body(Mono.just(student), Student.class)
+      .retrieve()
+      .bodyToMono(Student.class)
+      .block();
   }
 
   /**
@@ -128,12 +129,12 @@ public class RestUtils {
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Optional<Student> getStudentByPEN(final String pen) {
     final var studentResponse = this.webClient.get()
-        .uri(this.props.getStudentApiURL(), uri -> uri.queryParam("pen", pen).build())
-        .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-        .retrieve()
-        .bodyToFlux(Student.class)
-        .collectList()
-        .block();
+      .uri(this.props.getStudentApiURL(), uri -> uri.queryParam("pen", pen).build())
+      .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+      .retrieve()
+      .bodyToFlux(Student.class)
+      .collectList()
+      .block();
     if (studentResponse != null && !studentResponse.isEmpty()) {
       return Optional.of(studentResponse.get(0));
     }
@@ -149,12 +150,12 @@ public class RestUtils {
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public String getNextPenNumberFromPenServiceAPI(final String guid) {
     return this.webClient.get()
-        .uri(this.props.getPenServicesApiURL(), uri -> uri.path("/api/v1/pen-services/next-pen-number")
-            .queryParam("transactionID", guid).build())
-        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-        .retrieve()
-        .bodyToMono(String.class)
-        .block();
+      .uri(this.props.getPenServicesApiURL(), uri -> uri.path("/api/v1/pen-services/next-pen-number")
+        .queryParam("transactionID", guid).build())
+      .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+      .retrieve()
+      .bodyToMono(String.class)
+      .block();
   }
 
   /**
@@ -168,11 +169,11 @@ public class RestUtils {
     Optional<School> school = Optional.empty();
     try {
       final var response = this.webClient.get()
-          .uri(this.props.getSchoolApiURL(), uri -> uri.path("/{mincode}").build(mincode))
-          .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-          .retrieve()
-          .bodyToMono(School.class)
-          .block();
+        .uri(this.props.getSchoolApiURL(), uri -> uri.path("/{mincode}").build(mincode))
+        .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .retrieve()
+        .bodyToMono(School.class)
+        .block();
       if (response != null) {
         school = Optional.of(response);
       }
@@ -202,5 +203,25 @@ public class RestUtils {
     }
     return obMapper.readValue(event.getEventPayload(), new TypeReference<>() {
     });
+  }
+
+  public Optional<PenCoordinator> getPenCoordinator(final String mincode) {
+    try {
+      final var response = this.webClient.get()
+        .uri(this.props.getSchoolApiURL(), uri -> uri.path("/{mincode}/pen-coordinator").build(mincode))
+        .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+        .retrieve()
+        .bodyToMono(PenCoordinator.class)
+        .block();
+      log.info("record found for :: {}", mincode);
+      return Optional.ofNullable(response);
+    } catch (final WebClientResponseException ex) {
+      log.info("no record found for :: {}", mincode);
+      if (ex.getStatusCode().value() == HttpStatus.NOT_FOUND.value()) {
+        return Optional.empty();
+      } else {
+        throw ex;
+      }
+    }
   }
 }

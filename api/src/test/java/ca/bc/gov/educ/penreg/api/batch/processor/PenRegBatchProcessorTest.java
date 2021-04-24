@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.batch.processor;
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.compare.PenRequestBatchHistoryComparator;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
+import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
@@ -11,9 +12,16 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.github.javafaker.Faker;
+import io.nats.client.Connection;
+import io.nats.client.Message;
+import io.nats.client.Subscription;
+import io.nats.client.impl.Headers;
+import io.nats.client.impl.NatsJetStreamMetaData;
+import io.nats.client.support.Status;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,11 +31,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
@@ -35,6 +46,7 @@ import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCo
 import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.K12;
 import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.PSI;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -72,6 +84,9 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
   private PenRequestBatchStudentRepository studentRepository;
 
   @Autowired
+  private MessagePublisher messagePublisher;
+
+  @Autowired
   private PenRequestBatchTestUtils penRequestBatchTestUtils;
   /**
    * The Faker.
@@ -87,6 +102,8 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
   public void before() {
     this.faker = new Faker(new Random(0));
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(new School()));
+    when(this.restUtils.getPenCoordinator(anyString())).thenReturn(Optional.of(PenCoordinator.builder().penCoordinatorEmail("test@test.com").build()));
+    when(this.messagePublisher.requestMessage(anyString(), any())).thenReturn(CompletableFuture.completedFuture(this.getMessage()));
   }
 
 
@@ -717,6 +734,100 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     school.setMincode("66510518");
     school.setDateOpened("1964-09-01T00:00:00");
     return school;
+  }
+
+  private Message getMessage() {
+    return new Message() {
+      @Override
+      public String getSubject() {
+        return null;
+      }
+
+      @Override
+      public String getReplyTo() {
+        return null;
+      }
+
+      @Override
+      public boolean hasHeaders() {
+        return false;
+      }
+
+      @Override
+      public Headers getHeaders() {
+        return null;
+      }
+
+      @Override
+      public boolean isStatusMessage() {
+        return false;
+      }
+
+      @Override
+      public Status getStatus() {
+        return null;
+      }
+
+      @Override
+      public byte[] getData() {
+        return new byte[1];
+      }
+
+      @Override
+      public boolean isUtf8mode() {
+        return false;
+      }
+
+      @Override
+      public Subscription getSubscription() {
+        return null;
+      }
+
+      @Override
+      public String getSID() {
+        return null;
+      }
+
+      @Override
+      public Connection getConnection() {
+        return null;
+      }
+
+      @Override
+      public NatsJetStreamMetaData metaData() {
+        return null;
+      }
+
+      @Override
+      public void ack() {
+
+      }
+
+      @Override
+      public void ackSync(Duration timeout) throws TimeoutException, InterruptedException {
+
+      }
+
+      @Override
+      public void nak() {
+
+      }
+
+      @Override
+      public void term() {
+
+      }
+
+      @Override
+      public void inProgress() {
+
+      }
+
+      @Override
+      public boolean isJetStream() {
+        return false;
+      }
+    };
   }
 
 

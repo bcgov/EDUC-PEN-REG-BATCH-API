@@ -1,14 +1,14 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
-import ca.bc.gov.educ.penreg.api.constants.*;
-import ca.bc.gov.educ.penreg.api.mappers.v1.PenCoordinatorMapper;
+import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
+import ca.bc.gov.educ.penreg.api.constants.EventType;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
-import ca.bc.gov.educ.penreg.api.repository.PenCoordinatorRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
@@ -17,6 +17,7 @@ import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -32,9 +33,11 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Base64;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
@@ -54,11 +57,6 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
      */
     @Autowired
     SagaEventRepository sagaEventRepository;
-    /**
-     * The pen coordinator repository
-     */
-    @Autowired
-    PenCoordinatorRepository penCoordinatorRepository;
     /**
      * The Saga service.
      */
@@ -112,15 +110,12 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
       final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-pen-coordinator.json")).getFile());
       final List<ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator> structs = new ObjectMapper().readValue(file, new TypeReference<>() {
       });
-      this.penCoordinatorRepository.saveAll(structs.stream().map(PenCoordinatorMapper.mapper::toModel).collect(Collectors.toList()));
-      this.penCoordinatorService.setPenCoordinatorMap(this.penCoordinatorRepository.findAll().stream()
-        .map(ca.bc.gov.educ.penreg.api.batch.mappers.PenCoordinatorMapper.mapper::toTrimmedPenCoordinator)
-        .collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity())));
     }
 
 
   @Test
   public void testHandleEvent_givenBatchInSagaDataExistsAndUsrMtchStudent_shouldArchivePenRequestBatchAndBeMarkedSTUDENTS_FOUND() throws IOException, InterruptedException, TimeoutException {
+    when(this.restUtils.getPenCoordinator(anyString())).thenReturn(Optional.of(PenCoordinator.builder().penCoordinatorEmail("test@test.com").build()));
     this.saga = penRequestBatchTestUtils.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode(), TEST_PEN);
     final var event = Event.builder()
       .eventType(EventType.INITIATED)
@@ -151,6 +146,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
 
   @Test
   public void testHandleEvent_givenBatchInSagaDataExistsAndSysNewPenStudent_shouldGatherReportDataAndBeMarkedREPORT_DATA_GATHERED() throws IOException, InterruptedException, TimeoutException {
+    when(this.restUtils.getPenCoordinator(anyString())).thenReturn(Optional.of(PenCoordinator.builder().penCoordinatorEmail("test@test.com").build()));
     this.saga = penRequestBatchTestUtils.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), TEST_PEN);
     final var event = Event.builder()
       .eventType(EventType.INITIATED)

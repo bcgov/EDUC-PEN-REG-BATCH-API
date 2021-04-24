@@ -1,15 +1,14 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
-import ca.bc.gov.educ.penreg.api.constants.*;
-import ca.bc.gov.educ.penreg.api.mappers.v1.PenCoordinatorMapper;
+import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
+import ca.bc.gov.educ.penreg.api.constants.EventType;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.model.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
-import ca.bc.gov.educ.penreg.api.repository.PenCoordinatorRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
@@ -19,11 +18,9 @@ import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
@@ -32,20 +29,19 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Pair;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Base64;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -61,11 +57,6 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
    */
   @Autowired
   SagaEventRepository sagaEventRepository;
-  /**
-   * The pen coordinator repository
-   */
-  @Autowired
-  PenCoordinatorRepository penCoordinatorRepository;
   /**
    * The Saga service.
    */
@@ -122,10 +113,6 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-pen-coordinator.json")).getFile());
     final List<ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator> structs = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
-    this.penCoordinatorRepository.saveAll(structs.stream().map(PenCoordinatorMapper.mapper::toModel).collect(Collectors.toList()));
-    this.penCoordinatorService.setPenCoordinatorMap(this.penCoordinatorRepository.findAll().stream()
-      .map(ca.bc.gov.educ.penreg.api.batch.mappers.PenCoordinatorMapper.mapper::toTrimmedPenCoordinator)
-      .collect(Collectors.toConcurrentMap(PenCoordinator::getMincode, Function.identity())));
   }
 
   @Test
