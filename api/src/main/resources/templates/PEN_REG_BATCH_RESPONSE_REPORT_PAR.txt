@@ -35,7 +35,6 @@ correctly, please forward legal documentation to the PEN Coordinator at [(${d.pe
     --------- ------------------------- ------------------------- ------------------------- ---------- -- ------------
 [# th:each="pending : ${d.pendingList}"]
 [# th:with="surname=${T(org.apache.commons.lang3.StringUtils).rightPad(pending.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(pending.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(pending.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(pending.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(pending.gender, 2)}" ]SCH Pending   [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${pending.schoolID})][/]
-               Usual Name: [(${pending.usualName})]
    [(${pending.reason})]
 
 [/]----------------------------------------------------------------------------------------------------------------------[/]
@@ -87,7 +86,6 @@ record you submitted is correct.
 [# th:each="confirmed : ${d.confirmedList}"]
 [# th:with="pen=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.pen, 9)},surname=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.gender, 2)}" ]SCH [(${pen})] [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${confirmed.school.schoolID})][/]
 [# th:with="pen=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.pen, 9)},surname=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.gender, 2)}" ]MIN [(${pen})] [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${confirmed.min.schoolID})][/]
-   PEN Previously Requested by: [{confirmed.school.previousRequestBy}]
 
 [/]----------------------------------------------------------------------------------------------------------------------[/]
 The PEN request file was processed by the PEN system on [(${d.processDate})] at [(${d.processTime})], PENWEB Submission #[(${d.submissionNumber})]
