@@ -42,12 +42,8 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       List<ReportListItem> sysMatchedList = new ArrayList<>();
       List<ReportUserMatchedListItem> diffList = new ArrayList<>();
       List<ReportUserMatchedListItem> confirmedList = new ArrayList<>();
-      Map<String, Student> students = new HashMap<>();
+      Map<String, Student> students = this.setStudents(data.getStudents());
 
-      if (data.getStudents() != null && !data.getStudents().isEmpty()) {
-        students = data.getStudents().stream()
-          .collect(Collectors.toMap(Student::getStudentID, student -> student));
-      }
       for (PenRequestBatchStudent penRequestBatchStudent : data.getPenRequestBatchStudents()) {
         switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.codeOfValue(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
           case DUPLICATE:
@@ -97,11 +93,25 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       reportData.setProcessTime(processDateTime.format(DateTimeFormatter.ofPattern("HH:mm")));
       reportData.setReportDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
 
-      String penCoordinatorName = "School PEN Coordinator";
-      if (data.getPenCoordinator()  != null && data.getPenCoordinator().getPenCoordinatorName() != null && !data.getPenCoordinator().getPenCoordinatorName().isEmpty()) {
-        penCoordinatorName = data.getPenCoordinator().getPenCoordinatorName();
-      }
-      reportData.setReviewer(penCoordinatorName);
+      reportData.setReviewer(this.setReviewer(data.getPenCoordinator()));
+
       return reportData;
+    }
+
+    private String setReviewer(PenCoordinator penCoordinator) {
+      String penCoordinatorName = "School PEN Coordinator";
+      if (penCoordinator  != null && penCoordinator.getPenCoordinatorName() != null && !penCoordinator.getPenCoordinatorName().isEmpty()) {
+        penCoordinatorName = penCoordinator.getPenCoordinatorName();
+      }
+      return penCoordinatorName;
+    }
+
+    private Map<String, Student> setStudents (List<Student> students) {
+      Map<String, Student> studentsMap = new HashMap<>();
+      if (students != null && !students.isEmpty()) {
+        studentsMap = students.stream()
+          .collect(Collectors.toMap(Student::getStudentID, student -> student));
+      }
+      return studentsMap;
     }
 }
