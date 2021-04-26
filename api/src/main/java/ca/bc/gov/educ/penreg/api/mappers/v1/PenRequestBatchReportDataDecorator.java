@@ -8,6 +8,8 @@ import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportDa
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportListItem;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportUserMatchedListItem;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -100,18 +102,16 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
 
     private String setReviewer(PenCoordinator penCoordinator) {
       String penCoordinatorName = "School PEN Coordinator";
-      if (penCoordinator  != null && penCoordinator.getPenCoordinatorName() != null && !penCoordinator.getPenCoordinatorName().isEmpty()) {
+      if (penCoordinator != null && StringUtils.isNotBlank(penCoordinator.getPenCoordinatorName())) {
         penCoordinatorName = penCoordinator.getPenCoordinatorName();
       }
       return penCoordinatorName;
     }
 
     private Map<String, Student> setStudents (List<Student> students) {
-      Map<String, Student> studentsMap = new HashMap<>();
-      if (students != null && !students.isEmpty()) {
-        studentsMap = students.stream()
-          .collect(Collectors.toMap(Student::getStudentID, student -> student));
+      if (!CollectionUtils.isEmpty(students)) {
+        return students.stream().collect(Collectors.toMap(Student::getStudentID, student -> student));
       }
-      return studentsMap;
+      return Collections.emptyMap();
     }
 }
