@@ -814,6 +814,26 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
   }
 
   @Test
+  public void testCreateNewBatchSubmission_GivenSameSubmissionTwice_ShouldReturnConflictForTheSecond() throws Exception {
+    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("ExternalBatchSubmission.json")).getFile());
+    final PenRequestBatchSubmission entity = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).readValue(file, PenRequestBatchSubmission.class);
+    this.mockMvc
+      .perform(post("/api/v1/pen-request-batch/pen-request-batch-submission")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
+        .content(JsonUtil.getJsonStringFromObject(entity))
+        .contentType(APPLICATION_JSON))
+      .andDo(print()).andExpect(status().isCreated()).andExpect(jsonPath("$", isA(String.class)));
+
+    this.mockMvc
+      .perform(post("/api/v1/pen-request-batch/pen-request-batch-submission")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
+        .content(JsonUtil.getJsonStringFromObject(entity))
+        .contentType(APPLICATION_JSON))
+      .andDo(print()).andExpect(status().isConflict());
+  }
+
+
+  @Test
   public void testBatchSubmissionResult_GivenInvalidBatchSubmissionID_ShouldReturn404() throws Exception {
     this.mockMvc
       .perform(get("/api/v1/pen-request-batch/pen-request-batch-submission/" + UUID.randomUUID() + "/result")
@@ -832,7 +852,7 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
         .content(JsonUtil.getJsonStringFromObject(entity))
         .contentType(APPLICATION_JSON))
       .andDo(print()).andExpect(status().isCreated()).andExpect(jsonPath("$", isA(String.class)));
-    val savedEntity = this.penRequestBatchRepository.findBySubmissionNumber(entity.getSubmissionNumber()).orElseThrow();
+    val savedEntity = this.penRequestBatchRepository.findBySubmissionNumber(entity.getSubmissionNumber()).get(0);
     this.mockMvc
       .perform(get("/api/v1/pen-request-batch/pen-request-batch-submission/" + savedEntity.getPenRequestBatchID() + "/result")
         .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))

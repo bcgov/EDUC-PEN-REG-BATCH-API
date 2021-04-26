@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -268,14 +269,14 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   }
 
   /**
-   * Gets pen request batch by submission number.
+   * Gets the list of  pen request batch by submission number.
    *
    * @param submissionNumber the submission number
    * @return the pen request batch by submission number
    */
   @Override
-  public PenRequestBatch getPenRequestBatchBySubmissionNumber(final String submissionNumber) {
-    return this.getService().findPenRequestBatchBySubmissionNumber(submissionNumber).map(mapper::toStructure).orElseThrow(EntityNotFoundException::new);
+  public List<PenRequestBatch> getPenRequestBatchBySubmissionNumber(final String submissionNumber) {
+    return this.getService().findPenRequestBatchBySubmissionNumber(submissionNumber).stream().map(mapper::toStructure).collect(Collectors.toList());
   }
 
   /**
@@ -409,19 +410,31 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    */
   @Override
   public ResponseEntity<UUID> createNewBatchSubmission(final PenRequestBatchSubmission penRequestBatchSubmission) {
-    val batchEntity = mapper.toModel(penRequestBatchSubmission);
-    this.populateAuditColumns(batchEntity);
-    for (val reqStudent : penRequestBatchSubmission.getStudents()) {
-      val studentEntity = studentMapper.toModel(reqStudent);
-      studentEntity.setPenRequestBatchEntity(batchEntity);
-      studentEntity.setCreateDate(batchEntity.getCreateDate());
-      studentEntity.setUpdateDate(batchEntity.getUpdateDate());
-      studentEntity.setCreateUser(batchEntity.getCreateUser());
-      studentEntity.setUpdateUser(batchEntity.getUpdateUser());
-      batchEntity.getPenRequestBatchStudentEntities().add(studentEntity);
+    try {
+      val existingSubmission = this.service.findPenRequestBatchBySubmissionNumber(penRequestBatchSubmission.getSubmissionNumber())
+        .stream().anyMatch(penRequestBatchEntity -> PenRequestBatchProcessTypeCodes.API.getCode().equals(penRequestBatchEntity.getPenRequestBatchProcessTypeCode())
+          && penRequestBatchSubmission.getFileType().equals(penRequestBatchEntity.getFileType()));
+      if (existingSubmission) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+      }
+      val batchEntity = mapper.toModel(penRequestBatchSubmission);
+      this.populateAuditColumns(batchEntity);
+      for (val reqStudent : penRequestBatchSubmission.getStudents()) {
+        val studentEntity = studentMapper.toModel(reqStudent);
+        studentEntity.setPenRequestBatchEntity(batchEntity);
+        studentEntity.setCreateDate(batchEntity.getCreateDate());
+        studentEntity.setUpdateDate(batchEntity.getUpdateDate());
+        studentEntity.setCreateUser(batchEntity.getCreateUser());
+        studentEntity.setUpdateUser(batchEntity.getUpdateUser());
+        batchEntity.getPenRequestBatchStudentEntities().add(studentEntity);
+      }
+
+      return ResponseEntity.status(HttpStatus.CREATED).body(this.service.savePenRequestBatch(batchEntity).getPenRequestBatchID());
+    } catch (final DataIntegrityViolationException e) {
+      log.error("Integrity violation exception");
+      return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
 
-    return ResponseEntity.status(HttpStatus.CREATED).body(this.service.savePenRequestBatch(batchEntity).getPenRequestBatchID());
   }
 
   /**

@@ -95,12 +95,12 @@ public interface PenRequestBatchAPIEndpoint {
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to support data table view in frontend, with sort, filter and pagination.", description = "This API endpoint exposes flexible way to query the entity by leveraging JPA specifications.")
   CompletableFuture<Page<PenRequestBatchSearch>> findAll(@RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
-                                                   @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
-                                                   @RequestParam(name = "sort", defaultValue = "") String sortCriteriaJson,
-                                                   @ArraySchema(schema = @Schema(name = "searchCriteriaList",
-                                                       description = "searchCriteriaList if provided should be a JSON string of Search Array",
-                                                       implementation = ca.bc.gov.educ.penreg.api.struct.v1.Search.class))
-                                                   @RequestParam(name = "searchCriteriaList", required = false) String searchCriteriaListJson);
+                                                         @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
+                                                         @RequestParam(name = "sort", defaultValue = "") String sortCriteriaJson,
+                                                         @ArraySchema(schema = @Schema(name = "searchCriteriaList",
+                                                           description = "searchCriteriaList if provided should be a JSON string of Search Array",
+                                                           implementation = ca.bc.gov.educ.penreg.api.struct.v1.Search.class))
+                                                         @RequestParam(name = "searchCriteriaList", required = false) String searchCriteriaListJson);
 
   /**
    * Create pen request batch student pen request batch student.
@@ -159,11 +159,11 @@ public interface PenRequestBatchAPIEndpoint {
    */
   @GetMapping
   @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
-  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "404", description = "NOT FOUND")})
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
   @Transactional(readOnly = true)
-  @Tag(name = "Endpoint to get Pen Request Batch by submission number.", description = "Endpoint to get Pen Request Batch by submission number.")
-  @Schema(name = "PenRequestBatch", implementation = PenRequestBatch.class)
-  PenRequestBatch getPenRequestBatchBySubmissionNumber(@RequestParam("submissionNumber") String submissionNumber);
+  @Tag(name = "Endpoint to get List of  Pen Request Batch by submission number.", description = "Endpoint to get List of  Pen Request Batch by submission number.")
+  @ArraySchema(schema = @Schema(name = "PenRequestBatch", implementation = PenRequestBatch.class))
+  List<PenRequestBatch> getPenRequestBatchBySubmissionNumber(@RequestParam("submissionNumber") String submissionNumber);
 
   /**
    * Delete pen request batch response entity.
@@ -183,7 +183,7 @@ public interface PenRequestBatchAPIEndpoint {
    * Gets list of pen web blob by submission number and file type.
    *
    * @param submissionNumber the submission number
-   * @param fileType the file type
+   * @param fileType         the file type
    * @return the list of pen web blob by submission number and file type
    */
   @GetMapping("/source")
@@ -192,7 +192,7 @@ public interface PenRequestBatchAPIEndpoint {
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to get source entity list by Submission number and file type.", description = "Endpoint to get source entity list of Pen request batch by submission number and file type.")
   @ArraySchema(schema = @Schema(name = "PENWebBlob", implementation = PENWebBlob.class))
-  List<PENWebBlob> getPenWebBlobs(@RequestParam("submissionNumber") String submissionNumber, @RequestParam(name="fileType", required=false) String fileType);
+  List<PENWebBlob> getPenWebBlobs(@RequestParam("submissionNumber") String submissionNumber, @RequestParam(name = "fileType", required = false) String fileType);
 
   /**
    * Gets list of pen web blob metadata by submission number.
@@ -238,12 +238,12 @@ public interface PenRequestBatchAPIEndpoint {
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to support data table view in frontend, with sort, filter and pagination, for Student Requests.", description = "This API endpoint exposes flexible way to query the entity by leveraging JPA specifications.")
   CompletableFuture<Page<PenRequestBatchStudent>> findAllStudents(@RequestParam(name = "pageNumber", defaultValue = "0") Integer pageNumber,
-                                                           @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
-                                                           @RequestParam(name = "sort", defaultValue = "") String sortCriteriaJson,
-                                                           @ArraySchema(schema = @Schema(name = "searchCriteriaList",
-                                                               description = "searchCriteriaList if provided should be a JSON string of Search Array",
-                                                               implementation = ca.bc.gov.educ.penreg.api.struct.v1.Search.class))
-                                                           @RequestParam(name = "searchCriteriaList", required = false) String searchCriteriaListJson);
+                                                                  @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
+                                                                  @RequestParam(name = "sort", defaultValue = "") String sortCriteriaJson,
+                                                                  @ArraySchema(schema = @Schema(name = "searchCriteriaList",
+                                                                    description = "searchCriteriaList if provided should be a JSON string of Search Array",
+                                                                    implementation = ca.bc.gov.educ.penreg.api.struct.v1.Search.class))
+                                                                  @RequestParam(name = "searchCriteriaList", required = false) String searchCriteriaListJson);
 
   /**
    * Gets all pen request batch student status codes.
@@ -273,7 +273,7 @@ public interface PenRequestBatchAPIEndpoint {
 
   @PostMapping("/pen-request-batch-submission")
   @PreAuthorize("hasAuthority('SCOPE_WRITE_PEN_REQUEST_BATCH')")
-  @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "CREATED"), @ApiResponse(responseCode = "400", description = "BAD REQUEST")})
+  @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "CREATED"), @ApiResponse(responseCode = "400", description = "BAD REQUEST"), @ApiResponse(responseCode = "409", description = "CONFLICT")})
   @ResponseStatus(CREATED)
   @Transactional
   @Tag(name = "Endpoint to create Pen Request Batch Submission, used for external clients to the ministry.",
