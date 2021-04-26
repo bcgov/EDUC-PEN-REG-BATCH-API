@@ -9,15 +9,14 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
-import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -63,9 +62,6 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
   @Autowired
   private SagaService sagaService;
 
-  @Autowired
-  private PenCoordinatorService penCoordinatorService;
-
   /**
    * The Message publisher.
    */
@@ -87,9 +83,6 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
    */
   @Captor
   ArgumentCaptor<byte[]> eventCaptor;
-
-  @Autowired
-  private PenRequestBatchRepository penRequestBatchRepository;
 
   @Autowired
   RestUtils restUtils;
@@ -121,7 +114,7 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
     final PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatch(this.batchMapper.toStructure(penRequestBatchEntity))
       .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(this.batchStudentMapper::toStructure).collect(Collectors.toList()))
-      .penCordinatorEmail("pen@email.com")
+      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")
@@ -157,7 +150,7 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
     PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
       .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
-      .penCordinatorEmail("pen@email.com")
+      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")
@@ -199,7 +192,7 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
     PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
       .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
-      .penCordinatorEmail("pen@email.com")
+      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")

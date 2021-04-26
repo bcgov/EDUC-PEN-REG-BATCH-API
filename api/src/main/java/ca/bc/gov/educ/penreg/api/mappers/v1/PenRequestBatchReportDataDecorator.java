@@ -96,6 +96,12 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       reportData.setProcessDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
       reportData.setProcessTime(processDateTime.format(DateTimeFormatter.ofPattern("HH:mm")));
       reportData.setReportDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
+
+      String penCoordinatorName = "School PEN Coordinator";
+      if (data.getPenCoordinator()  != null && data.getPenCoordinator().getPenCoordinatorName() != null && !data.getPenCoordinator().getPenCoordinatorName().isEmpty()) {
+        penCoordinatorName = data.getPenCoordinator().getPenCoordinatorName();
+      }
+      reportData.setReviewer(penCoordinatorName);
       return reportData;
     }
 }

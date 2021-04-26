@@ -11,7 +11,6 @@ import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.BasePenRequestBatchReturnFilesSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchive;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportGenerationEventPayload;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;

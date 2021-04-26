@@ -6,6 +6,7 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchReportDataMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
@@ -14,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,7 +40,16 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     students.add(student1);
     students.add(student2);
 
-    final var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder().facsimile("3333333333").telephone("5555555555").fromEmail("test@abc.com").mailingAddress("mailing address").penCordinatorEmail("test@email.com").schoolName("Cataline").penRequestBatch(mapper.toStructure(batchEntities.get(0))).penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList())).students(students).build();
+    final var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder()
+      .facsimile("3333333333")
+      .telephone("5555555555")
+      .fromEmail("test@abc.com")
+      .mailingAddress("mailing address")
+      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
+      .schoolName("Cataline")
+      .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
+      .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList()))
+      .students(students).build();
 
     final PenRequestBatchReportData reportData = reportMapper.toReportData(sagaData);
 
@@ -48,7 +57,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getProcessTime()).isEqualTo("13:04");
     assertThat(reportData.getSubmissionNumber()).isEqualTo(batchEntities.get(0).getSubmissionNumber());
     assertThat(reportData.getReportDate()).isEqualTo("2021-MAR-23");
-    assertThat(reportData.getReviewer()).isEqualTo(batchEntities.get(0).getUpdateUser());
+    assertThat(reportData.getReviewer()).isEqualTo("Joe Blow");
     assertThat(reportData.getMincode()).isEqualTo(formatMincode(batchEntities.get(0).getMincode()));
     assertThat(reportData.getSchoolName()).isEqualTo("Cataline");
     assertThat(reportData.getFascimile()).isEqualTo("3333333333");
@@ -114,7 +123,16 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     final List<Student> students = new ArrayList<>();
     students.add(student);
 
-    final var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder().facsimile("3333333333").telephone("5555555555").fromEmail("test@abc.com").mailingAddress("mailing address").penCordinatorEmail("test@email.com").schoolName("Cataline").penRequestBatch(mapper.toStructure(batchEntities.get(0))).penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList())).students(students).build();
+    final var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder()
+      .facsimile("3333333333")
+      .telephone("5555555555")
+      .fromEmail("test@abc.com")
+      .mailingAddress("mailing address")
+      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
+      .schoolName("Cataline")
+      .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
+      .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList()))
+      .students(students).build();
     final PenRequestBatchReportData reportData = reportMapper.toReportData(sagaData);
 
     assertThat(reportData.getDiffList().size()).isEqualTo(1);
@@ -127,7 +145,15 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     final var batchEntities = PenRequestBatchTestUtils.createBatchStudents(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_archived_with_pen.json", 1,
         (batch) -> batch.setProcessDate(LocalDateTime.parse("2021-03-23T13:04:48.840098")));
 
-    final var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder().facsimile("3333333333").telephone("5555555555").fromEmail("test@abc.com").mailingAddress("mailing address").penCordinatorEmail("test@email.com").schoolName("Cataline").penRequestBatch(mapper.toStructure(batchEntities.get(0))).penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList())).build();
+    final var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder()
+      .facsimile("3333333333")
+      .telephone("5555555555")
+      .fromEmail("test@abc.com")
+      .mailingAddress("mailing address")
+      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
+      .schoolName("Cataline")
+      .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
+      .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList())).build();
     final PenRequestBatchReportData reportData = reportMapper.toReportData(sagaData);
 
     assertThat(reportData.getDiffList().size()).isEqualTo(0);
@@ -144,7 +170,15 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     students.add(student1);
     students.add(student2);
 
-    final var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder().facsimile("3333333333").telephone("5555555555").fromEmail("test@abc.com").mailingAddress("mailing address").penCordinatorEmail("test@email.com").schoolName("Cataline").penRequestBatch(mapper.toStructure(batchEntities.get(0))).penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList())).students(students).build();
+    final var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder()
+      .facsimile("3333333333")
+      .telephone("5555555555")
+      .fromEmail("test@abc.com")
+      .mailingAddress("mailing address")
+      .schoolName("Cataline")
+      .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
+      .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList()))
+      .students(students).build();
 
     final PenRequestBatchReportData reportData = reportMapper.toReportData(sagaData);
 
@@ -152,7 +186,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getProcessTime()).isEqualTo("13:04");
     assertThat(reportData.getSubmissionNumber()).isEqualTo(batchEntities.get(0).getSubmissionNumber());
     assertThat(reportData.getReportDate()).isEqualTo("2021-MAR-23");
-    assertThat(reportData.getReviewer()).isEqualTo(batchEntities.get(0).getUpdateUser());
+    assertThat(reportData.getReviewer()).isEqualTo("School PEN Coordinator");
     assertThat(reportData.getMincode()).isEqualTo(formatMincode(batchEntities.get(0).getMincode()));
     assertThat(reportData.getSchoolName()).isEqualTo("Cataline");
     assertThat(reportData.getFascimile()).isEqualTo("3333333333");
