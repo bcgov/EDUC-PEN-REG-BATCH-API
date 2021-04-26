@@ -20,7 +20,8 @@ import java.util.UUID;
  * @author OM
  */
 @Entity
-@Table(name = "PEN_REQUEST_BATCH")
+@Table(name = "PEN_REQUEST_BATCH",
+  uniqueConstraints = {@UniqueConstraint(columnNames = {"SUBMISSION_NO", "FILE_TYPE", "PEN_REQUEST_BATCH_PROCESS_TYPE_CODE"})})
 @Data
 @DynamicUpdate
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -31,7 +32,7 @@ public class PenRequestBatchEntity {
   @Id
   @GeneratedValue(generator = "UUID")
   @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator", parameters = {
-      @Parameter(name = "uuid_gen_strategy_class", value = "org.hibernate.id.uuid.CustomVersionOneStrategy")})
+    @Parameter(name = "uuid_gen_strategy_class", value = "org.hibernate.id.uuid.CustomVersionOneStrategy")})
   @Column(name = "PEN_REQUEST_BATCH_ID", unique = true, updatable = false, columnDefinition = "BINARY(16)")
   UUID penRequestBatchID;
 
@@ -39,7 +40,7 @@ public class PenRequestBatchEntity {
    * The Submission number.
    * this data comes from TSW table
    */
-  @Column(name = "SUBMISSION_NO", unique = true, length = 8, nullable = false)
+  @Column(name = "SUBMISSION_NO", length = 8, nullable = false)
   String submissionNumber;
 
   /**
@@ -193,14 +194,14 @@ public class PenRequestBatchEntity {
   /**
    * The Pen request batch process type code.
    */
-  @Column(name = "PEN_REQUEST_BATCH_PROCESS_TYPE_CODE",updatable = false, nullable = false, length = 10)
+  @Column(name = "PEN_REQUEST_BATCH_PROCESS_TYPE_CODE", updatable = false, nullable = false, length = 10)
   String penRequestBatchProcessTypeCode;
 
   /**
    * The Create user.
    */
   @Basic
-  @Column(name = "CREATE_USER",updatable = false, nullable = false, length = 32)
+  @Column(name = "CREATE_USER", updatable = false, nullable = false, length = 32)
   String createUser;
 
 
@@ -208,7 +209,7 @@ public class PenRequestBatchEntity {
    * The Create date.
    */
   @Basic
-  @Column(name = "CREATE_DATE",updatable = false, nullable = false)
+  @Column(name = "CREATE_DATE", updatable = false, nullable = false)
   LocalDateTime createDate;
 
   /**

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -22,7 +21,7 @@ public interface PenRequestBatchRepository extends JpaRepository<PenRequestBatch
    * @param submissionNumber the submission number
    * @return the optional
    */
-  Optional<PenRequestBatchEntity> findBySubmissionNumber(String submissionNumber);
+  List<PenRequestBatchEntity> findBySubmissionNumber(String submissionNumber);
 
   /**
    * Find by pen request batch status code list.

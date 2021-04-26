@@ -195,7 +195,7 @@ public class PenRequestBatchService {
    * @return the optional
    */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-  public Optional<PenRequestBatchEntity> findPenRequestBatchBySubmissionNumber(@NonNull final String submissionNumber) {
+  public List<PenRequestBatchEntity> findPenRequestBatchBySubmissionNumber(@NonNull final String submissionNumber) {
     return this.getRepository().findBySubmissionNumber(submissionNumber);
   }
 

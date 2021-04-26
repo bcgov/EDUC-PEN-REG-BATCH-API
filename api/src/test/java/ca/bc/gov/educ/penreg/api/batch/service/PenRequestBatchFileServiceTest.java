@@ -52,9 +52,9 @@ public class PenRequestBatchFileServiceTest extends BasePenRegAPITest {
     this.penRequestBatchTestUtils.createBatchStudentsInSingleTransaction(this.repository, "mock_pen_req_batch_dup_rpt_chk.json",
         "mock_pen_req_batch_student_repeat_2.json", 1, (batch) -> batch.setPenRequestBatchStatusCode("LOADED"));
     final var result = this.repository.findBySubmissionNumber("T-534095");
-    assertThat(result).isPresent();
+    assertThat(result).isNotEmpty();
     val filteredSet = this.penRequestBatchFileService.filterDuplicatesAndRepeatRequests(UUID.randomUUID().toString(),
-        result.get());
+      result.get(0));
     assertThat(filteredSet.size()).isZero();
 
   }
@@ -64,19 +64,19 @@ public class PenRequestBatchFileServiceTest extends BasePenRegAPITest {
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
     //sample_5000_records_OK
     final String submissionNumber = this.penRequestBatchTestUtils.createBatchStudentsFromFile("sample_5000_records_OK" +
-        ".txt", ARCHIVED.getCode());
+      ".txt", ARCHIVED.getCode());
     final String submissionNumber2 = this.penRequestBatchTestUtils.createBatchStudentsFromFile("sample_5000_records_OK" +
-        ".txt", LOADED.getCode());
+      ".txt", LOADED.getCode());
     val previousBatch = this.repository.findBySubmissionNumber(submissionNumber);
-    assertThat(previousBatch).isPresent();
-    val prvbatchEntity = previousBatch.get();
+    assertThat(previousBatch).isNotEmpty();
+    val prvbatchEntity = previousBatch.get(0);
     prvbatchEntity.setPenRequestBatchStatusCode(ARCHIVED.getCode());
     prvbatchEntity.setProcessDate(LocalDateTime.now().minusDays(2));
     this.penRequestBatchTestUtils.updateBatchInNewTransaction(prvbatchEntity);
     final var result = this.repository.findBySubmissionNumber(submissionNumber2);
-    assertThat(result).isPresent();
+    assertThat(result).isNotEmpty();
     val filteredSet = this.penRequestBatchFileService.filterDuplicatesAndRepeatRequests(UUID.randomUUID().toString(),
-        result.get());
+      result.get(0));
     assertThat(filteredSet.size()).isZero();
 
   }

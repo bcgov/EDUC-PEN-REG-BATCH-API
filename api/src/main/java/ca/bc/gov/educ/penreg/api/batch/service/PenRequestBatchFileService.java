@@ -12,6 +12,7 @@ import com.google.common.base.Stopwatch;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes.FLAT_FILE;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -77,7 +79,8 @@ public class PenRequestBatchFileService {
   @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public void markInitialLoadComplete(@NonNull final PenRequestBatchEntity penRequestBatchEntity, @NonNull final PENWebBlobEntity penWebBlobEntity) {
     final var result = this.getPenRequestBatchService().findPenRequestBatchBySubmissionNumber(penRequestBatchEntity.getSubmissionNumber());
-    if (result.isEmpty()) {
+    val isFileAlreadyProcessed = result.stream().anyMatch(this::submissionProcessedPredicate);
+    if (!isFileAlreadyProcessed) {
       this.getPenRequestBatchService().savePenRequestBatch(penRequestBatchEntity);
       penWebBlobEntity.setExtractDateTime(LocalDateTime.now()); // update the entity extract date time to mark the batch job as complete , so that wont be polled from table in the next schedule.
       this.getPenWebBlobRepository().save(penWebBlobEntity);
@@ -87,6 +90,10 @@ public class PenRequestBatchFileService {
       log.warn("submission number :: {} already processed", penRequestBatchEntity.getSubmissionNumber());
     }
 
+  }
+
+  private boolean submissionProcessedPredicate(PenRequestBatchEntity penRequestBatchEntity) {
+    return FLAT_FILE.getCode().equals(penRequestBatchEntity.getPenRequestBatchProcessTypeCode()) && "PEN".equals(penRequestBatchEntity.getFileType());
   }
 
   /**
