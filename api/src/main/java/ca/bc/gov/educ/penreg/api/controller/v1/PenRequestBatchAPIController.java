@@ -431,7 +431,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
 
       return ResponseEntity.status(HttpStatus.CREATED).body(this.service.savePenRequestBatch(batchEntity).getPenRequestBatchID());
     } catch (final DataIntegrityViolationException e) {
-      log.error("Integrity violation exception");
+      log.error("Integrity violation exception", e);
       return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
 
