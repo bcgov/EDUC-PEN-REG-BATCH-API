@@ -9,11 +9,9 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
-import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
@@ -63,10 +61,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     @Autowired
     private SagaService sagaService;
 
-    @Autowired
-    private PenCoordinatorService penCoordinatorService;
-
-    /**
+  /**
      * The Message publisher.
      */
     @Autowired
@@ -88,10 +83,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     @Captor
     ArgumentCaptor<byte[]> eventCaptor;
 
-    @Autowired
-    private PenRequestBatchRepository penRequestBatchRepository;
-
-    @Autowired
+  @Autowired
     RestUtils restUtils;
 
     @Autowired
@@ -115,7 +107,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
 
   @Test
   public void testHandleEvent_givenBatchInSagaDataExistsAndUsrMtchStudent_shouldArchivePenRequestBatchAndBeMarkedSTUDENTS_FOUND() throws IOException, InterruptedException, TimeoutException {
-    when(this.restUtils.getPenCoordinator(anyString())).thenReturn(Optional.of(PenCoordinator.builder().penCoordinatorEmail("test@test.com").build()));
+    when(this.restUtils.getPenCoordinator(anyString())).thenReturn(Optional.of(PenCoordinator.builder().penCoordinatorEmail("test@test.com").penCoordinatorName("Joe Blow").build()));
     this.saga = penRequestBatchTestUtils.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode(), TEST_PEN);
     final var event = Event.builder()
       .eventType(EventType.INITIATED)
@@ -139,14 +131,15 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     assertThat(payload.getFromEmail()).isNotEmpty();
     assertThat(payload.getTelephone()).isNotEmpty();
     assertThat(payload.getMailingAddress()).isNotEmpty();
-    assertThat(payload.getPenCordinatorEmail()).isNotEmpty();
+    assertThat(payload.getPenCoordinator().getPenCoordinatorEmail()).isNotEmpty();
+    assertThat(payload.getPenCoordinator().getPenCoordinatorName()).isNotEmpty();
     assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
     assertThat(payload.getPenRequestBatch()).isNotNull();
   }
 
   @Test
   public void testHandleEvent_givenBatchInSagaDataExistsAndSysNewPenStudent_shouldGatherReportDataAndBeMarkedREPORT_DATA_GATHERED() throws IOException, InterruptedException, TimeoutException {
-    when(this.restUtils.getPenCoordinator(anyString())).thenReturn(Optional.of(PenCoordinator.builder().penCoordinatorEmail("test@test.com").build()));
+    when(this.restUtils.getPenCoordinator(anyString())).thenReturn(Optional.of(PenCoordinator.builder().penCoordinatorEmail("test@test.com").penCoordinatorName("Joe Blow").build()));
     this.saga = penRequestBatchTestUtils.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), TEST_PEN);
     final var event = Event.builder()
       .eventType(EventType.INITIATED)
@@ -168,7 +161,8 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     assertThat(payload.getFromEmail()).isNotEmpty();
     assertThat(payload.getTelephone()).isNotEmpty();
     assertThat(payload.getMailingAddress()).isNotEmpty();
-    assertThat(payload.getPenCordinatorEmail()).isNotEmpty();
+    assertThat(payload.getPenCoordinator().getPenCoordinatorEmail()).isNotEmpty();
+    assertThat(payload.getPenCoordinator().getPenCoordinatorName()).isNotEmpty();
     assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
     assertThat(payload.getPenRequestBatch()).isNotNull();
   }
@@ -180,7 +174,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
       final PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
           .penRequestBatch(this.batchMapper.toStructure(penRequestBatchEntity))
           .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(this.batchStudentMapper::toStructure).collect(Collectors.toList()))
-          .penCordinatorEmail("pen@email.com")
+          .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
           .mailingAddress("123 st")
           .fromEmail("test@email.com")
           .facsimile("5555555555")
@@ -216,7 +210,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
                 .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
                 .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
-                .penCordinatorEmail("pen@email.com")
+                .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
                 .mailingAddress("123 st")
                 .fromEmail("test@email.com")
                 .facsimile("5555555555")
@@ -296,7 +290,6 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
                 .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
                 .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
                 .mailingAddress("123 st")
-                .penCordinatorEmail("")
                 .fromEmail("test@email.com")
                 .facsimile("5555555555")
                 .telephone("2222222222")

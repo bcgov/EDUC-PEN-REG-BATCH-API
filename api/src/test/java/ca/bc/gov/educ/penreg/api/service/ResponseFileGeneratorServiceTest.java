@@ -7,14 +7,13 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchReportDataMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchRepostReportsFilesSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -36,52 +35,17 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
   private PenRequestBatchService prbService;
   @Autowired
   private PenRequestBatchRepository prbRepository;
-  @Autowired
-  private PenRequestBatchStudentRepository prbStudentRepository;
 
   PenRequestBatchStudentMapper mapper = PenRequestBatchStudentMapper.mapper;
 
   @Autowired
   RestUtils restUtils;
-  @Mock
-  private PenCoordinatorService penCoordinatorService;
 
   protected static final PenRequestBatchReportDataMapper reportMapper = PenRequestBatchReportDataMapper.mapper;
   protected static final PenRequestBatchMapper batchMapper = PenRequestBatchMapper.mapper;
   protected static final PenRequestBatchStudentMapper batchStudentMapper = PenRequestBatchStudentMapper.mapper;
 
   private List<PenRequestBatchEntity> batchList;
-  private static final String [] mockStudents = {
-          "{\"studentID\": \"987654321\",\n" +
-                  " \"pen\": \"123456789\",\n" +
-                  " \"legalLastName\": \"JOSEPH\",\n" +
-                  " \"mincode\": \"10210518\",\n" +
-                  " \"localID\": \"204630109987\",\n" +
-                  " \"createUser\": \"test\",\n" +
-                  " \"updateUser\": \"test\"}",
-          "{\"studentID\": \"987654322\",\n" +
-                  " \"pen\": \"123456789\",\n" +
-                  " \"legalLastName\": \"JOSEPH\",\n" +
-                  " \"mincode\": \"10210518\",\n" +
-                  " \"localID\": \"204630290\",\n" +
-                  " \"createUser\": \"test\",\n" +
-                  " \"updateUser\": \"test\"}",
-          "{\"studentID\": \"987654323\",\n" +
-                  " \"pen\": \"123456789\",\n" +
-                  " \"legalLastName\": \"JOSEPH\",\n" +
-                  " \"mincode\": \"10210518\",\n" +
-                  " \"localID\": \"2046293\",\n" +
-                  " \"createUser\": \"test\",\n" +
-                  " \"updateUser\": \"test\"}",
-          "{\"studentID\": \"987654324\",\n" +
-            " \"pen\": \"123456789\",\n" +
-            " \"legalLastName\": \"JOSEPH\",\n" +
-            " \"mincode\": \"10210518\",\n" +
-            " \"localID\": \"22102\",\n" +
-            " \"createUser\": \"test\",\n" +
-            " \"updateUser\": \"test\"}"
-  };
-
 
   @Before
   public void before() {
@@ -206,7 +170,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
       .penRequestBatch(batchMapper.toStructure(batch))
       .penRequestBatchStudents(batch.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
       .students(PenRequestBatchTestUtils.createStudents(batch))
-      .penCordinatorEmail("pen@email.com")
+      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")

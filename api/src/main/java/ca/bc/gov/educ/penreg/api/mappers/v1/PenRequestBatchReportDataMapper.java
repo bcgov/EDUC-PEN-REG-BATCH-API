@@ -22,7 +22,7 @@ public interface PenRequestBatchReportDataMapper {
     @Mapping(target = "penCordinatorEmail", source = "fromEmail")
     @Mapping(target = "mincode", expression = "java(data.getPenRequestBatch().getMincode() == null || data.getPenRequestBatch().getMincode().isEmpty() ? \"\" : data.getPenRequestBatch().getMincode().substring(0, 3) + \" \" + data.getPenRequestBatch().getMincode().substring(3))")
     @Mapping(target = "submissionNumber", source = "data.penRequestBatch.submissionNumber")
-    @Mapping(target = "reviewer", source = "data.penRequestBatch.updateUser")
+    @Mapping(target = "reviewer", source = "data.penCoordinator.penCoordinatorName")
     @Mapping(target = "processDate", ignore = true)
     @Mapping(target = "processTime", ignore = true)
     @Mapping(target = "reportDate", ignore = true)

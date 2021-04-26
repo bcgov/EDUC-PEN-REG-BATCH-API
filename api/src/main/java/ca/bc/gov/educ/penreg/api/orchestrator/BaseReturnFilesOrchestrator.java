@@ -16,6 +16,7 @@ import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.v1.BasePenRequestBatchReturnFilesSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchivedEmailEvent;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -101,7 +102,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
             List<PenRequestBatchStudent> studentRequests = penRequestBatch.get().getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList());
             penRequestBatchReturnFilesSagaData.setPenRequestBatchStudents(studentRequests);
             penRequestBatchReturnFilesSagaData.setPenRequestBatch(mapper.toStructure(penRequestBatch.get()));
-            penRequestBatchReturnFilesSagaData.setPenCordinatorEmail(this.getPenCoordinatorEmail(penRequestBatch.get()));
+            penRequestBatchReturnFilesSagaData.setPenCoordinator(this.getPenCoordinator(penRequestBatch.get()));
             penRequestBatchReturnFilesSagaData.setFromEmail(penCoordinatorProperties.getFromEmail());
             penRequestBatchReturnFilesSagaData.setTelephone(penCoordinatorProperties.getTelephone());
             penRequestBatchReturnFilesSagaData.setFacsimile(penCoordinatorProperties.getFacsimile());
@@ -175,7 +176,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
             penRequestBatchArchivedEmailEvent.setToEmail(this.getPenCoordinatorProperties().getFromEmail());
         } else {
             nextEvent.setEventType(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT);
-            penRequestBatchArchivedEmailEvent.setToEmail(penRequestBatchReturnFilesSagaData.getPenCordinatorEmail());
+            penRequestBatchArchivedEmailEvent.setToEmail(penRequestBatchReturnFilesSagaData.getPenCoordinator().getPenCoordinatorEmail());
         }
         nextEvent.setEventPayload(JsonUtil.getJsonStringFromObject(penRequestBatchArchivedEmailEvent));
 
@@ -188,7 +189,9 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     }
 
     protected boolean hasNoPenCoordinatorEmail(BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) {
-        return penRequestBatchReturnFilesSagaData.getPenCordinatorEmail() == null || penRequestBatchReturnFilesSagaData.getPenCordinatorEmail().isEmpty();
+        return penRequestBatchReturnFilesSagaData.getPenCoordinator() == null ||
+          penRequestBatchReturnFilesSagaData.getPenCoordinator().getPenCoordinatorEmail() == null ||
+          penRequestBatchReturnFilesSagaData.getPenCoordinator().getPenCoordinatorEmail().isEmpty();
     }
 
     protected void sendHasNoCoordinatorEmail(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws JsonProcessingException {
@@ -199,12 +202,12 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
         this.sendArchivedEmail(event, saga, penRequestBatchReturnFilesSagaData, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT);
     }
 
-    protected String getPenCoordinatorEmail(PenRequestBatchEntity penRequestBatchEntity) {
+    protected PenCoordinator getPenCoordinator(PenRequestBatchEntity penRequestBatchEntity) {
         try {
-            var penCoordinatorEmailOptional = getPenCoordinatorService().getPenCoordinatorEmailByMinCode(penRequestBatchEntity.getMincode());
-            return penCoordinatorEmailOptional.orElse(null);
+            var penCoordinatorOptional = getPenCoordinatorService().getPenCoordinatorByMinCode(penRequestBatchEntity.getMincode());
+            return penCoordinatorOptional.orElse(null);
         } catch (NullPointerException e) {
-            log.error("Error while trying to get get pen coordinator email. The pen coordinator map is null", e);
+            log.error("Error while trying to get get pen coordinator. The pen coordinator map is null", e);
             return null;
         }
     }

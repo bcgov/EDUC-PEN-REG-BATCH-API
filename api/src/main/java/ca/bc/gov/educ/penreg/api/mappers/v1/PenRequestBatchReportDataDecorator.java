@@ -8,6 +8,8 @@ import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportDa
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportListItem;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportUserMatchedListItem;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -42,12 +44,8 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       List<ReportListItem> sysMatchedList = new ArrayList<>();
       List<ReportUserMatchedListItem> diffList = new ArrayList<>();
       List<ReportUserMatchedListItem> confirmedList = new ArrayList<>();
-      Map<String, Student> students = new HashMap<>();
+      Map<String, Student> students = this.setStudents(data.getStudents());
 
-      if (data.getStudents() != null && !data.getStudents().isEmpty()) {
-        students = data.getStudents().stream()
-          .collect(Collectors.toMap(Student::getStudentID, student -> student));
-      }
       for (PenRequestBatchStudent penRequestBatchStudent : data.getPenRequestBatchStudents()) {
         switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.codeOfValue(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
           case DUPLICATE:
@@ -96,6 +94,24 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       reportData.setProcessDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
       reportData.setProcessTime(processDateTime.format(DateTimeFormatter.ofPattern("HH:mm")));
       reportData.setReportDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
+
+      reportData.setReviewer(this.setReviewer(data.getPenCoordinator()));
+
       return reportData;
+    }
+
+    private String setReviewer(PenCoordinator penCoordinator) {
+      String penCoordinatorName = "School PEN Coordinator";
+      if (penCoordinator != null && StringUtils.isNotBlank(penCoordinator.getPenCoordinatorName())) {
+        penCoordinatorName = penCoordinator.getPenCoordinatorName();
+      }
+      return penCoordinatorName;
+    }
+
+    private Map<String, Student> setStudents (List<Student> students) {
+      if (!CollectionUtils.isEmpty(students)) {
+        return students.stream().collect(Collectors.toMap(Student::getStudentID, student -> student));
+      }
+      return Collections.emptyMap();
     }
 }
