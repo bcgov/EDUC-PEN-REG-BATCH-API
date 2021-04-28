@@ -201,7 +201,7 @@ public class RestUtils {
     if (responseEvent.getEventOutcome() == EventOutcome.STUDENT_NOT_FOUND) {
       return Collections.emptyList();
     }
-    return obMapper.readValue(event.getEventPayload(), new TypeReference<>() {
+    return obMapper.readValue(responseEvent.getEventPayload(), new TypeReference<>() {
     });
   }
 
