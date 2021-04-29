@@ -141,9 +141,7 @@ public class ResponseFileGeneratorService {
   public PENWebBlobEntity getTxtBlob(final PenRequestBatchEntity penRequestBatchEntity, final List<PenRequestBatchStudent> penRequestBatchStudentEntities) {
 
     final List<PenRequestBatchStudent> filteredStudents = penRequestBatchStudentEntities.stream().filter(x ->
-            (x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode()) ||
-            x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.INFOREQ.getCode())) &&
-            x.getLocalID() != null).collect(Collectors.toList());
+            (x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode()))).collect(Collectors.toList());
 
     byte[] bFile = null;
 
@@ -161,10 +159,8 @@ public class ResponseFileGeneratorService {
       txtFile.append(createHeader(penRequestBatchEntity, applicationCode));
 
       // SRM details records
-      for (final PenRequestBatchStudent entity : penRequestBatchStudentEntities) {
-        if (entity.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode())) {
-          txtFile.append(createBody(entity, applicationKeyMap));
-        }
+      for (final PenRequestBatchStudent entity : filteredStudents) {
+        txtFile.append(createBody(entity, applicationKeyMap));
       }
       // BTR footer
       txtFile.append(createFooter(penRequestBatchEntity));

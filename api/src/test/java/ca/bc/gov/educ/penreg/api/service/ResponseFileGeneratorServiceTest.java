@@ -95,6 +95,8 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
     assertThat(penWebBlob.getPenWebBlobId()).isEqualTo(penWebBlob.getPenWebBlobId());
     assertThat(penWebBlob.getFileName()).isEqualTo(penWebBlob.getMincode() + ".TXT");
     assertThat(penWebBlob.getFileContents().length > 0).isTrue();
+    assertThat(new String(penWebBlob.getFileContents())).contains("2046291");
+    assertThat(new String(penWebBlob.getFileContents())).doesNotContain("204629298765");
   }
 
   @Test
@@ -104,8 +106,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
       "mock_pen_req_batch_student_txt.json", 1);
 
     var prbStudents = this.batchList.get(0).getPenRequestBatchStudentEntities().stream()
-      .filter(prbStudent -> !prbStudent.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode()) &&
-        !prbStudent.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.INFOREQ.getCode()))
+      .filter(prbStudent -> !prbStudent.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode()))
       .map(mapper::toStructure).collect(Collectors.toList());
 
     final var penWebBlob = this.responseFileGeneratorService.getTxtBlob(this.batchList.get(0), prbStudents);
