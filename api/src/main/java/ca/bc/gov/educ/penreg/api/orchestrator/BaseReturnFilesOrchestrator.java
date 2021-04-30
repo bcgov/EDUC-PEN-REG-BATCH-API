@@ -108,6 +108,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
             penRequestBatchReturnFilesSagaData.setFacsimile(penCoordinatorProperties.getFacsimile());
             penRequestBatchReturnFilesSagaData.setMailingAddress(penCoordinatorProperties.getMailingAddress());
             saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchReturnFilesSagaData)); // save the updated payload to DB...
+            this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
             nextEvent.setEventOutcome(REPORT_DATA_GATHERED);
         } else {
             log.error("PenRequestBatch not found during archive and return saga. This is not expected :: {}", penRequestBatchReturnFilesSagaData.getPenRequestBatchID());
