@@ -4,8 +4,6 @@ import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import static lombok.AccessLevel.PRIVATE;
@@ -27,10 +25,10 @@ public class PenService {
   /**
    * Instantiates a new Pen service.
    *
-   * @param restUtils      the rest utils
+   * @param restUtils the rest utils
    */
   @Autowired
-  public PenService(RestUtils restUtils) {
+  public PenService(final RestUtils restUtils) {
     this.restUtils = restUtils;
   }
 
@@ -40,9 +38,8 @@ public class PenService {
    * @param guid the guid to identify the transaction.
    * @return the next pen number
    */
-  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
-  public String getNextPenNumber(String guid) {
-    return restUtils.getNextPenNumberFromPenServiceAPI(guid);
+  public String getNextPenNumber(final String guid) {
+    return this.restUtils.getNextPenNumberFromPenServiceAPI(guid);
   }
 
 }

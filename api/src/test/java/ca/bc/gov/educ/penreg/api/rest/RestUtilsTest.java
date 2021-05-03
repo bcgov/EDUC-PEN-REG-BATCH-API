@@ -1,8 +1,15 @@
 package ca.bc.gov.educ.penreg.api.rest;
 
+import ca.bc.gov.educ.penreg.api.constants.EventType;
+import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
+import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.support.NatsMessageImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.nats.client.Message;
 import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,8 +24,12 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.NEXT_PEN_NUMBER_RETRIEVED;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_SERVICES_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -39,6 +50,9 @@ public class RestUtilsTest {
   @Autowired
   WebClient webClient;
 
+  @Autowired
+  MessagePublisher messagePublisher;
+
   @Mock
   private WebClient.RequestHeadersSpec requestHeadersMock;
   @Mock
@@ -52,7 +66,19 @@ public class RestUtilsTest {
 
   @Before
   public void setUp() throws Exception {
+    when(this.webClient.get()).thenReturn(this.requestHeadersUriMock);
+    when(this.requestHeadersUriMock.uri(this.applicationProperties.getSchoolApiURL())).thenReturn(this.requestHeadersMock);
+    when(this.requestHeadersMock.header(any(), any())).thenReturn(this.requestHeadersMock);
+    when(this.requestHeadersMock.retrieve()).thenReturn(this.responseMock);
+    when(this.responseMock.bodyToFlux(School.class)).thenReturn(Flux.just(createSchoolArray()));
+    this.restUtils.populateSchoolMap();
     openMocks(this);
+  }
+
+  private School[] createSchoolArray() {
+    School[] schools = new School[1];
+    schools[0] = School.builder().mincode("10200001").distNo("102").schlNo("00001").build();
+    return schools;
   }
 
 
@@ -87,14 +113,12 @@ public class RestUtilsTest {
   }
 
   @Test
-  public void testGetStudentByPEN_givenAPICallSuccess_shouldReturnData() {
+  public void testGetStudentByPEN_givenAPICallSuccess_shouldReturnData() throws JsonProcessingException {
     final Student student = new Student();
     student.setPen("123456789");
-    when(this.webClient.get()).thenReturn(this.requestHeadersUriMock);
-    when(this.requestHeadersUriMock.uri(eq(this.applicationProperties.getStudentApiURL()), any(Function.class))).thenReturn(this.requestHeadersMock);
-    when(this.requestHeadersMock.header(any(), any())).thenReturn(this.requestHeadersMock);
-    when(this.requestHeadersMock.retrieve()).thenReturn(this.responseMock);
-    when(this.responseMock.bodyToFlux(Student.class)).thenReturn(Flux.just(student));
+    Message natsResponse = NatsMessageImpl.builder().data(new ObjectMapper().writeValueAsBytes(student)).build();
+
+    when(this.messagePublisher.requestMessage(eq(STUDENT_API_TOPIC.toString()), any())).thenReturn(CompletableFuture.completedFuture(natsResponse));
     val result = this.restUtils.getStudentByPEN("123456789");
     assertThat(result).isNotNull().isPresent();
     assertThat(result.get().getPen()).isEqualTo("123456789");
@@ -104,25 +128,17 @@ public class RestUtilsTest {
   public void testGetSchoolByMincode_givenAPICallSuccess_shouldReturnData() {
     final School school = new School();
     school.setMincode("123456789");
-    when(this.webClient.get()).thenReturn(this.requestHeadersUriMock);
-    when(this.requestHeadersUriMock.uri(eq(this.applicationProperties.getSchoolApiURL()), any(Function.class))).thenReturn(this.requestHeadersMock);
-    when(this.requestHeadersMock.header(any(), any())).thenReturn(this.requestHeadersMock);
-    when(this.requestHeadersMock.retrieve()).thenReturn(this.responseMock);
-    when(this.responseMock.bodyToMono(School.class)).thenReturn(Mono.just(school));
-    val result = this.restUtils.getSchoolByMincode("123456789");
+    val result = this.restUtils.getSchoolByMincode("10200001");
     assertThat(result).isNotNull().isPresent();
-    assertThat(result.get().getMincode()).isEqualTo("123456789");
+    assertThat(result.get().getMincode()).isEqualTo("10200001");
   }
 
   @Test
-  public void testGetNextPenNumberFromPenServiceAPI_givenAPICallSuccess_shouldReturnData() {
-    final School school = new School();
-    school.setMincode("123456789");
-    when(this.webClient.get()).thenReturn(this.requestHeadersUriMock);
-    when(this.requestHeadersUriMock.uri(eq(this.applicationProperties.getPenServicesApiURL()), any(Function.class))).thenReturn(this.requestHeadersMock);
-    when(this.requestHeadersMock.header(any(), any())).thenReturn(this.requestHeadersMock);
-    when(this.requestHeadersMock.retrieve()).thenReturn(this.responseMock);
-    when(this.responseMock.bodyToMono(String.class)).thenReturn(Mono.just("123456789"));
+  public void testGetNextPenNumberFromPenServiceAPI_givenAPICallSuccess_shouldReturnData() throws JsonProcessingException {
+    Event event = Event.builder().eventType(EventType.GET_NEXT_PEN_NUMBER).eventOutcome(NEXT_PEN_NUMBER_RETRIEVED).eventPayload("123456789").build();
+    Message natsResponse = NatsMessageImpl.builder().data(new ObjectMapper().writeValueAsBytes(event)).build();
+
+    when(this.messagePublisher.requestMessage(eq(PEN_SERVICES_API_TOPIC.toString()), any())).thenReturn(CompletableFuture.completedFuture(natsResponse));
     final String result = this.restUtils.getNextPenNumberFromPenServiceAPI(UUID.randomUUID().toString());
     assertThat(result).isNotNull().isEqualTo("123456789");
   }

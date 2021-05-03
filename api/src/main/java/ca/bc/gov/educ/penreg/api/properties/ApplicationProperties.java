@@ -1,11 +1,15 @@
 package ca.bc.gov.educ.penreg.api.properties;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.Getter;
 import lombok.Setter;
+import org.jboss.threads.EnhancedQueueExecutor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * Class holds all application properties
@@ -16,7 +20,9 @@ import java.util.Set;
 @Getter
 @Setter
 public class ApplicationProperties {
-
+  public static final Executor bgTask = new EnhancedQueueExecutor.Builder()
+    .setThreadFactory(new ThreadFactoryBuilder().setNameFormat("bg-task-executor-%d").build())
+    .setCorePoolSize(1).setMaximumPoolSize(1).setKeepAliveTime(Duration.ofSeconds(60)).build();
   public static final String API_NAME = "PEN_REG_BATCH_API";
   /**
    * The Client id.

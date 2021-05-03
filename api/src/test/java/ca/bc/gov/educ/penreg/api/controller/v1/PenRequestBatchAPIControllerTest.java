@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
+import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
@@ -12,6 +13,10 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
+import ca.bc.gov.educ.penreg.api.struct.Event;
+import ca.bc.gov.educ.penreg.api.struct.PenMatchRecord;
+import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.Search;
 import ca.bc.gov.educ.penreg.api.struct.v1.SearchCriteria;
@@ -26,6 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
@@ -88,6 +95,9 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
    */
   @Autowired
   private MockMvc mockMvc;
+
+  @Autowired
+  RestUtils restUtils;
 
   /**
    * Sets up.
@@ -859,6 +869,135 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
         .contentType(APPLICATION_JSON))
       .andDo(print()).andExpect(status().isAccepted());
   }
+
+  @Test
+  public void testPostPenRequest_GivenValidStudentData_ShouldReturnMatchedStudentPen() throws Exception {
+    Mockito.when(this.restUtils.requestEventResponseFromServicesAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.VALIDATION_SUCCESS_NO_ERROR_WARNING).build()));
+    val matchList = new ArrayList<PenMatchRecord>(1);
+    matchList.add(PenMatchRecord.builder().matchingPEN("123456789").studentID("studentID").build());
+    PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("D1").matchingRecords(matchList).build();
+    Mockito.when(this.restUtils.requestEventResponseFromMatchAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.PEN_MATCH_PROCESSED).eventPayload(JsonUtil.getJsonStringFromObject(penMatchResult)).build()));
+    this.mockMvc
+      .perform(post("/api/v1/pen-request-batch/pen-request")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
+        .content("{\n" +
+          "  \"localStudentID\": \"102000201\",\n" +
+          "  \"legalSurname\": \"AAAA\",\n" +
+          "  \"legalGivenName\": \"OM\",\n" +
+          "  \"birthDate\": \"19801114\",\n" +
+          "  \"gender\": \"M\",\n" +
+          "  \"enrolledGradeCode\": \"12\",\n" +
+          "  \"postalCode\": \"V8T0E1\",\n" +
+          "  \"mincode\": \"10200001\",\n" +
+          "  \"createUser\": \"om\",\n" +
+          "  \"updateUser\": \"om\"\n" +
+          "}")
+        .contentType(APPLICATION_JSON))
+      .andDo(print())
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.pen", is("123456789")));
+  }
+
+  @Test
+  public void testPostPenRequest_GivenValidStudentDataPenMatchReturnsMultipleMatch_ShouldReturn300() throws Exception {
+    Mockito.when(this.restUtils.requestEventResponseFromServicesAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.VALIDATION_SUCCESS_NO_ERROR_WARNING).build()));
+    val matchList = new ArrayList<PenMatchRecord>(1);
+    matchList.add(PenMatchRecord.builder().matchingPEN("123456789").studentID("studentID").build());
+    PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("BM").matchingRecords(matchList).build();
+    Mockito.when(this.restUtils.requestEventResponseFromMatchAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.PEN_MATCH_PROCESSED).eventPayload(JsonUtil.getJsonStringFromObject(penMatchResult)).build()));
+    this.mockMvc
+      .perform(post("/api/v1/pen-request-batch/pen-request")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
+        .content("{\n" +
+          "  \"localStudentID\": \"102000201\",\n" +
+          "  \"legalSurname\": \"AAAA\",\n" +
+          "  \"legalGivenName\": \"OM\",\n" +
+          "  \"birthDate\": \"19801114\",\n" +
+          "  \"gender\": \"M\",\n" +
+          "  \"enrolledGradeCode\": \"12\",\n" +
+          "  \"postalCode\": \"V8T0E1\",\n" +
+          "  \"mincode\": \"10200001\",\n" +
+          "  \"createUser\": \"om\",\n" +
+          "  \"updateUser\": \"om\"\n" +
+          "}")
+        .contentType(APPLICATION_JSON))
+      .andDo(print())
+      .andExpect(status().isMultipleChoices());
+
+  }
+
+  @Test
+  public void testPostPenRequest_GivenValidStudentDataPenMatchReturnsNoMatch_ShouldReturn201() throws Exception {
+    Mockito.when(this.restUtils.requestEventResponseFromServicesAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.VALIDATION_SUCCESS_NO_ERROR_WARNING).build()));
+    val matchList = new ArrayList<PenMatchRecord>(1);
+    matchList.add(PenMatchRecord.builder().matchingPEN("123456789").studentID("studentID").build());
+    PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("D0").matchingRecords(matchList).build();
+    Mockito.when(this.restUtils.requestEventResponseFromMatchAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.PEN_MATCH_PROCESSED).eventPayload(JsonUtil.getJsonStringFromObject(penMatchResult)).build()));
+    Mockito.when(this.restUtils.getNextPenNumberFromPenServiceAPI(ArgumentMatchers.any())).thenReturn("123456788");
+    Mockito.when(this.restUtils.requestEventResponseFromStudentAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.STUDENT_CREATED).build()));
+    this.mockMvc
+      .perform(post("/api/v1/pen-request-batch/pen-request")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
+        .content("{\n" +
+          "  \"localStudentID\": \"102000201\",\n" +
+          "  \"legalSurname\": \"AAAA\",\n" +
+          "  \"legalGivenName\": \"OM\",\n" +
+          "  \"birthDate\": \"19801114\",\n" +
+          "  \"gender\": \"M\",\n" +
+          "  \"enrolledGradeCode\": \"12\",\n" +
+          "  \"postalCode\": \"V8T0E1\",\n" +
+          "  \"mincode\": \"10200001\",\n" +
+          "  \"createUser\": \"om\",\n" +
+          "  \"updateUser\": \"om\"\n" +
+          "}")
+        .contentType(APPLICATION_JSON))
+      .andDo(print())
+      .andExpect(status().isCreated())
+      .andExpect(jsonPath("$.pen", is("123456788")));
+  }
+
+  @Test
+  public void testPostPenRequest_GivenStudentDataWithValidationErrors_ShouldReturnValidationIssues() throws Exception {
+    Mockito.when(this.restUtils.requestEventResponseFromServicesAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.VALIDATION_SUCCESS_WITH_ERROR).eventPayload(" [\n" +
+      "    {\n" +
+      "      \"penRequestBatchStudentValidationIssueId\": null,\n" +
+      "      \"penRequestBatchValidationIssueSeverityCode\": \"ERROR\",\n" +
+      "      \"penRequestBatchValidationIssueTypeCode\": \"REPEATCHARS\",\n" +
+      "      \"penRequestBatchValidationFieldCode\": \"LEGALLAST\"\n" +
+      "    },\n" +
+      "    {\n" +
+      "      \"penRequestBatchStudentValidationIssueId\": null,\n" +
+      "      \"penRequestBatchValidationIssueSeverityCode\": \"WARNING\",\n" +
+      "      \"penRequestBatchValidationIssueTypeCode\": \"OLD4GRADE\",\n" +
+      "      \"penRequestBatchValidationFieldCode\": \"GRADECODE\"\n" +
+      "    }\n" +
+      "  ]").build()));
+    val matchList = new ArrayList<PenMatchRecord>(1);
+    matchList.add(PenMatchRecord.builder().matchingPEN("123456789").studentID("studentID").build());
+    PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("D1").matchingRecords(matchList).build();
+    Mockito.when(this.restUtils.requestEventResponseFromMatchAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.PEN_MATCH_PROCESSED).eventPayload(JsonUtil.getJsonStringFromObject(penMatchResult)).build()));
+    this.mockMvc
+      .perform(post("/api/v1/pen-request-batch/pen-request")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
+        .content("{\n" +
+          "  \"localStudentID\": \"102000201\",\n" +
+          "  \"legalSurname\": \"AAAA\",\n" +
+          "  \"legalGivenName\": \"OM\",\n" +
+          "  \"birthDate\": \"19801114\",\n" +
+          "  \"gender\": \"M\",\n" +
+          "  \"enrolledGradeCode\": \"12\",\n" +
+          "  \"postalCode\": \"V8T0E1\",\n" +
+          "  \"mincode\": \"10200001\",\n" +
+          "  \"createUser\": \"om\",\n" +
+          "  \"updateUser\": \"om\"\n" +
+          "}")
+        .contentType(APPLICATION_JSON))
+      .andDo(print())
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.validationIssues", hasSize(greaterThan(1))))
+      .andExpect(jsonPath("$.pen", is(emptyOrNullString())));
+  }
+
 
   /**
    * Create batch students list.

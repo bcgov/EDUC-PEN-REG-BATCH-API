@@ -2,8 +2,10 @@ package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
+import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequest;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmission;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmissionResult;
+import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestResult;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -15,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -290,4 +293,21 @@ public interface PenRequestBatchAPIEndpoint {
     description = "This endpoint will allow external client to query the results of a batch earlier submitted.")
   @Schema(name = "PenRequestBatchSubmissionResult", implementation = PenRequestBatchSubmissionResult.class)
   ResponseEntity<PenRequestBatchSubmissionResult> batchSubmissionResult(@PathVariable UUID batchSubmissionID);
+
+  /**
+   * this endpoint will help external clients like MyEd to request for a PEN.
+   * 200 - Means Either Direct match to a student, matched student pen was returned Or validation errors were returned.
+   * 201 - Means a new pen was created and pen was returned.
+   * 300 - Means multiple choice found.
+   *
+   * @param penRequest the payload with student details
+   */
+  @PostMapping("/pen-request")
+  @PreAuthorize("hasAuthority('SCOPE_WRITE_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "201", description = "CREATED"), @ApiResponse(responseCode = "300", description = "MultipleChoices.")})
+  @Transactional(propagation = Propagation.NEVER)
+  @Tag(name = "Endpoint to provide one of pen request facility for external clients to the ministry.",
+    description = "This endpoint will allow external client to request for a pen.")
+  @Schema(name = "penRequest", implementation = PenRequest.class)
+  ResponseEntity<PenRequestResult> postPenRequest(@Validated @RequestBody PenRequest penRequest);
 }

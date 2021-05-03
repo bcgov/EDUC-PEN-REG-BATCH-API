@@ -22,8 +22,10 @@ import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
+import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequest;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmission;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmissionResult;
+import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,7 +61,7 @@ import static lombok.AccessLevel.PRIVATE;
 @RestController
 @Slf4j
 public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint {
-
+  private final ObjectMapper objectMapper = new ObjectMapper();
   /**
    * The constant PEN_REQUEST_BATCH_API.
    */
@@ -171,7 +173,7 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    */
   @Override
   public CompletableFuture<Page<PenRequestBatchSearch>> findAll(final Integer pageNumber, final Integer pageSize, final String sortCriteriaJson, final String searchList) {
-    final ObjectMapper objectMapper = new ObjectMapper();
+
     final List<Sort.Order> sorts = new ArrayList<>();
     Specification<PenRequestBatchEntity> penRegBatchSpecs = null;
     final Associations associationNames;
@@ -450,11 +452,22 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
       try {
         return ResponseEntity.ok(batchResultMapper.toResult(penRequestBatch, this.service.populateStudentDataFromBatch(penRequestBatch)));
       } catch (final Exception e) {
+        Thread.currentThread().interrupt();
         log.error("Exception ex :: ", e);
         throw new PenRegAPIRuntimeException(e.getMessage());
       }
     }
     return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+  }
+
+
+  @Override
+  public ResponseEntity<PenRequestResult> postPenRequest(final PenRequest penRequest) {
+    val pair = this.service.postPenRequest(penRequest);
+    if (pair.getValue().isPresent()) {
+      return ResponseEntity.status(pair.getKey()).body(pair.getValue().get());
+    }
+    return ResponseEntity.status(pair.getKey()).build();
   }
 
   /**
