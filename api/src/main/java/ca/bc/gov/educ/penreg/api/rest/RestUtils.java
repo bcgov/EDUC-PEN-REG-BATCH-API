@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.rest;
 
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
+import ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.struct.Event;
@@ -14,27 +15,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 
 /**
  * This class is used for REST calls
@@ -58,6 +59,14 @@ public class RestUtils {
 
   private final MessagePublisher messagePublisher;
 
+  private final Map<String, School> schoolMap = new ConcurrentHashMap<>();
+  /**
+   * The School lock.
+   */
+  private final ReadWriteLock schoolLock = new ReentrantReadWriteLock();
+  @Value("${initialization.background.enabled}")
+  private Boolean isBackgroundInitializationEnabled;
+
   /**
    * Instantiates a new Rest utils.
    *
@@ -71,12 +80,61 @@ public class RestUtils {
   }
 
   /**
+   * Init.
+   */
+  @PostConstruct
+  public void init() {
+    if (this.isBackgroundInitializationEnabled != null && this.isBackgroundInitializationEnabled) {
+      ApplicationProperties.bgTask.execute(this::populateSchoolMap);
+    }
+  }
+
+  /**
+   * Populate school map.
+   */
+  public void populateSchoolMap() {
+    for (val school : this.getSchools()) {
+      this.schoolMap.putIfAbsent(school.getDistNo() + school.getSchlNo(), school);
+    }
+    log.info("loaded  {} schools to memory", this.schoolMap.values().size());
+  }
+
+  /**
+   * Gets schools.
+   *
+   * @return the schools
+   */
+  public List<School> getSchools() {
+    log.info("calling school api to load schools to memory");
+    return this.webClient.get()
+      .uri(this.props.getSchoolApiURL())
+      .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+      .retrieve()
+      .bodyToFlux(School.class)
+      .collectList()
+      .block();
+  }
+
+  /**
+   * Scheduled.
+   */
+  @Scheduled(cron = "${schedule.jobs.load.school.cron}")
+  public void scheduled() {
+    val writeLock = this.schoolLock.writeLock();
+    try {
+      writeLock.lock();
+      this.init();
+    } finally {
+      writeLock.unlock();
+    }
+  }
+
+  /**
    * Gets student by student id.
    *
    * @param studentID the student id
    * @return the student by student id
    */
-  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Student getStudentByStudentID(final String studentID) {
     return this.webClient.get()
       .uri(this.props.getStudentApiURL(), uri -> uri.path("/{studentID}").build(studentID))
@@ -91,7 +149,6 @@ public class RestUtils {
    *
    * @param studentFromStudentAPI the student from student api
    */
-  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public void updateStudent(final Student studentFromStudentAPI) {
     this.webClient.put()
       .uri(this.props.getStudentApiURL(), uri -> uri.path("/{studentID}").build(studentFromStudentAPI.getStudentID()))
@@ -109,7 +166,6 @@ public class RestUtils {
    * @param student the student
    * @return the student
    */
-  //@Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Student createStudent(final Student student) {
     return this.webClient.post()
       .uri(this.props.getStudentApiURL())
@@ -126,17 +182,18 @@ public class RestUtils {
    * @param pen the pen
    * @return the student by pen
    */
-  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Optional<Student> getStudentByPEN(final String pen) {
-    final var studentResponse = this.webClient.get()
-      .uri(this.props.getStudentApiURL(), uri -> uri.queryParam("pen", pen).build())
-      .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-      .retrieve()
-      .bodyToFlux(Student.class)
-      .collectList()
-      .block();
-    if (studentResponse != null && !studentResponse.isEmpty()) {
-      return Optional.of(studentResponse.get(0));
+    val getStudentByPenEvent = Event.builder().eventType(EventType.GET_STUDENT).eventPayload(pen).sagaId(UUID.randomUUID()).build();
+    try {
+      log.info("calling getStudentByPEN :: {} via NATS for pen :: {}", STUDENT_API_TOPIC, pen);
+      val eventResponse = this.messagePublisher.requestMessage(STUDENT_API_TOPIC.toString(), JsonUtil.getJsonString(getStudentByPenEvent).orElseThrow().getBytes(StandardCharsets.UTF_8)).get(30, TimeUnit.SECONDS).getData();
+      log.info("got response from NATS for pen :: {}, student found :: {}", pen, eventResponse.length > 0);
+      if (eventResponse.length > 0) {
+        return Optional.of(JsonUtil.getJsonObjectFromByteArray(Student.class, eventResponse));
+      }
+    } catch (InterruptedException | ExecutionException | TimeoutException | IOException e) {
+      Thread.currentThread().interrupt();
+      log.error("Exception while get student by pen", e);
     }
     return Optional.empty();
   }
@@ -147,15 +204,11 @@ public class RestUtils {
    * @param guid the guid
    * @return the next pen number from pen service api
    */
-  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
+
   public String getNextPenNumberFromPenServiceAPI(final String guid) {
-    return this.webClient.get()
-      .uri(this.props.getPenServicesApiURL(), uri -> uri.path("/api/v1/pen-services/next-pen-number")
-        .queryParam("transactionID", guid).build())
-      .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-      .retrieve()
-      .bodyToMono(String.class)
-      .block();
+    val event = Event.builder().eventType(EventType.GET_NEXT_PEN_NUMBER).eventPayload(guid).build();
+    val responseEvent = this.requestEventResponseFromServicesAPI(event);
+    return responseEvent.map(Event::getEventPayload).orElse(null);
   }
 
   /**
@@ -164,28 +217,8 @@ public class RestUtils {
    * @param mincode the mincode
    * @return the school by min code
    */
-  @Retryable(value = {Exception.class}, maxAttempts = 10, backoff = @Backoff(multiplier = 2, delay = 2000))
   public Optional<School> getSchoolByMincode(final String mincode) {
-    Optional<School> school = Optional.empty();
-    try {
-      final var response = this.webClient.get()
-        .uri(this.props.getSchoolApiURL(), uri -> uri.path("/{mincode}").build(mincode))
-        .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-        .retrieve()
-        .bodyToMono(School.class)
-        .block();
-      if (response != null) {
-        school = Optional.of(response);
-      }
-    } catch (final WebClientResponseException ex) {
-      log.info("no record found for :: {}", mincode);
-      if (ex.getStatusCode().value() == HttpStatus.NOT_FOUND.value()) {
-        return Optional.empty();
-      } else {
-        throw ex;
-      }
-    }
-    return school;
+    return Optional.ofNullable(this.schoolMap.get(mincode));
   }
 
   /**
@@ -194,14 +227,14 @@ public class RestUtils {
    * @param studentIDs the student ids to be fetched.
    * @return the student objects
    */
-  public List<Student> getStudentsByStudentIDs(List<UUID> studentIDs) throws IOException, ExecutionException, InterruptedException, TimeoutException {
-    Event event = Event.builder().sagaId(UUID.randomUUID()).eventType(EventType.GET_STUDENTS).eventPayload(JsonUtil.getJsonStringFromObject(studentIDs)).build();
+  public List<Student> getStudentsByStudentIDs(final List<UUID> studentIDs) throws IOException, ExecutionException, InterruptedException, TimeoutException {
+    final var event = Event.builder().sagaId(UUID.randomUUID()).eventType(EventType.GET_STUDENTS).eventPayload(JsonUtil.getJsonStringFromObject(studentIDs)).build();
     val responseEvent = JsonUtil.getJsonObjectFromByteArray(Event.class,
       this.messagePublisher.requestMessage(STUDENT_API_TOPIC.toString(), JsonUtil.getJsonString(event).orElseThrow().getBytes(StandardCharsets.UTF_8)).get(30, TimeUnit.SECONDS).getData());
     if (responseEvent.getEventOutcome() == EventOutcome.STUDENT_NOT_FOUND) {
       return Collections.emptyList();
     }
-    return obMapper.readValue(responseEvent.getEventPayload(), new TypeReference<>() {
+    return this.obMapper.readValue(responseEvent.getEventPayload(), new TypeReference<>() {
     });
   }
 
@@ -224,4 +257,35 @@ public class RestUtils {
       }
     }
   }
+
+  public Optional<Event> requestEventResponseFromServicesAPI(final Event event) {
+    return this.requestEventResponseFromAPI(event, PEN_SERVICES_API_TOPIC, "Exception while calling services api via nats");
+  }
+
+  public Optional<Event> requestEventResponseFromMatchAPI(final Event event) {
+    return this.requestEventResponseFromAPI(event, PEN_MATCH_API_TOPIC, "Exception while calling match api via nats");
+  }
+
+  public Optional<Event> requestEventResponseFromStudentAPI(final Event event) {
+    return this.requestEventResponseFromAPI(event, STUDENT_API_TOPIC, "Exception while calling student api via nats");
+  }
+
+  /**
+   * This is a synchronous req/reply pattern call via NATS
+   */
+  private Optional<Event> requestEventResponseFromAPI(final Event event, final SagaTopicsEnum topic, final String exceptionMessage) {
+    try {
+      log.info("calling :: {} via NATS", topic);
+      val response = JsonUtil.getJsonObjectFromByteArray(Event.class,
+        this.messagePublisher.requestMessage(topic.toString(), JsonUtil.getJsonString(event).orElseThrow().getBytes(StandardCharsets.UTF_8)).get(30, TimeUnit.SECONDS).getData());
+      log.info("got response from NATS :: {}", response.getEventOutcome());
+      return Optional.of(response);
+    } catch (final Exception e) {
+      Thread.currentThread().interrupt();
+      log.error(exceptionMessage, e);
+    }
+    return Optional.empty();
+  }
+
+
 }

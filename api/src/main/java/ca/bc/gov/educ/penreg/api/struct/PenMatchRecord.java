@@ -1,9 +1,6 @@
 package ca.bc.gov.educ.penreg.api.struct;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 /**
  * The type Pen match record.
@@ -12,6 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class PenMatchRecord {
   /**
    * The Matching pen.
