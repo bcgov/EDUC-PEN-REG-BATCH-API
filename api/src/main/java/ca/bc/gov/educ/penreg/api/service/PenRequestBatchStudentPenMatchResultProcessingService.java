@@ -256,7 +256,10 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
     final var changesBadLocalIDIfExistBeforeSetValue = LocalIDUtil.changeBadLocalID(StringUtils.remove(penRequestBatchStudent.getLocalID(), ' '));
     studentFromStudentAPI.setLocalID(changesBadLocalIDIfExistBeforeSetValue);
     this.updateGradeCodeAndGradeYear(studentFromStudentAPI, penRequestBatchStudent);
-    studentFromStudentAPI.setPostalCode(penRequestBatchStudent.getPostalCode());
+
+    if(StringUtils.isNotBlank(penRequestBatchStudent.getPostalCode())) {
+      studentFromStudentAPI.setPostalCode(penRequestBatchStudent.getPostalCode());
+    }
 
     this.updateUsualNameFields(studentFromStudentAPI, penRequestBatchStudent);
 
