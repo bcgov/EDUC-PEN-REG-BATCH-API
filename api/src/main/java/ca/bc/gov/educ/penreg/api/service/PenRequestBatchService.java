@@ -398,7 +398,7 @@ public class PenRequestBatchService {
       final TypeReference<List<PenRequestBatchStudentValidationIssue>> responseType = new TypeReference<>() {
       };
       val validationResults = new ObjectMapper().readValue(validationResponseEvent.get().getEventPayload(), responseType);
-      penRequestResult.setValidationIssues(validationResults);
+      penRequestResult.setValidationIssues(validationResults.stream().filter(validationResult -> "ERROR".equals(validationResult.getPenRequestBatchValidationIssueSeverityCode())).collect(Collectors.toList()));
       return org.apache.commons.lang3.tuple.Pair.of(HttpStatus.OK.value(), Optional.of(penRequestResult));
     }
     val penMatchPayload = JsonUtil.getJsonStringFromObject(PenRequestBatchMapper.mapper.toPenMatch(penRequest));

@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.mappers.v1.external;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.StudentDemogCode;
+import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchStudentValidationIssueMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.struct.Student;
@@ -9,16 +10,18 @@ import ca.bc.gov.educ.penreg.api.struct.v1.external.ListItem;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmissionResult;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.SchoolMinListItem;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class PenRequestBatchResultDataDecorator implements PenRequestBatchResultDataMapper {
 
-  private final ListItemMapper listItemMapper = ListItemMapper.mapper;
+  private static final ListItemMapper listItemMapper = ListItemMapper.mapper;
   /**
    * The Delegate
    */
@@ -30,13 +33,13 @@ public abstract class PenRequestBatchResultDataDecorator implements PenRequestBa
   }
 
   @Override
-  public PenRequestBatchSubmissionResult toResult(PenRequestBatchEntity penRequestBatch, Map<String, Student> studentMap) {
+  public PenRequestBatchSubmissionResult toResult(final PenRequestBatchEntity penRequestBatch, final Map<String, Student> studentMap) {
     final var requestBatchSubmissionResult = this.delegate.toResult(penRequestBatch, studentMap);
-    List<ListItem> pendingList = new ArrayList<>();
-    List<ListItem> newPenAssignedList = new ArrayList<>();
-    List<ListItem> exactMatchList = new ArrayList<>();
-    List<SchoolMinListItem> differencesList = new ArrayList<>();
-    List<SchoolMinListItem> confirmedList = new ArrayList<>();
+    final List<ListItem> pendingList = new ArrayList<>();
+    final List<ListItem> newPenAssignedList = new ArrayList<>();
+    final List<ListItem> exactMatchList = new ArrayList<>();
+    final List<SchoolMinListItem> differencesList = new ArrayList<>();
+    final List<SchoolMinListItem> confirmedList = new ArrayList<>();
     for (final PenRequestBatchStudentEntity penRequestBatchStudent : penRequestBatch.getPenRequestBatchStudentEntities()) {
       switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.codeOfValue(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
         case DUPLICATE:
@@ -44,7 +47,9 @@ public abstract class PenRequestBatchResultDataDecorator implements PenRequestBa
         case REPEAT:
         case INFOREQ:
         case FIXABLE:
-          pendingList.add(listItemMapper.toListItem(penRequestBatchStudent));
+          val fixableItem = listItemMapper.toListItem(penRequestBatchStudent);
+          fixableItem.setValidationIssues(penRequestBatchStudent.getPenRequestBatchStudentValidationIssueEntities().stream().filter(validationResult -> "ERROR".equals(validationResult.getPenRequestBatchValidationIssueSeverityCode())).map(PenRequestBatchStudentValidationIssueMapper.mapper::toStruct).collect(Collectors.toList()));
+          pendingList.add(fixableItem);
           break;
         case SYS_NEW_PEN:
         case USR_NEW_PEN:
@@ -62,14 +67,14 @@ public abstract class PenRequestBatchResultDataDecorator implements PenRequestBa
             log.error("Error attempting to create report data. Students list should not be null for USR_MATCHED status.");
             break;
           }
-          final Student matchedStudent = studentMap.get(penRequestBatchStudent.getStudentID().toString());
+          val matchedStudent = studentMap.get(penRequestBatchStudent.getStudentID().toString());
           if (matchedStudent != null && matchedStudent.getDemogCode() != null && matchedStudent.getDemogCode().equals(StudentDemogCode.CONFIRMED.getCode())) {
-            SchoolMinListItem item = new SchoolMinListItem();
+            val item = new SchoolMinListItem();
             item.setMin(listItemMapper.toListItem(matchedStudent));
             item.setSchool(listItemMapper.toListItem(penRequestBatchStudent));
             confirmedList.add(item);
           } else {
-            SchoolMinListItem item = new SchoolMinListItem();
+            val item = new SchoolMinListItem();
             item.setMin(listItemMapper.toListItem(matchedStudent));
             item.setSchool(listItemMapper.toListItem(penRequestBatchStudent));
             differencesList.add(item);

@@ -24,4 +24,7 @@ public interface PenRequestBatchStudentValidationIssueMapper {
    */
   @Mapping(target = "penRequestBatchStudentEntity", ignore = true)
   PenRequestBatchStudentValidationIssueEntity toModel(PenRequestBatchStudentValidationIssue penRequestBatchStudentValidationIssue);
+
+  @Mapping(target = "penRequestBatchStudentValidationIssueId", ignore = true)
+  PenRequestBatchStudentValidationIssue toStruct(PenRequestBatchStudentValidationIssueEntity entity);
 }

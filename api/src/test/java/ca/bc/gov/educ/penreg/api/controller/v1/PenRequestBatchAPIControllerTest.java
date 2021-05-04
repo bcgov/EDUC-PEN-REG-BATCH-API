@@ -994,7 +994,7 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
         .contentType(APPLICATION_JSON))
       .andDo(print())
       .andExpect(status().isOk())
-      .andExpect(jsonPath("$.validationIssues", hasSize(greaterThan(1))))
+      .andExpect(jsonPath("$.validationIssues", hasSize(greaterThan(0))))
       .andExpect(jsonPath("$.pen", is(emptyOrNullString())));
   }
 

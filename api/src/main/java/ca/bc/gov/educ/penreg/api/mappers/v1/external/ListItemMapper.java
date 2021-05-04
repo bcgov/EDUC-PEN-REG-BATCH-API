@@ -24,10 +24,10 @@ public interface ListItemMapper {
   @Mapping(target = "birthDate", source = "dob")
   ListItem toListItem(Student student);
 
-  @Mapping(target = "validationIssues", source = "penRequestBatchStudentValidationIssueEntities")
+  @Mapping(target = "validationIssues", ignore = true)
   @Mapping(target = "usualSurname", source = "usualLastName")
   @Mapping(target = "usualGivenName", source = "usualFirstName")
-  @Mapping(target = "pen", source = "submittedPen")
+  @Mapping(target = "pen", source = "assignedPEN")
   @Mapping(target = "mincode", source = "penRequestBatchEntity.mincode")
   @Mapping(target = "legalSurname", source = "legalLastName")
   @Mapping(target = "legalGivenName", source = "legalFirstName")
