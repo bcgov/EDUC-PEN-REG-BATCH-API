@@ -17,6 +17,7 @@ import lombok.val;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.util.Pair;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
@@ -509,7 +510,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
 
   @Override
   @Async("subscriberExecutor")
-  @Transactional
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void startMultipleSagas(final List<Saga> sagas) {
     for (final Saga saga : sagas) {
       try {
