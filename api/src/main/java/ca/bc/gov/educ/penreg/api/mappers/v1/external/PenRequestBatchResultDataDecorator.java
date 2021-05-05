@@ -60,7 +60,7 @@ public abstract class PenRequestBatchResultDataDecorator implements PenRequestBa
           newPenAssignedList.add(listItemMapper.toListItem(studentMap.get(penRequestBatchStudent.getStudentID().toString())));
           break;
         case SYS_MATCHED:
-          exactMatchList.add(listItemMapper.toListItem(penRequestBatchStudent));
+          exactMatchList.add(listItemMapper.toListItem(studentMap.get(penRequestBatchStudent.getStudentID().toString())));
           break;
         case USR_MATCHED:
           if (studentMap.get(penRequestBatchStudent.getStudentID().toString()) == null) {
