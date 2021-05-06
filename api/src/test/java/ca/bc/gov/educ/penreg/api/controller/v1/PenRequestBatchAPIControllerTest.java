@@ -17,6 +17,7 @@ import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenMatchRecord;
 import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
+import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.Search;
 import ca.bc.gov.educ.penreg.api.struct.v1.SearchCriteria;
@@ -877,6 +878,7 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
     matchList.add(PenMatchRecord.builder().matchingPEN("123456789").studentID("studentID").build());
     PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("D1").matchingRecords(matchList).build();
     Mockito.when(this.restUtils.requestEventResponseFromMatchAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.PEN_MATCH_PROCESSED).eventPayload(JsonUtil.getJsonStringFromObject(penMatchResult)).build()));
+    Mockito.when(this.restUtils.getStudentByPEN("123456789")).thenReturn(Optional.of(Student.builder().studentID("studentID").pen("123456789").build()));
     this.mockMvc
       .perform(post("/api/v1/pen-request-batch/pen-request")
         .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))

@@ -62,6 +62,19 @@ public interface PenRequestBatchMapper {
   @Mapping(target = "validationIssues", ignore = true)
   PenRequestResult toPenRequestResult(PenRequest penRequest);
 
+  @Mapping(target = "usualSurname", source = "usualLastName")
+  @Mapping(target = "usualMiddleName", source = "usualMiddleNames")
+  @Mapping(target = "usualGivenName", source = "usualFirstName")
+  @Mapping(target = "localStudentID", source = "localID")
+  @Mapping(target = "legalSurname", source = "legalLastName")
+  @Mapping(target = "legalMiddleName", source = "legalMiddleNames")
+  @Mapping(target = "legalGivenName", source = "legalFirstName")
+  @Mapping(target = "gender", source = "genderCode")
+  @Mapping(target = "enrolledGradeCode", source = "gradeCode")
+  @Mapping(target = "birthDate", source = "dob")
+  @Mapping(target = "validationIssues", ignore = true)
+  PenRequestResult toPenRequestResult(Student student);
+
   @Mapping(target = "pen", ignore = true)
   @Mapping(target = "surname", source = "legalSurname")
   @Mapping(target = "sex", source = "gender")

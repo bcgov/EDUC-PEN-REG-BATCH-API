@@ -79,12 +79,17 @@ public class PenRequestPenMatchResultProcessingService extends BasePenMatchResul
       return Pair.of(HttpStatus.INTERNAL_SERVER_ERROR.value(), Optional.empty());
     }
     val firstStudent = payload.getPenMatchResult().getMatchingRecords().stream().findFirst();
+
     if (firstStudent.isEmpty() || StringUtils.isBlank(firstStudent.get().getMatchingPEN())) {
       log.error("Pen match result does not contain matched student for sys match status ");
       return Pair.of(HttpStatus.INTERNAL_SERVER_ERROR.value(), Optional.empty());
     }
-    val penRequestResult = payload.getPenRequestResult();
-    penRequestResult.setPen(firstStudent.get().getMatchingPEN());
+    val optionalStudent = this.getRestUtils().getStudentByPEN(firstStudent.get().getMatchingPEN());
+    if (optionalStudent.isEmpty()) {
+      log.error("could not retrieve student data for sys match status ");
+      return Pair.of(HttpStatus.INTERNAL_SERVER_ERROR.value(), Optional.empty());
+    }
+    val penRequestResult = PenRequestBatchMapper.mapper.toPenRequestResult(optionalStudent.get());
     return Pair.of(HttpStatus.OK.value(), Optional.of(penRequestResult));
   }
 }
