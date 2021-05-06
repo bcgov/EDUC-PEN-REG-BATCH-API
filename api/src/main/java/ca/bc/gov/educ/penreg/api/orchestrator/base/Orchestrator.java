@@ -14,19 +14,22 @@ import java.util.concurrent.TimeoutException;
 public interface Orchestrator {
 
   /**
-   * Start saga saga.
+   * Start saga.
+   *
+   * @param saga                  the saga data
+   */
+  void startSaga(Saga saga);
+
+  /**
+   * create saga.
    *
    * @param payload                  the payload
    * @param penRequestBatchStudentID the pen request batch student id
    * @param penRequestBatchID        the pen request batch id
    * @param userName                 the user who created the saga
    * @return the saga
-   * @throws InterruptedException the interrupted exception
-   * @throws TimeoutException     the timeout exception
-   * @throws IOException          the io exception
    */
-  Saga startSaga(String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID, String userName) throws InterruptedException, TimeoutException, IOException;
-
+  Saga createSaga(String payload, UUID penRequestBatchStudentID, UUID penRequestBatchID, String userName);
 
   List<Saga> saveMultipleSagas(List<Pair<UUID, String>> payloads, String userName);
 
