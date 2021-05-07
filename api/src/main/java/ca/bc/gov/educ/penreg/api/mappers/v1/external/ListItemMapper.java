@@ -21,7 +21,7 @@ public interface ListItemMapper {
   @Mapping(target = "legalGivenName", source = "legalFirstName")
   @Mapping(target = "gender", source = "genderCode")
   @Mapping(target = "enrolledGradeCode", source = "gradeCode")
-  @Mapping(target = "birthDate", source = "dob")
+  @Mapping(target = "birthDate", expression = "java(org.apache.commons.lang3.RegExUtils.removeAll(student.getDob(), \"[^\\\\d]\"))")
   ListItem toListItem(Student student);
 
   @Mapping(target = "validationIssues", ignore = true)
