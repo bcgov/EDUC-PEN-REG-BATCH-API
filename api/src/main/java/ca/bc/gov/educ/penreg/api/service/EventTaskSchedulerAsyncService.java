@@ -18,7 +18,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchRepostReportsFilesSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REPEATS_CHECKED;
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA;
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -123,12 +123,12 @@ public class EventTaskSchedulerAsyncService {
   }
 
   /**
-   * Mark processed batches active.
+   * Mark processed batches active or archived.
    * Redis is used to make sure the job is not updating the same record twice, if there is a delay in processing.
    */
   @Async("taskExecutor")
   @Transactional
-  public void markProcessedBatchesActive() {
+  public void markProcessedBatchesActiveOrArchived() {
     final var penReqBatches = this.getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
     log.debug("found {} records in repeat checked state", penReqBatches.size());
     if (!penReqBatches.isEmpty()) {
@@ -138,11 +138,11 @@ public class EventTaskSchedulerAsyncService {
             "::markProcessedBatchesActive");
         val valueFromRedis = this.stringRedisTemplate.opsForValue().get(redisKey);
         if (StringUtils.isBlank(valueFromRedis)) { // skip if it is already in redis
-          this.checkAndUpdateStatusToActive(penReqBatchEntities, penRequestBatchEntity, redisKey);
+          this.checkAndUpdateStatusToActiveOrArchived(penReqBatchEntities, penRequestBatchEntity, redisKey);
         }
       }
       if (!penReqBatchEntities.isEmpty()) {
-        log.info("marking {} records ACTIVE", penReqBatchEntities.size());
+        log.info("marking {} records ACTIVE or ARCHIVED", penReqBatchEntities.size());
         this.getPenRequestBatchRepository().saveAll(penReqBatchEntities); // update all of them in one commit.
       }
     }
@@ -155,7 +155,7 @@ public class EventTaskSchedulerAsyncService {
    * @param penRequestBatchEntity the pen request batch entity
    * @param redisKey              the redis key
    */
-  private void checkAndUpdateStatusToActive(final ArrayList<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey) {
+  private void checkAndUpdateStatusToActiveOrArchived(final ArrayList<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey) {
 
     final var studentSagaRecords = this.getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatchEntity.getPenRequestBatchID(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString());
     final var studentEntities = penRequestBatchEntity.getPenRequestBatchStudentEntities();
@@ -180,8 +180,12 @@ public class EventTaskSchedulerAsyncService {
       if (count == studentSagaRecords.size()) { // All records are processed mark batch to active.
         this.setDifferentCounts(penRequestBatchEntity, studentEntities);
         if(newPenAndMatchCount == count) { // all records are either New PEN by System or Matched by System
-          this.updatePenRequestBatchStatus(penReqBatchEntities, penRequestBatchEntity, redisKey, PenRequestBatchStatusCodes.ARCHIVED.getCode());
-          this.startPostReportsSaga(penRequestBatchEntity);
+          var sagas = this.getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatchEntity.getPenRequestBatchID(), PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString());
+          if(sagas.size() == 0) {
+            this.startArchiveAndReturnSaga(penRequestBatchEntity);
+          } else {
+            log.warn("Archive and return saga has already started :: for pen request batch :: {} ", penRequestBatchEntity.getPenRequestBatchID());
+          }
         } else {
           this.updatePenRequestBatchStatus(penReqBatchEntities, penRequestBatchEntity, redisKey, PenRequestBatchStatusCodes.ACTIVE.getCode());
         }
@@ -198,20 +202,20 @@ public class EventTaskSchedulerAsyncService {
     this.stringRedisTemplate.opsForValue().set(redisKey, "true", 5, TimeUnit.MINUTES);
   }
 
-  private void startPostReportsSaga(final PenRequestBatchEntity penRequestBatchEntity) {
-    var sagaData = PenRequestBatchRepostReportsFilesSagaData.builder()
+  private void startArchiveAndReturnSaga(final PenRequestBatchEntity penRequestBatchEntity) {
+    var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatchID(penRequestBatchEntity.getPenRequestBatchID())
       .schoolName(penRequestBatchEntity.getSchoolName())
       .createUser(penRequestBatchEntity.getCreateUser())
       .build();
 
-    var orchestrator = getSagaOrchestrators().get(PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA.toString());
+    var orchestrator = getSagaOrchestrators().get(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString());
     try {
       var saga = orchestrator.createSaga(JsonUtil.getJsonStringFromObject(sagaData),
         null, penRequestBatchEntity.getPenRequestBatchID(), sagaData.getCreateUser());
       orchestrator.startSaga(saga);
     } catch (JsonProcessingException e) {
-      log.error("JsonProcessingException while startPostReportsSaga", e);
+      log.error("JsonProcessingException while startArchiveAndReturnSaga", e);
       throw new SagaRuntimeException(e.getMessage());
     }
   }

@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REPEATS_CHECKED;
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA;
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA;
 import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils.createBatchStudents;
 import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils.createSagaRecords;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,11 +35,11 @@ public class EventTaskSchedulerAsyncServiceTest extends BasePenRegAPITest {
 
 
   @Test
-  public void testMarkProcessedBatchesActive_GivenNewPen_ShouldUpdateCountInDB() throws IOException {
+  public void testMarkProcessedBatchesActiveOrArchived_GivenNewPen_ShouldUpdateCountInDB() throws IOException {
     final var batches = createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_repeats_checked.json",
         "mock_pen_req_batch_student_repeats_checked.json", 1);
     createSagaRecords(this.sagaRepository, batches);
-    this.eventTaskSchedulerAsyncService.markProcessedBatchesActive();
+    this.eventTaskSchedulerAsyncService.markProcessedBatchesActiveOrArchived();
 
     // history records.
     final var batch = this.penRequestBatchRepository.findById(batches.get(0).getPenRequestBatchID());
@@ -52,31 +52,31 @@ public class EventTaskSchedulerAsyncServiceTest extends BasePenRegAPITest {
     val batchEntity = batch.get();
     batchEntity.setPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
     this.penRequestBatchRepository.save(batchEntity);
-    this.eventTaskSchedulerAsyncService.markProcessedBatchesActive(); //update to repeat and  call it twice to verify
+    this.eventTaskSchedulerAsyncService.markProcessedBatchesActiveOrArchived(); //update to repeat and  call it twice to verify
     // there are no two history records to indicate it was not processed twice
     val historyEntities = this.historyRepository.findAllByPenRequestBatchEntity(batch.get());
     assertThat(historyEntities).isNotEmpty().size().isEqualTo(1);
   }
 
   @Test
-  public void testMarkProcessedBatchesActive_GivenAllNewPenAndMatched_ShouldUpdateCountInDB() throws IOException {
+  public void testMarkProcessedBatchesActiveOrArchived_GivenAllNewPenAndMatched_ShouldUpdateCountInDB() throws IOException {
     final var batches = createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_repeats_checked.json",
       "mock_pen_req_batch_student_all_newpen_and_macthed.json", 1);
     createSagaRecords(this.sagaRepository, batches);
-    this.eventTaskSchedulerAsyncService.markProcessedBatchesActive();
+    this.eventTaskSchedulerAsyncService.markProcessedBatchesActiveOrArchived();
 
     // history records.
     final var batch = this.penRequestBatchRepository.findById(batches.get(0).getPenRequestBatchID());
     assertThat(batch).isPresent();
-    assertThat(batch.get().getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.ARCHIVED.getCode());
+    assertThat(batch.get().getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.REPEATS_CHECKED.getCode());
     assertThat(batch.get().getErrorCount()).isEqualTo(0);
     assertThat(batch.get().getFixableCount()).isEqualTo(0);
     assertThat(batch.get().getMatchedCount()).isEqualTo(3);
     assertThat(batch.get().getNewPenCount()).isEqualTo(2);
     val historyEntities = this.historyRepository.findAllByPenRequestBatchEntity(batch.get());
-    assertThat(historyEntities).isNotEmpty().size().isEqualTo(1);
+    assertThat(historyEntities).isEmpty();
 
-    var saga = this.sagaRepository.findByPenRequestBatchIDAndSagaName(batch.get().getPenRequestBatchID(), PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA.toString());
+    var saga = this.sagaRepository.findByPenRequestBatchIDAndSagaName(batch.get().getPenRequestBatchID(), PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString());
     assertThat(saga).isNotEmpty().size().isEqualTo(1);
   }
 }
