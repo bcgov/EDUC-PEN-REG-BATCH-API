@@ -68,9 +68,9 @@ public class EventTaskScheduler {
   @SchedulerLock(name = "MARK_PROCESSED_BATCHES_ACTIVE",
       lockAtLeastFor = "${scheduled.jobs.mark.processed.batches.active.cron.lockAtLeastFor}", lockAtMostFor = "${scheduled.jobs.mark.processed.batches.active.cron.lockAtMostFor}")
   @Transactional
-  public void markProcessedPenRequestBatchesActive() {
+  public void markProcessedPenRequestBatchesActiveOrArchived() {
     LockAssert.assertLocked();
-    this.getTaskSchedulerAsyncService().markProcessedBatchesActive();
+    this.getTaskSchedulerAsyncService().markProcessedBatchesActiveOrArchived();
   }
 
   /**

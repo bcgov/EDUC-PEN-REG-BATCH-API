@@ -89,7 +89,8 @@ public class EventHandlerServiceTest extends BasePenRegAPITest {
     final var payload = this.dummyPenRequestBatchStudentSagaDataJson();
     final var event = new Event(READ_FROM_TOPIC, null, null, null, payload);
     this.eventHandlerService.handleEvent(event);
-    verify(this.penReqBatchStudentOrchestrator, atMostOnce()).startSaga(payload, UUID.fromString(this.penRequestBatchStudentID), UUID.fromString(this.penRequestBatchID), ApplicationProperties.API_NAME);
+    verify(this.penReqBatchStudentOrchestrator, atMostOnce()).createSaga(payload, UUID.fromString(this.penRequestBatchStudentID), UUID.fromString(this.penRequestBatchID), ApplicationProperties.API_NAME);
+    verify(this.penReqBatchStudentOrchestrator, atMostOnce()).startSaga(any());
   }
 
   /**
