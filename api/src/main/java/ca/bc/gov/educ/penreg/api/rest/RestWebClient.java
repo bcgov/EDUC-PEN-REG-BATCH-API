@@ -69,6 +69,9 @@ public class RestWebClient {
     factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
     val connector = new ReactorClientHttpConnector(this.client);
     return builder
+      .codecs(configurer -> configurer
+        .defaultCodecs()
+        .maxInMemorySize(100 * 1024 * 1024))
       .clientConnector(connector)
       .uriBuilderFactory(factory)
       .filter(oauthFilter)
