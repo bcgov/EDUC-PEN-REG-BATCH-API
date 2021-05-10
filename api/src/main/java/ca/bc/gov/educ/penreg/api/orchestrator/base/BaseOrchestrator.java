@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.orchestrator.base;
 
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
+import ca.bc.gov.educ.penreg.api.exception.SagaRuntimeException;
 import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchStudentValidationIssueMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
@@ -473,26 +474,40 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
   /**
    * Start to execute saga
    *
+   * @param saga                  the saga data
+   */
+  @Override
+  @Async("subscriberExecutor")
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void startSaga(@NotNull final Saga saga) {
+    try {
+      this.handleEvent(Event.builder()
+          .eventType(EventType.INITIATED)
+          .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+          .sagaId(saga.getSagaId())
+          .eventPayload(saga.getPayload())
+          .build());
+    } catch (InterruptedException e) {
+      log.error("InterruptedException while startSaga", e);
+      Thread.currentThread().interrupt();
+    } catch (TimeoutException | IOException e) {
+      log.error("Exception while startSaga", e);
+    }
+  }
+
+  /**
+   * Create saga data
+   *
    * @param payload                  the event payload
    * @param penRequestBatchStudentID the pen request batch student id
    * @param penRequestBatchID        the pen request batch id
    * @param userName                 the user who created the saga
    * @return saga record
-   * @throws InterruptedException the interrupted exception
-   * @throws TimeoutException     the timeout exception
-   * @throws IOException          the io exception
    */
   @Override
   @Transactional
-  public Saga startSaga(@NotNull final String payload, final UUID penRequestBatchStudentID, final UUID penRequestBatchID, final String userName) throws InterruptedException, TimeoutException, IOException {
-    final var saga = this.sagaService.createSagaRecordInDB(this.sagaName, userName, payload, penRequestBatchStudentID, penRequestBatchID);
-    this.handleEvent(Event.builder()
-        .eventType(EventType.INITIATED)
-        .eventOutcome(EventOutcome.INITIATE_SUCCESS)
-        .sagaId(saga.getSagaId())
-        .eventPayload(payload)
-        .build());
-    return saga;
+  public Saga createSaga(@NotNull final String payload, final UUID penRequestBatchStudentID, final UUID penRequestBatchID, final String userName) {
+    return this.sagaService.createSagaRecordInDB(this.sagaName, userName, payload, penRequestBatchStudentID, penRequestBatchID);
   }
 
   /**

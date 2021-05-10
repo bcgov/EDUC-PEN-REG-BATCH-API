@@ -93,14 +93,15 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
     if (!sagaInProgress.isEmpty()) {
       return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
+
+    var orchestrator = getOrchestratorMap().get(sagaName.toString());
     try {
-      var saga = getOrchestratorMap()
-        .get(sagaName.toString())
-        .startSaga(JsonUtil.getJsonStringFromObject(penRequestBatchStudentSagaData),
-          penRequestBatchStudentID, penRequestBatchStudentSagaData.getPenRequestBatchID(), penRequestBatchStudentSagaData.getCreateUser());
+      var saga = orchestrator.createSaga(JsonUtil.getJsonStringFromObject(penRequestBatchStudentSagaData),
+        penRequestBatchStudentID, penRequestBatchStudentSagaData.getPenRequestBatchID(), penRequestBatchStudentSagaData.getCreateUser());
+      orchestrator.startSaga(saga);
       return ResponseEntity.ok(saga.getSagaId().toString());
-    } catch (InterruptedException | TimeoutException | IOException e) {
-      Thread.currentThread().interrupt();
+    } catch (JsonProcessingException e) {
+      log.error("JsonProcessingException while processStudentRequest", e);
       throw new SagaRuntimeException(e.getMessage());
     }
   }
@@ -113,15 +114,15 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
     if (sagaInProgress) {
       return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
-    try {
-      var saga = getOrchestratorMap()
-        .get(sagaName.toString())
-        .startSaga(JsonUtil.getJsonStringFromObject(penRequestBatchSagaData),
-          null, penRequestBatchID, penRequestBatchSagaData.getCreateUser());
 
+    var orchestrator = getOrchestratorMap().get(sagaName.toString());
+    try {
+      var saga = orchestrator.createSaga(JsonUtil.getJsonStringFromObject(penRequestBatchSagaData),
+        null, penRequestBatchID, penRequestBatchSagaData.getCreateUser());
+      orchestrator.startSaga(saga);
       return ResponseEntity.ok(saga.getSagaId().toString());
-    } catch (InterruptedException | TimeoutException | IOException e) {
-      Thread.currentThread().interrupt();
+    } catch (JsonProcessingException e) {
+      log.error("JsonProcessingException while processStudentRequest", e);
       throw new SagaRuntimeException(e.getMessage());
     }
   }

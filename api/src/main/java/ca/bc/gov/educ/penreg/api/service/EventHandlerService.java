@@ -149,8 +149,9 @@ public class EventHandlerService implements EventHandler {
         return;
       }
 
-      this.getPenReqBatchStudentOrchestrator().startSaga(event.getEventPayload(), penRequestBatchStudentSagaData.getPenRequestBatchStudentID(),
-          penRequestBatchStudentSagaData.getPenRequestBatchID(), ApplicationProperties.API_NAME);
+      var saga = this.getPenReqBatchStudentOrchestrator().createSaga(event.getEventPayload(), penRequestBatchStudentSagaData.getPenRequestBatchStudentID(),
+        penRequestBatchStudentSagaData.getPenRequestBatchID(), ApplicationProperties.API_NAME);
+      this.getPenReqBatchStudentOrchestrator().startSaga(saga);
     }
   }
 
