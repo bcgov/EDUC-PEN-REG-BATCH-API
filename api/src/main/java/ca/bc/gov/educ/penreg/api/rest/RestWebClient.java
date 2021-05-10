@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.rest;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import io.netty.handler.logging.LogLevel;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -50,7 +51,8 @@ public class RestWebClient {
    * @return the web client
    */
   @Bean
-  WebClient webClient() {
+  @Autowired
+  WebClient webClient(final WebClient.Builder builder) {
     val clientRegistryRepo = new InMemoryReactiveClientRegistrationRepository(ClientRegistration
       .withRegistrationId(this.props.getClientID())
       .tokenUri(this.props.getTokenURL())
@@ -66,7 +68,7 @@ public class RestWebClient {
     val factory = new DefaultUriBuilderFactory();
     factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
     val connector = new ReactorClientHttpConnector(this.client);
-    return WebClient.builder()
+    return builder
       .clientConnector(connector)
       .uriBuilderFactory(factory)
       .filter(oauthFilter)

@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api;
 
+import lombok.val;
 import net.javacrumbs.shedlock.core.LockProvider;
 import net.javacrumbs.shedlock.provider.jdbctemplate.JdbcTemplateLockProvider;
 import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
@@ -61,7 +62,7 @@ public class PenRegBatchApiApplication {
    */
   @Bean
   public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
-    final ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
+    val threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
     threadPoolTaskScheduler.setPoolSize(5);
     return threadPoolTaskScheduler;
   }
@@ -91,7 +92,7 @@ public class PenRegBatchApiApplication {
     @Override
     public void configure(final WebSecurity web) {
       web.ignoring()
-          .antMatchers("/v3/api-docs/**", "/actuator/health", "/actuator/prometheus", "/swagger-ui/**");
+        .antMatchers("/v3/api-docs/**", "/actuator/health", "/actuator/metrics/**", "/actuator/prometheus", "/swagger-ui/**");
     }
 
     @Override
