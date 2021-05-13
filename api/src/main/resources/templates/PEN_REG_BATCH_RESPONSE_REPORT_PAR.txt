@@ -50,7 +50,7 @@ will be posted and become an Official Ministry Record.
 
 [/]----------------------------------------------------------------------------------------------------------------------[/]
 [# th:if="${d.sysMatchedList.size() > 0}"]
-EXACT MATCH - The record you submitted has matched an Official Ministry Record.
+EXACT MATCH - The student demographic record you have submitted has matched an existing Ministry PEN Record.
 
        PEN    Legal Surname             Legal Given Name          Legal Middle Names        Birth Date Gn School Id
     --------- ------------------------- ------------------------- ------------------------- ---------- -- ------------
@@ -61,10 +61,11 @@ MIN SAME
 
 [/]----------------------------------------------------------------------------------------------------------------------[/]
 [# th:if="${d.diffList.size() > 0}"]
-DIFFERENCES – The information in the Official Ministry record is different than the record you have submitted. PLEASE
-FAX the PEN Coordinator any legal documentation that indicates the information in the record you have submitted is
-correct. Also, listed in this section are any 'changed' PENs.  Please replace your current PEN section with the
-Official Ministry PEN.
+DIFFERENCES – The existing student demographic information in PEN is different than the student demographic record
+that you have submitted.  Please provide the PEN Coordinator with the current valid Legal Identification indicating
+that the information in the record you have submitted is correct.  If the report identifies a change in PEN, Please
+replace your current PEN with the Official Ministry PEN in your school database.  MyEducation users NOTE: You must
+have the old PEN Nulled by your MyEd HelpDesk
 
        PEN    Legal Surname             Legal Given Name          Legal Middle Names        Birth Date Gn School Id
     --------- ------------------------- ------------------------- ------------------------- ---------- -- ------------
