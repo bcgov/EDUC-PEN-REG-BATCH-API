@@ -178,6 +178,32 @@ public class PenRequestBatchSagaControllerTest extends BasePenRegAPITest {
   }
 
   @Test
+  public void testRepostReports_GivenStudentSagaWithSameBatchInProcess_ShouldReturnStatusConflict() throws Exception {
+    final var studentPayload = this.placeholderPenRequestBatchStudentActionsSagaData();
+    final var payload = this.placeholderPenRequestBatchActionsSagaData(this.penRequestBatchID);
+    this.sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA.toString(), "Test", studentPayload, null,
+      UUID.fromString(this.penRequestBatchID));
+    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/repost-reports")
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_REPOST_SAGA")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .accept(MediaType.APPLICATION_JSON)
+      .content(payload)).andDo(print()).andExpect(status().isConflict());
+  }
+
+  @Test
+  public void testProcessStudentRequestMatchedByUser_GivenOtherSagaWithSameBatchIdInProcess_ShouldReturnStatusConflict() throws Exception {
+    final var payload = this.placeholderPenRequestBatchStudentActionsSagaData();
+    final var parentPayload = this.placeholderPenRequestBatchActionsSagaData(this.penRequestBatchID);
+    this.sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA.toString(), "Test", parentPayload, null,
+      UUID.fromString(this.penRequestBatchID));
+    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/user-match")
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_USER_MATCH_SAGA")))
+      .contentType(MediaType.APPLICATION_JSON)
+      .accept(MediaType.APPLICATION_JSON)
+      .content(payload)).andDo(print()).andExpect(status().isConflict());
+  }
+
+  @Test
   public void testArchiveAndReturnAllFiles_GivenValidPayload_ShouldReturnStatusOk() throws Exception {
     this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/archive-and-return")
         .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_ARCHIVE_SAGA")))

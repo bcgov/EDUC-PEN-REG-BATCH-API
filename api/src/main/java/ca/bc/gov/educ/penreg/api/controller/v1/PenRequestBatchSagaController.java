@@ -89,8 +89,10 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
 
   private ResponseEntity<String> processStudentRequest(SagaEnum sagaName, BasePenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
     var penRequestBatchStudentID = penRequestBatchStudentSagaData.getPenRequestBatchStudentID();
-    var sagaInProgress = getSagaService().findAllByPenRequestBatchStudentIDAndStatusIn(penRequestBatchStudentID, getStatusesFilter());
-    if (!sagaInProgress.isEmpty()) {
+    var penRequestBatchID = penRequestBatchStudentSagaData.getPenRequestBatchID();
+    var sagaInProgress = !this.getSagaService().findAllByPenRequestBatchStudentIDAndStatusIn(penRequestBatchStudentID, getStatusesFilter()).isEmpty();
+    var parentSagaInProgress = !this.getSagaService().findAllByPenRequestBatchIDInAndStatusIn(List.of(penRequestBatchID), this.getStatusesFilter()).isEmpty();
+    if (sagaInProgress || parentSagaInProgress) {
       return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
     try {
