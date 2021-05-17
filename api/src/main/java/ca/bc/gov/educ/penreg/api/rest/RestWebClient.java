@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.rest;
 
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
-import io.netty.handler.logging.LogLevel;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -17,8 +16,6 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import reactor.netty.http.client.HttpClient;
-
-import java.time.Duration;
 
 /**
  * The type Rest web client.
@@ -39,8 +36,7 @@ public class RestWebClient {
    */
   public RestWebClient(final ApplicationProperties props) {
     this.props = props;
-    this.client = HttpClient.create().compress(true)
-      .resolver(spec -> spec.queryTimeout(Duration.ofMillis(200)).trace("DNS", LogLevel.TRACE));
+    this.client = HttpClient.create().compress(true);
     this.client.warmup()
       .block();
   }
