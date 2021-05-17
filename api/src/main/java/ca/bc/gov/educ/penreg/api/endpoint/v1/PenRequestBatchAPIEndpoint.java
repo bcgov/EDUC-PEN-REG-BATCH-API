@@ -80,7 +80,7 @@ public interface PenRequestBatchAPIEndpoint {
   @Transactional
   @Tag(name = "Endpoint to update Pen Request Batch Entity.", description = "Endpoint to update the Pen Request Batch Entity")
   @Schema(name = "PenRequestBatch", implementation = PenRequestBatch.class)
-  PenRequestBatch updatePenRequestBatch(@Validated @RequestBody PenRequestBatch penRequestBatch, @PathVariable UUID penRequestBatchID);
+  ResponseEntity<PenRequestBatch> updatePenRequestBatch(@Validated @RequestBody PenRequestBatch penRequestBatch, @PathVariable UUID penRequestBatchID);
 
 
   /**
