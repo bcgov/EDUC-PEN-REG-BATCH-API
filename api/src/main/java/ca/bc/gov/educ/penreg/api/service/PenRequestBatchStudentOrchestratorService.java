@@ -86,8 +86,8 @@ public class PenRequestBatchStudentOrchestratorService {
           var isRecordAlreadyPresent = false;
           for (final var validationIssue : student.getPenRequestBatchStudentValidationIssueEntities()) {
             if (StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationFieldCode(), el.getPenRequestBatchValidationFieldCode())
-                && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationIssueSeverityCode(), el.getPenRequestBatchValidationIssueSeverityCode())
-                && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationIssueTypeCode(), el.getPenRequestBatchValidationIssueTypeCode())) {
+              && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationIssueSeverityCode(), el.getPenRequestBatchValidationIssueSeverityCode())
+              && StringUtils.equalsIgnoreCase(validationIssue.getPenRequestBatchValidationIssueTypeCode(), el.getPenRequestBatchValidationIssueTypeCode())) {
               isRecordAlreadyPresent = true;
               break;
             }
@@ -145,18 +145,27 @@ public class PenRequestBatchStudentOrchestratorService {
     }
     final var usualFirstName = sagaData.getUsualFirstName();
     if (StringUtils.isNotEmpty(usualFirstName)
-        && (StringUtils.length(StringUtils.trim(usualFirstName)) == 1 || StringUtils.equals(usualFirstName, sagaData.getLegalFirstName()))) {
+      && (StringUtils.length(StringUtils.trim(usualFirstName)) == 1 || StringUtils.equals(usualFirstName, sagaData.getLegalFirstName()))) {
       updatedPayload.setUsualFirstName("");
     }
 
     final var usualLastName = sagaData.getUsualLastName();
     if (StringUtils.isNotEmpty(usualLastName)
-        && (StringUtils.length(StringUtils.trim(usualLastName)) == 1 || StringUtils.equals(usualLastName, sagaData.getLegalLastName()))) {
+      && (StringUtils.length(StringUtils.trim(usualLastName)) == 1 || StringUtils.equals(usualLastName, sagaData.getLegalLastName()))) {
       updatedPayload.setUsualLastName("");
     }
     final var usualMiddleName = sagaData.getUsualMiddleNames();
     if (this.doesMiddleNameNeedsToBeBlank(usualMiddleName, sagaData)) {
       updatedPayload.setUsualMiddleNames("");
+    }
+    if (StringUtils.isNotBlank(updatedPayload.getUsualFirstName())) {
+      updatedPayload.setUsualFirstName(this.scrubNameField(updatedPayload.getUsualFirstName()));
+    }
+    if (StringUtils.isNotBlank(updatedPayload.getUsualMiddleNames())) {
+      updatedPayload.setUsualMiddleNames(this.scrubNameField(updatedPayload.getUsualMiddleNames()));
+    }
+    if (StringUtils.isNotBlank(updatedPayload.getUsualLastName())) {
+      updatedPayload.setUsualLastName(this.scrubNameField(updatedPayload.getUsualLastName()));
     }
 
     return updatedPayload;
@@ -174,11 +183,11 @@ public class PenRequestBatchStudentOrchestratorService {
    */
   private boolean doesMiddleNameNeedsToBeBlank(final String usualMiddleName, final PenRequestBatchStudentSagaData sagaData) {
     return StringUtils.isNotEmpty(usualMiddleName)
-        && (usualMiddleName.trim().length() == 1
-        || this.areBothFieldValueEqual(usualMiddleName, sagaData.getLegalMiddleNames())
-        || this.areBothFieldValueEqual(usualMiddleName, sagaData.getLegalFirstName())
-        || (StringUtils.isNotBlank(sagaData.getLegalMiddleNames()) && sagaData.getLegalMiddleNames().contains(usualMiddleName))
-        || (usualMiddleName.trim().equals(sagaData.getLegalFirstName() + " " + sagaData.getLegalMiddleNames())));
+      && (usualMiddleName.trim().length() == 1
+      || this.areBothFieldValueEqual(usualMiddleName, sagaData.getLegalFirstName())
+      || this.areBothFieldValueEqual(usualMiddleName, sagaData.getUsualFirstName())
+      || (usualMiddleName.trim().equals(sagaData.getLegalFirstName() + " " + sagaData.getLegalMiddleNames()))
+      || (StringUtils.isNotBlank(sagaData.getLegalMiddleNames()) && sagaData.getLegalMiddleNames().contains(usualMiddleName)));
   }
 
   /**
