@@ -99,7 +99,7 @@ public class ResponseFileGeneratorService {
             x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode())) &&
             x.getLocalID() != null).collect(Collectors.toList());
 
-    byte[] bFile = null;
+    byte[] bFile;
     if (!filteredStudents.isEmpty()) {
       final StringBuilder idsFile = new StringBuilder();
 
@@ -110,7 +110,7 @@ public class ResponseFileGeneratorService {
           .append(student.getMincode())
           .append(String.format("%12s", student.getLocalID()).replace(' ', '0'))
           .append(student.getPen()).append(" ")
-          .append(student.getLegalLastName())
+          .append(String.format("%-25s", student.getLegalLastName()))
           .append("\n");
         } else {
           log.error("StudentId was not found. This should not have happened.");
@@ -143,7 +143,7 @@ public class ResponseFileGeneratorService {
     final List<PenRequestBatchStudent> filteredStudents = penRequestBatchStudentEntities.stream().filter(x ->
             (x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode()))).collect(Collectors.toList());
 
-    byte[] bFile = null;
+    byte[] bFile;
 
     if (!filteredStudents.isEmpty()) {
       // retrieve the original prb file from school
