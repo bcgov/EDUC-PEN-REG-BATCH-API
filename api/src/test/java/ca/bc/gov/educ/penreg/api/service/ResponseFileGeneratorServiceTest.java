@@ -67,10 +67,10 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
     final var students = PenRequestBatchTestUtils.createStudents(batchList.get(0));
     final var penWebBlob = this.responseFileGeneratorService.getIDSBlob(this.batchList.get(0), this.batchList.get(0).getPenRequestBatchStudentEntities().stream().map(mapper::toStructure).collect(Collectors.toList()), students);
-    assertThat(new String(penWebBlob.getFileContents(), StandardCharsets.UTF_8)).contains("E0310210518204630109987123456789 JOSEPH\n");
-    assertThat(new String(penWebBlob.getFileContents(), StandardCharsets.UTF_8)).contains("E0310210518000204630290123456789 JOSEPH\n");
-    assertThat(new String(penWebBlob.getFileContents(), StandardCharsets.UTF_8)).contains("E0310210518000002046293123456789 JEBSTER\n");
-    assertThat(new String(penWebBlob.getFileContents(), StandardCharsets.UTF_8)).contains("E0310210518000000022102123456789 JEY\n");
+    assertThat(new String(penWebBlob.getFileContents(), StandardCharsets.UTF_8)).contains("E0310210518204630109987123456789 JOSEPH                   \n");
+    assertThat(new String(penWebBlob.getFileContents(), StandardCharsets.UTF_8)).contains("E0310210518000204630290123456789 JOSEPH                   \n");
+    assertThat(new String(penWebBlob.getFileContents(), StandardCharsets.UTF_8)).contains("E0310210518000002046293123456789 JEBSTER                  \n");
+    assertThat(new String(penWebBlob.getFileContents(), StandardCharsets.UTF_8)).contains("E0310210518000000022102123456789 JEY                      \n");
   }
 
   @Test
