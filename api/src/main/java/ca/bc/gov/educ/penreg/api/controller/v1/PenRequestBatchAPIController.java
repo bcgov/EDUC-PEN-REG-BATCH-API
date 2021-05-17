@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes;
+import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchAPIEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
@@ -20,6 +21,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
+import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequest;
@@ -105,6 +107,11 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    */
   @Getter(PRIVATE)
   private final PenRequestBatchStudentService studentService;
+  /**
+   * The Saga service
+   */
+  @Getter(PRIVATE)
+  private final SagaService sagaService;
 
 
   /**
@@ -116,11 +123,16 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * @param studentService                the student service
    */
   @Autowired
-  public PenRequestBatchAPIController(final PenRegBatchFilterSpecs penRegBatchFilterSpecs, final PenRegBatchStudentFilterSpecs penRegBatchStudentFilterSpecs, final PenRequestBatchService service, final PenRequestBatchStudentService studentService) {
+  public PenRequestBatchAPIController(final PenRegBatchFilterSpecs penRegBatchFilterSpecs,
+                                      final PenRegBatchStudentFilterSpecs penRegBatchStudentFilterSpecs,
+                                      final PenRequestBatchService service,
+                                      final PenRequestBatchStudentService studentService,
+                                      SagaService sagaService) {
     this.penRegBatchFilterSpecs = penRegBatchFilterSpecs;
     this.penRegBatchStudentFilterSpecs = penRegBatchStudentFilterSpecs;
     this.service = service;
     this.studentService = studentService;
+    this.sagaService = sagaService;
   }
 
   /**
@@ -156,10 +168,14 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
    * @return the pen request batch
    */
   @Override
-  public PenRequestBatch updatePenRequestBatch(final PenRequestBatch penRequestBatch, final UUID penRequestBatchID) {
+  public ResponseEntity<PenRequestBatch> updatePenRequestBatch(final PenRequestBatch penRequestBatch, final UUID penRequestBatchID) {
+    var sagaInProgress = !this.getSagaService().findAllByPenRequestBatchIDInAndStatusIn(List.of(penRequestBatchID), this.getStatusesFilter()).isEmpty();
+    if (sagaInProgress) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
     final var model = mapper.toModel(penRequestBatch);
     this.populateAuditColumns(model);
-    return mapper.toStructure(this.getService().updatePenRequestBatch(model, penRequestBatchID));
+    return ResponseEntity.ok(mapper.toStructure(this.getService().updatePenRequestBatch(model, penRequestBatchID)));
   }
 
   /**
@@ -720,6 +736,13 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
     }
     model.setCreateDate(LocalDateTime.now());
     model.setUpdateDate(LocalDateTime.now());
+  }
+
+  protected List<String> getStatusesFilter() {
+    var statuses = new ArrayList<String>();
+    statuses.add(SagaStatusEnum.IN_PROGRESS.toString());
+    statuses.add(SagaStatusEnum.STARTED.toString());
+    return statuses;
   }
 
 }

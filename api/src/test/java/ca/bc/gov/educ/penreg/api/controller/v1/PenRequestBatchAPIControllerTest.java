@@ -14,6 +14,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
+import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenMatchRecord;
 import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
@@ -35,6 +36,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -44,6 +46,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA;
 import static ca.bc.gov.educ.penreg.api.struct.v1.Condition.AND;
 import static ca.bc.gov.educ.penreg.api.struct.v1.Condition.OR;
 import static java.util.stream.Collectors.toList;
@@ -98,6 +101,9 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
 
   @Autowired
   RestUtils restUtils;
+
+  @Autowired
+  SagaService sagaService;
 
   /**
    * Sets up.
@@ -720,6 +726,23 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
   }
 
   @Test
+  public void testUpdatePenRequestBatch_GivenStudentSagaWithSameBatchInProcess_ShouldReturnStatusConflict() throws Exception {
+    final var models = this.createBatchStudents(1);
+    final var batch = mapper.toStructure(models.get(0));
+    batch.setPenRequestBatchStatusCode("ARCHIVED");
+    final var request = new ObjectMapper().writeValueAsString(batch);
+
+    final var studentPayload = this.placeholderPenRequestBatchStudentActionsSagaData(batch.getPenRequestBatchID());
+    this.sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA.toString(), "Test", studentPayload, null,
+      UUID.fromString(batch.getPenRequestBatchID()));
+
+    this.mockMvc.perform(put(String.format("/api/v1/pen-request-batch/%s", batch.getPenRequestBatchID()))
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
+      .contentType(APPLICATION_JSON).accept(APPLICATION_JSON)
+      .content(request)).andDo(print()).andExpect(status().isConflict());
+  }
+
+  @Test
   public void testStats_givenDataINDB_ShouldReturnStatusOkWithData() throws Exception {
     final File file = new File(
       Objects.requireNonNull(this.getClass().getClassLoader().getResource("API_PEN_REQUEST_BATCH_PEN_REQUEST_BATCH.json")).getFile()
@@ -1045,5 +1068,15 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
     final var pdfBlob = PENWebBlobEntity.builder().penWebBlobId(2L).mincode("10210518").fileName("sample_5_PSI_PDF").fileType("PDF")
       .fileContents("test data".getBytes()).submissionNumber(submissionNumber).build();
     this.penWebBlobRepository.saveAll(List.of(penBlob, pdfBlob));
+  }
+
+  protected String placeholderPenRequestBatchStudentActionsSagaData(String batchID) {
+    return " {\n" +
+      "    \"createUser\": \"test\",\n" +
+      "    \"updateUser\": \"test\",\n" +
+      "    \"penRequestBatchID\": \"" + batchID + "\",\n" +
+      "    \"penRequestBatchStudentID\": \"7f000101-7151-1d84-8171-5187006c0001\",\n" +
+      "    \"legalFirstName\": \"Jack\"\n" +
+      "  }";
   }
 }
