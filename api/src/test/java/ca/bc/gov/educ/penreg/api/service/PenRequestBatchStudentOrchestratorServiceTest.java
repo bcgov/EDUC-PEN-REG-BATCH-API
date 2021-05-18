@@ -199,8 +199,12 @@ public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestra
     eventPayload.setPenStatus("D1");
     final PenMatchRecord record = new PenMatchRecord();
     final List<PenRequestBatchEntity> batches = this.penRequestBatchRepository.findAll();
+    assertThat(batches.size()).isEqualTo(1);
     val firstBatchRecord = batches.get(0);
+
     final PenRequestBatchStudentEntity studEntity = firstBatchRecord.getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow();
+    firstBatchRecord.getPenRequestBatchStudentEntities().clear();
+    firstBatchRecord.getPenRequestBatchStudentEntities().add(studEntity); // make sure only one record exist.
     BeanUtils.copyProperties(studEntity, this.sagaData);
     this.sagaData.setLocalID(" " + studEntity.getLocalID() + " " + studEntity.getLocalID().charAt(0) + " ");
     this.penRequestBatchRepository.save(firstBatchRecord);
