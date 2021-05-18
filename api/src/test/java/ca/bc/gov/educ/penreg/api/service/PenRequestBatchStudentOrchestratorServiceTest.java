@@ -205,9 +205,11 @@ public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestra
     final PenRequestBatchStudentEntity studEntity = firstBatchRecord.getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow();
     firstBatchRecord.getPenRequestBatchStudentEntities().clear();
     firstBatchRecord.getPenRequestBatchStudentEntities().add(studEntity); // make sure only one record exist.
+    this.penRequestBatchRepository.save(firstBatchRecord);
+    assertThat(firstBatchRecord.getPenRequestBatchStudentEntities().size()).isEqualTo(1);
     BeanUtils.copyProperties(studEntity, this.sagaData);
     this.sagaData.setLocalID(" " + studEntity.getLocalID() + " " + studEntity.getLocalID().charAt(0) + " ");
-    this.penRequestBatchRepository.save(firstBatchRecord);
+
     record.setStudentID(studEntity.getPenRequestBatchStudentID().toString());
     when(this.restUtils.getStudentByStudentID(studEntity.getPenRequestBatchStudentID().toString()))
       .thenReturn(Student.builder()
