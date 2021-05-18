@@ -112,41 +112,23 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
     saga.setSagaState(VALIDATE_STUDENT_DEMOGRAPHICS.toString());
     saga.setPayload(JsonUtil.getJsonStringFromObject(scrubbedSagaData)); // update the payload with scrubbed values to use it in the saga process...
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-    if (this.isValidationStepRequired(penRequestBatchStudentSagaData.getMincode())) {
-      final var validationPayload = validationMapper.toStudentDemogValidationPayload(scrubbedSagaData);
+    final var validationPayload = validationMapper.toStudentDemogValidationPayload(scrubbedSagaData);
 
-      validationPayload.setTransactionID(saga.getSagaId().toString());
-      final var eventPayload = JsonUtil.getJsonString(validationPayload);
-      if (eventPayload.isPresent()) {
-        final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-            .eventType(VALIDATE_STUDENT_DEMOGRAPHICS)
-            .replyTo(this.getTopicToSubscribe())
-            .eventPayload(eventPayload.get())
-            .build();
-        this.postMessageToTopic(PEN_SERVICES_API_TOPIC.toString(), nextEvent);
-        log.info("message sent to PEN_SERVICES_API_TOPIC for VALIDATE_STUDENT_DEMOGRAPHICS Event. :: {}", saga.getSagaId());
-      } else {
-        log.error("event payload is not present this should not have happened. :: {}", saga.getSagaId());
-      }
+    validationPayload.setTransactionID(saga.getSagaId().toString());
+    final var eventPayload = JsonUtil.getJsonString(validationPayload);
+    if (eventPayload.isPresent()) {
+      final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
+          .eventType(VALIDATE_STUDENT_DEMOGRAPHICS)
+          .replyTo(this.getTopicToSubscribe())
+          .eventPayload(eventPayload.get())
+          .build();
+      this.postMessageToTopic(PEN_SERVICES_API_TOPIC.toString(), nextEvent);
+      log.info("message sent to PEN_SERVICES_API_TOPIC for VALIDATE_STUDENT_DEMOGRAPHICS Event. :: {}", saga.getSagaId());
     } else {
-      this.handleEvent(Event.builder().sagaId(saga.getSagaId())
-          .eventType(VALIDATE_STUDENT_DEMOGRAPHICS).eventOutcome(SKIP_VALIDATION)
-          .build());
+      log.error("event payload is not present this should not have happened. :: {}", saga.getSagaId());
     }
 
   }
-
-  /**
-   * For certain district codes the validation is not required.
-   *
-   * @param mincode the mincode of the batch file.
-   * @return true or false
-   */
-  protected boolean isValidationStepRequired(@NonNull final String mincode) {
-    final String districtCode = StringUtils.substring(mincode, 0, 3);
-    return !this.applicationProperties.getDistrictCodesToNotValidate().contains(districtCode);
-  }
-
 
   /**
    * it will hand off the request to downstream service class to process the results.

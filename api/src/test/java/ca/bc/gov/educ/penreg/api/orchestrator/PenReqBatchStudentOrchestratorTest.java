@@ -166,10 +166,10 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
   public void testHandleEvent_givenValidSagaDataAndEvenType_shouldExecuteNextEventVALIDATE_STUDENT_DEMOGRAPHICS() throws InterruptedException, TimeoutException, IOException {
     final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
     final var event = Event.builder()
-        .eventType(EventType.INITIATED)
-        .eventOutcome(EventOutcome.INITIATE_SUCCESS)
-        .sagaId(this.saga.getSagaId())
-        .build();
+            .eventType(EventType.INITIATED)
+            .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+            .sagaId(this.saga.getSagaId())
+            .build();
     this.orchestrator.handleEvent(event);
     verify(this.messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(PEN_SERVICES_API_TOPIC.toString()), this.eventCaptor.capture());
     final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
@@ -181,42 +181,6 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
     assertThat(sagaFromDB.get().getSagaState()).isEqualTo(VALIDATE_STUDENT_DEMOGRAPHICS.toString());
     final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(1);
-    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.INITIATED.toString());
-    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
-  }
-
-  @Test
-  public void testHandleEvent_givenValidSagaDataAndEvenTypeAndDistrictCodeToSkipValidation_shouldExecuteNextEventPROCESS_PEN_MATCH() throws InterruptedException, TimeoutException,
-      IOException {
-    final var sagaInDB = this.sagaService.findSagaById(this.saga.getSagaId());
-    sagaInDB.ifPresent(saga -> {
-      try {
-        val payload = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, saga.getPayload());
-        payload.setMincode("10300001");
-        JsonUtil.getJsonStringFromObject(payload);
-        saga.setPayload(JsonUtil.getJsonStringFromObject(payload));
-        this.repository.save(saga);
-      } catch (final JsonProcessingException e) {
-        //do nothing..
-      }
-    });
-    final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
-    final var event = Event.builder()
-        .eventType(EventType.INITIATED)
-        .eventOutcome(EventOutcome.INITIATE_SUCCESS)
-        .sagaId(this.saga.getSagaId())
-        .build();
-    this.orchestrator.handleEvent(event);
-    verify(this.messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(PEN_MATCH_API_TOPIC.toString()), this.eventCaptor.capture());
-    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
-    assertThat(newEvent.getEventType()).isEqualTo(PROCESS_PEN_MATCH);
-    assertThat(newEvent.getEventPayload()).isNotEmpty();
-    assertThat(newEvent.getEventPayload()).contains(this.sagaData.getDob());
-    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
-    assertThat(sagaFromDB).isPresent();
-    assertThat(sagaFromDB.get().getSagaState()).isEqualTo(PROCESS_PEN_MATCH.toString());
-    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
-    assertThat(sagaStates.size()).isEqualTo(2);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.INITIATED.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
   }
@@ -337,18 +301,6 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
   @Test
   public void testHandleEvent_givenValidSagaDataAndEvenTypeAndPenMatchResultF1_shouldMarkSagaComplete() throws InterruptedException, TimeoutException, IOException {
     this.runFixableStudentTestBasedOnArgument("F1");
-  }
-
-  @Test
-  public void testIsValidationStepRequired_givenDistrictCodeInSkippedList_shouldReturnFalse() {
-    val result = this.orchestrator.isValidationStepRequired("10350000");
-    assertThat(result).isFalse();
-  }
-
-  @Test
-  public void testIsValidationStepRequired_givenDistrictCodeNotInSkippedList_shouldReturnTrue() {
-    val result = this.orchestrator.isValidationStepRequired("10150000");
-    assertThat(result).isTrue();
   }
 
   private void runFixableStudentTestBasedOnArgument(final String penStatus) throws IOException, InterruptedException, TimeoutException {
