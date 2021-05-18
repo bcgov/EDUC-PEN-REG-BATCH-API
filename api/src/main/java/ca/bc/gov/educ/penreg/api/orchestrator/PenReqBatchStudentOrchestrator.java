@@ -87,7 +87,6 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
   public void populateStepsToExecuteMap() {
     this.stepBuilder()
         .begin(VALIDATE_STUDENT_DEMOGRAPHICS, this::validateStudentDemographics)
-        .step(VALIDATE_STUDENT_DEMOGRAPHICS, SKIP_VALIDATION, PROCESS_PEN_MATCH, this::processPenMatch)
         .step(VALIDATE_STUDENT_DEMOGRAPHICS, VALIDATION_SUCCESS_NO_ERROR_WARNING, PROCESS_PEN_MATCH, this::processPenMatch)
         .step(VALIDATE_STUDENT_DEMOGRAPHICS, VALIDATION_SUCCESS_WITH_ONLY_WARNING, PROCESS_PEN_MATCH, this::processPenMatch)
         .end(VALIDATE_STUDENT_DEMOGRAPHICS, VALIDATION_SUCCESS_WITH_ERROR, this::completePenRequestBatchStudentSaga)
