@@ -75,7 +75,4 @@ public class ApplicationProperties {
   @Value("${number.records.for.batch.hold}")
   private int numRecordsForBatchHold;
 
-  @Value("${skip.validation.for.district.codes}")
-  private Set<String> districtCodesToNotValidate;
-
 }

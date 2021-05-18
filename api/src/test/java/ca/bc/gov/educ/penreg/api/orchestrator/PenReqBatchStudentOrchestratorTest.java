@@ -339,18 +339,6 @@ public class PenReqBatchStudentOrchestratorTest extends BaseOrchestratorTest {
     this.runFixableStudentTestBasedOnArgument("F1");
   }
 
-  @Test
-  public void testIsValidationStepRequired_givenDistrictCodeInSkippedList_shouldReturnFalse() {
-    val result = this.orchestrator.isValidationStepRequired("10350000");
-    assertThat(result).isFalse();
-  }
-
-  @Test
-  public void testIsValidationStepRequired_givenDistrictCodeNotInSkippedList_shouldReturnTrue() {
-    val result = this.orchestrator.isValidationStepRequired("10150000");
-    assertThat(result).isTrue();
-  }
-
   private void runFixableStudentTestBasedOnArgument(final String penStatus) throws IOException, InterruptedException, TimeoutException {
     final var eventPayload = new PenMatchResult();
     eventPayload.setPenStatus(penStatus);
