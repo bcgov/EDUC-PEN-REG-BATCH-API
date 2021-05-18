@@ -207,13 +207,14 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
    * case C1:
    * case D1:
    *
-   * @param saga                   the saga
-   * @param penMatchResult         the pen match result
-   * @param penRequestBatchStudent the pen request batch student
-   * @param penRequestBatch        the pen request batch
+   * @param saga                           the saga
+   * @param penMatchResult                 the pen match result
+   * @param penRequestBatchStudent         the pen request batch student
+   * @param penRequestBatch                the pen request batch
+   * @param penRequestBatchStudentSagaData th saga data which contains scrubbed payload.
    * @return the event
    */
-  private Event handleSystemMatchedStatus(final Saga saga, final PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent, final PenRequestBatchEntity penRequestBatch) {
+  private Event handleSystemMatchedStatus(final Saga saga, final PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent, final PenRequestBatchEntity penRequestBatch, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
     final var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
     if (penMatchRecordOptional.isPresent()) {
       final var penMatchRecord = penMatchRecordOptional.get();
@@ -222,9 +223,9 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
       penRequestBatchStudent.setStudentID(UUID.fromString(studentID));
       penRequestBatchStudent.setAssignedPEN(penMatchRecord.getMatchingPEN());
       penRequestBatchStudent.setBestMatchPEN(penMatchRecord.getMatchingPEN());
-      penRequestBatchStudent = this.getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
+      this.getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
       final var studentFromStudentAPI = this.getRestUtils().getStudentByStudentID(studentID);
-      this.updateStudentData(studentFromStudentAPI, penRequestBatchStudent, penRequestBatch);
+      this.updateStudentData(studentFromStudentAPI, penRequestBatchStudentSagaData, penRequestBatch);
       this.getRestUtils().updateStudent(studentFromStudentAPI);
       return Event.builder().sagaId(saga.getSagaId())
         .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
@@ -246,22 +247,22 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
    * Postal Code
    * TBD: Do any of the other demographic values get updated? For K-12? For PSIs?
    *
-   * @param studentFromStudentAPI  the student from student api
-   * @param penRequestBatchStudent the pen request batch student
-   * @param penRequestBatchEntity  the pen request batch entity
+   * @param studentFromStudentAPI          the student from student api
+   * @param penRequestBatchStudentSagaData th saga data which contains scrubbed payload.
+   * @param penRequestBatchEntity          the pen request batch entity
    */
-  private void updateStudentData(final Student studentFromStudentAPI, final PenRequestBatchStudentEntity penRequestBatchStudent, final PenRequestBatchEntity penRequestBatchEntity) {
+  private void updateStudentData(final Student studentFromStudentAPI, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, final PenRequestBatchEntity penRequestBatchEntity) {
     studentFromStudentAPI.setMincode(penRequestBatchEntity.getMincode());
     // updated as part of https://gww.jira.educ.gov.bc.ca/browse/PEN-1347
-    final var changesBadLocalIDIfExistBeforeSetValue = LocalIDUtil.changeBadLocalID(StringUtils.remove(penRequestBatchStudent.getLocalID(), ' '));
+    final var changesBadLocalIDIfExistBeforeSetValue = LocalIDUtil.changeBadLocalID(StringUtils.remove(penRequestBatchStudentSagaData.getLocalID(), ' '));
     studentFromStudentAPI.setLocalID(changesBadLocalIDIfExistBeforeSetValue);
-    this.updateGradeCodeAndGradeYear(studentFromStudentAPI, penRequestBatchStudent);
+    this.updateGradeCodeAndGradeYear(studentFromStudentAPI, penRequestBatchStudentSagaData, penRequestBatchEntity);
 
-    if(StringUtils.isNotBlank(penRequestBatchStudent.getPostalCode())) {
-      studentFromStudentAPI.setPostalCode(penRequestBatchStudent.getPostalCode());
+    if (StringUtils.isNotBlank(penRequestBatchStudentSagaData.getPostalCode())) {
+      studentFromStudentAPI.setPostalCode(penRequestBatchStudentSagaData.getPostalCode());
     }
 
-    this.updateUsualNameFields(studentFromStudentAPI, penRequestBatchStudent);
+    this.updateUsualNameFields(studentFromStudentAPI, penRequestBatchStudentSagaData);
 
     studentFromStudentAPI.setHistoryActivityCode(StudentHistoryActivityCode.REQ_MATCH.getCode());
     studentFromStudentAPI.setUpdateUser(ALGORITHM);
@@ -276,11 +277,11 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
    */
 
 
-  private void updateGradeCodeAndGradeYear(final Student studentFromStudentAPI, final PenRequestBatchStudentEntity penRequestBatchStudent) {
-    if (!StringUtils.startsWith(penRequestBatchStudent.getPenRequestBatchEntity().getMincode(), "102")
-      && ((StringUtils.isNotBlank(penRequestBatchStudent.getGradeCode()) && StringUtils.isNotBlank(studentFromStudentAPI.getGradeCode()))
-      || (StringUtils.isNotBlank(penRequestBatchStudent.getGradeCode())))) {
-      studentFromStudentAPI.setGradeCode(penRequestBatchStudent.getGradeCode());
+  private void updateGradeCodeAndGradeYear(final Student studentFromStudentAPI, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, PenRequestBatchEntity penRequestBatchEntity) {
+    if (!StringUtils.startsWith(penRequestBatchEntity.getMincode(), "102")
+      && ((StringUtils.isNotBlank(penRequestBatchStudentSagaData.getGradeCode()) && StringUtils.isNotBlank(studentFromStudentAPI.getGradeCode()))
+      || (StringUtils.isNotBlank(penRequestBatchStudentSagaData.getGradeCode())))) {
+      studentFromStudentAPI.setGradeCode(penRequestBatchStudentSagaData.getGradeCode());
       val localDateTime = LocalDateTime.now();
       if (localDateTime.getMonthValue() > 6) {
         studentFromStudentAPI.setGradeYear(String.valueOf(localDateTime.getYear()));
@@ -292,24 +293,24 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
 
   //Added as part of PEN-1007; Update the usual given & surnames if provided and not blank
   // updated as part of https://gww.jira.educ.gov.bc.ca/browse/PEN-1346
-  private void updateUsualNameFields(final Student studentFromStudentAPI, final PenRequestBatchStudentEntity penRequestBatchStudent) {
+  private void updateUsualNameFields(final Student studentFromStudentAPI, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
 
-    if (StringUtils.equalsIgnoreCase(penRequestBatchStudent.getLegalFirstName(), penRequestBatchStudent.getUsualFirstName())) {
+    if (StringUtils.equalsIgnoreCase(penRequestBatchStudentSagaData.getLegalFirstName(), penRequestBatchStudentSagaData.getUsualFirstName())) {
       studentFromStudentAPI.setUsualFirstName(null);
-    } else if (StringUtils.isNotBlank(penRequestBatchStudent.getUsualFirstName())) {
-      studentFromStudentAPI.setUsualFirstName(penRequestBatchStudent.getUsualFirstName());
+    } else if (StringUtils.isNotBlank(penRequestBatchStudentSagaData.getUsualFirstName())) {
+      studentFromStudentAPI.setUsualFirstName(penRequestBatchStudentSagaData.getUsualFirstName());
     }
 
-    if (StringUtils.equalsIgnoreCase(penRequestBatchStudent.getLegalLastName(), penRequestBatchStudent.getUsualLastName())) {
+    if (StringUtils.equalsIgnoreCase(penRequestBatchStudentSagaData.getLegalLastName(), penRequestBatchStudentSagaData.getUsualLastName())) {
       studentFromStudentAPI.setUsualLastName(null);
-    } else if (StringUtils.isNotBlank(penRequestBatchStudent.getUsualLastName())) {
-      studentFromStudentAPI.setUsualLastName(penRequestBatchStudent.getUsualLastName());
+    } else if (StringUtils.isNotBlank(penRequestBatchStudentSagaData.getUsualLastName())) {
+      studentFromStudentAPI.setUsualLastName(penRequestBatchStudentSagaData.getUsualLastName());
     }
 
-    if (StringUtils.equalsIgnoreCase(penRequestBatchStudent.getLegalMiddleNames(), penRequestBatchStudent.getUsualMiddleNames())) {
+    if (StringUtils.equalsIgnoreCase(penRequestBatchStudentSagaData.getLegalMiddleNames(), penRequestBatchStudentSagaData.getUsualMiddleNames())) {
       studentFromStudentAPI.setUsualMiddleNames(null);
-    } else if (StringUtils.isNotBlank(penRequestBatchStudent.getLegalMiddleNames())) {
-      studentFromStudentAPI.setUsualMiddleNames(penRequestBatchStudent.getUsualMiddleNames());
+    } else if (StringUtils.isNotBlank(penRequestBatchStudentSagaData.getLegalMiddleNames())) {
+      studentFromStudentAPI.setUsualMiddleNames(penRequestBatchStudentSagaData.getUsualMiddleNames());
     }
   }
 
@@ -330,6 +331,6 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
 
   @Override
   protected Optional<Event> handleSystemMatchedStatus(final BatchStudentPenMatchProcessingPayload batchStudentPenMatchProcessingPayload) {
-    return Optional.ofNullable(this.handleSystemMatchedStatus(batchStudentPenMatchProcessingPayload.getSaga(), batchStudentPenMatchProcessingPayload.getPenMatchResult(), batchStudentPenMatchProcessingPayload.getPenRequestBatchStudentEntity(), batchStudentPenMatchProcessingPayload.getPenRequestBatchEntity()));
+    return Optional.ofNullable(this.handleSystemMatchedStatus(batchStudentPenMatchProcessingPayload.getSaga(), batchStudentPenMatchProcessingPayload.getPenMatchResult(), batchStudentPenMatchProcessingPayload.getPenRequestBatchStudentEntity(), batchStudentPenMatchProcessingPayload.getPenRequestBatchEntity(), batchStudentPenMatchProcessingPayload.getPenRequestBatchStudentSagaData()));
   }
 }

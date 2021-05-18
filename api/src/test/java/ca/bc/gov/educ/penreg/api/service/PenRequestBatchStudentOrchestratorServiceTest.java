@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
@@ -200,21 +201,18 @@ public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestra
     final List<PenRequestBatchEntity> batches = this.penRequestBatchRepository.findAll();
     val firstBatchRecord = batches.get(0);
     final PenRequestBatchStudentEntity studEntity = firstBatchRecord.getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow();
-    studEntity.setLocalID(" " + studEntity.getLocalID() + " " + studEntity.getLocalID().charAt(0) + " ");
-    studEntity.setUsualFirstName(studEntity.getLegalFirstName());
-    studEntity.setUsualLastName(studEntity.getLegalLastName());
-    studEntity.setUsualMiddleNames(studEntity.getLegalMiddleNames());
-    studEntity.setGradeCode("12");
+    BeanUtils.copyProperties(studEntity, this.sagaData);
+    this.sagaData.setLocalID(" " + studEntity.getLocalID() + " " + studEntity.getLocalID().charAt(0) + " ");
     this.penRequestBatchRepository.save(firstBatchRecord);
     record.setStudentID(studEntity.getPenRequestBatchStudentID().toString());
     when(this.restUtils.getStudentByStudentID(studEntity.getPenRequestBatchStudentID().toString()))
-        .thenReturn(Student.builder()
-            .studentID(studEntity.getPenRequestBatchStudentID().toString())
-            .legalFirstName(studEntity.getLegalFirstName())
-            .legalLastName(studEntity.getLegalLastName())
-            .legalMiddleNames(studEntity.getLegalMiddleNames())
-            .usualFirstName(studEntity.getUsualFirstName())
-            .usualLastName(studEntity.getUsualLastName())
+      .thenReturn(Student.builder()
+        .studentID(studEntity.getPenRequestBatchStudentID().toString())
+        .legalFirstName(studEntity.getLegalFirstName())
+        .legalLastName(studEntity.getLegalLastName())
+        .legalMiddleNames(studEntity.getLegalMiddleNames())
+        .usualFirstName(studEntity.getUsualFirstName())
+        .usualLastName(studEntity.getUsualLastName())
             .usualMiddleNames(studEntity.getUsualMiddleNames())
             .gradeCode("10")
             .pen(TEST_PEN)
@@ -262,7 +260,7 @@ public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestra
     val firstBatchRecord = batches.get(0);
     final PenRequestBatchStudentEntity studEntity = firstBatchRecord.getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow();
 
-    studEntity.setLocalID("N#A");
+    this.sagaData.setLocalID("N#A");
     this.penRequestBatchRepository.save(firstBatchRecord);
     record.setStudentID(studEntity.getPenRequestBatchStudentID().toString());
     when(this.restUtils.getStudentByStudentID(studEntity.getPenRequestBatchStudentID().toString()))
