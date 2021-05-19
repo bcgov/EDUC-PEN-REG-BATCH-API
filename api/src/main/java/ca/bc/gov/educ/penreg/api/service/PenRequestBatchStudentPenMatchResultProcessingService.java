@@ -294,24 +294,9 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
   //Added as part of PEN-1007; Update the usual given & surnames if provided and not blank
   // updated as part of https://gww.jira.educ.gov.bc.ca/browse/PEN-1346
   private void updateUsualNameFields(final Student studentFromStudentAPI, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
-
-    if (StringUtils.equalsIgnoreCase(penRequestBatchStudentSagaData.getLegalFirstName(), penRequestBatchStudentSagaData.getUsualFirstName())) {
-      studentFromStudentAPI.setUsualFirstName(null);
-    } else if (StringUtils.isNotBlank(penRequestBatchStudentSagaData.getUsualFirstName())) {
-      studentFromStudentAPI.setUsualFirstName(penRequestBatchStudentSagaData.getUsualFirstName());
-    }
-
-    if (StringUtils.equalsIgnoreCase(penRequestBatchStudentSagaData.getLegalLastName(), penRequestBatchStudentSagaData.getUsualLastName())) {
-      studentFromStudentAPI.setUsualLastName(null);
-    } else if (StringUtils.isNotBlank(penRequestBatchStudentSagaData.getUsualLastName())) {
-      studentFromStudentAPI.setUsualLastName(penRequestBatchStudentSagaData.getUsualLastName());
-    }
-
-    if (StringUtils.equalsIgnoreCase(penRequestBatchStudentSagaData.getLegalMiddleNames(), penRequestBatchStudentSagaData.getUsualMiddleNames())) {
-      studentFromStudentAPI.setUsualMiddleNames(null);
-    } else if (StringUtils.isNotBlank(penRequestBatchStudentSagaData.getLegalMiddleNames())) {
-      studentFromStudentAPI.setUsualMiddleNames(penRequestBatchStudentSagaData.getUsualMiddleNames());
-    }
+    studentFromStudentAPI.setUsualFirstName(penRequestBatchStudentSagaData.getUsualFirstName());
+    studentFromStudentAPI.setUsualLastName(penRequestBatchStudentSagaData.getUsualLastName());
+    studentFromStudentAPI.setUsualMiddleNames(penRequestBatchStudentSagaData.getUsualMiddleNames());
   }
 
   @Override
