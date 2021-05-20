@@ -99,19 +99,20 @@ public class RestUtils {
 
   private void initialize() {
     this.populateSchoolMap();
-    this.setGradeCodesMap();
+    this.setGradeCodes();
   }
 
   /**
    * Sets grade codes map.
    */
-  public void setGradeCodesMap() {
+  public void setGradeCodes() {
     val writeLock = this.gradeLock.writeLock();
     try {
       writeLock.lock();
       val result = this.webClient.get().uri(this.props.getStudentApiURL(), uri -> uri.path("/grade-codes").build()).header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).retrieve().bodyToFlux(GradeCode.class).collectList().block();
       if (!CollectionUtils.isEmpty(result)) {
         this.gradeCodes = result.stream().map(GradeCode::getGradeCode).collect(Collectors.toCollection(CopyOnWriteArrayList::new));
+        log.info("loaded {} grade codes", this.gradeCodes.size());
       }
     } finally {
       writeLock.unlock();
@@ -220,7 +221,7 @@ public class RestUtils {
       if (eventResponse.length > 0) {
         return Optional.of(JsonUtil.getJsonObjectFromByteArray(Student.class, eventResponse));
       }
-    } catch (InterruptedException | ExecutionException | TimeoutException | IOException e) {
+    } catch (final InterruptedException | ExecutionException | TimeoutException | IOException e) {
       Thread.currentThread().interrupt();
       log.error("Exception while get student by pen", e);
     }
