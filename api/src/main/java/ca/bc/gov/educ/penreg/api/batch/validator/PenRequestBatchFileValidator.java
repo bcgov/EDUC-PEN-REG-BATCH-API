@@ -110,10 +110,8 @@ public class PenRequestBatchFileValidator {
       var message = "";
       boolean firstErrorFound = false;
       for (final DataError error : ds.getErrors()) {
-        if (error.getErrorDesc() != null && error.getErrorDesc().contains("SHOULD BE 211")) { // Header record should be 211 characters long.
-          message = this.getHeaderRowLengthIncorrectMessage(message, error);
-          firstErrorFound = true;
-        } else if (error.getErrorDesc() != null && error.getErrorDesc().contains("SHOULD BE 234")) { // Details Record should be 234 characters long.
+        // ignore the header error to allow all flavours of header
+        if (error.getErrorDesc() != null && error.getErrorDesc().contains("SHOULD BE 234")) { // Details Record should be 234 characters long.
           message = this.getDetailRowLengthIncorrectMessage(message, error);
           firstErrorFound = true;
         } else if (error.getErrorDesc() != null && error.getErrorDesc().contains("SHOULD BE 224")) { // Trailer Record should be 224 characters long.
@@ -124,7 +122,9 @@ public class PenRequestBatchFileValidator {
           break; // if system found one error , system breaks the loop.
         }
       }
-      throw new FileUnProcessableException(INVALID_ROW_LENGTH, guid, PenRequestBatchStatusCodes.LOAD_FAIL, message);
+      if(firstErrorFound) {
+        throw new FileUnProcessableException(INVALID_ROW_LENGTH, guid, PenRequestBatchStatusCodes.LOAD_FAIL, message);
+      }
     }
   }
 

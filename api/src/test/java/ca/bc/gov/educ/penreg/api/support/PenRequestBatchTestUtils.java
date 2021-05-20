@@ -239,6 +239,12 @@ public class PenRequestBatchTestUtils {
     return studentSagaRecords;
   }
 
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public String createBatchStudentsFromFile(final String blobFileName, final String studentStatusCode) throws java.io.IOException,
+    FileUnProcessableException {
+    return createBatchStudentsFromFile(blobFileName, studentStatusCode, "10210518");
+  }
+
   /**
    * make sure the file is a valid file, free from formatting errors.
    * it will return the submission number for future use.
@@ -246,7 +252,7 @@ public class PenRequestBatchTestUtils {
    * @param blobFileName the name of the file from resources folder.
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public String createBatchStudentsFromFile(final String blobFileName, final String studentStatusCode) throws java.io.IOException,
+  public String createBatchStudentsFromFile(final String blobFileName, final String studentStatusCode, final String mincode) throws java.io.IOException,
       FileUnProcessableException {
     try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
       final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(blobFileName)).getFile());
@@ -259,10 +265,9 @@ public class PenRequestBatchTestUtils {
       this.penRegBatchProcessor.populateBatchFile(UUID.randomUUID().toString(), ds, batchFile);
 
       assertThat(batchFile.getBatchFileHeader()).isNotNull();
-      assertThat(batchFile.getBatchFileHeader().getMincode()).isNotNull();
       final String submissionNumber = ("T" + randomNum).substring(0, 8);
       final var tsw =
-          PENWebBlobEntity.builder().penWebBlobId(1L).mincode(batchFile.getBatchFileHeader().getMincode()).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName(blobFileName).fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(submissionNumber).build();
+          PENWebBlobEntity.builder().penWebBlobId(1L).mincode(mincode).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName(blobFileName).fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(submissionNumber).build();
       final PenRequestBatchEntity entity =
           PenRequestBatchFileMapper.mapper.toPenReqBatchEntityLoaded(tsw, batchFile); // batch file can be processed
       // further and persisted.

@@ -148,6 +148,7 @@ public class PenRegBatchProcessor {
       batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents())));
       final DataSet ds = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get()).setStoreRawDataToDataError(true).setStoreRawDataToDataSet(true).setNullEmptyStrings(true).parse();
       this.penRequestBatchFileValidator.validateFileForFormatAndLength(guid, ds);
+      this.penRequestBatchFileValidator.validateMincode(guid, penWebBlobEntity.getMincode());
       this.populateBatchFile(guid, ds, batchFile);
       this.penRequestBatchFileValidator.validateStudentCountForMismatchAndSize(guid, batchFile);
       this.checkForDuplicateFile(penWebBlobEntity, guid); // if all other validations passed check if it is a duplicate file from PSI.
@@ -375,17 +376,9 @@ public class PenRegBatchProcessor {
    */
   private void setHeaderOrTrailer(final DataSet ds, final BatchFile batchFile, final String guid) throws FileUnProcessableException {
     if (ds.isRecordID(HEADER.getName())) {
-      final var mincode = ds.getString(MIN_CODE.getName());
-      this.penRequestBatchFileValidator.validateMincode(guid, mincode);
+      //Just set transactionCode because of different flavours of header
       batchFile.setBatchFileHeader(BatchFileHeader.builder()
           .transactionCode(ds.getString(TRANSACTION_CODE.getName()))
-          .contactName(ds.getString(CONTACT_NAME.getName()))
-          .emailID(ds.getString(EMAIL.getName()))
-          .faxNumber(ds.getString(FAX_NUMBER.getName()))
-          .mincode(mincode)
-          .officeNumber(ds.getString(OFFICE_NUMBER.getName()))
-          .requestDate(ds.getString(REQUEST_DATE.getName()))
-          .schoolName(ds.getString(SCHOOL_NAME.getName()))
           .build());
     } else if (ds.isRecordID(TRAILER.getName())) {
       final var transactionCode = ds.getString(TRANSACTION_CODE.getName());

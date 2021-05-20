@@ -114,7 +114,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
    */
   @Test
   @Transactional
-  public void testProcessPenRegBatchFileFromTSW_Given8RowInvalidFileWithHeaderLengthShort_ShouldCreateLOADFAILRecordsInDB() throws IOException {
+  public void testProcessPenRegBatchFileFromTSW_Given8RowInvalidFileWithHeaderAndRecordLengthShort_ShouldCreateLOADFAILRecordsInDB() throws IOException {
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_8_records_Header_Short_Length.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
     final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
@@ -128,13 +128,13 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     final var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Header record is missing characters");
+    assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Detail record 1 is missing characters");
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
     final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().min(new PenRequestBatchHistoryComparator());
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).containsIgnoringCase("Header record is missing characters");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).containsIgnoringCase("Detail record 1 is missing characters");
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -147,6 +147,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
   @Test
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given10RowInvalidFileWithHeaderLengthLong_ShouldCreateLOADFAILRecordsInDB() throws IOException {
+    when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_10_records_Header_Longer_length.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
     final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
@@ -157,16 +158,17 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     assertThat(result.size()).isEqualTo(1);
     final var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
-    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Header record has extraneous characters");
-    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
+    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
+    assertThat(entity.getPenRequestBatchStatusReason()).isNull();
+    assertThat(entity.getRepeatCount()).isZero();
+    final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
+    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(2);
     final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().min(new PenRequestBatchHistoryComparator());
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).containsIgnoringCase("Header record has extraneous characters");
-    final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
-    assertThat(students.size()).isZero();
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isNull();
+    assertThat(students.size()).isEqualTo(10);
   }
 
   /**
@@ -188,13 +190,13 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     final var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Header record is missing characters.");
+    assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Trailer record has extraneous characters.");
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
     final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().min(new PenRequestBatchHistoryComparator());
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).containsIgnoringCase("Header record is missing characters.");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).containsIgnoringCase("Trailer record has extraneous characters.");
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -218,13 +220,13 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     final var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Header record is missing characters.");
+    assertThat(entity.getPenRequestBatchStatusReason()).containsIgnoringCase("Trailer record is missing characters.");
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
     final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().min(new PenRequestBatchHistoryComparator());
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).containsIgnoringCase("Header record is missing characters.");
+    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).containsIgnoringCase("Trailer record is missing characters.");
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
     assertThat(students.size()).isZero();
   }
@@ -558,7 +560,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_PSI_OK.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
     final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_PSI_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("10210518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_PSI_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
     tsw = this.penRequestBatchTestUtils.savePenWebBlob(tsw);
     this.penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     final var result = this.repository.findAll();

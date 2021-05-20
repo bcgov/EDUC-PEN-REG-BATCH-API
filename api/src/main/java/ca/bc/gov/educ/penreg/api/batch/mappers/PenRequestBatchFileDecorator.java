@@ -50,7 +50,7 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
     final var entity = this.delegate.toPenReqBatchEntityLoaded(penWebBlobEntity, file);
     entity.setPenRequestBatchStatusCode(LOADED.getCode());
     entity.setStudentCount((long) file.getStudentDetails().size());
-    entity.setSchoolGroupCode(this.computeSchoolGroupCode(file.getBatchFileHeader().getMincode()));
+    entity.setSchoolGroupCode(this.computeSchoolGroupCode(penWebBlobEntity.getMincode()));
     this.setDefaults(entity);
     return entity;
   }
@@ -76,9 +76,8 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
         entity.setStudentCount((long) batchFile.getStudentDetails().size());
       }
       if (batchFile.getBatchFileHeader() != null) {
-        entity.setSchoolGroupCode(this.computeSchoolGroupCode(batchFile.getBatchFileHeader().getMincode()));
-        entity.setMincode(batchFile.getBatchFileHeader().getMincode());
-        entity.setSchoolName(batchFile.getBatchFileHeader().getSchoolName());
+        entity.setSchoolGroupCode(this.computeSchoolGroupCode(penWebBlobEntity.getMincode()));
+        entity.setMincode(penWebBlobEntity.getMincode());
       }
     }
     if (persistStudentRecords && batchFile != null) { // for certain business exception, system needs to store the student details as well.
