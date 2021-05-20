@@ -8,10 +8,12 @@ import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.v1.GradeCode;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
@@ -28,12 +31,10 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 
@@ -57,6 +58,11 @@ public class RestUtils {
 
   private final WebClient webClient;
 
+  /**
+   * The Grade lock.
+   */
+  private final ReadWriteLock gradeLock = new ReentrantReadWriteLock();
+
   private final MessagePublisher messagePublisher;
 
   private final Map<String, School> schoolMap = new ConcurrentHashMap<>();
@@ -66,6 +72,8 @@ public class RestUtils {
   private final ReadWriteLock schoolLock = new ReentrantReadWriteLock();
   @Value("${initialization.background.enabled}")
   private Boolean isBackgroundInitializationEnabled;
+  @Getter
+  private List<String> gradeCodes = new CopyOnWriteArrayList<>();
 
   /**
    * Instantiates a new Rest utils.
@@ -85,7 +93,28 @@ public class RestUtils {
   @PostConstruct
   public void init() {
     if (this.isBackgroundInitializationEnabled != null && this.isBackgroundInitializationEnabled) {
-      ApplicationProperties.bgTask.execute(this::populateSchoolMap);
+      ApplicationProperties.bgTask.execute(this::initialize);
+    }
+  }
+
+  private void initialize() {
+    this.populateSchoolMap();
+    this.setGradeCodesMap();
+  }
+
+  /**
+   * Sets grade codes map.
+   */
+  public void setGradeCodesMap() {
+    val writeLock = this.gradeLock.writeLock();
+    try {
+      writeLock.lock();
+      val result = this.webClient.get().uri(this.props.getStudentApiURL(), uri -> uri.path("/grade-codes").build()).header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).retrieve().bodyToFlux(GradeCode.class).collectList().block();
+      if (!CollectionUtils.isEmpty(result)) {
+        this.gradeCodes = result.stream().map(GradeCode::getGradeCode).collect(Collectors.toCollection(CopyOnWriteArrayList::new));
+      }
+    } finally {
+      writeLock.unlock();
     }
   }
 

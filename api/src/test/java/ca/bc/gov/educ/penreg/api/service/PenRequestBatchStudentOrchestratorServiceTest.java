@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.Mockito;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
@@ -192,6 +193,7 @@ public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestra
 
   @Test
   public void testProcessPenMatchResult_givenSystemMatchScenario_studentShouldBeUpdatedWithDifferentValues() throws IOException {
+    Mockito.reset(this.restUtils);
     final var prbStudentEntity = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentEntity.class, this.dummyPenRequestBatchStudentDataJson(USR_NEW_PEN.toString()));
 
     prbStudentEntity.setUpdateDate(LocalDateTime.now());
@@ -208,6 +210,7 @@ public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestra
     this.penRequestBatchRepository.save(firstBatchRecord);
     assertThat(firstBatchRecord.getPenRequestBatchStudentEntities().size()).isEqualTo(1);
     BeanUtils.copyProperties(studEntity, this.sagaData);
+    this.sagaData = orchestratorService.scrubPayload(sagaData);
     this.sagaData.setLocalID(" " + studEntity.getLocalID() + " " + studEntity.getLocalID().charAt(0) + " ");
 
     record.setStudentID(studEntity.getPenRequestBatchStudentID().toString());

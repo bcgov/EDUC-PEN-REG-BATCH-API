@@ -226,6 +226,7 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
       this.getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
       final var studentFromStudentAPI = this.getRestUtils().getStudentByStudentID(studentID);
       this.updateStudentData(studentFromStudentAPI, penRequestBatchStudentSagaData, penRequestBatch);
+      log.debug("Student payload for update :: {}", studentFromStudentAPI);
       this.getRestUtils().updateStudent(studentFromStudentAPI);
       return Event.builder().sagaId(saga.getSagaId())
         .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)

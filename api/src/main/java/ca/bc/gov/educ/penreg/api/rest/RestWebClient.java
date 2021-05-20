@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.security.oauth2.client.AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.InMemoryReactiveOAuth2AuthorizedClientService;
@@ -23,7 +24,8 @@ import reactor.netty.http.client.HttpClient;
 @Configuration
 @Profile("!test")
 public class RestWebClient {
-  private final HttpClient client;
+  private final DefaultUriBuilderFactory factory;
+  private final ClientHttpConnector connector;
   /**
    * The Props.
    */
@@ -36,9 +38,12 @@ public class RestWebClient {
    */
   public RestWebClient(final ApplicationProperties props) {
     this.props = props;
-    this.client = HttpClient.create().compress(true);
-    this.client.warmup()
+    this.factory = new DefaultUriBuilderFactory();
+    this.factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
+    final HttpClient client = HttpClient.create().compress(true);
+    client.warmup()
       .block();
+    this.connector = new ReactorClientHttpConnector(client);
   }
 
   /**
@@ -61,15 +66,12 @@ public class RestWebClient {
       new AuthorizedClientServiceReactiveOAuth2AuthorizedClientManager(clientRegistryRepo, clientService);
     val oauthFilter = new ServerOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
     oauthFilter.setDefaultClientRegistrationId(this.props.getClientID());
-    val factory = new DefaultUriBuilderFactory();
-    factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
-    val connector = new ReactorClientHttpConnector(this.client);
     return builder
       .codecs(configurer -> configurer
         .defaultCodecs()
         .maxInMemorySize(100 * 1024 * 1024))
-      .clientConnector(connector)
-      .uriBuilderFactory(factory)
+      .clientConnector(this.connector)
+      .uriBuilderFactory(this.factory)
       .filter(oauthFilter)
       .build();
   }

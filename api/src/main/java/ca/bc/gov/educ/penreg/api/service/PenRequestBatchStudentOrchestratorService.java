@@ -4,6 +4,7 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentValidationIssueEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.interfaces.PenMatchResultProcessingService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
@@ -49,6 +50,14 @@ public class PenRequestBatchStudentOrchestratorService {
   @Getter(PRIVATE)
   private final PenService penService;
 
+  /**
+   * The Rest utils.
+   */
+  private final RestUtils restUtils;
+
+  /**
+   * The Processing service.
+   */
   private final PenMatchResultProcessingService<BatchStudentPenMatchProcessingPayload, Optional<Event>> processingService;
 
   /**
@@ -56,11 +65,14 @@ public class PenRequestBatchStudentOrchestratorService {
    *
    * @param penRequestBatchStudentService the pen request batch student service
    * @param penService                    the pen service
+   * @param restUtils                     the rest utils
+   * @param processingService             the processing service
    */
   public PenRequestBatchStudentOrchestratorService(final PenRequestBatchStudentService penRequestBatchStudentService, final PenService penService,
-                                                   @Qualifier("penRequestBatchStudentPenMatchResultProcessingService") final PenMatchResultProcessingService<BatchStudentPenMatchProcessingPayload, Optional<Event>> processingService) {
+                                                   final RestUtils restUtils, @Qualifier("penRequestBatchStudentPenMatchResultProcessingService") final PenMatchResultProcessingService<BatchStudentPenMatchProcessingPayload, Optional<Event>> processingService) {
     this.penRequestBatchStudentService = penRequestBatchStudentService;
     this.penService = penService;
+    this.restUtils = restUtils;
     this.processingService = processingService;
   }
 
@@ -105,6 +117,12 @@ public class PenRequestBatchStudentOrchestratorService {
     }
   }
 
+  /**
+   * Add validation issue entities to student.
+   *
+   * @param validationIssueEntities the validation issue entities
+   * @param student                 the student
+   */
   private void addValidationIssueEntitiesToStudent(final Collection<PenRequestBatchStudentValidationIssueEntity> validationIssueEntities, final PenRequestBatchStudentEntity student) {
     for (final var issue : validationIssueEntities) {
       issue.setPenRequestBatchStudentEntity(student);
@@ -134,6 +152,7 @@ public class PenRequestBatchStudentOrchestratorService {
    */
   public PenRequestBatchStudentSagaData scrubPayload(final PenRequestBatchStudentSagaData sagaData) throws JsonProcessingException {
     final PenRequestBatchStudentSagaData updatedPayload = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, JsonUtil.getJsonStringFromObject(sagaData));
+    log.debug("Payload before scrubbing :: {}", updatedPayload);
     if (StringUtils.isNotBlank(sagaData.getLegalLastName())) {
       updatedPayload.setLegalLastName(this.scrubNameField(sagaData.getLegalLastName()));
     }
@@ -146,17 +165,17 @@ public class PenRequestBatchStudentOrchestratorService {
     final var usualFirstName = sagaData.getUsualFirstName();
     if (StringUtils.isNotEmpty(usualFirstName)
       && (StringUtils.length(StringUtils.trim(usualFirstName)) == 1 || StringUtils.equals(usualFirstName, sagaData.getLegalFirstName()))) {
-      updatedPayload.setUsualFirstName("");
+      updatedPayload.setUsualFirstName(null);
     }
 
     final var usualLastName = sagaData.getUsualLastName();
     if (StringUtils.isNotEmpty(usualLastName)
       && (StringUtils.length(StringUtils.trim(usualLastName)) == 1 || StringUtils.equals(usualLastName, sagaData.getLegalLastName()))) {
-      updatedPayload.setUsualLastName("");
+      updatedPayload.setUsualLastName(null);
     }
     final var usualMiddleName = sagaData.getUsualMiddleNames();
     if (this.doesMiddleNameNeedsToBeBlank(usualMiddleName, sagaData)) {
-      updatedPayload.setUsualMiddleNames("");
+      updatedPayload.setUsualMiddleNames(null);
     }
     if (StringUtils.isNotBlank(updatedPayload.getUsualFirstName())) {
       updatedPayload.setUsualFirstName(this.scrubNameField(updatedPayload.getUsualFirstName()));
@@ -167,7 +186,10 @@ public class PenRequestBatchStudentOrchestratorService {
     if (StringUtils.isNotBlank(updatedPayload.getUsualLastName())) {
       updatedPayload.setUsualLastName(this.scrubNameField(updatedPayload.getUsualLastName()));
     }
-
+    if (!this.restUtils.getGradeCodes().contains(sagaData.getGradeCode())) {
+      updatedPayload.setGradeCode(null); // make the grade code null to make sure it does nt break FK in student.
+    }
+    log.debug("Payload after scrubbing :: {}", updatedPayload);
     return updatedPayload;
   }
 
@@ -216,6 +238,14 @@ public class PenRequestBatchStudentOrchestratorService {
     return nameFieldValue.trim().toUpperCase().replace("\t", " ").replace(".", "").replaceAll("\\s{2,}", " ");
   }
 
+  /**
+   * Process pen match result optional.
+   *
+   * @param saga                           the saga
+   * @param penRequestBatchStudentSagaData the pen request batch student saga data
+   * @param penMatchResult                 the pen match result
+   * @return the optional
+   */
   public Optional<Event> processPenMatchResult(final Saga saga, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, final PenMatchResult penMatchResult) {
     return this.processingService.processPenMatchResults(BatchStudentPenMatchProcessingPayload.builder().penMatchResult(penMatchResult).penRequestBatchStudentSagaData(penRequestBatchStudentSagaData).saga(saga).build());
   }
