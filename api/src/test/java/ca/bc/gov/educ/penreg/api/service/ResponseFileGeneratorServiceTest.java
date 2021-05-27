@@ -160,7 +160,8 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
     assertThat(content).isNotNull();
     assertThat(content.getFileType()).isEqualTo("PAR");
-    assertThat(new String(content.getFileContents())).contains(batch.getMincode());
+    var prbStudent = batch.getPenRequestBatchStudentEntities().iterator().next();
+    assertThat(new String(content.getFileContents())).contains(prbStudent.getLocalID());
     assertThat(new String(content.getFileContents())).contains(batch.getPenRequestBatchStudentEntities().iterator().next().getLegalLastName());
   }
 
