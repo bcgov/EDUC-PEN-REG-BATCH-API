@@ -72,7 +72,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getDiffList().get(0).getMin().getLegalMiddleNames()).isEqualTo("Jim");
     assertThat(reportData.getDiffList().get(0).getMin().getPen()).isEqualTo("123456780");
     assertThat(reportData.getDiffList().get(0).getMin().getReason()).isEqualTo(null);
-    assertThat(reportData.getDiffList().get(0).getMin().getSchoolID()).isEqualTo(batchEntities.get(0).getMincode());
+    assertThat(reportData.getDiffList().get(0).getMin().getSchoolID()).isEqualTo("");
     assertThat(reportData.getDiffList().get(0).getMin().getSurname()).isEqualTo("Jones");
     assertThat(reportData.getDiffList().get(0).getMin().getUsualName()).isEqualTo("Mr, Steal, Yo Girl");
 
@@ -83,7 +83,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getDiffList().get(0).getSchool().getLegalMiddleNames()).isEqualTo("JAMIESON");
     assertThat(reportData.getDiffList().get(0).getSchool().getPen()).isEqualTo("123456780");
     assertThat(reportData.getDiffList().get(0).getSchool().getReason()).isEqualTo("Here's some more info");
-    assertThat(reportData.getDiffList().get(0).getSchool().getSchoolID()).isEqualTo(batchEntities.get(0).getMincode());
+    assertThat(reportData.getDiffList().get(0).getSchool().getSchoolID()).isEqualTo("2046302");
     assertThat(reportData.getDiffList().get(0).getSchool().getSurname()).isEqualTo("BRODY");
     assertThat(reportData.getDiffList().get(0).getSchool().getUsualName()).isEqualTo("JOSEPH, BRAYDON, SMIT");
 
@@ -94,7 +94,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getConfirmedList().get(0).getMin().getLegalMiddleNames()).isEqualTo("Tim");
     assertThat(reportData.getConfirmedList().get(0).getMin().getPen()).isEqualTo("123456785");
     assertThat(reportData.getConfirmedList().get(0).getMin().getReason()).isEqualTo(null);
-    assertThat(reportData.getConfirmedList().get(0).getMin().getSchoolID()).isEqualTo(batchEntities.get(0).getMincode());
+    assertThat(reportData.getConfirmedList().get(0).getMin().getSchoolID()).isEqualTo("");
     assertThat(reportData.getConfirmedList().get(0).getMin().getSurname()).isEqualTo("Joe");
     assertThat(reportData.getConfirmedList().get(0).getMin().getUsualName()).isEqualTo("Smithy, Bob, Smalls");
 
@@ -105,7 +105,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getConfirmedList().get(0).getSchool().getLegalMiddleNames()).isEqualTo("JAMIESON");
     assertThat(reportData.getConfirmedList().get(0).getSchool().getPen()).isEqualTo("123456785");
     assertThat(reportData.getConfirmedList().get(0).getSchool().getReason()).isEqualTo("Here's some info");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getSchoolID()).isEqualTo(batchEntities.get(0).getMincode());
+    assertThat(reportData.getConfirmedList().get(0).getSchool().getSchoolID()).isEqualTo("2046302");
     assertThat(reportData.getConfirmedList().get(0).getSchool().getSurname()).isEqualTo("JOSEPH");
     assertThat(reportData.getConfirmedList().get(0).getSchool().getUsualName()).isEqualTo("JOSEPH, BRAYDON, KIM");
 
@@ -212,7 +212,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getDiffList().get(0).getSchool().getLegalMiddleNames()).isEqualTo("");
     assertThat(reportData.getDiffList().get(0).getSchool().getPen()).isEqualTo("");
     assertThat(reportData.getDiffList().get(0).getSchool().getReason()).isEqualTo(null);
-    assertThat(reportData.getDiffList().get(0).getSchool().getSchoolID()).isEqualTo(batchEntities.get(0).getMincode());
+    assertThat(reportData.getDiffList().get(0).getSchool().getSchoolID()).isEqualTo("");
     assertThat(reportData.getDiffList().get(0).getSchool().getSurname()).isEqualTo("");
     assertThat(reportData.getDiffList().get(0).getSchool().getUsualName()).isEqualTo("");
 
@@ -234,7 +234,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getConfirmedList().get(0).getSchool().getLegalMiddleNames()).isEqualTo("");
     assertThat(reportData.getConfirmedList().get(0).getSchool().getPen()).isEqualTo("");
     assertThat(reportData.getConfirmedList().get(0).getSchool().getReason()).isEqualTo(null);
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getSchoolID()).isEqualTo(batchEntities.get(0).getMincode());
+    assertThat(reportData.getConfirmedList().get(0).getSchool().getSchoolID()).isEqualTo("");
     assertThat(reportData.getConfirmedList().get(0).getSchool().getSurname()).isEqualTo("");
     assertThat(reportData.getConfirmedList().get(0).getSchool().getUsualName()).isEqualTo("");
 

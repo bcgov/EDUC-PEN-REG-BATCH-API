@@ -18,7 +18,7 @@ public interface ReportListItemMapper {
     @Mapping(target = "birthDate", ignore = true)
     @Mapping(source = "genderCode", target = "gender", defaultValue = "")
     @Mapping(source = "assignedPEN", target = "pen", defaultValue = "")
-    @Mapping(source = "mincode", target = "schoolID", defaultValue = "")
+    @Mapping(source = "localID", target = "schoolID", defaultValue = "")
     @Mapping(source = "legalFirstName", target = "givenName", defaultValue = "")
     @Mapping(source = "legalLastName", target = "surname", defaultValue = "")
     @Mapping(source = "legalMiddleNames", target = "legalMiddleNames", defaultValue = "")
@@ -28,7 +28,7 @@ public interface ReportListItemMapper {
 
     @Mapping(target = "birthDate", ignore = true)
     @Mapping(source = "genderCode", target = "gender", defaultValue = "")
-    @Mapping(source = "mincode", target = "schoolID", defaultValue = "")
+    @Mapping(source = "localID", target = "schoolID", defaultValue = "")
     @Mapping(source = "legalFirstName", target = "givenName", defaultValue = "")
     @Mapping(source = "legalLastName", target = "surname", defaultValue = "")
     @Mapping(source = "legalMiddleNames", target = "legalMiddleNames", defaultValue = "")
