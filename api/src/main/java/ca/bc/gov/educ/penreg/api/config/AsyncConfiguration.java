@@ -22,8 +22,8 @@ public class AsyncConfiguration {
   @Bean(name = "subscriberExecutor")
   public Executor threadPoolTaskExecutor() {
     return new EnhancedQueueExecutor.Builder()
-        .setThreadFactory(new ThreadFactoryBuilder().withNameFormat("message-subscriber-%d").get())
-        .setCorePoolSize(5).setMaximumPoolSize(10).setKeepAliveTime(Duration.ofSeconds(60)).build();
+      .setThreadFactory(new ThreadFactoryBuilder().withNameFormat("message-subscriber-%d").get())
+      .setCorePoolSize(10).setMaximumPoolSize(10).setKeepAliveTime(Duration.ofSeconds(60)).build();
   }
 
   /**

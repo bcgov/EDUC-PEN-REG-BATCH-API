@@ -2,7 +2,6 @@ package ca.bc.gov.educ.penreg.api.orchestrator.base;
 
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
-import ca.bc.gov.educ.penreg.api.exception.SagaRuntimeException;
 import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchStudentValidationIssueMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
@@ -260,10 +259,10 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @return true or false based on whether the current event with outcome received from the queue is already processed or not.
    */
   protected boolean isNotProcessedEvent(final EventType currentEventType, final Saga saga, final Set<EventType> eventTypes) {
-    final EventType eventTypeInDB = EventType.valueOf(saga.getSagaState());
-    final List<EventType> events = new LinkedList<>(eventTypes);
-    final int dbEventIndex = events.indexOf(eventTypeInDB);
-    final int currentEventIndex = events.indexOf(currentEventType);
+    val eventTypeInDB = EventType.valueOf(saga.getSagaState());
+    val events = new LinkedList<>(eventTypes);
+    val dbEventIndex = events.indexOf(eventTypeInDB);
+    val currentEventIndex = events.indexOf(currentEventType);
     return currentEventIndex >= dbEventIndex;
   }
 
@@ -314,7 +313,7 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
       this.postMessageToTopic(this.getTopicToSubscribe(), finalEvent);
     }
 
-    final SagaEvent sagaEvent = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
+    val sagaEvent = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(COMPLETED.toString());
     saga.setStatus(COMPLETED.toString());
     saga.setUpdateDate(LocalDateTime.now());
@@ -420,11 +419,11 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
    * @throws IOException          if there is connectivity problem
    */
   private void replayFromBeginning(final Saga saga, final T t) throws InterruptedException, TimeoutException, IOException {
-    final Event event = Event.builder()
-        .eventOutcome(INITIATE_SUCCESS)
-        .eventType(INITIATED)
-        .build();
-    final Optional<SagaEventState<T>> sagaEventState = this.findNextSagaEventState(INITIATED, INITIATE_SUCCESS, t);
+    val event = Event.builder()
+      .eventOutcome(INITIATE_SUCCESS)
+      .eventType(INITIATED)
+      .build();
+    val sagaEventState = this.findNextSagaEventState(INITIATED, INITIATE_SUCCESS, t);
     if (sagaEventState.isPresent()) {
       log.trace(SYSTEM_IS_GOING_TO_EXECUTE_NEXT_EVENT_FOR_CURRENT_EVENT, sagaEventState.get().getNextEventType(), event.toString(), saga.getSagaId());
       this.invokeNextEvent(event, saga, t, sagaEventState.get());
@@ -523,26 +522,6 @@ public abstract class BaseOrchestrator<T> implements EventHandler, Orchestrator 
     return this.getSagaService().createMultipleBatchSagaRecordsInDB(this.getSagaName(), userName, payloads);
   }
 
-  @Override
-  @Async("subscriberExecutor")
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void startMultipleSagas(final List<Saga> sagas) {
-    for (final Saga saga : sagas) {
-      try {
-        this.handleEvent(Event.builder()
-            .eventType(EventType.INITIATED)
-            .eventOutcome(EventOutcome.INITIATE_SUCCESS)
-            .sagaId(saga.getSagaId())
-            .eventPayload(saga.getPayload())
-            .build());
-      } catch (final InterruptedException e) {
-        log.error("There was an unexpected exception attempting to start multiple sagas", e);
-        Thread.currentThread().interrupt();
-      } catch (final IOException | TimeoutException e) {
-        log.error("There was an unexpected exception attempting to start multiple sagas", e);
-      }
-    }
-  }
 
   /**
    * DONT DO ANYTHING the message was broad-casted for the frontend listeners, that a saga process has initiated, completed.

@@ -17,15 +17,14 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.*;
@@ -143,7 +142,7 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
       var payloads = penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchArchiveAndReturnSagaData().stream().map(sagaData -> {
         sagaData.setUpdateUser(updateUser);
         try {
-          String  payload = JsonUtil.getJsonStringFromObject(sagaData);
+          val payload = JsonUtil.getJsonStringFromObject(sagaData);
           return Pair.of(sagaData.getPenRequestBatchID(), payload);
         } catch (JsonProcessingException e) {
           throw new InvalidParameterException(e.getMessage());
@@ -153,13 +152,13 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
       var sagas = this.getOrchestratorMap()
         .get(sagaName.toString())
         .saveMultipleSagas(payloads, penRequestBatchArchiveAndReturnAllSagaData.getCreateUser());
-      this.getOrchestratorMap()
-        .get(sagaName.toString())
-        .startMultipleSagas(sagas);
-
+      for (val saga : sagas) {
+        this.getOrchestratorMap()
+          .get(sagaName.toString())
+          .startSaga(saga);
+      }
       return ResponseEntity.ok(sagas.stream().map(archiveAndReturnSagaResponseMapper::toStruct).collect(Collectors.toList()));
-    } catch (InterruptedException | TimeoutException | IOException e) {
-      Thread.currentThread().interrupt();
+    } catch (final Exception e) {
       throw new SagaRuntimeException(e.getMessage());
     }
   }

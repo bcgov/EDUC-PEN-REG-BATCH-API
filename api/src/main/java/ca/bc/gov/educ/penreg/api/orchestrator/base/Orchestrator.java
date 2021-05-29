@@ -33,7 +33,6 @@ public interface Orchestrator {
 
   List<Saga> saveMultipleSagas(List<Pair<UUID, String>> payloads, String userName);
 
-  void startMultipleSagas(List<Saga> sagas) throws InterruptedException, TimeoutException, IOException;
 
   /**
    * Gets saga name.
