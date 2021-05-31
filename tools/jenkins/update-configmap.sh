@@ -137,7 +137,7 @@ if [ "$envValue" = "tools" ]; then
 fi
 
 if [ "$envValue" = "dev" ]; then
-  PEN_COORDINATOR_EMAIL=Gurvinder.J.Bhatia@gov.bc.ca
+  PEN_COORDINATOR_EMAIL=aditya.sharma@gov.bc.ca
   SOFT_DELETED_RETENTION_DAYS=2
 fi
 
