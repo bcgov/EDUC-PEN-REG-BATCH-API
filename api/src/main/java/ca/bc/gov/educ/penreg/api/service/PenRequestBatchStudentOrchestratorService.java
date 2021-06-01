@@ -4,7 +4,6 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentValidationIssueEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
-import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.interfaces.PenMatchResultProcessingService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
@@ -50,10 +49,6 @@ public class PenRequestBatchStudentOrchestratorService {
   @Getter(PRIVATE)
   private final PenService penService;
 
-  /**
-   * The Rest utils.
-   */
-  private final RestUtils restUtils;
 
   /**
    * The Processing service.
@@ -65,14 +60,12 @@ public class PenRequestBatchStudentOrchestratorService {
    *
    * @param penRequestBatchStudentService the pen request batch student service
    * @param penService                    the pen service
-   * @param restUtils                     the rest utils
    * @param processingService             the processing service
    */
   public PenRequestBatchStudentOrchestratorService(final PenRequestBatchStudentService penRequestBatchStudentService, final PenService penService,
-                                                   final RestUtils restUtils, @Qualifier("penRequestBatchStudentPenMatchResultProcessingService") final PenMatchResultProcessingService<BatchStudentPenMatchProcessingPayload, Optional<Event>> processingService) {
+                                                   @Qualifier("penRequestBatchStudentPenMatchResultProcessingService") final PenMatchResultProcessingService<BatchStudentPenMatchProcessingPayload, Optional<Event>> processingService) {
     this.penRequestBatchStudentService = penRequestBatchStudentService;
     this.penService = penService;
-    this.restUtils = restUtils;
     this.processingService = processingService;
   }
 
@@ -185,9 +178,6 @@ public class PenRequestBatchStudentOrchestratorService {
     }
     if (StringUtils.isNotBlank(updatedPayload.getUsualLastName())) {
       updatedPayload.setUsualLastName(this.scrubNameField(updatedPayload.getUsualLastName()));
-    }
-    if (!this.restUtils.getGradeCodes().contains(sagaData.getGradeCode())) {
-      updatedPayload.setGradeCode(null); // make the grade code null to make sure it does nt break FK in student.
     }
     log.debug("Payload after scrubbing :: {}", updatedPayload);
     return updatedPayload;

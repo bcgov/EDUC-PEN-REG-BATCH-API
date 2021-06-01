@@ -33,10 +33,16 @@ import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCo
 import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_NEW;
 import static lombok.AccessLevel.PRIVATE;
 
+/**
+ * The type Pen request batch student pen match result processing service.
+ */
 @Slf4j
 @Service("penRequestBatchStudentPenMatchResultProcessingService")
 public class PenRequestBatchStudentPenMatchResultProcessingService extends BasePenMatchResultProcessingService<BatchStudentPenMatchProcessingPayload, Optional<Event>> {
 
+  /**
+   * The constant ALGORITHM.
+   */
   public static final String ALGORITHM = "ALGORITHM";
   /**
    * The constant studentMapper.
@@ -47,9 +53,20 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
    */
   @Getter(PRIVATE)
   private final PenRequestBatchStudentService penRequestBatchStudentService;
+  /**
+   * The Saga service.
+   */
   @Getter(PRIVATE)
   private final SagaService sagaService;
 
+  /**
+   * Instantiates a new Pen request batch student pen match result processing service.
+   *
+   * @param penRequestBatchStudentService the pen request batch student service
+   * @param restUtils                     the rest utils
+   * @param penService                    the pen service
+   * @param sagaService                   the saga service
+   */
   public PenRequestBatchStudentPenMatchResultProcessingService(final PenRequestBatchStudentService penRequestBatchStudentService, final RestUtils restUtils, final PenService penService, final SagaService sagaService) {
     super(restUtils, penService);
     this.penRequestBatchStudentService = penRequestBatchStudentService;
@@ -183,6 +200,9 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
       student.setCreateUser(ALGORITHM);
       student.setUpdateUser(ALGORITHM);
       penRequestBatchStudent.setAssignedPEN(pen);
+      if (this.isGradeCodeWarningPresent(penRequestBatchStudent)) {
+        student.setGradeCode(null);
+      }
       final var studentFromStudentAPIOptional = this.getRestUtils().getStudentByPEN(pen);
       if (studentFromStudentAPIOptional.isEmpty()) { // create the student only if it does not exist.
         final var studentFromAPIResponse = this.getRestUtils().createStudent(student);
@@ -202,6 +222,16 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
   }
 
   /**
+   * check if there is a warning present in the validation.
+   *
+   * @param penRequestBatchStudent the incoming record from school
+   * @return the boolean true if validation of grade code resulted in warning else false.
+   */
+  private boolean isGradeCodeWarningPresent(final PenRequestBatchStudentEntity penRequestBatchStudent) {
+    return penRequestBatchStudent.getPenRequestBatchStudentValidationIssueEntities().stream().anyMatch(entity -> "GRADECODE".equals(entity.getPenRequestBatchValidationFieldCode()));
+  }
+
+  /**
    * case AA:
    * case B1:
    * case C1:
@@ -214,7 +244,7 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
    * @param penRequestBatchStudentSagaData th saga data which contains scrubbed payload.
    * @return the event
    */
-  private Event handleSystemMatchedStatus(final Saga saga, final PenMatchResult penMatchResult, PenRequestBatchStudentEntity penRequestBatchStudent, final PenRequestBatchEntity penRequestBatch, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
+  private Event handleSystemMatchedStatus(final Saga saga, final PenMatchResult penMatchResult, final PenRequestBatchStudentEntity penRequestBatchStudent, final PenRequestBatchEntity penRequestBatch, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
     final var penMatchRecordOptional = penMatchResult.getMatchingRecords().stream().findFirst();
     if (penMatchRecordOptional.isPresent()) {
       final var penMatchRecord = penMatchRecordOptional.get();
@@ -225,7 +255,7 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
       penRequestBatchStudent.setBestMatchPEN(penMatchRecord.getMatchingPEN());
       this.getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
       final var studentFromStudentAPI = this.getRestUtils().getStudentByStudentID(studentID);
-      this.updateStudentData(studentFromStudentAPI, penRequestBatchStudentSagaData, penRequestBatch);
+      this.updateStudentData(studentFromStudentAPI, penRequestBatchStudentSagaData, penRequestBatch, penRequestBatchStudent);
       log.debug("Student payload for update :: {}", studentFromStudentAPI);
       this.getRestUtils().updateStudent(studentFromStudentAPI);
       return Event.builder().sagaId(saga.getSagaId())
@@ -251,13 +281,14 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
    * @param studentFromStudentAPI          the student from student api
    * @param penRequestBatchStudentSagaData th saga data which contains scrubbed payload.
    * @param penRequestBatchEntity          the pen request batch entity
+   * @param penRequestBatchStudent         the student from school.
    */
-  private void updateStudentData(final Student studentFromStudentAPI, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, final PenRequestBatchEntity penRequestBatchEntity) {
+  private void updateStudentData(final Student studentFromStudentAPI, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, final PenRequestBatchEntity penRequestBatchEntity, final PenRequestBatchStudentEntity penRequestBatchStudent) {
     studentFromStudentAPI.setMincode(penRequestBatchEntity.getMincode());
     // updated as part of https://gww.jira.educ.gov.bc.ca/browse/PEN-1347
     final var changesBadLocalIDIfExistBeforeSetValue = LocalIDUtil.changeBadLocalID(StringUtils.remove(penRequestBatchStudentSagaData.getLocalID(), ' '));
     studentFromStudentAPI.setLocalID(changesBadLocalIDIfExistBeforeSetValue);
-    this.updateGradeCodeAndGradeYear(studentFromStudentAPI, penRequestBatchStudentSagaData, penRequestBatchEntity);
+    this.updateGradeCodeAndGradeYear(studentFromStudentAPI, penRequestBatchStudentSagaData, penRequestBatchEntity, penRequestBatchStudent);
 
     if (StringUtils.isNotBlank(penRequestBatchStudentSagaData.getPostalCode())) {
       studentFromStudentAPI.setPostalCode(penRequestBatchStudentSagaData.getPostalCode());
@@ -269,17 +300,22 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
     studentFromStudentAPI.setUpdateUser(ALGORITHM);
   }
 
+
   /**
    * updated for https://gww.jira.educ.gov.bc.ca/browse/PEN-1348
    * When district number is <b> NOT </b> 102, apply the following logic for grade code & grade year.
    * If PEN Request grade code is null, and STUDENT record grade code is null do nothing
    * If PEN Request grade code has value, set it in the STUDENT record
    * Set the STUD_GRADE_YEAR to the current year (if after June 30) or the previous year (if before June 30)
+   *
+   * @param studentFromStudentAPI          the student from student api
+   * @param penRequestBatchStudentSagaData the pen request batch student saga data
+   * @param penRequestBatchEntity          the pen request batch entity
+   * @param penRequestBatchStudent         the pen request batch student
    */
-
-
-  private void updateGradeCodeAndGradeYear(final Student studentFromStudentAPI, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, PenRequestBatchEntity penRequestBatchEntity) {
+  private void updateGradeCodeAndGradeYear(final Student studentFromStudentAPI, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, final PenRequestBatchEntity penRequestBatchEntity, final PenRequestBatchStudentEntity penRequestBatchStudent) {
     if (!StringUtils.startsWith(penRequestBatchEntity.getMincode(), "102")
+      && !this.isGradeCodeWarningPresent(penRequestBatchStudent)
       && ((StringUtils.isNotBlank(penRequestBatchStudentSagaData.getGradeCode()) && StringUtils.isNotBlank(studentFromStudentAPI.getGradeCode()))
       || (StringUtils.isNotBlank(penRequestBatchStudentSagaData.getGradeCode())))) {
       studentFromStudentAPI.setGradeCode(penRequestBatchStudentSagaData.getGradeCode());
@@ -292,7 +328,13 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
     }
   }
 
-  //Added as part of PEN-1007; Update the usual given & surnames if provided and not blank
+  /**
+   * Update usual name fields.
+   *
+   * @param studentFromStudentAPI          the student from student api
+   * @param penRequestBatchStudentSagaData the pen request batch student saga data
+   */
+//Added as part of PEN-1007; Update the usual given & surnames if provided and not blank
   // updated as part of https://gww.jira.educ.gov.bc.ca/browse/PEN-1346
   private void updateUsualNameFields(final Student studentFromStudentAPI, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
     studentFromStudentAPI.setUsualFirstName(penRequestBatchStudentSagaData.getUsualFirstName());
@@ -300,21 +342,45 @@ public class PenRequestBatchStudentPenMatchResultProcessingService extends BaseP
     studentFromStudentAPI.setUsualMiddleNames(penRequestBatchStudentSagaData.getUsualMiddleNames());
   }
 
+  /**
+   * Handle default optional.
+   *
+   * @param batchStudentPenMatchProcessingPayload the batch student pen match processing payload
+   * @return the optional
+   */
   @Override
   protected Optional<Event> handleDefault(final BatchStudentPenMatchProcessingPayload batchStudentPenMatchProcessingPayload) {
     return Optional.ofNullable(this.handleDefault(batchStudentPenMatchProcessingPayload.getSaga(), batchStudentPenMatchProcessingPayload.getPenRequestBatchStudentEntity(), batchStudentPenMatchProcessingPayload.getPenMatchResult()));
   }
 
+  /**
+   * Handle f 1 status optional.
+   *
+   * @param batchStudentPenMatchProcessingPayload the batch student pen match processing payload
+   * @return the optional
+   */
   @Override
   protected Optional<Event> handleF1Status(final BatchStudentPenMatchProcessingPayload batchStudentPenMatchProcessingPayload) {
     return Optional.ofNullable(this.handleF1Status(batchStudentPenMatchProcessingPayload.getSaga(), batchStudentPenMatchProcessingPayload.getPenMatchResult(), batchStudentPenMatchProcessingPayload.getPenRequestBatchStudentEntity()));
   }
 
+  /**
+   * Handle create new student status optional.
+   *
+   * @param batchStudentPenMatchProcessingPayload the batch student pen match processing payload
+   * @return the optional
+   */
   @Override
   protected Optional<Event> handleCreateNewStudentStatus(final BatchStudentPenMatchProcessingPayload batchStudentPenMatchProcessingPayload) {
     return Optional.ofNullable(this.handleCreateNewStudentStatus(batchStudentPenMatchProcessingPayload.getSaga(), batchStudentPenMatchProcessingPayload.getPenRequestBatchStudentSagaData(), batchStudentPenMatchProcessingPayload.getPenRequestBatchStudentEntity(), batchStudentPenMatchProcessingPayload.getPenMatchResult()));
   }
 
+  /**
+   * Handle system matched status optional.
+   *
+   * @param batchStudentPenMatchProcessingPayload the batch student pen match processing payload
+   * @return the optional
+   */
   @Override
   protected Optional<Event> handleSystemMatchedStatus(final BatchStudentPenMatchProcessingPayload batchStudentPenMatchProcessingPayload) {
     return Optional.ofNullable(this.handleSystemMatchedStatus(batchStudentPenMatchProcessingPayload.getSaga(), batchStudentPenMatchProcessingPayload.getPenMatchResult(), batchStudentPenMatchProcessingPayload.getPenRequestBatchStudentEntity(), batchStudentPenMatchProcessingPayload.getPenRequestBatchEntity(), batchStudentPenMatchProcessingPayload.getPenRequestBatchStudentSagaData()));
