@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
+import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -146,13 +147,7 @@ public class ResponseFileGeneratorService {
     byte[] bFile;
 
     if (!filteredStudents.isEmpty()) {
-      // retrieve the original prb file from school
-      List<PENWebBlobEntity> penWebBlobs = this.getPenWebBlobRepository().findAllBySubmissionNumberAndFileType(penRequestBatchEntity.getSubmissionNumber(), "PEN");
-      PENWebBlobEntity penWebBlob = penWebBlobs.isEmpty() ? null : penWebBlobs.get(0);
-
-      Pair<String, Map<String, String>> pair = parseOriginalPenFile(penWebBlob != null ? penWebBlob.getFileContents() : null);
-      String applicationCode = pair.getFirst();
-      Map<String, String> applicationKeyMap = pair.getSecond();
+      var applicationCode = this.getApplicationCode(penRequestBatchEntity.getMincode());
 
       final StringBuilder txtFile = new StringBuilder();
       // FFI header
@@ -160,7 +155,7 @@ public class ResponseFileGeneratorService {
 
       // SRM details records
       for (final PenRequestBatchStudent entity : filteredStudents) {
-        txtFile.append(createBody(entity, applicationKeyMap));
+        txtFile.append(createBody(entity));
       }
       // BTR footer
       txtFile.append(createFooter(penRequestBatchEntity));
@@ -271,11 +266,11 @@ public class ResponseFileGeneratorService {
             "\n";
   }
 
-  private String createBody(final PenRequestBatchStudent penRequestBatchStudentEntity, Map<String,String> applicationKeyMap) {
+  private String createBody(final PenRequestBatchStudent penRequestBatchStudentEntity) {
     final StringBuilder body = new StringBuilder();
 
     String localID = StringUtils.leftPad(penRequestBatchStudentEntity.getLocalID(), 12, "0");
-    String applicationKey = applicationKeyMap.get(localID);
+    String applicationKey = "";
 
     body.append("SRM")
             .append(String.format("%-12.12s", print(localID)))
@@ -298,31 +293,18 @@ public class ResponseFileGeneratorService {
     return body.toString();
   }
 
-  private Pair<String, Map<String, String>> parseOriginalPenFile(byte[] fileContents) {
-    String applicationCode = "";
-    Map<String, String> applicationKeyMap = new HashMap<>();
-
-    if (fileContents == null || fileContents.length == 0) {
-      return Pair.of(applicationCode, applicationKeyMap);
+  private String getApplicationCode(String mincode) {
+    var applicationCode = "PEN";
+    var school = this.restUtils.getSchoolByMincode(mincode).
+      orElseThrow(() -> new PenRegAPIRuntimeException("Cannot find the school data by mincode :: " + mincode));
+    if(school.getDistNo().equals("104")) {
+      applicationCode = "MISC";
+    } else if(school.getDistNo().equals("102") && school.getSchlNo().equals("00030")) {
+      applicationCode = "SFAS";
+    } else if(school.getFacilityTypeCode().equals("12")) {
+      applicationCode = "SS";
     }
-
-    try {
-      InputStreamReader inStreamReader = new InputStreamReader(new ByteArrayInputStream(fileContents));
-      BufferedReader reader = new BufferedReader(inStreamReader);
-
-      String line;
-      while ((line = reader.readLine()) != null) {
-        if (line.startsWith("FFI")) {
-          applicationCode = line.substring(211,215).trim();
-        } else if (line.startsWith("SRM")) {
-          String currentLocalID = line.substring(3, 15);
-          applicationKeyMap.put(currentLocalID, line.substring(235, 255).trim());
-        }
-      }
-    } catch (Exception e) {
-      log.error("An unexpected error occurred while attempting to parseOriginalPenFile :: ", e);
-    }
-    return Pair.of(applicationCode, applicationKeyMap);
+    return applicationCode;
   }
 
   private String print(String value) {
