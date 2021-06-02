@@ -5,7 +5,6 @@ import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.mappers.PenStudentDemogValidationMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
-import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
@@ -67,8 +66,6 @@ public class PenRequestBatchService {
    * The constant historyMapper.
    */
   private static final PenRequestBatchHistoryMapper historyMapper = PenRequestBatchHistoryMapper.mapper;
-
-  private static final PenRequestBatchStudentMapper mapper = PenRequestBatchStudentMapper.mapper;
   /**
    * The Repository.
    */
@@ -290,10 +287,7 @@ public class PenRequestBatchService {
 
   public List<PenRequestIDs> findAllPenRequestIDs(final List<UUID> penRequestBatchIDs, final List<PenRequestBatchStudentStatusCodes> penRequestBatchStudentStatusCodes) {
     return this.penRequestBatchStudentRepository.getAllPenRequestBatchStudentIDs(penRequestBatchIDs,
-      penRequestBatchStudentStatusCodes.stream().map(PenRequestBatchStudentStatusCodes::getCode).collect(Collectors.toList()))
-      .stream()
-      .map(mapper::toPenRequestID)
-      .collect(Collectors.toList());
+      penRequestBatchStudentStatusCodes.stream().map(PenRequestBatchStudentStatusCodes::getCode).collect(Collectors.toList()));
   }
 
   /**
