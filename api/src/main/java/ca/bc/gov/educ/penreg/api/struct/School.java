@@ -18,4 +18,5 @@ public class School {
   private String schlNo;
   private String dateOpened;
   private String dateClosed;
+  private String facilityTypeCode;
 }

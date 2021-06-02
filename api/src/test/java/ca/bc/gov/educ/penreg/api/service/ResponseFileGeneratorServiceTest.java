@@ -8,6 +8,7 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
+import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchRepostReportsFilesSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
@@ -22,9 +23,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
@@ -85,9 +89,10 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
   @Test
   @Transactional
-  public void testGetTxtFile_givenBatchFileHasErrorStudents_shouldCreateTxtFile() throws IOException {
+  public void testGetTxtFile_givenBatchFileHasErrorStudents_shouldCreateTxtFileWithApplicationCodePEN() throws IOException {
     this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_txt.json",
             "mock_pen_req_batch_student_txt.json", 1);
+    when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool(batchList.get(0).getMincode())));
 
     final var penWebBlob = this.responseFileGeneratorService.getTxtBlob(this.batchList.get(0), this.batchList.get(0).getPenRequestBatchStudentEntities().stream().map(mapper::toStructure).collect(Collectors.toList()));
     assertThat(penWebBlob).isNotNull();
@@ -97,6 +102,61 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
     assertThat(penWebBlob.getFileContents().length > 0).isTrue();
     assertThat(new String(penWebBlob.getFileContents())).contains("2046291");
     assertThat(new String(penWebBlob.getFileContents())).doesNotContain("204629298765");
+    assertThat(new String(penWebBlob.getFileContents())).contains("PEN");
+  }
+
+  @Test
+  @Transactional
+  public void testGetTxtFile_givenBatchFileHasErrorStudents_shouldCreateTxtFileWithApplicationCodeSFAS() throws IOException {
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_txt.json",
+      "mock_pen_req_batch_student_txt.json", 1);
+    when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool("10200030")));
+
+    final var penWebBlob = this.responseFileGeneratorService.getTxtBlob(this.batchList.get(0), this.batchList.get(0).getPenRequestBatchStudentEntities().stream().map(mapper::toStructure).collect(Collectors.toList()));
+    assertThat(penWebBlob).isNotNull();
+
+    assertThat(penWebBlob.getPenWebBlobId()).isEqualTo(penWebBlob.getPenWebBlobId());
+    assertThat(penWebBlob.getFileName()).isEqualTo(penWebBlob.getMincode() + ".TXT");
+    assertThat(penWebBlob.getFileContents().length > 0).isTrue();
+    assertThat(new String(penWebBlob.getFileContents())).contains("2046291");
+    assertThat(new String(penWebBlob.getFileContents())).doesNotContain("204629298765");
+    assertThat(new String(penWebBlob.getFileContents())).contains("SFAS");
+  }
+
+  @Test
+  @Transactional
+  public void testGetTxtFile_givenBatchFileHasErrorStudents_shouldCreateTxtFileWithApplicationCodeMISC() throws IOException {
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_txt.json",
+      "mock_pen_req_batch_student_txt.json", 1);
+    when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool("10400030")));
+
+    final var penWebBlob = this.responseFileGeneratorService.getTxtBlob(this.batchList.get(0), this.batchList.get(0).getPenRequestBatchStudentEntities().stream().map(mapper::toStructure).collect(Collectors.toList()));
+    assertThat(penWebBlob).isNotNull();
+
+    assertThat(penWebBlob.getPenWebBlobId()).isEqualTo(penWebBlob.getPenWebBlobId());
+    assertThat(penWebBlob.getFileName()).isEqualTo(penWebBlob.getMincode() + ".TXT");
+    assertThat(penWebBlob.getFileContents().length > 0).isTrue();
+    assertThat(new String(penWebBlob.getFileContents())).contains("2046291");
+    assertThat(new String(penWebBlob.getFileContents())).doesNotContain("204629298765");
+    assertThat(new String(penWebBlob.getFileContents())).contains("MISC");
+  }
+
+  @Test
+  @Transactional
+  public void testGetTxtFile_givenBatchFileHasErrorStudents_shouldCreateTxtFileWithApplicationCodeSS() throws IOException {
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_txt.json",
+      "mock_pen_req_batch_student_txt.json", 1);
+    when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool(batchList.get(0).getMincode(), "12")));
+
+    final var penWebBlob = this.responseFileGeneratorService.getTxtBlob(this.batchList.get(0), this.batchList.get(0).getPenRequestBatchStudentEntities().stream().map(mapper::toStructure).collect(Collectors.toList()));
+    assertThat(penWebBlob).isNotNull();
+
+    assertThat(penWebBlob.getPenWebBlobId()).isEqualTo(penWebBlob.getPenWebBlobId());
+    assertThat(penWebBlob.getFileName()).isEqualTo(penWebBlob.getMincode() + ".TXT");
+    assertThat(penWebBlob.getFileContents().length > 0).isTrue();
+    assertThat(new String(penWebBlob.getFileContents())).contains("2046291");
+    assertThat(new String(penWebBlob.getFileContents())).doesNotContain("204629298765");
+    assertThat(new String(penWebBlob.getFileContents())).contains("SS");
   }
 
   @Test
@@ -122,6 +182,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
   public void testSaveReports_givenPSIBatch_shouldCreatePSIReports() throws IOException {
     this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
             "mock_pen_req_batch_student_ids.json", 1);
+    when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool(batchList.get(0).getMincode())));
 
     final var students = PenRequestBatchTestUtils.createStudents(batchList.get(0));
     this.responseFileGeneratorService.saveReports(Base64.getEncoder().encodeToString("Here's a fake pdf file".getBytes()), this.batchList.get(0),
@@ -179,5 +240,20 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
       .telephone("2222222222")
       .build();
     return reportMapper.toReportData(sagaData);
+  }
+
+  private School createMockSchool(String mincode, String facilityTypeCode) {
+    final School school = new School();
+    school.setSchoolName("Marco's school");
+    school.setMincode(mincode);
+    school.setDateOpened("1964-09-01T00:00:00");
+    school.setDistNo(mincode.substring(0, 3));
+    school.setSchlNo(mincode.substring(3));
+    school.setFacilityTypeCode(facilityTypeCode);
+    return school;
+  }
+
+  private School createMockSchool(String mincode) {
+    return this.createMockSchool(mincode, "00");
   }
 }
