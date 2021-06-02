@@ -313,13 +313,13 @@ public interface PenRequestBatchAPIEndpoint {
   ResponseEntity<PenRequestResult> postPenRequest(@Validated @RequestBody PenRequest penRequest);
 
   /**
-   * Find all pen request ids given list of batch ids and status code s
+   * Find all pen request ids given list of batch ids and status codes
    *
    * @param penRequestBatchIDs                              the list of batch ids
    * @param penRequestBatchStudentStatusCodes               the list of status codes
    * @return the list of PenRequestIDs {@link PenRequestIDs}
    */
-  @GetMapping("/findPenRequestIDs")
+  @GetMapping("/pen-request-batch-ids")
   @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR.")})
   @Transactional(readOnly = true)

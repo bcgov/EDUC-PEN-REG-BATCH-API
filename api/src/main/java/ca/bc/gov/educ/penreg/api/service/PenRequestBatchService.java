@@ -289,7 +289,6 @@ public class PenRequestBatchService {
   }
 
   public List<PenRequestIDs> findAllPenRequestIDs(final List<UUID> penRequestBatchIDs, final List<PenRequestBatchStudentStatusCodes> penRequestBatchStudentStatusCodes) {
-    log.info(penRequestBatchStudentStatusCodes.stream().map(PenRequestBatchStudentStatusCodes::getCode).collect(Collectors.joining(",")));
     return this.penRequestBatchStudentRepository.getAllPenRequestBatchStudentIDs(penRequestBatchIDs,
       penRequestBatchStudentStatusCodes.stream().map(PenRequestBatchStudentStatusCodes::getCode).collect(Collectors.toList()))
       .stream()
