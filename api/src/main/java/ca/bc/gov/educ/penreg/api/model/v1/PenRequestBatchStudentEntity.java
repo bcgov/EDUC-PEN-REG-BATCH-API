@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.model.v1;
 
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestIDs;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -29,10 +30,14 @@ import java.util.UUID;
 @Table(name = "PEN_REQUEST_BATCH_STUDENT")
 @Data
 @DynamicUpdate
+@SqlResultSetMapping(name="penRequestIDsMapping", classes = {
+  @ConstructorResult(targetClass = PenRequestIDs.class,
+    columns = {@ColumnResult(name="PEN_REQUEST_BATCH_STUDENT_ID", type = UUID.class), @ColumnResult(name="PEN_REQUEST_BATCH_ID", type = UUID.class)})
+})
 @NamedNativeQuery(
   name="PenRequestBatchStudentEntity.getAllPenRequestBatchStudentIDs",
   query = "SELECT PEN_REQUEST_BATCH_STUDENT_ID, PEN_REQUEST_BATCH_ID FROM PEN_REQUEST_BATCH_STUDENT WHERE PEN_REQUEST_BATCH_ID IN (?1) AND PEN_REQUEST_BATCH_STUDENT_STATUS_CODE IN (?2)",
-  resultClass = PenRequestBatchStudentEntity.class
+  resultSetMapping = "penRequestIDsMapping"
 )
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PenRequestBatchStudentEntity {

@@ -37,7 +37,6 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -1023,6 +1022,19 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
       .andExpect(jsonPath("$.pen", is(emptyOrNullString())));
   }
 
+  @Test
+  public void testFindAllPenRequestIDs_HasMatchedResults_ShouldReturnStatusOk() throws Exception {
+    final String batchIDs = this.createBatchStudentRecords(2);
+    this.mockMvc
+      .perform(get("/api/v1/pen-request-batch/pen-request-batch-ids")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .param("penRequestBatchIDs", batchIDs)
+        .param("penRequestBatchStudentStatusCodes", "LOADED")
+        .contentType(APPLICATION_JSON))
+      .andDo(print()).andExpect(status().isOk())
+      .andExpect(
+        jsonPath("$", hasSize(10)));
+  }
 
   /**
    * Create batch students list.
