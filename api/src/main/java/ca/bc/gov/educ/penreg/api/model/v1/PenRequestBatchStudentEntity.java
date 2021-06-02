@@ -12,6 +12,7 @@ import lombok.ToString;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.NamedNativeQuery;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -28,6 +29,11 @@ import java.util.UUID;
 @Table(name = "PEN_REQUEST_BATCH_STUDENT")
 @Data
 @DynamicUpdate
+@NamedNativeQuery(
+  name="PenRequestBatchStudentEntity.getAllPenRequestBatchStudentIDs",
+  query = "SELECT PEN_REQUEST_BATCH_STUDENT_ID, PEN_REQUEST_BATCH_ID FROM PEN_REQUEST_BATCH_STUDENT WHERE PEN_REQUEST_BATCH_ID IN (?1) AND PEN_REQUEST_BATCH_STUDENT_STATUS_CODE IN (?2)",
+  resultClass = PenRequestBatchStudentEntity.class
+)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PenRequestBatchStudentEntity {
 

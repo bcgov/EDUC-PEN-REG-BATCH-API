@@ -5,6 +5,7 @@ import ca.bc.gov.educ.penreg.api.mappers.UUIDMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.struct.BasePenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestIDs;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -55,5 +56,12 @@ public interface PenRequestBatchStudentMapper {
   @Mapping(target = "submissionNumber", ignore = true)
   @Mapping(target = "mincode", ignore = true)
   PenRequestBatchStudent toPrbStudent(BasePenRequestBatchStudentSagaData basePenRequestBatchStudentSagaData);
+
+  /**
+   * To pen request id
+   * @param penRequestBatchStudentEntity - The Entity
+   * @return the pen request id
+   */
+  PenRequestIDs toPenRequestID(PenRequestBatchStudentEntity penRequestBatchStudentEntity);
 
 }

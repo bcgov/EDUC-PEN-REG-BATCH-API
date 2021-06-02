@@ -1,13 +1,11 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.constants.EventType;
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
-import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
+import ca.bc.gov.educ.penreg.api.constants.*;
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.mappers.PenStudentDemogValidationMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
+import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
@@ -18,19 +16,15 @@ import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.interfaces.PenMatchResultProcessingService;
 import ca.bc.gov.educ.penreg.api.struct.*;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStat;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestPenMatchProcessingPayload;
+import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequest;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestResult;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.SneakyThrows;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,6 +67,8 @@ public class PenRequestBatchService {
    * The constant historyMapper.
    */
   private static final PenRequestBatchHistoryMapper historyMapper = PenRequestBatchHistoryMapper.mapper;
+
+  private static final PenRequestBatchStudentMapper mapper = PenRequestBatchStudentMapper.mapper;
   /**
    * The Repository.
    */
@@ -118,7 +114,13 @@ public class PenRequestBatchService {
    * @param processingService                the processing service
    */
   @Autowired
-  public PenRequestBatchService(final PenRequestBatchRepository repository, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final ResponseFileGeneratorService responseFileGeneratorService, final RestUtils restUtils, @Qualifier("penRequestPenMatchResultProcessingService") final PenMatchResultProcessingService<PenRequestPenMatchProcessingPayload, org.apache.commons.lang3.tuple.Pair<Integer, Optional<PenRequestResult>>> processingService) {
+  public PenRequestBatchService(final PenRequestBatchRepository repository,
+                                final PenWebBlobRepository penWebBlobRepository,
+                                final PenRequestBatchStudentRepository penRequestBatchStudentRepository,
+                                final ResponseFileGeneratorService responseFileGeneratorService,
+                                final RestUtils restUtils,
+                                @Qualifier("penRequestPenMatchResultProcessingService") final PenMatchResultProcessingService<PenRequestPenMatchProcessingPayload,
+                                org.apache.commons.lang3.tuple.Pair<Integer, Optional<PenRequestResult>>> processingService) {
     this.repository = repository;
     this.penWebBlobRepository = penWebBlobRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
@@ -284,6 +286,14 @@ public class PenRequestBatchService {
    */
   public Optional<PenRequestBatchEntity> findById(final UUID penRequestBatchID) {
     return this.repository.findById(penRequestBatchID);
+  }
+
+  public List<PenRequestIDs> findAllPenRequestIDs(final List<UUID> penRequestBatchIDs, final List<PenRequestBatchStudentStatusCodes> penRequestBatchStudentStatusCodes) {
+    return this.penRequestBatchStudentRepository.getAllPenRequestBatchStudentIDs(penRequestBatchIDs,
+      penRequestBatchStudentStatusCodes.stream().map(PenRequestBatchStudentStatusCodes::getCode).collect(Collectors.toList()))
+      .stream()
+      .map(mapper::toPenRequestID)
+      .collect(Collectors.toList());
   }
 
   /**

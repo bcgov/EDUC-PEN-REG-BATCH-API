@@ -2,12 +2,14 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestIDs;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,9 +22,7 @@ import javax.transaction.Transactional;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -133,7 +133,7 @@ public class PenRequestBatchServiceTest extends BasePenRegAPITest {
   @Transactional
   public void testUnArchivedStatus_givenDataInDB_shouldBeUpdatedToReArchivedStatus() throws IOException {
     this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
-        "mock_pen_req_batch_student_ids.json", 1);
+      "mock_pen_req_batch_student_ids.json", 1);
 
     assertThat(this.batchList).isNotEmpty();
     final Optional<PenRequestBatchEntity> prbFileOptional = this.prbRepository.findById(this.batchList.get(0).getPenRequestBatchID());
@@ -152,6 +152,19 @@ public class PenRequestBatchServiceTest extends BasePenRegAPITest {
 
     final PenRequestBatchEntity returnedPrbFile = this.prbRepository.getOne(prbFileDBOptional.get().getPenRequestBatchID());
     assertThat(returnedPrbFile.getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.REARCHIVED.getCode());
+  }
+
+  @Test
+  @Transactional
+  public void testFindAllPenRequestIDs_givenDataInDB_shouldReturnPenRequestIDsList() throws IOException {
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+      "mock_pen_req_batch_student_ids.json", 1);
+
+    assertThat(this.batchList).isNotEmpty();
+    List<PenRequestIDs> ids = this.prbService.findAllPenRequestIDs(this.batchList.stream()
+      .map(PenRequestBatchEntity::getPenRequestBatchID)
+      .collect(toList()), List.of(PenRequestBatchStudentStatusCodes.FIXABLE, PenRequestBatchStudentStatusCodes.INFOREQ));
+    assertThat(ids.size()).isEqualTo(2);
   }
 
 }
