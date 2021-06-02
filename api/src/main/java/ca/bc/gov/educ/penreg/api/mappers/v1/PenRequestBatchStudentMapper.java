@@ -62,6 +62,7 @@ public interface PenRequestBatchStudentMapper {
    * @param penRequestBatchStudentEntity - The Entity
    * @return the pen request id
    */
+  @Mapping(target = "penRequestBatchID", source = "penRequestBatchStudentEntity.penRequestBatchEntity.penRequestBatchID")
   PenRequestIDs toPenRequestID(PenRequestBatchStudentEntity penRequestBatchStudentEntity);
 
 }
