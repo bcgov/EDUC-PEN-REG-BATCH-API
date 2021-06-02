@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequest;
@@ -310,4 +311,19 @@ public interface PenRequestBatchAPIEndpoint {
     description = "This endpoint will allow external client to request for a pen.")
   @Schema(name = "penRequest", implementation = PenRequest.class)
   ResponseEntity<PenRequestResult> postPenRequest(@Validated @RequestBody PenRequest penRequest);
+
+  /**
+   * Find all pen request ids given list of batch ids and status code s
+   *
+   * @param penRequestBatchIDs                              the list of batch ids
+   * @param penRequestBatchStudentStatusCodes               the list of status codes
+   * @return the list of PenRequestIDs {@link PenRequestIDs}
+   */
+  @GetMapping("/findPenRequestIDs")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR.")})
+  @Transactional(readOnly = true)
+  @Tag(name = "Endpoint to support pen request navigation view in frontend.", description = "This API endpoint exposes flexible way to query ids without returning the entire entity.")
+  List<PenRequestIDs> findAllPenRequestIDs(@RequestParam(name = "penRequestBatchIDs") List<UUID> penRequestBatchIDs,
+                                           @RequestParam(name = "penRequestBatchStudentStatusCodes") List<PenRequestBatchStudentStatusCodes> penRequestBatchStudentStatusCodes);
 }

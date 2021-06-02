@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchAPIEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
@@ -484,6 +485,11 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
       return ResponseEntity.status(pair.getKey()).body(pair.getValue().get());
     }
     return ResponseEntity.status(pair.getKey()).build();
+  }
+
+  @Override
+  public List<PenRequestIDs> findAllPenRequestIDs(List<UUID> penRequestBatchIDs, List<PenRequestBatchStudentStatusCodes> penRequestBatchStudentStatusCodes) {
+    return this.getService().findAllPenRequestIDs(penRequestBatchIDs, penRequestBatchStudentStatusCodes);
   }
 
   /**
