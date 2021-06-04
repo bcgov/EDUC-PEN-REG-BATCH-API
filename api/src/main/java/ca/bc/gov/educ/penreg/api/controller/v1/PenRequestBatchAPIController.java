@@ -46,10 +46,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -488,8 +485,13 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
   }
 
   @Override
-  public List<PenRequestIDs> findAllPenRequestIDs(List<UUID> penRequestBatchIDs, List<PenRequestBatchStudentStatusCodes> penRequestBatchStudentStatusCodes) {
-    return this.getService().findAllPenRequestIDs(penRequestBatchIDs, penRequestBatchStudentStatusCodes);
+  public ResponseEntity<List<PenRequestIDs>> findAllPenRequestIDs(List<UUID> penRequestBatchIDs, List<String> penRequestBatchStudentStatusCodes) {
+    val errorCode = penRequestBatchStudentStatusCodes.stream().filter(statusCode -> PenRequestBatchStudentStatusCodes.valueOfCode(statusCode) == null).findFirst();
+    if(errorCode.isPresent()) {
+      log.error("Invalid pen request batch student status code provided :: " + errorCode);
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+    return ResponseEntity.ok(this.getService().findAllPenRequestIDs(penRequestBatchIDs, penRequestBatchStudentStatusCodes));
   }
 
   /**

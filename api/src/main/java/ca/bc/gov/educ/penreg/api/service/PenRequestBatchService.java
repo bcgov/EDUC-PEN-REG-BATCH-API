@@ -285,9 +285,9 @@ public class PenRequestBatchService {
     return this.repository.findById(penRequestBatchID);
   }
 
-  public List<PenRequestIDs> findAllPenRequestIDs(final List<UUID> penRequestBatchIDs, final List<PenRequestBatchStudentStatusCodes> penRequestBatchStudentStatusCodes) {
+  public List<PenRequestIDs> findAllPenRequestIDs(final List<UUID> penRequestBatchIDs, final List<String> penRequestBatchStudentStatusCodes) {
     return this.penRequestBatchStudentRepository.getAllPenRequestBatchStudentIDs(penRequestBatchIDs,
-      penRequestBatchStudentStatusCodes.stream().map(PenRequestBatchStudentStatusCodes::getCode).collect(Collectors.toList()));
+      penRequestBatchStudentStatusCodes);
   }
 
   /**

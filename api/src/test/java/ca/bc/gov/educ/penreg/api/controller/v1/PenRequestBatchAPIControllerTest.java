@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.controller.v1;
 
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
@@ -1029,11 +1030,23 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
       .perform(get("/api/v1/pen-request-batch/pen-request-batch-ids")
         .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
         .param("penRequestBatchIDs", batchIDs)
-        .param("penRequestBatchStudentStatusCodes", "LOADED")
+        .param("penRequestBatchStudentStatusCodes", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode() + "," + PenRequestBatchStudentStatusCodes.LOADED.getCode())
         .contentType(APPLICATION_JSON))
       .andDo(print()).andExpect(status().isOk())
       .andExpect(
         jsonPath("$", hasSize(10)));
+  }
+
+  @Test
+  public void testFindAllPenRequestIDs_GivenBadStatusCode_ShouldReturnStatus400() throws Exception {
+    final String batchIDs = this.createBatchStudentRecords(2);
+    this.mockMvc
+      .perform(get("/api/v1/pen-request-batch/pen-request-batch-ids")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .param("penRequestBatchIDs", batchIDs)
+        .param("penRequestBatchStudentStatusCodes", "BADCODE")
+        .contentType(APPLICATION_JSON))
+      .andDo(print()).andExpect(status().isBadRequest());
   }
 
   /**

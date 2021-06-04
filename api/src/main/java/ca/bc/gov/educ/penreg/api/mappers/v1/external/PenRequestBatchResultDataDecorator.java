@@ -41,7 +41,7 @@ public abstract class PenRequestBatchResultDataDecorator implements PenRequestBa
     final List<SchoolMinListItem> differencesList = new ArrayList<>();
     final List<SchoolMinListItem> confirmedList = new ArrayList<>();
     for (final PenRequestBatchStudentEntity penRequestBatchStudent : penRequestBatch.getPenRequestBatchStudentEntities()) {
-      switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.codeOfValue(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
+      switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.valueOfCode(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
         case DUPLICATE:
         case ERROR:
         case REPEAT:
