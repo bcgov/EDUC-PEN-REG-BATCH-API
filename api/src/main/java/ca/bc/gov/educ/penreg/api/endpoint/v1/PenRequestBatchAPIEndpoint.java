@@ -324,6 +324,6 @@ public interface PenRequestBatchAPIEndpoint {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR.")})
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to support pen request navigation view in frontend.", description = "This API endpoint exposes flexible way to query ids without returning the entire entity.")
-  List<PenRequestIDs> findAllPenRequestIDs(@RequestParam(name = "penRequestBatchIDs") List<UUID> penRequestBatchIDs,
-                                           @RequestParam(name = "penRequestBatchStudentStatusCodes") List<PenRequestBatchStudentStatusCodes> penRequestBatchStudentStatusCodes);
+  ResponseEntity<List<PenRequestIDs>> findAllPenRequestIDs(@RequestParam(name = "penRequestBatchIDs") List<UUID> penRequestBatchIDs,
+                                           @RequestParam(name = "penRequestBatchStudentStatusCodes") List<String> penRequestBatchStudentStatusCodes);
 }

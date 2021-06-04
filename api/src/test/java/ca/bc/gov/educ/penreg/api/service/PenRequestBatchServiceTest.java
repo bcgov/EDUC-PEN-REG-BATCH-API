@@ -164,7 +164,7 @@ public class PenRequestBatchServiceTest extends BasePenRegAPITest {
     var batchIds = this.batchList.stream()
       .map(PenRequestBatchEntity::getPenRequestBatchID)
       .collect(toList());
-    List<PenRequestIDs> ids = this.prbService.findAllPenRequestIDs(batchIds, List.of(PenRequestBatchStudentStatusCodes.FIXABLE, PenRequestBatchStudentStatusCodes.INFOREQ));
+    List<PenRequestIDs> ids = this.prbService.findAllPenRequestIDs(batchIds, List.of(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), PenRequestBatchStudentStatusCodes.INFOREQ.getCode()));
     assertThat(ids.size()).isEqualTo(2);
     assertThat(ids.get(0).getPenRequestBatchID()).isEqualTo(batchIds.get(0));
   }

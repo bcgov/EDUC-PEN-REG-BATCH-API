@@ -47,7 +47,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       Map<String, Student> students = this.setStudents(data.getStudents());
 
       for (PenRequestBatchStudent penRequestBatchStudent : data.getPenRequestBatchStudents()) {
-        switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.codeOfValue(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
+        switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.valueOfCode(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
           case DUPLICATE:
           case ERROR:
           case REPEAT:

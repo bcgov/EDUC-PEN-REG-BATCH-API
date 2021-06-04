@@ -96,13 +96,4 @@ public enum PenRequestBatchStudentStatusCodes {
   public static PenRequestBatchStudentStatusCodes valueOfCode(String code) {
     return codeMap.get(code);
   }
-
-  public static PenRequestBatchStudentStatusCodes codeOfValue(String value) {
-    for (PenRequestBatchStudentStatusCodes statusCode : PenRequestBatchStudentStatusCodes.values()) {
-      if (statusCode.getCode().equals(value)) {
-        return statusCode;
-      }
-    }
-    return null;
-  }
 }
