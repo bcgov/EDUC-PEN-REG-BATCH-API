@@ -486,8 +486,8 @@ public class PenRequestBatchAPIController implements PenRequestBatchAPIEndpoint 
 
   @Override
   public ResponseEntity<List<PenRequestIDs>> findAllPenRequestIDs(List<UUID> penRequestBatchIDs, List<String> penRequestBatchStudentStatusCodes) {
-    String errorCode = penRequestBatchStudentStatusCodes.stream().filter(statusCode -> PenRequestBatchStudentStatusCodes.valueOfCode(statusCode) == null).findFirst().orElse(null);
-    if(errorCode != null) {
+    val errorCode = penRequestBatchStudentStatusCodes.stream().filter(statusCode -> PenRequestBatchStudentStatusCodes.valueOfCode(statusCode) == null).findFirst();
+    if(errorCode.isPresent()) {
       log.error("Invalid pen request batch student status code provided :: " + errorCode);
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
