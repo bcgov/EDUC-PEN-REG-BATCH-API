@@ -13,5 +13,5 @@ import java.util.UUID;
  */
 @Repository
 public interface PenRequestBatchStudentValidationIssueRepository extends CrudRepository<PenRequestBatchStudentValidationIssueEntity, UUID> {
-  List<PenRequestBatchStudentValidationIssueEntity> findByPenRequestBatchStudentEntity_penRequestBatchEntity(PenRequestBatchEntity penRequestBatchID);
+  List<PenRequestBatchStudentValidationIssueEntity> findByPenRequestBatchStudentEntity_penRequestBatchEntity(PenRequestBatchEntity penRequestBatch);
 }

@@ -13,7 +13,7 @@ import java.util.*;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
- * The type Pen reg batch student validation issue service.
+ * The type Pen request batch student validation issue service.
  *
  * @author OM
  */
@@ -27,7 +27,7 @@ public class PenRequestBatchStudentValidationIssueService {
   private final PenRequestBatchStudentValidationIssueRepository repository;
 
   /**
-   * Instantiates a new Pen reg batch service.
+   * Instantiates a new pen request batch student validation issues service.
    *
    * @param repository                       the repository
    */
