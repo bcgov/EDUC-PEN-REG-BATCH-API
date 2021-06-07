@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.struct.v1;
 
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,6 +10,7 @@ import lombok.experimental.SuperBuilder;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -33,6 +35,7 @@ public class BasePenRequestBatchReturnFilesSagaData extends BaseRequest {
     PenRequestBatch penRequestBatch;
     List<PenRequestBatchStudent> penRequestBatchStudents;
     List<Student> students;
+    Map<String, String> penRequestBatchStudentValidationIssues;
     PenCoordinator penCoordinator;
 
     String fromEmail;

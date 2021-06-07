@@ -6,6 +6,7 @@ import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
 import ca.bc.gov.educ.penreg.api.support.NatsMessageImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,6 +73,13 @@ public class RestUtilsTest {
     when(this.requestHeadersMock.retrieve()).thenReturn(this.responseMock);
     when(this.responseMock.bodyToFlux(School.class)).thenReturn(Flux.just(createSchoolArray()));
     this.restUtils.populateSchoolMap();
+
+    when(this.requestHeadersUriMock.uri(this.applicationProperties.getPenServicesApiURL() + "/api/v1/pen-services/validation/issue-type-code")).thenReturn(this.requestHeadersMock);
+    when(this.responseMock.bodyToFlux(PenRequestBatchStudentValidationIssueTypeCode.class))
+      .thenReturn(Flux.just(createValidationIssueTypeCodeArray("INVCHARS", "Invalid chars")))
+      .thenReturn(Flux.just(createValidationIssueTypeCodeArray("GENDER_ERR", "Gender error")));
+    this.restUtils.populatePenRequestBatchStudentValidationIssueTypeCodeMap();
+
     openMocks(this);
   }
 
@@ -81,6 +89,11 @@ public class RestUtilsTest {
     return schools;
   }
 
+  private PenRequestBatchStudentValidationIssueTypeCode[] createValidationIssueTypeCodeArray(String code, String description) {
+    PenRequestBatchStudentValidationIssueTypeCode[] codes = new PenRequestBatchStudentValidationIssueTypeCode[1];
+    codes[0] = PenRequestBatchStudentValidationIssueTypeCode.builder().code(code).description(description).build();
+    return codes;
+  }
 
   @Test
   public void testGetStudentByStudentID_givenAPICallSuccess_shouldReturnData() {
@@ -131,6 +144,23 @@ public class RestUtilsTest {
     val result = this.restUtils.getSchoolByMincode("10200001");
     assertThat(result).isNotNull().isPresent();
     assertThat(result.get().getMincode()).isEqualTo("10200001");
+  }
+
+  @Test
+  public void testGetPenRequestBatchStudentValidationIssueTypeCodes_givenAPICallSuccess_shouldReturnData() {
+    val result = this.restUtils.getPenRequestBatchStudentValidationIssueTypeCodeInfoByIssueTypeCode("INVCHARS");
+    assertThat(result).isNotNull().isPresent();
+    assertThat(result.get().getDescription()).isEqualTo("Invalid chars");
+  }
+
+  @Test
+  public void testPopulatePenRequestBatchStudentValidationIssueTypeCodeMap_givenNewData_shouldMergeData() {
+    this.restUtils.populatePenRequestBatchStudentValidationIssueTypeCodeMap();
+    var result = this.restUtils.getPenRequestBatchStudentValidationIssueTypeCodeInfoByIssueTypeCode("INVCHARS");
+    assertThat(result).isEmpty();
+    result = this.restUtils.getPenRequestBatchStudentValidationIssueTypeCodeInfoByIssueTypeCode("GENDER_ERR");
+    assertThat(result).isNotNull().isPresent();
+    assertThat(result.get().getDescription()).isEqualTo("Gender error");
   }
 
   @Test

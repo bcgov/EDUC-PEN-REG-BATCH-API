@@ -224,14 +224,19 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
     var prbStudent = batch.getPenRequestBatchStudentEntities().iterator().next();
     assertThat(new String(content.getFileContents())).contains(prbStudent.getLocalID());
     assertThat(new String(content.getFileContents())).contains(batch.getPenRequestBatchStudentEntities().iterator().next().getLegalLastName());
+    assertThat(new String(content.getFileContents())).contains("error issue message");
+    assertThat(new String(content.getFileContents())).contains("info request message");
   }
 
   private PenRequestBatchReportData getPenRequestBatchReportData(PenRequestBatchEntity batch) {
+    var issues = batch.getPenRequestBatchStudentEntities().stream().filter(student -> student.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode()))
+      .collect(Collectors.toMap(student -> student.getPenRequestBatchStudentID().toString(), student -> "error issue message"));
     var sagaData = PenRequestBatchRepostReportsFilesSagaData.builder()
       .penRequestBatchID(batch.getPenRequestBatchID())
       .schoolName(batch.getSchoolName())
       .penRequestBatch(batchMapper.toStructure(batch))
       .penRequestBatchStudents(batch.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
+      .penRequestBatchStudentValidationIssues(issues)
       .students(PenRequestBatchTestUtils.createStudents(batch))
       .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
       .mailingAddress("123 st")

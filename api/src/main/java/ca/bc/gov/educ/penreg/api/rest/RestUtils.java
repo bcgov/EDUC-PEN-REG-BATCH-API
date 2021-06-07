@@ -9,9 +9,11 @@ import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 
@@ -61,6 +65,9 @@ public class RestUtils {
   private final MessagePublisher messagePublisher;
 
   private final Map<String, School> schoolMap = new ConcurrentHashMap<>();
+
+  private final Map<String, PenRequestBatchStudentValidationIssueTypeCode> penRequestBatchStudentValidationIssueTypeCodeMap = new ConcurrentHashMap<>();
+
   /**
    * The School lock.
    */
@@ -92,6 +99,7 @@ public class RestUtils {
 
   private void initialize() {
     this.populateSchoolMap();
+    this.populatePenRequestBatchStudentValidationIssueTypeCodeMap();
   }
 
   /**
@@ -102,6 +110,19 @@ public class RestUtils {
       this.schoolMap.putIfAbsent(school.getDistNo() + school.getSchlNo(), school);
     }
     log.info("loaded  {} schools to memory", this.schoolMap.values().size());
+  }
+
+  /**
+   * Populate pen request batch student validation issue type code map.
+   */
+  public void populatePenRequestBatchStudentValidationIssueTypeCodeMap() {
+    var issueTypeCodes = this.getPenRequestBatchStudentValidationIssueTypeCodes();
+    penRequestBatchStudentValidationIssueTypeCodeMap.putAll(issueTypeCodes.stream().collect(Collectors.toMap(PenRequestBatchStudentValidationIssueTypeCode::getCode, Function.identity())));
+    var mergedCodes = penRequestBatchStudentValidationIssueTypeCodeMap.keySet();
+    var newCodes = issueTypeCodes.stream().map(PenRequestBatchStudentValidationIssueTypeCode::getCode).collect(Collectors.toSet());
+    var difference = Sets.difference(mergedCodes, newCodes);
+    difference.forEach(penRequestBatchStudentValidationIssueTypeCodeMap::remove);
+    log.info("loaded  {} penRequestBatchStudentValidationIssueTypeCodes to memory", this.penRequestBatchStudentValidationIssueTypeCodeMap.values().size());
   }
 
   /**
@@ -116,6 +137,22 @@ public class RestUtils {
       .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
       .retrieve()
       .bodyToFlux(School.class)
+      .collectList()
+      .block();
+  }
+
+  /**
+   * Gets pen request batch student validation issue type codes.
+   *
+   * @return the schools
+   */
+  public List<PenRequestBatchStudentValidationIssueTypeCode> getPenRequestBatchStudentValidationIssueTypeCodes() {
+    log.info("calling pen service api to load penRequestBatchStudentValidationIssueTypeCodes to memory");
+    return this.webClient.get()
+      .uri(this.props.getPenServicesApiURL() + "/api/v1/pen-services/validation/issue-type-code")
+      .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+      .retrieve()
+      .bodyToFlux(PenRequestBatchStudentValidationIssueTypeCode.class)
       .collectList()
       .block();
   }
@@ -224,6 +261,16 @@ public class RestUtils {
    */
   public Optional<School> getSchoolByMincode(final String mincode) {
     return Optional.ofNullable(this.schoolMap.get(mincode));
+  }
+
+  /**
+   * Gets penRequestBatchStudentValidationIssueTypeCode by issue type code.
+   *
+   * @param issueTypeCode the issue type code
+   * @return the PenRequestBatchStudentValidationIssueTypeCode
+   */
+  public Optional<PenRequestBatchStudentValidationIssueTypeCode> getPenRequestBatchStudentValidationIssueTypeCodeInfoByIssueTypeCode(final String issueTypeCode) {
+    return Optional.ofNullable(this.penRequestBatchStudentValidationIssueTypeCodeMap.get(issueTypeCode));
   }
 
   /**

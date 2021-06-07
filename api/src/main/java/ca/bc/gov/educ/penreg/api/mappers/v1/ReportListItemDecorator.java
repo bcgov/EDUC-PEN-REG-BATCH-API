@@ -5,6 +5,7 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportListItem;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportUserMatchedListItem;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -27,13 +28,18 @@ public abstract class ReportListItemDecorator implements ReportListItemMapper {
     final var data = this.delegate.toReportUserMatchedListItem(penRequestBatchStudent, student);
 
     data.setMin(toReportListItem(student));
-    data.setSchool(toReportListItem(penRequestBatchStudent));
+    data.setSchool(toReportListItem(penRequestBatchStudent, ""));
     return data;
   }
 
   @Override
-  public ReportListItem toReportListItem (PenRequestBatchStudent penRequestBatchStudent) {
-    final var studentData = this.delegate.toReportListItem(penRequestBatchStudent);
+  public ReportListItem toReportListItem (PenRequestBatchStudent penRequestBatchStudent, String penRequestBatchStudentValidationIssues) {
+    final var studentData = this.delegate.toReportListItem(penRequestBatchStudent, penRequestBatchStudentValidationIssues);
+    if(!StringUtils.isBlank(penRequestBatchStudent.getInfoRequest())) {
+      studentData.setReason(penRequestBatchStudent.getInfoRequest());
+    } else if(!StringUtils.isBlank(penRequestBatchStudentValidationIssues)) {
+      studentData.setReason(penRequestBatchStudentValidationIssues);
+    }
     return setBirthDateAndUsualName(studentData, penRequestBatchStudent.getDob(), penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames(), "yyyyMMdd");
   }
 

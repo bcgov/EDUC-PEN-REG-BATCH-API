@@ -46,7 +46,8 @@
     "genderCode": "F",
     "gradeCode": "EL",
     "postalCode": "V0J1P0",
-    "assignedPEN": "123456789"
+    "assignedPEN": "123456789",
+    "infoRequest": "info request message"
   },
   {
     "penRequestBatchStudentStatusCode": "MATCHEDSYS",

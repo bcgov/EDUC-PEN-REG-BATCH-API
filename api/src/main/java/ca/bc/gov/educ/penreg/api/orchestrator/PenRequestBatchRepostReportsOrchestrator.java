@@ -5,10 +5,8 @@ import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
-import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
-import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
-import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
-import ca.bc.gov.educ.penreg.api.service.SagaService;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
+import ca.bc.gov.educ.penreg.api.service.*;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchRepostReportsFilesSagaData;
@@ -43,10 +41,13 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
                                                     PenRequestBatchService penRequestBatchService,
                                                     PenCoordinatorService penCoordinatorService,
                                                     PenCoordinatorProperties penCoordinatorProperties,
-                                                    ResponseFileGeneratorService responseFileGeneratorService) {
+                                                    ResponseFileGeneratorService responseFileGeneratorService,
+                                                    PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService,
+                                                    RestUtils restUtils) {
         super(sagaService, messagePublisher, PenRequestBatchRepostReportsFilesSagaData.class,
           PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA.toString(), PEN_REQUEST_BATCH_REPOST_REPORTS_TOPIC.toString(),
-          penRequestBatchService, penCoordinatorService, penCoordinatorProperties, responseFileGeneratorService);
+          penRequestBatchService, penCoordinatorService, penCoordinatorProperties, responseFileGeneratorService,
+          penRequestBatchStudentValidationIssueService, restUtils);
     }
 
     /**

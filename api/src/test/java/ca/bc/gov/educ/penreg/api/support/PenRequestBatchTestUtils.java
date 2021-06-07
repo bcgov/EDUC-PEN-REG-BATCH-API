@@ -10,6 +10,7 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.*;
 import ca.bc.gov.educ.penreg.api.repository.*;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
@@ -319,6 +320,14 @@ public class PenRequestBatchTestUtils {
     if(penRequestBatchStudentStatusCode.equals(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode())) {
       penRequestBatchStudentEntity.setAssignedPEN("123456789");
       penRequestBatchStudentEntity.setStudentID(UUID.randomUUID());
+    } else if(penRequestBatchStudentStatusCode.equals(PenRequestBatchStudentStatusCodes.ERROR.getCode())) {
+      var issueEntity = PenRequestBatchStudentValidationIssueEntity.builder()
+        .penRequestBatchStudentEntity(penRequestBatchStudentEntity)
+        .penRequestBatchValidationFieldCode(PenRequestBatchStudentValidationFieldCode.LEGAL_FIRST.getCode())
+        .penRequestBatchValidationIssueSeverityCode(PenRequestBatchStudentValidationIssueSeverityCode.ERROR.toString())
+        .penRequestBatchValidationIssueTypeCode(PenRequestBatchStudentValidationIssueTypeCode.INV_CHARS.getCode())
+        .build();
+      penRequestBatchStudentEntity.getPenRequestBatchStudentValidationIssueEntities().add(issueEntity);
     }
     final PenRequestBatchEntity entity = new PenRequestBatchEntity();
     entity.setCreateDate(LocalDateTime.now());

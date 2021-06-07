@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,6 +52,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
       .schoolName("Cataline")
       .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
       .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList()))
+      .penRequestBatchStudentValidationIssues(new HashMap<>())
       .students(students).build();
 
     final PenRequestBatchReportData reportData = reportMapper.toReportData(sagaData);
@@ -158,7 +160,9 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
       .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
       .schoolName("Cataline")
       .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
-      .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList())).build();
+      .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList()))
+      .penRequestBatchStudentValidationIssues(new HashMap<>())
+      .build();
     final PenRequestBatchReportData reportData = reportMapper.toReportData(sagaData);
 
     assertThat(reportData.getDiffList().size()).isEqualTo(1);
@@ -183,6 +187,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
       .schoolName("Cataline")
       .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
       .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList()))
+      .penRequestBatchStudentValidationIssues(new HashMap<>())
       .students(students).build();
 
     final PenRequestBatchReportData reportData = reportMapper.toReportData(sagaData);

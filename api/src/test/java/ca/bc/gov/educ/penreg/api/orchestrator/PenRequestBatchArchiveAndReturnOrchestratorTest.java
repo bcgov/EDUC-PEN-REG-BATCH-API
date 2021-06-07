@@ -17,6 +17,7 @@ import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -61,7 +62,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     @Autowired
     private SagaService sagaService;
 
-  /**
+    /**
      * The Message publisher.
      */
     @Autowired
@@ -83,7 +84,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     @Captor
     ArgumentCaptor<byte[]> eventCaptor;
 
-  @Autowired
+    @Autowired
     RestUtils restUtils;
 
     @Autowired
@@ -104,6 +105,42 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
       });
     }
 
+  @Test
+  public void testHandleEvent_givenBatchInSagaDataExistsAndErrorStudent_shouldArchivePenRequestBatchAndBeMarkedSTUDENTS_FOUND() throws IOException, InterruptedException, TimeoutException {
+    when(this.restUtils.getPenCoordinator(anyString())).thenReturn(Optional.of(PenCoordinator.builder().penCoordinatorEmail("test@test.com").penCoordinatorName("Joe Blow").build()));
+    final String errorDescription = "Invalid chars";
+    when(this.restUtils.getPenRequestBatchStudentValidationIssueTypeCodeInfoByIssueTypeCode(anyString())).
+      thenReturn(Optional.of(PenRequestBatchStudentValidationIssueTypeCode.builder().code(ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentValidationIssueTypeCode.INV_CHARS.getCode())
+        .description(errorDescription).build()));
+    this.saga = penRequestBatchTestUtils.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.ERROR.getCode(), TEST_PEN);
+    final var event = Event.builder()
+      .eventType(EventType.INITIATED)
+      .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+      .sagaId(this.saga.get(0).getSagaId())
+      .build();
+    this.orchestrator.handleEvent(event);
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.get(0).getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    assertThat(sagaFromDB.get().getSagaState()).isEqualTo(ARCHIVE_PEN_REQUEST_BATCH.toString());
+    final var sagaStates = this.sagaService.findAllSagaStates(sagaFromDB.get());
+    assertThat(sagaStates.size()).isEqualTo(3);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
+    assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(GATHER_REPORT_DATA.toString());
+    assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.REPORT_DATA_GATHERED.toString());
+    assertThat(sagaStates.get(2).getSagaEventState()).isEqualTo(GET_STUDENTS.toString());
+    assertThat(sagaStates.get(2).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENTS_FOUND.toString());
+    final PenRequestBatchArchiveAndReturnSagaData payload = JsonUtil.getJsonObjectFromString(PenRequestBatchArchiveAndReturnSagaData.class, sagaFromDB.get().getPayload());
+    assertThat(payload.getFacsimile()).isNotEmpty();
+    assertThat(payload.getFromEmail()).isNotEmpty();
+    assertThat(payload.getTelephone()).isNotEmpty();
+    assertThat(payload.getMailingAddress()).isNotEmpty();
+    assertThat(payload.getPenCoordinator().getPenCoordinatorEmail()).isNotEmpty();
+    assertThat(payload.getPenCoordinator().getPenCoordinatorName()).isNotEmpty();
+    assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
+    assertThat(payload.getPenRequestBatch()).isNotNull();
+    assertThat(payload.getPenRequestBatchStudentValidationIssues()).containsValue(errorDescription);
+  }
 
   @Test
   public void testHandleEvent_givenBatchInSagaDataExistsAndUsrMtchStudent_shouldArchivePenRequestBatchAndBeMarkedSTUDENTS_FOUND() throws IOException, InterruptedException, TimeoutException {
