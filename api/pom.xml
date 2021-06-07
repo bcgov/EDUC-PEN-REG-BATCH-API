@@ -12,6 +12,7 @@
   <properties>
     <sonar.language>java</sonar.language>
     <sonar.exclusions>
+      src/test/**,
       src/main/resources/**,src/main/java/ca/bc/gov/educ/penreg/api/endpoint/**,src/main/java/ca/bc/gov/educ/penreg/api/config/**,
       src/main/java/ca/bc/gov/educ/penreg/api/mappers/**,src/main/java/ca/bc/gov/educ/penreg/api/exception/**,src/main/java/ca/bc/gov/educ/penreg/api/model/**,src/main/java/ca/bc/gov/educ/penreg/api/struct/**
     </sonar.exclusions>

@@ -2,7 +2,9 @@ package ca.bc.gov.educ.penreg.api.mappers.v1.external;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.StudentDemogCode;
+import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchStudentValidationIssueMapper;
+import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.struct.Student;
@@ -53,32 +55,13 @@ public abstract class PenRequestBatchResultDataDecorator implements PenRequestBa
           break;
         case SYS_NEW_PEN:
         case USR_NEW_PEN:
-          if (studentMap.get(penRequestBatchStudent.getStudentID().toString()) == null) {
-            log.error("Error attempting to PenRequestBatchSubmissionResult data. Students list should not be null for USR_NEW_PEN or SYS_NEW_PEN status.");
-            break;
-          }
-          newPenAssignedList.add(listItemMapper.toListItem(studentMap.get(penRequestBatchStudent.getStudentID().toString())));
+          populateForNewPenStatus(studentMap, newPenAssignedList, penRequestBatchStudent);
           break;
         case SYS_MATCHED:
-          exactMatchList.add(listItemMapper.toListItem(studentMap.get(penRequestBatchStudent.getStudentID().toString())));
+          this.populateForSystemMatchedStatus(exactMatchList, differencesList, studentMap, penRequestBatchStudent);
           break;
         case USR_MATCHED:
-          if (studentMap.get(penRequestBatchStudent.getStudentID().toString()) == null) {
-            log.error("Error attempting to create report data. Students list should not be null for USR_MATCHED status.");
-            break;
-          }
-          val matchedStudent = studentMap.get(penRequestBatchStudent.getStudentID().toString());
-          if (matchedStudent != null && matchedStudent.getDemogCode() != null && matchedStudent.getDemogCode().equals(StudentDemogCode.CONFIRMED.getCode())) {
-            val item = new SchoolMinListItem();
-            item.setMin(listItemMapper.toListItem(matchedStudent));
-            item.setSchool(listItemMapper.toListItem(penRequestBatchStudent));
-            confirmedList.add(item);
-          } else {
-            val item = new SchoolMinListItem();
-            item.setMin(listItemMapper.toListItem(matchedStudent));
-            item.setSchool(listItemMapper.toListItem(penRequestBatchStudent));
-            differencesList.add(item);
-          }
+          populateForUserMatchedStatus(studentMap, differencesList, confirmedList, penRequestBatchStudent);
           break;
         default:
           log.error("Unexpected pen request batch student error code encountered while attempting generate PenRequestBatchSubmissionResult data :: " + penRequestBatchStudent.getPenRequestBatchStudentStatusCode());
@@ -91,6 +74,45 @@ public abstract class PenRequestBatchResultDataDecorator implements PenRequestBa
     requestBatchSubmissionResult.setExactMatchList(exactMatchList);
     requestBatchSubmissionResult.setNewPenAssignedList(newPenAssignedList);
     return requestBatchSubmissionResult;
+  }
+
+  private void populateForUserMatchedStatus(Map<String, Student> studentMap, List<SchoolMinListItem> differencesList, List<SchoolMinListItem> confirmedList, PenRequestBatchStudentEntity penRequestBatchStudent) {
+    if (studentMap.get(penRequestBatchStudent.getStudentID().toString()) == null) {
+      log.error("Error attempting to create report data. Students list should not be null for USR_MATCHED status.");
+      return;
+    }
+    val matchedStudent = studentMap.get(penRequestBatchStudent.getStudentID().toString());
+    if (matchedStudent != null && matchedStudent.getDemogCode() != null && matchedStudent.getDemogCode().equals(StudentDemogCode.CONFIRMED.getCode())) {
+      val item = new SchoolMinListItem();
+      item.setMin(listItemMapper.toListItem(matchedStudent));
+      item.setSchool(listItemMapper.toListItem(penRequestBatchStudent));
+      confirmedList.add(item);
+    } else {
+      val item = new SchoolMinListItem();
+      item.setMin(listItemMapper.toListItem(matchedStudent));
+      item.setSchool(listItemMapper.toListItem(penRequestBatchStudent));
+      differencesList.add(item);
+    }
+  }
+
+  private void populateForSystemMatchedStatus(List<ListItem> exactMatchList, List<SchoolMinListItem> differencesList, Map<String, Student> studentMap, PenRequestBatchStudentEntity penRequestBatchStudent) {
+    val student = studentMap.get(penRequestBatchStudent.getStudentID().toString());
+    if (PenRegBatchHelper.exactMatch(PenRequestBatchStudentMapper.mapper.toStructure(penRequestBatchStudent), student)) {
+      exactMatchList.add(listItemMapper.toListItem(penRequestBatchStudent));
+    } else {
+      val item = new SchoolMinListItem();
+      item.setMin(listItemMapper.toListItem(student));
+      item.setSchool(listItemMapper.toListItem(penRequestBatchStudent));
+      differencesList.add(item);
+    }
+  }
+
+  private void populateForNewPenStatus(Map<String, Student> studentMap, List<ListItem> newPenAssignedList, PenRequestBatchStudentEntity penRequestBatchStudent) {
+    if (studentMap.get(penRequestBatchStudent.getStudentID().toString()) == null) {
+      log.error("Error attempting to PenRequestBatchSubmissionResult data. Students list should not be null for USR_NEW_PEN or SYS_NEW_PEN status.");
+      return;
+    }
+    newPenAssignedList.add(listItemMapper.toListItem(studentMap.get(penRequestBatchStudent.getStudentID().toString())));
   }
 
 }

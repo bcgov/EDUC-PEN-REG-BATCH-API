@@ -79,7 +79,8 @@
     "genderCode": "M",
     "gradeCode": "EL",
     "postalCode": "V0J1P0",
-    "assignedPEN": "123456784"
+    "assignedPEN": "123456784",
+    "studentID": "566ee980-8e5f-11eb-8dcd-0242ac130009"
   },
   {
     "penRequestBatchStudentStatusCode": "MATCHEDUSR",

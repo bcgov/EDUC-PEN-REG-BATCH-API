@@ -36,9 +36,11 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
 
     final var student1 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130002").dob("1990-07-04").genderCode("M").legalFirstName("Mike").pen("123456785").legalLastName("Joe").legalMiddleNames("Tim").usualFirstName("Bob").usualLastName("Smithy").usualMiddleNames("Smalls").mincode(batchEntities.get(0).getMincode()).demogCode("C").build();
     final var student2 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130003").dob("1990-07-03").genderCode("F").legalFirstName("Ted").pen("123456780").legalLastName("Jones").legalMiddleNames("Jim").usualFirstName("Steal").usualLastName("Mr").usualMiddleNames("Yo Girl").mincode(batchEntities.get(0).getMincode()).demogCode("A").build();
+    final var student3 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130009").dob("2011-12-07").genderCode("M").sexCode("M").legalFirstName("BRAYDON").pen("123456784").legalLastName("JOSEPH").legalMiddleNames("JAMIESON").usualFirstName("BRAYDON").usualLastName("JOSEPH").usualMiddleNames(null).mincode(batchEntities.get(0).getMincode()).demogCode("A").build();
     final List<Student> students = new ArrayList<>();
     students.add(student1);
     students.add(student2);
+    students.add(student3);
 
     final var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder()
       .facsimile("3333333333")
@@ -71,12 +73,11 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getDiffList().get(0).getMin().getGivenName()).isEqualTo("Ted");
     assertThat(reportData.getDiffList().get(0).getMin().getLegalMiddleNames()).isEqualTo("Jim");
     assertThat(reportData.getDiffList().get(0).getMin().getPen()).isEqualTo("123456780");
-    assertThat(reportData.getDiffList().get(0).getMin().getReason()).isEqualTo(null);
-    assertThat(reportData.getDiffList().get(0).getMin().getSchoolID()).isEqualTo("");
+    assertThat(reportData.getDiffList().get(0).getMin().getReason()).isNull();
+    assertThat(reportData.getDiffList().get(0).getMin().getSchoolID()).isBlank();
     assertThat(reportData.getDiffList().get(0).getMin().getSurname()).isEqualTo("Jones");
     assertThat(reportData.getDiffList().get(0).getMin().getUsualName()).isEqualTo("Mr, Steal, Yo Girl");
 
-    assertThat(reportData.getDiffList().size()).isEqualTo(1);
     assertThat(reportData.getDiffList().get(0).getSchool().getBirthDate()).isEqualTo("2011/12/08");
     assertThat(reportData.getDiffList().get(0).getSchool().getGender()).isEqualTo("M");
     assertThat(reportData.getDiffList().get(0).getSchool().getGivenName()).isEqualTo("BOY");
@@ -93,8 +94,8 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getConfirmedList().get(0).getMin().getGivenName()).isEqualTo("Mike");
     assertThat(reportData.getConfirmedList().get(0).getMin().getLegalMiddleNames()).isEqualTo("Tim");
     assertThat(reportData.getConfirmedList().get(0).getMin().getPen()).isEqualTo("123456785");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getReason()).isEqualTo(null);
-    assertThat(reportData.getConfirmedList().get(0).getMin().getSchoolID()).isEqualTo("");
+    assertThat(reportData.getConfirmedList().get(0).getMin().getReason()).isNull();
+    assertThat(reportData.getConfirmedList().get(0).getMin().getSchoolID()).isBlank();
     assertThat(reportData.getConfirmedList().get(0).getMin().getSurname()).isEqualTo("Joe");
     assertThat(reportData.getConfirmedList().get(0).getMin().getUsualName()).isEqualTo("Smithy, Bob, Smalls");
 
@@ -111,7 +112,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
 
     assertThat(reportData.getNewPenList().size()).isEqualTo(2);
     assertThat(reportData.getPendingList().size()).isEqualTo(5);
-    assertThat(reportData.getSysMatchedList().size()).isEqualTo(1);
+    assertThat(reportData.getSysMatchedList().size()).isEqualTo(1); // exact match
 }
 
   @Test
@@ -143,20 +144,24 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
   @Test
   public void testToReportUserMatchedListItem_GivenNullStudent_ShouldNotThrowError() throws IOException {
     final var batchEntities = PenRequestBatchTestUtils.createBatchStudents(this.repository, "mock_pen_req_batch_repeat.json", "mock_pen_req_batch_student_archived_with_pen.json", 1,
-        (batch) -> batch.setProcessDate(LocalDateTime.parse("2021-03-23T13:04:48.840098")));
+      (batch) -> batch.setProcessDate(LocalDateTime.parse("2021-03-23T13:04:48.840098")));
 
+    final var student = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130009").pen("123456780").build();
+    final List<Student> students = new ArrayList<>();
+    students.add(student);
     final var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder()
       .facsimile("3333333333")
       .telephone("5555555555")
       .fromEmail("test@abc.com")
       .mailingAddress("mailing address")
+      .students(students)
       .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
       .schoolName("Cataline")
       .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
       .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList())).build();
     final PenRequestBatchReportData reportData = reportMapper.toReportData(sagaData);
 
-    assertThat(reportData.getDiffList().size()).isEqualTo(0);
+    assertThat(reportData.getDiffList().size()).isEqualTo(1);
   }
 
   @Test
