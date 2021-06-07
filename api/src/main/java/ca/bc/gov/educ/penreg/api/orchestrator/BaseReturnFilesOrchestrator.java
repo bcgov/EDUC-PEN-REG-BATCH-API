@@ -10,15 +10,14 @@ import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
 import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
-import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
-import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
-import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
-import ca.bc.gov.educ.penreg.api.service.SagaService;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
+import ca.bc.gov.educ.penreg.api.service.*;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.v1.BasePenRequestBatchReturnFilesSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchivedEmailEvent;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +25,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeoutException;
@@ -49,6 +49,12 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
 
     @Getter(PROTECTED)
     private final ResponseFileGeneratorService responseFileGeneratorService;
+
+    @Getter(PROTECTED)
+    private final PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService;
+
+    @Getter(PROTECTED)
+    private final RestUtils restUtils;
 
     @Getter(PROTECTED)
     private final PenCoordinatorProperties penCoordinatorProperties;
@@ -82,12 +88,16 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
                                        PenRequestBatchService penRequestBatchService,
                                        PenCoordinatorService penCoordinatorService,
                                        PenCoordinatorProperties penCoordinatorProperties,
-                                       ResponseFileGeneratorService responseFileGeneratorService) {
+                                       ResponseFileGeneratorService responseFileGeneratorService,
+                                       PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService,
+                                       RestUtils restUtils) {
         super(sagaService, messagePublisher, clazz, sagaName, topicToSubscribe);
         this.penRequestBatchService = penRequestBatchService;
         this.penCoordinatorService = penCoordinatorService;
         this.penCoordinatorProperties = penCoordinatorProperties;
         this.responseFileGeneratorService = responseFileGeneratorService;
+        this.penRequestBatchStudentValidationIssueService = penRequestBatchStudentValidationIssueService;
+        this.restUtils = restUtils;
     }
 
     protected void gatherReportData(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws IOException, InterruptedException, TimeoutException {
@@ -99,6 +109,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
         Event nextEvent = Event.builder().sagaId(saga.getSagaId()).eventType(GATHER_REPORT_DATA).replyTo(this.getTopicToSubscribe()).build();
 
         if(penRequestBatch.isPresent()) {
+            penRequestBatchReturnFilesSagaData.setPenRequestBatchStudentValidationIssues(getValidationIssues(penRequestBatch.get()));
             List<PenRequestBatchStudent> studentRequests = penRequestBatch.get().getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList());
             penRequestBatchReturnFilesSagaData.setPenRequestBatchStudents(studentRequests);
             penRequestBatchReturnFilesSagaData.setPenRequestBatch(mapper.toStructure(penRequestBatch.get()));
@@ -115,6 +126,24 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
             nextEvent.setEventOutcome(EventOutcome.PEN_REQUEST_BATCH_NOT_FOUND);
         }
         this.handleEvent(nextEvent);
+    }
+
+    private HashMap<String, String> getValidationIssues(PenRequestBatchEntity penRequestBatch) {
+        var validationIssues = penRequestBatchStudentValidationIssueService.findAllPenRequestBatchStudentValidationIssueEntities(penRequestBatch);
+        var validationIssuesByPrbStudentID = new HashMap<String, String>();
+        validationIssues.forEach(issue -> {
+            if(issue.getPenRequestBatchValidationIssueSeverityCode().equals(PenRequestBatchStudentValidationIssueSeverityCode.ERROR.toString())) {
+                var prbStudentID = issue.getPenRequestBatchStudentEntity().getPenRequestBatchStudentID().toString();
+                var errorDescription = restUtils.getPenRequestBatchStudentValidationIssueTypeCodeInfoByIssueTypeCode(issue.getPenRequestBatchValidationIssueTypeCode())
+                  .map(PenRequestBatchStudentValidationIssueTypeCode::getDescription)
+                  .orElse(issue.getPenRequestBatchValidationIssueTypeCode());
+                if(validationIssuesByPrbStudentID.containsKey(prbStudentID)) {
+                    errorDescription = validationIssuesByPrbStudentID.get(prbStudentID) + ". "  + errorDescription;
+                }
+                validationIssuesByPrbStudentID.put(prbStudentID, errorDescription);
+            }
+        });
+        return validationIssuesByPrbStudentID;
     }
 
     protected void getStudents(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws IOException, TimeoutException, InterruptedException {

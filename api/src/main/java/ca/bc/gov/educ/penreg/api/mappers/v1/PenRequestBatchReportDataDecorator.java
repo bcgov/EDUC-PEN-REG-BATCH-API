@@ -57,7 +57,8 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
         case REPEAT:
         case INFOREQ:
         case FIXABLE:
-          pendingList.add(listItemMapper.toReportListItem(penRequestBatchStudent));
+          var issues = data.getPenRequestBatchStudentValidationIssues().get(penRequestBatchStudent.getPenRequestBatchStudentID());
+          pendingList.add(listItemMapper.toReportListItem(penRequestBatchStudent, issues));
           break;
         case SYS_NEW_PEN:
         case USR_NEW_PEN:
@@ -115,7 +116,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
   private void populateForSystemMatchedStatus(final List<ReportListItem> sysMatchedList, final List<ReportUserMatchedListItem> diffList, final Map<String, Student> students, final PenRequestBatchStudent penRequestBatchStudent) {
     val student = students.get(penRequestBatchStudent.getStudentID());
     if (PenRegBatchHelper.exactMatch(penRequestBatchStudent, student)) {
-      sysMatchedList.add(listItemMapper.toReportListItem(penRequestBatchStudent));
+      sysMatchedList.add(listItemMapper.toReportListItem(penRequestBatchStudent, ""));
     } else {
       diffList.add(listItemMapper.toReportUserMatchedListItem(penRequestBatchStudent, student));
     }
