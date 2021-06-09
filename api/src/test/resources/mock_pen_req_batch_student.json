@@ -3,17 +3,18 @@
 
     "penRequestBatchStudentStatusCode": "LOADED",
     "localID": "1488645",
-    "submittedPen": null,
+    "submittedPen": "123456789",
     "legalLastName": "JOHNSTON",
     "legalFirstName": "ANGEL",
     "legalMiddleNames": "MARIA LYNN",
-    "usualLastName": null,
-    "usualFirstName": null,
-    "usualMiddleNames": null,
+    "usualLastName": "JEB",
+    "usualFirstName": "JEB",
+    "usualMiddleNames": "JEB",
     "dob": "20060628",
     "genderCode": "F",
     "gradeCode": "02",
-    "postalCode": "Y1A4V1"
+    "postalCode": "Y1A4V1",
+    "bestMatchPEN":  "123456789"
   },
   {
 

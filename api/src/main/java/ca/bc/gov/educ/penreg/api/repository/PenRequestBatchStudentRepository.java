@@ -2,7 +2,6 @@ package ca.bc.gov.educ.penreg.api.repository;
 
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestIDs;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -71,7 +70,5 @@ public interface PenRequestBatchStudentRepository extends JpaRepository<PenReque
   @Query("select t from PenRequestBatchStudentEntity t WHERE t.penRequestBatchEntity IN (select s from PenRequestBatchEntity s WHERE s.mincode = :mincode AND s.penRequestBatchStatusCode = :penRequestBatchStatusCode AND s.processDate >= :startDate) AND t.penRequestBatchStudentStatusCode NOT IN :penRequestBatchStudentStatusCodes")
   List<PenRequestBatchStudentEntity> findAllPenRequestBatchStudentsForGivenCriteria(@Param("mincode") String mincode,
                                                                                     @Param("penRequestBatchStatusCode") String penRequestBatchStatusCode, @Param("startDate") LocalDateTime startDate, List<String> penRequestBatchStudentStatusCodes);
-  @Query(nativeQuery = true)
-  List<PenRequestIDs> getAllPenRequestBatchStudentIDs(List<UUID> penRequestBatchIDs, List<String> penRequestBatchStudentStatusCodes);
 
 }
