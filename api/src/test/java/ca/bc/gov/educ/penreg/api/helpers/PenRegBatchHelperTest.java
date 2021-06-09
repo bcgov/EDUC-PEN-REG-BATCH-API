@@ -20,8 +20,8 @@ public class PenRegBatchHelperTest {
 
   @Test
   public void testExactMatch_givenAllValuesSame2_shouldReturnTrue() {
-    PenRequestBatchStudent penRequestBatchStudent = PenRequestBatchStudent.builder().genderCode("M").dob("20000101").legalFirstName("test").legalLastName("test").submittedPen("123456789").assignedPEN("123456789").build();
-    Student student = Student.builder().sexCode("M").dob("2000-01-01").legalFirstName("test").legalLastName("test").build();
+    PenRequestBatchStudent penRequestBatchStudent = PenRequestBatchStudent.builder().genderCode("M").dob("20000101").legalMiddleNames("middleName 123").legalFirstName("test").legalLastName("test").submittedPen("123456789").assignedPEN("123456789").build();
+    Student student = Student.builder().sexCode("M").dob("2000-01-01").legalFirstName("test").legalMiddleNames("middleName 123").legalLastName("test").build();
     assertThat(PenRegBatchHelper.exactMatch(penRequestBatchStudent, student)).isTrue();
   }
 
@@ -35,6 +35,13 @@ public class PenRegBatchHelperTest {
   @Test
   public void testExactMatch_givenDiffValues2_shouldReturnFalse() {
     PenRequestBatchStudent penRequestBatchStudent = PenRequestBatchStudent.builder().genderCode("F").dob("20000101").legalFirstName("test").legalLastName("test").submittedPen("123456789").assignedPEN("123456789").build();
+    Student student = Student.builder().sexCode("M").dob("2000-01-01").legalFirstName("test").legalLastName("test").build();
+    assertThat(PenRegBatchHelper.exactMatch(penRequestBatchStudent, student)).isFalse();
+  }
+
+  @Test
+  public void testExactMatch_givenDiffValues3_shouldReturnFalse() {
+    PenRequestBatchStudent penRequestBatchStudent = PenRequestBatchStudent.builder().genderCode("F").dob("20000101").legalFirstName("test").legalMiddleNames("AARON").legalLastName("test").submittedPen("123456789").assignedPEN("123456789").build();
     Student student = Student.builder().sexCode("M").dob("2000-01-01").legalFirstName("test").legalLastName("test").build();
     assertThat(PenRegBatchHelper.exactMatch(penRequestBatchStudent, student)).isFalse();
   }

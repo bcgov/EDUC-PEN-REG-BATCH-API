@@ -80,6 +80,7 @@ public final class PenRegBatchHelper {
   public static boolean exactMatch(final PenRequestBatchStudent penRequestBatchStudent, final Student student) {
     return StringUtils.equalsIgnoreCase(penRequestBatchStudent.getLegalLastName(), student.getLegalLastName())
       && StringUtils.equalsIgnoreCase(penRequestBatchStudent.getLegalFirstName(), student.getLegalFirstName())
+      && StringUtils.equalsIgnoreCase(penRequestBatchStudent.getLegalMiddleNames(), student.getLegalMiddleNames())
       && StringUtils.equalsIgnoreCase(penRequestBatchStudent.getDob(), RegExUtils.removeAll(student.getDob(), "[^\\d]"))
       && StringUtils.equalsIgnoreCase(penRequestBatchStudent.getGenderCode(), student.getSexCode())
       && (StringUtils.isBlank(penRequestBatchStudent.getSubmittedPen())
