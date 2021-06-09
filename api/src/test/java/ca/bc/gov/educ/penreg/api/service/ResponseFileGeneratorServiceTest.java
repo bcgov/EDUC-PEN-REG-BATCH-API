@@ -101,8 +101,10 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
     assertThat(penWebBlob.getFileName()).isEqualTo(penWebBlob.getMincode() + ".TXT");
     assertThat(penWebBlob.getFileContents().length > 0).isTrue();
     assertThat(new String(penWebBlob.getFileContents())).contains("2046291");
+    assertThat(new String(penWebBlob.getFileContents())).contains("221024");
     assertThat(new String(penWebBlob.getFileContents())).doesNotContain("204629298765");
     assertThat(new String(penWebBlob.getFileContents())).contains("PEN");
+    assertThat(new String(penWebBlob.getFileContents())).contains("BTR000002");
   }
 
   @Test
