@@ -156,7 +156,7 @@ public class PenRequestBatchServiceTest extends BasePenRegAPITest {
 
   @Test
   @Transactional
-  public void testFindAllPenRequestIDs_givenDataInDB_shouldReturnPenRequestIDsList() throws IOException {
+  public void testFindAllPenRequestIDs_givenNullSearchCriteria_shouldReturnPenRequestIDsList() throws IOException {
     this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
       "mock_pen_req_batch_student_ids.json", 1);
 
@@ -164,8 +164,44 @@ public class PenRequestBatchServiceTest extends BasePenRegAPITest {
     var batchIds = this.batchList.stream()
       .map(PenRequestBatchEntity::getPenRequestBatchID)
       .collect(toList());
-    List<PenRequestIDs> ids = this.prbService.findAllPenRequestIDs(batchIds, List.of(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), PenRequestBatchStudentStatusCodes.INFOREQ.getCode()));
+    List<PenRequestIDs> ids = this.prbService.findAllPenRequestIDs(batchIds, List.of(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), PenRequestBatchStudentStatusCodes.INFOREQ.getCode()), null);
     assertThat(ids.size()).isEqualTo(3);
+    assertThat(ids.get(0).getPenRequestBatchID()).isEqualTo(batchIds.get(0));
+  }
+
+  @Test
+  @Transactional
+  public void testFindAllPenRequestIDs_givenAllSearchCriteria_shouldReturnPenRequestIDsList() throws IOException {
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+      "mock_pen_req_batch_student_ids.json", 1);
+
+    assertThat(this.batchList).isNotEmpty();
+    var batchIds = this.batchList.stream()
+      .map(PenRequestBatchEntity::getPenRequestBatchID)
+      .collect(toList());
+
+    Map<String,String> searchCriteria = new HashMap<>();
+    searchCriteria.put("mincode", "10210518");
+    searchCriteria.put("localID", "1488645");
+    searchCriteria.put("submittedPen", "123456789");
+    searchCriteria.put("legalSurname", "JOHNSTON");
+    searchCriteria.put("legalGivenName", "ANGEL");
+    searchCriteria.put("legalMiddleNames", "MARIA LYNN");
+    searchCriteria.put("usualSurname", "JEB");
+    searchCriteria.put("usualGivenName", "JEB");
+    searchCriteria.put("usualMiddleNames", "JEB");
+    searchCriteria.put("dob", "20060628");
+    searchCriteria.put("gender", "F");
+    searchCriteria.put("grade", "02");
+    searchCriteria.put("postalCode", "Y1A4V1");
+    searchCriteria.put("bestMatchPEN", "123456789");
+    searchCriteria.put("submissionNumber", "T-534093");
+
+    List<PenRequestIDs> ids = this.prbService.findAllPenRequestIDs(batchIds,
+      List.of(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(),
+      PenRequestBatchStudentStatusCodes.FIXABLE.getCode()),
+      searchCriteria);
+    assertThat(ids.size()).isEqualTo(1);
     assertThat(ids.get(0).getPenRequestBatchID()).isEqualTo(batchIds.get(0));
   }
 

@@ -1024,7 +1024,43 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
   }
 
   @Test
-  public void testFindAllPenRequestIDs_HasMatchedResults_ShouldReturnStatusOk() throws Exception {
+  public void testFindAllPenRequestIDs_HasMatchedResultsWithAllSearchCriteria_ShouldReturnStatusOk() throws Exception {
+    final String batchIDs = this.createBatchStudentRecords(2);
+
+    Map<String,String> searchCriteria = new HashMap<>();
+    searchCriteria.put("mincode", "66510518");
+    searchCriteria.put("localID", "1488645");
+    searchCriteria.put("submittedPen", "123456789");
+    searchCriteria.put("legalSurname", "JOHNSTON");
+    searchCriteria.put("legalGivenName", "ANGEL");
+    searchCriteria.put("legalMiddleNames", "MARIA LYNN");
+    searchCriteria.put("usualSurname", "JEB");
+    searchCriteria.put("usualGivenName", "JEB");
+    searchCriteria.put("usualMiddleNames", "JEB");
+    searchCriteria.put("dob", "20060628");
+    searchCriteria.put("gender", "F");
+    searchCriteria.put("grade", "02");
+    searchCriteria.put("postalCode", "Y1A4V1");
+    searchCriteria.put("bestMatchPEN", "123456789");
+    searchCriteria.put("submissionNumber", "T-428469");
+
+    final ObjectMapper objectMapper = new ObjectMapper();
+    final String criteriaJSON = objectMapper.writeValueAsString(searchCriteria);
+
+    this.mockMvc
+      .perform(get("/api/v1/pen-request-batch/pen-request-batch-ids")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .param("penRequestBatchIDs", batchIDs)
+        .param("penRequestBatchStudentStatusCodes", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode() + "," + PenRequestBatchStudentStatusCodes.LOADED.getCode())
+        .param("searchCriteria", criteriaJSON)
+        .contentType(APPLICATION_JSON))
+      .andDo(print()).andExpect(status().isOk())
+      .andExpect(
+        jsonPath("$", hasSize(1)));
+  }
+
+  @Test
+  public void testFindAllPenRequestIDs_HasMatchedResultsWithNoSearchCriteria_ShouldReturnStatusOk() throws Exception {
     final String batchIDs = this.createBatchStudentRecords(2);
     this.mockMvc
       .perform(get("/api/v1/pen-request-batch/pen-request-batch-ids")

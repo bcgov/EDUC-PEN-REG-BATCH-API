@@ -1,12 +1,12 @@
 package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequest;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmission;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmissionResult;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestResult;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -325,5 +325,9 @@ public interface PenRequestBatchAPIEndpoint {
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to support pen request navigation view in frontend.", description = "This API endpoint exposes flexible way to query ids without returning the entire entity.")
   ResponseEntity<List<PenRequestIDs>> findAllPenRequestIDs(@RequestParam(name = "penRequestBatchIDs") List<UUID> penRequestBatchIDs,
-                                           @RequestParam(name = "penRequestBatchStudentStatusCodes") List<String> penRequestBatchStudentStatusCodes);
+                                           @RequestParam(name = "penRequestBatchStudentStatusCodes") List<String> penRequestBatchStudentStatusCodes,
+                                           @ArraySchema(schema = @Schema(name = "searchCriteria",
+                                             description = "searchCriteria if provided should be a JSON string Map<String,String>",
+                                             implementation = java.util.Map.class))
+                                           @RequestParam(name = "searchCriteria", required = false) String searchCriteria) throws JsonProcessingException;
 }

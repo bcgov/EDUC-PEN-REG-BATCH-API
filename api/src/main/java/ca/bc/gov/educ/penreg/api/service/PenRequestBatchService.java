@@ -10,7 +10,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepositoryCustom;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.interfaces.PenMatchResultProcessingService;
@@ -81,7 +81,7 @@ public class PenRequestBatchService {
    * the pen request batch student repository
    */
   @Getter(PRIVATE)
-  private final PenRequestBatchStudentRepository penRequestBatchStudentRepository;
+  private final PenRequestBatchStudentRepositoryCustom penRequestBatchStudentRepositoryCustom;
 
   /**
    * the pen response file generator service
@@ -105,7 +105,7 @@ public class PenRequestBatchService {
    *
    * @param repository                       the repository
    * @param penWebBlobRepository             the pen web blob repository
-   * @param penRequestBatchStudentRepository the pen request batch student repository
+   * @param penRequestBatchStudentRepositoryCustom the pen request batch student repository
    * @param responseFileGeneratorService     the response file generator service
    * @param restUtils                        the rest utils
    * @param processingService                the processing service
@@ -113,14 +113,14 @@ public class PenRequestBatchService {
   @Autowired
   public PenRequestBatchService(final PenRequestBatchRepository repository,
                                 final PenWebBlobRepository penWebBlobRepository,
-                                final PenRequestBatchStudentRepository penRequestBatchStudentRepository,
+                                final PenRequestBatchStudentRepositoryCustom penRequestBatchStudentRepositoryCustom,
                                 final ResponseFileGeneratorService responseFileGeneratorService,
                                 final RestUtils restUtils,
                                 @Qualifier("penRequestPenMatchResultProcessingService") final PenMatchResultProcessingService<PenRequestPenMatchProcessingPayload,
                                 org.apache.commons.lang3.tuple.Pair<Integer, Optional<PenRequestResult>>> processingService) {
     this.repository = repository;
     this.penWebBlobRepository = penWebBlobRepository;
-    this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
+    this.penRequestBatchStudentRepositoryCustom = penRequestBatchStudentRepositoryCustom;
     this.responseFileGeneratorService = responseFileGeneratorService;
     this.restUtils = restUtils;
     this.processingService = processingService;
@@ -285,9 +285,8 @@ public class PenRequestBatchService {
     return this.repository.findById(penRequestBatchID);
   }
 
-  public List<PenRequestIDs> findAllPenRequestIDs(final List<UUID> penRequestBatchIDs, final List<String> penRequestBatchStudentStatusCodes) {
-    return this.penRequestBatchStudentRepository.getAllPenRequestBatchStudentIDs(penRequestBatchIDs,
-      penRequestBatchStudentStatusCodes);
+  public List<PenRequestIDs> findAllPenRequestIDs(final List<UUID> penRequestBatchIDs, final List<String> penRequestBatchStudentStatusCodes, Map<String,String> searchCriteria) {
+    return this.penRequestBatchStudentRepositoryCustom.getAllPenRequestBatchStudentIDs(penRequestBatchIDs, penRequestBatchStudentStatusCodes, searchCriteria);
   }
 
   /**
