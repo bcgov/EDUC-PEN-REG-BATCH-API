@@ -158,7 +158,7 @@ public class ResponseFileGeneratorService {
         txtFile.append(createBody(entity));
       }
       // BTR footer
-      txtFile.append(createFooter(penRequestBatchEntity));
+      txtFile.append(createFooter(penRequestBatchEntity, filteredStudents.size()));
       bFile = txtFile.toString().getBytes();
     } else {
       bFile = EMPTY_TXT_FILE_CONTENT;
@@ -257,9 +257,9 @@ public class ResponseFileGeneratorService {
     return header.toString();
   }
 
-  private String createFooter(final PenRequestBatchEntity penRequestBatchEntity) {
+  private String createFooter(final PenRequestBatchEntity penRequestBatchEntity, final int studentCount) {
     return "BTR" +
-            String.format("%04d", print(penRequestBatchEntity.getSourceStudentCount())) +
+            String.format("%06d", studentCount) +
             String.format("%-100.100s", print(penRequestBatchEntity.getSisVendorName())) +
             String.format("%-100.100s", print(penRequestBatchEntity.getSisProductName())) +
             String.format("%-15.15s", print(penRequestBatchEntity.getSisProductID())) +
