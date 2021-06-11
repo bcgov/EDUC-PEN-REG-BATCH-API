@@ -100,6 +100,10 @@ public class PenRequestBatchStudentRepositoryImpl implements PenRequestBatchStud
       });
     }
 
+    sqlString.append(" ORDER BY b.MINCODE ASC," +
+      " b.SUBMISSION_NO ASC," +
+      " s.RECORD_NUMBER ASC");
+
     Query q = this.entityManager.createNativeQuery(sqlString.toString(), "penRequestIDsMapping");
     q.setParameter("batchIDs", penRequestBatchIDs);
     q.setParameter("statusCodes", penRequestBatchStudentStatusCodes);
