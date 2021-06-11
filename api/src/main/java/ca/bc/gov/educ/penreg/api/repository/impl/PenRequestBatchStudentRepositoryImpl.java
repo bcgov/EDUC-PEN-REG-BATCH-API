@@ -38,11 +38,7 @@ public class PenRequestBatchStudentRepositoryImpl implements PenRequestBatchStud
 
     StringBuilder sqlString = new StringBuilder();
     sqlString.append("SELECT s.PEN_REQUEST_BATCH_STUDENT_ID, s.PEN_REQUEST_BATCH_ID FROM PEN_REQUEST_BATCH_STUDENT s");
-
-    //Mincode and submission number come from pen request batch table so will need to do a join if either of these search criteria are present
-    if(searchCriteria != null && (StringUtils.isNotBlank(searchCriteria.get("mincode")) || StringUtils.isNotBlank(searchCriteria.get("submissionNumber")))) {
-      sqlString.append(" LEFT JOIN PEN_REQUEST_BATCH b ON b.PEN_REQUEST_BATCH_ID = s.PEN_REQUEST_BATCH_ID");
-    }
+    sqlString.append(" LEFT JOIN PEN_REQUEST_BATCH b ON b.PEN_REQUEST_BATCH_ID = s.PEN_REQUEST_BATCH_ID");
     sqlString.append(" WHERE s.PEN_REQUEST_BATCH_ID IN (:batchIDs) AND s.PEN_REQUEST_BATCH_STUDENT_STATUS_CODE IN (:statusCodes)");
 
     if(searchCriteria != null) {
