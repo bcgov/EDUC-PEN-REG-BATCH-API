@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.messaging;
 
+import ca.bc.gov.educ.penreg.api.helpers.LogHelper;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.EventHandler;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -55,6 +56,7 @@ public class MessageSubscriber {
         log.info("Message received subject :: {},  replyTo :: {}, subscriptionID :: {}", message.getSubject(), message.getReplyTo(), message.getSID());
         try {
           final var eventString = new String(message.getData());
+          LogHelper.logMessagingEventDetails(eventString);
           final var event = JsonUtil.getJsonObjectFromString(Event.class, eventString);
           eventHandler.handleEvent(event);
         } catch (final Exception e) {

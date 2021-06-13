@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.Set;
 import java.util.concurrent.Executor;
 
 /**
@@ -24,6 +23,7 @@ public class ApplicationProperties {
     .setThreadFactory(new ThreadFactoryBuilder().setNameFormat("bg-task-executor-%d").build())
     .setCorePoolSize(1).setMaximumPoolSize(1).setKeepAliveTime(Duration.ofSeconds(60)).build();
   public static final String API_NAME = "PEN_REG_BATCH_API";
+  public static final String CORRELATION_ID = "correlationID";
   /**
    * The Client id.
    */

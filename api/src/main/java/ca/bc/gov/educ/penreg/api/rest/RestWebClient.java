@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.rest;
 
+import ca.bc.gov.educ.penreg.api.helpers.LogHelper;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.InMemoryReactiveClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import reactor.netty.http.client.HttpClient;
@@ -70,9 +72,17 @@ public class RestWebClient {
       .codecs(configurer -> configurer
         .defaultCodecs()
         .maxInMemorySize(100 * 1024 * 1024))
+      .filter(this.log())
       .clientConnector(this.connector)
       .uriBuilderFactory(this.factory)
       .filter(oauthFilter)
       .build();
+  }
+
+  private ExchangeFilterFunction log() {
+    return (clientRequest, next) ->
+      next
+        .exchange(clientRequest)
+        .doOnNext((clientResponse -> LogHelper.logClientHttpReqResponseDetails(clientRequest.method(), clientRequest.url().toString(), clientResponse.rawStatusCode(), clientRequest.headers().get(ApplicationProperties.CORRELATION_ID))));
   }
 }
