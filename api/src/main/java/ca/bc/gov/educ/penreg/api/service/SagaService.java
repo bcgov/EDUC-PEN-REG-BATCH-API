@@ -4,12 +4,16 @@ import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.util.Pair;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -22,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventType.INITIATED;
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.STARTED;
@@ -197,5 +203,26 @@ public class SagaService {
         .build()));
 
     return getSagaRepository().saveAll(sagas);
+  }
+
+  /**
+   * Find all completable future.
+   *
+   * @param specs            the saga specs
+   * @param pageNumber       the page number
+   * @param pageSize         the page size
+   * @param sorts            the sorts
+   * @return the completable future
+   */
+  @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+  public CompletableFuture<Page<Saga>> findAll(final Specification<Saga> specs, final Integer pageNumber, final Integer pageSize, final List<Sort.Order> sorts) {
+    return CompletableFuture.supplyAsync(() -> {
+      final Pageable paging = PageRequest.of(pageNumber, pageSize, Sort.by(sorts));
+      try {
+        return this.sagaRepository.findAll(specs, paging);
+      } catch (final Exception ex) {
+        throw new CompletionException(ex);
+      }
+    });
   }
 }

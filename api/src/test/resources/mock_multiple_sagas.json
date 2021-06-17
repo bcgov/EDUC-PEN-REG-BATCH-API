@@ -1,0 +1,35 @@
+[
+  {
+    "sagaId": "0a610f58-75e8-19da-8175-e8d6cfd10009",
+    "sagaName": "PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA",
+    "sagaState": "COMPLETED",
+    "status": "COMPLETED",
+    "createUser": "USER",
+    "updateUser": "USER",
+    "penRequestBatchStudentID": null,
+    "penRequestBatchID": "ac336ffc-70d4-15cf-8170-e952f901000a",
+    "payload": "{\"createUser\":null,\"updateUser\":\"USER\",\"createDate\":null,\"updateDate\":null,\"penRequestBatchID\":\"0a612f49-79f6-11db-8179-f879c7900060\",\"schoolName\":\"British Columbia Institute of Technology\",\"penRequestBatch\":{\"penRequestBatchID\":\"0a612f49-79f6-11db-8179-f879c7900060\",\"submissionNumber\":\"01325712\"}"
+  },
+  {
+    "sagaId": "0a610f58-75e8-19da-8175-e8d6cfd10008",
+    "sagaName": "PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA",
+    "sagaState": "IN_PROGRESS",
+    "status": "ARCHIVE_PEN_REQUEST_BATCH",
+    "createUser": "USER",
+    "updateUser": "USER",
+    "penRequestBatchStudentID": null,
+    "penRequestBatchID": "ac336ffc-70d4-15cf-8170-e952f901000a",
+    "payload": "{\"createUser\":null,\"updateUser\":\"USER\",\"createDate\":null,\"updateDate\":null,\"penRequestBatchID\":\"0a612f49-79f6-11db-8179-f879c7900060\",\"schoolName\":\"British Columbia Institute of Technology\",\"penRequestBatch\":{\"penRequestBatchID\":\"0a612f49-79f6-11db-8179-f879c7900060\",\"submissionNumber\":\"01325712\"}"
+  },
+  {
+    "sagaId": "0a610f58-75e8-19da-8175-e8d6cfd10007",
+    "sagaName": "PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA",
+    "sagaState": "IN_PROGRESS",
+    "status": "GENERATE_PEN_REQUEST_BATCH_REPORTS",
+    "createUser": "USER",
+    "updateUser": "USER",
+    "penRequestBatchStudentID": null,
+    "penRequestBatchID": "ac336ffc-70d4-15cf-8170-e952f901000a",
+    "payload": "{\"createUser\":null,\"updateUser\":\"USER\",\"createDate\":null,\"updateDate\":null,\"penRequestBatchID\":\"0a612f49-79f6-11db-8179-f879c7900060\",\"schoolName\":\"British Columbia Institute of Technology\",\"penRequestBatch\":{\"penRequestBatchID\":\"0a612f49-79f6-11db-8179-f879c7900060\",\"submissionNumber\":\"01325712\"}"
+  }
+]
