@@ -1,25 +1,34 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
+import ca.bc.gov.educ.penreg.api.filter.FilterOperation;
+import ca.bc.gov.educ.penreg.api.mappers.v1.SagaMapper;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
+import ca.bc.gov.educ.penreg.api.struct.v1.*;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.List;
-import java.util.UUID;
+import java.io.File;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.*;
+import static ca.bc.gov.educ.penreg.api.struct.v1.Condition.AND;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -47,6 +56,8 @@ public class PenRequestBatchSagaControllerTest extends BasePenRegAPITest {
   private final String penRequestBatchID = "7f000101-7151-1d84-8171-5187006c0000";
 
   private final String getPenRequestBatchStudentID = "7f000101-7151-1d84-8171-5187006c0001";
+
+  private SagaMapper mapper = SagaMapper.mapper;
 
   @Before
   public void setUp() {
@@ -211,6 +222,77 @@ public class PenRequestBatchSagaControllerTest extends BasePenRegAPITest {
         .accept(MediaType.APPLICATION_JSON)
         .content(this.placeholderMultiplePenRequestBatchActionsSagaData(List.of(UUID.randomUUID(), UUID.randomUUID()))))
       .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(2)));
+  }
+
+  @Test
+  @SuppressWarnings("java:S100")
+  public void testGetSagaPaginated_givenNoSearchCriteria_shouldReturnAllWithStatusOk() throws Exception {
+    final File file = new File(
+      Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_multiple_sagas.json")).getFile()
+    );
+    final List<Saga> sagaStructs = new ObjectMapper().readValue(file, new TypeReference<>() {
+    });
+    final List<ca.bc.gov.educ.penreg.api.model.v1.Saga> sagaEntities = sagaStructs.stream().map(mapper::toModel).collect(Collectors.toList());
+
+    for (val saga : sagaEntities) {
+      saga.setSagaId(null);
+      saga.setCreateDate(LocalDateTime.now());
+      saga.setUpdateDate(LocalDateTime.now());
+    }
+    this.repository.saveAll(sagaEntities);
+    final MvcResult result = this.mockMvc
+      .perform(get("/api/v1/pen-request-batch-saga/paginated")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .contentType(APPLICATION_JSON))
+      .andReturn();
+    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(3)));
+  }
+
+  @Test
+  @SuppressWarnings("java:S100")
+  public void testGetSagaPaginated_givenNoData_shouldReturnStatusOk() throws Exception {
+    final MvcResult result = this.mockMvc
+      .perform(get("/api/v1/pen-request-batch-saga/paginated")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .contentType(APPLICATION_JSON))
+      .andReturn();
+    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
+  }
+
+  @Test
+  @SuppressWarnings("java:S100")
+  public void testGetSagaPaginated_givenSearchCriteria_shouldReturnStatusOk() throws Exception {
+    final File file = new File(
+      Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock_multiple_sagas.json")).getFile()
+    );
+    final List<Saga> sagaStructs = new ObjectMapper().readValue(file, new TypeReference<>() {
+    });
+    final List<ca.bc.gov.educ.penreg.api.model.v1.Saga> sagaEntities = sagaStructs.stream().map(mapper::toModel).collect(Collectors.toList());
+
+    for (val saga : sagaEntities) {
+      saga.setSagaId(null);
+      saga.setCreateDate(LocalDateTime.now());
+      saga.setUpdateDate(LocalDateTime.now());
+    }
+    this.repository.saveAll(sagaEntities);
+
+    final SearchCriteria criteria = SearchCriteria.builder().key("sagaState").operation(FilterOperation.IN).value("IN_PROGRESS").valueType(ValueType.STRING).build();
+    final SearchCriteria criteria2 = SearchCriteria.builder().key("sagaName").condition(AND).operation(FilterOperation.EQUAL).value("PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA").valueType(ValueType.STRING).build();
+    final List<SearchCriteria> criteriaList = new ArrayList<>();
+    criteriaList.add(criteria);
+    criteriaList.add(criteria2);
+    final List<Search> searches = new LinkedList<>();
+    searches.add(Search.builder().searchCriteriaList(criteriaList).build());
+    final ObjectMapper objectMapper = new ObjectMapper();
+    final String criteriaJSON = objectMapper.writeValueAsString(searches);
+
+    final MvcResult result = this.mockMvc
+      .perform(get("/api/v1/pen-request-batch-saga/paginated")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .param("searchCriteriaList", criteriaJSON)
+        .contentType(APPLICATION_JSON))
+      .andReturn();
+    this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)));
   }
 
 

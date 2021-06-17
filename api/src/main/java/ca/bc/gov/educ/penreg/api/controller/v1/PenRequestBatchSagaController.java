@@ -5,6 +5,7 @@ import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchSagaEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
 import ca.bc.gov.educ.penreg.api.exception.SagaRuntimeException;
+import ca.bc.gov.educ.penreg.api.filter.SagaFilterSpecs;
 import ca.bc.gov.educ.penreg.api.mappers.v1.ArchiveAndReturnSagaResponseMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.SagaMapper;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.Orchestrator;
@@ -15,16 +16,23 @@ import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.*;
@@ -32,7 +40,7 @@ import static lombok.AccessLevel.PRIVATE;
 
 @RestController
 @Slf4j
-public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoint {
+public class PenRequestBatchSagaController extends PaginatedController implements PenRequestBatchSagaEndpoint {
 
   @Getter(PRIVATE)
   private final SagaService sagaService;
@@ -46,9 +54,16 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
 
   private static final ArchiveAndReturnSagaResponseMapper archiveAndReturnSagaResponseMapper = ArchiveAndReturnSagaResponseMapper.mapper;
 
+  /**
+   * The saga filter specs.
+   */
+  @Getter(PRIVATE)
+  private final SagaFilterSpecs sagaFilterSpecs;
+
   @Autowired
-  public PenRequestBatchSagaController(SagaService sagaService, List<Orchestrator> orchestrators) {
+  public PenRequestBatchSagaController(SagaService sagaService, List<Orchestrator> orchestrators, SagaFilterSpecs sagaFilterSpecs) {
     this.sagaService = sagaService;
+    this.sagaFilterSpecs = sagaFilterSpecs;
     orchestrators.forEach(orchestrator -> orchestratorMap.put(orchestrator.getSagaName(), orchestrator));
     log.info("'{}' Saga Orchestrators are loaded.", String.join(",", orchestratorMap.keySet()));
   }
@@ -85,6 +100,40 @@ public class PenRequestBatchSagaController implements PenRequestBatchSagaEndpoin
   public ResponseEntity<String> repostReports(PenRequestBatchRepostReportsFilesSagaData penRequestBatchRepostReportsSagaData) {
     return processBatchRequest(PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA, penRequestBatchRepostReportsSagaData);
   }
+
+  /**
+   * Find all sagas completable future.
+   *
+   * @param pageNumber             the page number
+   * @param pageSize               the page size
+   * @param sortCriteriaJson       the sort criteria json
+   * @param searchCriteriaListJson the search criteria list json
+   * @return the completable future
+   */
+  @Override
+  public CompletableFuture<Page<Saga>> findAllSagas(final Integer pageNumber, final Integer pageSize, final String sortCriteriaJson, final String searchCriteriaListJson) {
+    final ObjectMapper objectMapper = new ObjectMapper();
+    final List<Sort.Order> sorts = new ArrayList<>();
+    Specification<ca.bc.gov.educ.penreg.api.model.v1.Saga> sagaEntitySpecification = null;
+    try {
+      final var associationNames = this.getSortCriteria(sortCriteriaJson, objectMapper, sorts);
+      if (StringUtils.isNotBlank(searchCriteriaListJson)) {
+        final List<Search> searches = objectMapper.readValue(searchCriteriaListJson, new TypeReference<>() {
+        });
+        this.getAssociationNamesFromSearchCriterias(associationNames, searches);
+        int i = 0;
+        for (final var search : searches) {
+          sagaEntitySpecification = this.getSpecifications(sagaEntitySpecification, i, search, associationNames, this.getSagaFilterSpecs());
+          i++;
+        }
+
+      }
+    } catch (final JsonProcessingException e) {
+      throw new InvalidParameterException(e.getMessage());
+    }
+    return this.getSagaService().findAll(sagaEntitySpecification, pageNumber, pageSize, sorts).thenApplyAsync(sagas -> sagas.map(sagaMapper::toStruct));
+  }
+
 
   private ResponseEntity<String> processStudentRequest(SagaEnum sagaName, BasePenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
     var penRequestBatchStudentID = penRequestBatchStudentSagaData.getPenRequestBatchStudentID();

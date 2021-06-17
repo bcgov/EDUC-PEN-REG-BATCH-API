@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.repository;
 
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -12,7 +13,7 @@ import java.util.UUID;
  * The interface Saga repository.
  */
 @Repository
-public interface SagaRepository extends JpaRepository<Saga, UUID> {
+public interface SagaRepository extends JpaRepository<Saga, UUID>, JpaSpecificationExecutor<Saga> {
   /**
    * Find all by status in list.
    *

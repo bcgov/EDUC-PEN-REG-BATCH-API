@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.filter;
 
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -8,15 +8,12 @@ import java.time.chrono.ChronoLocalDate;
 import java.time.chrono.ChronoLocalDateTime;
 import java.util.UUID;
 
-/**
- * The type Pen reg batch filter specs.
- */
 @Service
 @Slf4j
-public class PenRegBatchStudentFilterSpecs extends BaseFilterSpecs<PenRequestBatchStudentEntity> {
+public class SagaFilterSpecs extends BaseFilterSpecs<Saga>{
 
   /**
-   * Instantiates a new Student filter specs.
+   * Instantiates a new saga filter specs.
    *
    * @param dateFilterSpecifications     the date filter specifications
    * @param dateTimeFilterSpecifications the date time filter specifications
@@ -26,7 +23,7 @@ public class PenRegBatchStudentFilterSpecs extends BaseFilterSpecs<PenRequestBat
    * @param uuidFilterSpecifications     the uuid filter specifications
    * @param converters                   the converters
    */
-  public PenRegBatchStudentFilterSpecs(FilterSpecifications<PenRequestBatchStudentEntity, ChronoLocalDate> dateFilterSpecifications, FilterSpecifications<PenRequestBatchStudentEntity, ChronoLocalDateTime<?>> dateTimeFilterSpecifications, FilterSpecifications<PenRequestBatchStudentEntity, Integer> integerFilterSpecifications, FilterSpecifications<PenRequestBatchStudentEntity, String> stringFilterSpecifications, FilterSpecifications<PenRequestBatchStudentEntity, Long> longFilterSpecifications, FilterSpecifications<PenRequestBatchStudentEntity, UUID> uuidFilterSpecifications, Converters converters) {
+  public SagaFilterSpecs(FilterSpecifications<Saga, ChronoLocalDate> dateFilterSpecifications, FilterSpecifications<Saga, ChronoLocalDateTime<?>> dateTimeFilterSpecifications, FilterSpecifications<Saga, Integer> integerFilterSpecifications, FilterSpecifications<Saga, String> stringFilterSpecifications, FilterSpecifications<Saga, Long> longFilterSpecifications, FilterSpecifications<Saga, UUID> uuidFilterSpecifications, Converters converters) {
     super(dateFilterSpecifications, dateTimeFilterSpecifications, integerFilterSpecifications, stringFilterSpecifications, longFilterSpecifications, uuidFilterSpecifications, converters);
   }
 }
