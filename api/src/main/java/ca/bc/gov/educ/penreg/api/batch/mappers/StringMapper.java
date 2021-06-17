@@ -5,7 +5,11 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * The type String mapper.
  */
-public class StringMapper {
+public final class StringMapper {
+
+  private StringMapper() {
+
+  }
 
   /**
    * Map string.
@@ -13,9 +17,16 @@ public class StringMapper {
    * @param value the value
    * @return the string
    */
-  public String map(final String value) {
-    if (StringUtils.isNotEmpty(value)) {
+  public static String map(final String value) {
+    if (StringUtils.isNotBlank(value)) {
       return value.trim();
+    }
+    return value;
+  }
+
+  public static String toUpperCase(String value) {
+    if (StringUtils.isNotBlank(value)) {
+      return value.trim().toUpperCase();
     }
     return value;
   }
