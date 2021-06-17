@@ -34,7 +34,7 @@ PRB_CLIENT_ID=$(curl -sX GET "https://$SOAM_KC/auth/admin/realms/$SOAM_KC_REALM_
 
 echo
 echo Removing PEN REG BATCH API client if exists
-curl -sX POST "https://$SOAM_KC/auth/admin/realms/$SOAM_KC_REALM_ID/clients/$PRB_CLIENT_ID" \
+curl -sX DELETE "https://$SOAM_KC/auth/admin/realms/$SOAM_KC_REALM_ID/clients/$PRB_CLIENT_ID" \
   -H "Authorization: Bearer $TKN" \
 
 echo
