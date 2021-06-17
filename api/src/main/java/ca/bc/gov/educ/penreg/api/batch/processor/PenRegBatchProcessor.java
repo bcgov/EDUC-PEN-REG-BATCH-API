@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.batch.processor;
 
 import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper;
+import ca.bc.gov.educ.penreg.api.batch.mappers.StringMapper;
 import ca.bc.gov.educ.penreg.api.batch.service.DuplicateFileCheckService;
 import ca.bc.gov.educ.penreg.api.batch.service.PenRequestBatchFileService;
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
@@ -139,10 +140,10 @@ public class PenRegBatchProcessor {
   @Async("penWebBlobExtractor")
   public void processPenRegBatchFileFromPenWebBlob(@NonNull final PENWebBlobEntity penWebBlob) {
     val penWebBlobEntity = this.penRequestBatchFileService.getPenWebBlob(penWebBlob.getPenWebBlobId()).orElseThrow(); // do a get to associate the object with current thread for lazy loading.
-    final Stopwatch stopwatch = Stopwatch.createStarted();
+    val stopwatch = Stopwatch.createStarted();
     final var guid = UUID.randomUUID().toString(); // this guid will be used throughout the logs for easy tracking.
     log.info("Started processing row from Pen Web Blobs with submission Number :: {} and guid :: {}", penWebBlobEntity.getSubmissionNumber(), guid);
-    final BatchFile batchFile = new BatchFile();
+    val batchFile = new BatchFile();
     Optional<Reader> batchFileReaderOptional = Optional.empty();
     try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
       batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents())));
@@ -181,7 +182,6 @@ public class PenRegBatchProcessor {
   }
 
 
-
   /**
    * Check for duplicate file.
    *
@@ -191,7 +191,7 @@ public class PenRegBatchProcessor {
    */
   private void checkForDuplicateFile(final PENWebBlobEntity penWebBlobEntity, final String guid) throws FileUnProcessableException {
     if (StringUtils.startsWith(penWebBlobEntity.getMincode(), "102")
-        && this.duplicateFileCheckServiceMap.get(SchoolGroupCodes.PSI).isBatchFileDuplicate(penWebBlobEntity)) {
+      && this.duplicateFileCheckServiceMap.get(SchoolGroupCodes.PSI).isBatchFileDuplicate(penWebBlobEntity)) {
       throw new FileUnProcessableException(DUPLICATE_BATCH_FILE_PSI, guid, PenRequestBatchStatusCodes.DUPLICATE);
     }
   }
@@ -275,9 +275,9 @@ public class PenRegBatchProcessor {
    */
   private boolean isNotificationToSchoolRequired(final FileUnProcessableException fileUnProcessableException) {
     return fileUnProcessableException.getFileError() != INVALID_MINCODE_SCHOOL_CLOSED
-        && fileUnProcessableException.getFileError() != INVALID_MINCODE_HEADER
-        && fileUnProcessableException.getFileError() != DUPLICATE_BATCH_FILE_PSI
-        && fileUnProcessableException.getFileError() != HELD_BACK_FOR_SIZE;
+      && fileUnProcessableException.getFileError() != INVALID_MINCODE_HEADER
+      && fileUnProcessableException.getFileError() != DUPLICATE_BATCH_FILE_PSI
+      && fileUnProcessableException.getFileError() != HELD_BACK_FOR_SIZE;
   }
 
 
@@ -324,7 +324,7 @@ public class PenRegBatchProcessor {
     long index = 0;
     while (ds.next()) {
       if (ds.isRecordID(HEADER.getName()) || ds.isRecordID(TRAILER.getName())) {
-        this.setHeaderOrTrailer(ds, batchFile, guid);
+        this.setHeaderOrTrailer(ds, batchFile);
         index++;
         continue;
       }
@@ -348,22 +348,22 @@ public class PenRegBatchProcessor {
       throw new FileUnProcessableException(INVALID_TRANSACTION_CODE_STUDENT_DETAILS, guid, PenRequestBatchStatusCodes.LOAD_FAIL, String.valueOf(index), ds.getString(LOCAL_STUDENT_ID.getName()));
     }
     return StudentDetails.builder()
-        .birthDate(ds.getString(BIRTH_DATE.getName()))
-        .enrolledGradeCode(ds.getString(ENROLLED_GRADE_CODE.getName()))
-        .gender(ds.getString(GENDER.getName()))
-        .legalGivenName(ds.getString(LEGAL_GIVEN_NAME.getName()))
-        .legalMiddleName(ds.getString(LEGAL_MIDDLE_NAME.getName()))
-        .legalSurname(ds.getString(LEGAL_SURNAME.getName()))
-        .localStudentID(ds.getString(LOCAL_STUDENT_ID.getName()))
-        .pen(ds.getString(PEN.getName()))
-        .postalCode(ds.getString(POSTAL_CODE.getName()))
-        .transactionCode(transactionCode)
-        .unused(ds.getString(UNUSED.getName()))
-        .unusedSecond(ds.getString(UNUSED_SECOND.getName()))
-        .usualGivenName(ds.getString(USUAL_GIVEN_NAME.getName()))
-        .usualMiddleName(ds.getString(USUAL_MIDDLE_NAME.getName()))
-        .usualSurname(ds.getString(USUAL_SURNAME.getName()))
-        .build();
+      .birthDate(StringMapper.toUpperCase(ds.getString(BIRTH_DATE.getName())))
+      .enrolledGradeCode(StringMapper.toUpperCase(ds.getString(ENROLLED_GRADE_CODE.getName())))
+      .gender(StringMapper.toUpperCase(ds.getString(GENDER.getName())))
+      .legalGivenName(StringMapper.toUpperCase(ds.getString(LEGAL_GIVEN_NAME.getName())))
+      .legalMiddleName(StringMapper.toUpperCase(ds.getString(LEGAL_MIDDLE_NAME.getName())))
+      .legalSurname(StringMapper.toUpperCase(ds.getString(LEGAL_SURNAME.getName())))
+      .localStudentID(ds.getString(LOCAL_STUDENT_ID.getName()))
+      .pen(ds.getString(PEN.getName()))
+      .postalCode(StringMapper.toUpperCase(ds.getString(POSTAL_CODE.getName())))
+      .transactionCode(transactionCode)
+      .unused(ds.getString(UNUSED.getName()))
+      .unusedSecond(ds.getString(UNUSED_SECOND.getName()))
+      .usualGivenName(StringMapper.toUpperCase(ds.getString(USUAL_GIVEN_NAME.getName())))
+      .usualMiddleName(StringMapper.toUpperCase(ds.getString(USUAL_MIDDLE_NAME.getName())))
+      .usualSurname(StringMapper.toUpperCase(ds.getString(USUAL_SURNAME.getName())))
+      .build();
   }
 
   /**
@@ -371,24 +371,22 @@ public class PenRegBatchProcessor {
    *
    * @param ds        the ds
    * @param batchFile the batch file
-   * @param guid      the guid
-   * @throws FileUnProcessableException the file un processable exception
    */
-  private void setHeaderOrTrailer(final DataSet ds, final BatchFile batchFile, final String guid) throws FileUnProcessableException {
+  private void setHeaderOrTrailer(final DataSet ds, final BatchFile batchFile) {
     if (ds.isRecordID(HEADER.getName())) {
       //Just set transactionCode because of different flavours of header
       batchFile.setBatchFileHeader(BatchFileHeader.builder()
-          .transactionCode(ds.getString(TRANSACTION_CODE.getName()))
-          .build());
+        .transactionCode(ds.getString(TRANSACTION_CODE.getName()))
+        .build());
     } else if (ds.isRecordID(TRAILER.getName())) {
       final var transactionCode = ds.getString(TRANSACTION_CODE.getName());
       batchFile.setBatchFileTrailer(BatchFileTrailer.builder()
-          .transactionCode(transactionCode)
-          .productID(ds.getString(PRODUCT_ID.getName()))
-          .productName(ds.getString(PRODUCT_NAME.getName()))
-          .studentCount(ds.getString(STUDENT_COUNT.getName()))
-          .vendorName(ds.getString(VENDOR_NAME.getName()))
-          .build());
+        .transactionCode(transactionCode)
+        .productID(ds.getString(PRODUCT_ID.getName()))
+        .productName(ds.getString(PRODUCT_NAME.getName()))
+        .studentCount(ds.getString(STUDENT_COUNT.getName()))
+        .vendorName(ds.getString(VENDOR_NAME.getName()))
+        .build());
     }
   }
 
