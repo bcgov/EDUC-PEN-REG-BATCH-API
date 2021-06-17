@@ -68,12 +68,12 @@ public class PaginatedController {
    * Gets specifications.
    *
    * @param specs            specs
-   * @param i                the
+   * @param specIndexNumber  the index of which spec this is in a list of search criteria
    * @param search           the search
    * @return the specifications
    */
-  public <T> Specification<T> getSpecifications(Specification<T> specs, final int i, final Search search, final Associations associationNames, BaseFilterSpecs<T> filterSpecs) {
-    if (i == 0) {
+  public <T> Specification<T> getSpecifications(Specification<T> specs, final int specIndexNumber, final Search search, final Associations associationNames, BaseFilterSpecs<T> filterSpecs) {
+    if (specIndexNumber == 0) {
       specs = this.getEntitySpecification(search.getSearchCriteriaList(), associationNames, filterSpecs);
     } else {
       if (search.getCondition() == Condition.AND) {
@@ -148,13 +148,13 @@ public class PaginatedController {
    * Gets specification per group.
    *
    * @param entitySpecification                the entity specification
-   * @param i                                  the
+   * @param specIndexNumber                    the index of which spec this is in a list of search criteria
    * @param criteria                           the criteria
    * @param typeSpecification                  the type specification
    * @return the specification per group
    */
-  private <T> Specification<T> getSpecificationPerGroup(Specification<T> entitySpecification, final int i, final SearchCriteria criteria, final Specification<T> typeSpecification) {
-    if (i == 0) {
+  private <T> Specification<T> getSpecificationPerGroup(Specification<T> entitySpecification, final int specIndexNumber, final SearchCriteria criteria, final Specification<T> typeSpecification) {
+    if (specIndexNumber == 0) {
       entitySpecification = Specification.where(typeSpecification);
     } else {
       if (criteria.getCondition() == Condition.AND) {
