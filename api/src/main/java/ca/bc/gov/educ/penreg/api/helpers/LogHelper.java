@@ -50,7 +50,7 @@ public final class LogHelper {
   public static void logClientHttpReqResponseDetails(@NonNull final HttpMethod method, final String url, final int responseCode, final List<String> correlationID) {
     try {
       final Map<String, Object> httpMap = new HashMap<>();
-      httpMap.put("client_http_response_code", String.valueOf(responseCode));
+      httpMap.put("client_http_response_code", responseCode);
       httpMap.put("client_http_request_method", method.toString());
       httpMap.put("client_http_request_url", url);
       if (correlationID != null) {
