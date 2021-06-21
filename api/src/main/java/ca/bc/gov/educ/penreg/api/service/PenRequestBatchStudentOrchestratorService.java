@@ -155,6 +155,15 @@ public class PenRequestBatchStudentOrchestratorService {
     if (StringUtils.isNotBlank(sagaData.getLegalMiddleNames())) {
       updatedPayload.setLegalMiddleNames(this.scrubNameField(sagaData.getLegalMiddleNames()));
     }
+    if (StringUtils.isNotBlank(updatedPayload.getUsualFirstName())) {
+      updatedPayload.setUsualFirstName(this.scrubNameField(updatedPayload.getUsualFirstName()));
+    }
+    if (StringUtils.isNotBlank(updatedPayload.getUsualMiddleNames())) {
+      updatedPayload.setUsualMiddleNames(this.scrubNameField(updatedPayload.getUsualMiddleNames()));
+    }
+    if (StringUtils.isNotBlank(updatedPayload.getUsualLastName())) {
+      updatedPayload.setUsualLastName(this.scrubNameField(updatedPayload.getUsualLastName()));
+    }
     final var usualFirstName = sagaData.getUsualFirstName();
     if (StringUtils.isNotEmpty(usualFirstName)
       && (StringUtils.length(StringUtils.trim(usualFirstName)) == 1 || StringUtils.equals(usualFirstName, sagaData.getLegalFirstName()))) {
@@ -169,15 +178,6 @@ public class PenRequestBatchStudentOrchestratorService {
     final var usualMiddleName = sagaData.getUsualMiddleNames();
     if (this.doesMiddleNameNeedsToBeBlank(usualMiddleName, sagaData)) {
       updatedPayload.setUsualMiddleNames(null);
-    }
-    if (StringUtils.isNotBlank(updatedPayload.getUsualFirstName())) {
-      updatedPayload.setUsualFirstName(this.scrubNameField(updatedPayload.getUsualFirstName()));
-    }
-    if (StringUtils.isNotBlank(updatedPayload.getUsualMiddleNames())) {
-      updatedPayload.setUsualMiddleNames(this.scrubNameField(updatedPayload.getUsualMiddleNames()));
-    }
-    if (StringUtils.isNotBlank(updatedPayload.getUsualLastName())) {
-      updatedPayload.setUsualLastName(this.scrubNameField(updatedPayload.getUsualLastName()));
     }
     log.debug("Payload after scrubbing :: {}", updatedPayload);
     return updatedPayload;
