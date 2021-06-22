@@ -146,14 +146,14 @@ public class PenRequestBatchStudentOrchestratorService {
   public PenRequestBatchStudentSagaData scrubPayload(final PenRequestBatchStudentSagaData sagaData) throws JsonProcessingException {
     final PenRequestBatchStudentSagaData updatedPayload = JsonUtil.getJsonObjectFromString(PenRequestBatchStudentSagaData.class, JsonUtil.getJsonStringFromObject(sagaData));
     log.debug("Payload before scrubbing :: {}", updatedPayload);
-    if (StringUtils.isNotBlank(sagaData.getLegalLastName())) {
-      updatedPayload.setLegalLastName(this.scrubNameField(sagaData.getLegalLastName()));
+    if (StringUtils.isNotBlank(updatedPayload.getLegalLastName())) {
+      updatedPayload.setLegalLastName(this.scrubNameField(updatedPayload.getLegalLastName()));
     }
-    if (StringUtils.isNotBlank(sagaData.getLegalFirstName())) {
-      updatedPayload.setLegalFirstName(this.scrubNameField(sagaData.getLegalFirstName()));
+    if (StringUtils.isNotBlank(updatedPayload.getLegalFirstName())) {
+      updatedPayload.setLegalFirstName(this.scrubNameField(updatedPayload.getLegalFirstName()));
     }
-    if (StringUtils.isNotBlank(sagaData.getLegalMiddleNames())) {
-      updatedPayload.setLegalMiddleNames(this.scrubNameField(sagaData.getLegalMiddleNames()));
+    if (StringUtils.isNotBlank(updatedPayload.getLegalMiddleNames())) {
+      updatedPayload.setLegalMiddleNames(this.scrubNameField(updatedPayload.getLegalMiddleNames()));
     }
     if (StringUtils.isNotBlank(updatedPayload.getUsualFirstName())) {
       updatedPayload.setUsualFirstName(this.scrubNameField(updatedPayload.getUsualFirstName()));
@@ -164,19 +164,19 @@ public class PenRequestBatchStudentOrchestratorService {
     if (StringUtils.isNotBlank(updatedPayload.getUsualLastName())) {
       updatedPayload.setUsualLastName(this.scrubNameField(updatedPayload.getUsualLastName()));
     }
-    final var usualFirstName = sagaData.getUsualFirstName();
+    final var usualFirstName = updatedPayload.getUsualFirstName();
     if (StringUtils.isNotEmpty(usualFirstName)
-      && (StringUtils.length(StringUtils.trim(usualFirstName)) == 1 || StringUtils.equals(usualFirstName, sagaData.getLegalFirstName()))) {
+      && (StringUtils.length(StringUtils.trim(usualFirstName)) == 1 || StringUtils.equals(usualFirstName, updatedPayload.getLegalFirstName()))) {
       updatedPayload.setUsualFirstName(null);
     }
 
-    final var usualLastName = sagaData.getUsualLastName();
+    final var usualLastName = updatedPayload.getUsualLastName();
     if (StringUtils.isNotEmpty(usualLastName)
-      && (StringUtils.length(StringUtils.trim(usualLastName)) == 1 || StringUtils.equals(usualLastName, sagaData.getLegalLastName()))) {
+      && (StringUtils.length(StringUtils.trim(usualLastName)) == 1 || StringUtils.equals(usualLastName, updatedPayload.getLegalLastName()))) {
       updatedPayload.setUsualLastName(null);
     }
-    final var usualMiddleName = sagaData.getUsualMiddleNames();
-    if (this.doesMiddleNameNeedsToBeBlank(usualMiddleName, sagaData)) {
+    final var usualMiddleName = updatedPayload.getUsualMiddleNames();
+    if (this.doesMiddleNameNeedsToBeBlank(usualMiddleName, updatedPayload)) {
       updatedPayload.setUsualMiddleNames(null);
     }
     log.debug("Payload after scrubbing :: {}", updatedPayload);
