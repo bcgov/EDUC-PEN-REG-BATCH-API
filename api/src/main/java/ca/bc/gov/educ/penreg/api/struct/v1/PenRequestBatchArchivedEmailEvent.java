@@ -15,4 +15,5 @@ public class PenRequestBatchArchivedEmailEvent {
     String submissionNumber;
     String schoolName;
     String mincode;
+    PendingRecords pendingRecords;
 }

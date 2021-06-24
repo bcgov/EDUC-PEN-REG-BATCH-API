@@ -269,6 +269,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
         assertThat(newEvent.getEventType()).isEqualTo(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT);
         assertThat(newEvent.getEventPayload()).isNotEmpty();
         assertThat(newEvent.getEventPayload()).contains("pen@email.com");
+      assertThat(newEvent.getEventPayload()).contains("\"pendingRecords\":\"NONE\"");
         final var sagaFromDB = this.sagaService.findSagaById(this.saga.get(0).getSagaId());
         assertThat(sagaFromDB).isPresent();
         assertThat(sagaFromDB.get().getSagaState()).isEqualTo(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT.toString());
