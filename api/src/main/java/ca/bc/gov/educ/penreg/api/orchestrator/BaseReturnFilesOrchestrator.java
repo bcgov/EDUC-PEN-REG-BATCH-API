@@ -1,6 +1,9 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
-import ca.bc.gov.educ.penreg.api.constants.*;
+import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
+import ca.bc.gov.educ.penreg.api.constants.EventType;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentValidationIssueSeverityCode;
+import ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchReportDataMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
@@ -13,7 +16,6 @@ import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.*;
 import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -25,12 +27,16 @@ import lombok.val;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.*;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 import static lombok.AccessLevel.PROTECTED;
 
 @Slf4j
@@ -58,7 +64,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
   /**
    * The constant PEN_REQUEST_BATCH_API.
    */
-  protected String PEN_REQUEST_BATCH_API = "PEN_REQUEST_BATCH_API";
+  protected static final String PEN_REQUEST_BATCH_API = "PEN_REQUEST_BATCH_API";
 
   /**
    * Instantiates a new Base orchestrator.
@@ -72,14 +78,14 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
    * @param penCoordinatorService    the pen coordinator service
    * @param penCoordinatorProperties the pen coordinator properties
    */
-  public BaseReturnFilesOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
-                                     Class<T> clazz, String sagaName, String topicToSubscribe,
-                                     PenRequestBatchService penRequestBatchService,
-                                     PenCoordinatorService penCoordinatorService,
-                                     PenCoordinatorProperties penCoordinatorProperties,
-                                     ResponseFileGeneratorService responseFileGeneratorService,
-                                     PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService,
-                                     RestUtils restUtils) {
+  protected BaseReturnFilesOrchestrator(final SagaService sagaService, final MessagePublisher messagePublisher,
+                                        final Class<T> clazz, final String sagaName, final String topicToSubscribe,
+                                        final PenRequestBatchService penRequestBatchService,
+                                        final PenCoordinatorService penCoordinatorService,
+                                        final PenCoordinatorProperties penCoordinatorProperties,
+                                        final ResponseFileGeneratorService responseFileGeneratorService,
+                                        final PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService,
+                                        final RestUtils restUtils) {
     super(sagaService, messagePublisher, clazz, sagaName, topicToSubscribe);
     this.penRequestBatchService = penRequestBatchService;
     this.penCoordinatorService = penCoordinatorService;
@@ -89,24 +95,24 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     this.restUtils = restUtils;
   }
 
-  protected void gatherReportData(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws IOException, InterruptedException, TimeoutException {
-    SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
+  protected void gatherReportData(final Event event, final Saga saga, final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws IOException, InterruptedException, TimeoutException {
+    final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(GATHER_REPORT_DATA.toString());
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
-    var penRequestBatch = getPenRequestBatchService().findById(penRequestBatchReturnFilesSagaData.getPenRequestBatchID());
-    Event nextEvent = Event.builder().sagaId(saga.getSagaId()).eventType(GATHER_REPORT_DATA).replyTo(this.getTopicToSubscribe()).build();
+    final var penRequestBatch = this.getPenRequestBatchService().findById(penRequestBatchReturnFilesSagaData.getPenRequestBatchID());
+    val nextEvent = Event.builder().sagaId(saga.getSagaId()).eventType(GATHER_REPORT_DATA).replyTo(this.getTopicToSubscribe()).build();
 
     if (penRequestBatch.isPresent()) {
-      penRequestBatchReturnFilesSagaData.setPenRequestBatchStudentValidationIssues(getValidationIssues(penRequestBatch.get()));
-      List<PenRequestBatchStudent> studentRequests = penRequestBatch.get().getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList());
+      penRequestBatchReturnFilesSagaData.setPenRequestBatchStudentValidationIssues(this.getValidationIssues(penRequestBatch.get()));
+      final List<PenRequestBatchStudent> studentRequests = penRequestBatch.get().getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList());
       penRequestBatchReturnFilesSagaData.setPenRequestBatchStudents(studentRequests);
       penRequestBatchReturnFilesSagaData.setPenRequestBatch(mapper.toStructure(penRequestBatch.get()));
       penRequestBatchReturnFilesSagaData.setPenCoordinator(this.getPenCoordinator(penRequestBatch.get()));
-      penRequestBatchReturnFilesSagaData.setFromEmail(penCoordinatorProperties.getFromEmail());
-      penRequestBatchReturnFilesSagaData.setTelephone(penCoordinatorProperties.getTelephone());
-      penRequestBatchReturnFilesSagaData.setFacsimile(penCoordinatorProperties.getFacsimile());
-      penRequestBatchReturnFilesSagaData.setMailingAddress(penCoordinatorProperties.getMailingAddress());
+      penRequestBatchReturnFilesSagaData.setFromEmail(this.penCoordinatorProperties.getFromEmail());
+      penRequestBatchReturnFilesSagaData.setTelephone(this.penCoordinatorProperties.getTelephone());
+      penRequestBatchReturnFilesSagaData.setFacsimile(this.penCoordinatorProperties.getFacsimile());
+      penRequestBatchReturnFilesSagaData.setMailingAddress(this.penCoordinatorProperties.getMailingAddress());
       saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchReturnFilesSagaData)); // save the updated payload to DB...
       this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
       nextEvent.setEventOutcome(REPORT_DATA_GATHERED);
@@ -117,13 +123,13 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     this.handleEvent(nextEvent);
   }
 
-  private HashMap<String, String> getValidationIssues(PenRequestBatchEntity penRequestBatch) {
-    var validationIssues = penRequestBatchStudentValidationIssueService.findAllPenRequestBatchStudentValidationIssueEntities(penRequestBatch);
-    var validationIssuesByPrbStudentID = new HashMap<String, String>();
+  private HashMap<String, String> getValidationIssues(final PenRequestBatchEntity penRequestBatch) {
+    final var validationIssues = this.penRequestBatchStudentValidationIssueService.findAllPenRequestBatchStudentValidationIssueEntities(penRequestBatch);
+    final var validationIssuesByPrbStudentID = new HashMap<String, String>();
     validationIssues.forEach(issue -> {
       if (issue.getPenRequestBatchValidationIssueSeverityCode().equals(PenRequestBatchStudentValidationIssueSeverityCode.ERROR.toString())) {
-        var prbStudentID = issue.getPenRequestBatchStudentEntity().getPenRequestBatchStudentID().toString();
-        var errorDescription = restUtils.getPenRequestBatchStudentValidationIssueTypeCodeInfoByIssueTypeCode(issue.getPenRequestBatchValidationIssueTypeCode())
+        final var prbStudentID = issue.getPenRequestBatchStudentEntity().getPenRequestBatchStudentID().toString();
+        var errorDescription = this.restUtils.getPenRequestBatchStudentValidationIssueTypeCodeInfoByIssueTypeCode(issue.getPenRequestBatchValidationIssueTypeCode())
           .map(PenRequestBatchStudentValidationIssueTypeCode::getDescription)
           .orElse(issue.getPenRequestBatchValidationIssueTypeCode());
         if (validationIssuesByPrbStudentID.containsKey(prbStudentID)) {
@@ -135,14 +141,14 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     return validationIssuesByPrbStudentID;
   }
 
-  protected void getStudents(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws IOException, TimeoutException, InterruptedException {
-    SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
+  protected void getStudents(final Event event, final Saga saga, final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws IOException, TimeoutException, InterruptedException {
+    final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(GET_STUDENTS.toString());
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
-    Event nextEvent = Event.builder().sagaId(saga.getSagaId()).eventType(EventType.GET_STUDENTS).replyTo(this.getTopicToSubscribe()).build();
+    val nextEvent = Event.builder().sagaId(saga.getSagaId()).eventType(EventType.GET_STUDENTS).replyTo(this.getTopicToSubscribe()).build();
 
-    List<String> studentIDs = penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().stream()
+    final List<String> studentIDs = penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().stream()
       .map(PenRequestBatchStudent::getStudentID).filter(Objects::nonNull).collect(Collectors.toList());
 
     if (studentIDs.isEmpty()) {
@@ -156,45 +162,45 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     }
   }
 
-  protected void saveReports(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws IOException, InterruptedException, TimeoutException {
-    SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
+  protected void saveReports(final Event event, final Saga saga, final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws IOException, InterruptedException, TimeoutException {
+    final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(SAVE_REPORTS.toString());
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
-    getResponseFileGeneratorService().saveReports(event.getEventPayload(),
+    this.getResponseFileGeneratorService().saveReports(event.getEventPayload(),
       mapper.toModel(penRequestBatchReturnFilesSagaData.getPenRequestBatch()),
       penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents(),
       penRequestBatchReturnFilesSagaData.getStudents(),
       reportMapper.toReportData(penRequestBatchReturnFilesSagaData));
 
-    Event nextEvent = Event.builder().sagaId(saga.getSagaId())
+    val nextEvent = Event.builder().sagaId(saga.getSagaId())
       .eventType(SAVE_REPORTS)
       .eventOutcome(REPORTS_SAVED)
       .build();
     this.handleEvent(nextEvent);
   }
 
-  protected void sendArchivedEmail(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData, EventType eventType) throws JsonProcessingException {
-    SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
+  protected void sendArchivedEmail(final Event event, final Saga saga, final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData, final EventType eventType) throws JsonProcessingException {
+    final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(eventType.toString());
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-    val pendingCount = penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().stream().filter(this::getPenRequestBatchStudentPendingCountPredicate).count();
+    val prbStudentStatusCodeMap = penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().stream().collect(groupingBy(PenRequestBatchStudent::getPenRequestBatchStudentStatusCode, counting()));
     final PendingRecords pendingRecords;
-    if (pendingCount == (long) penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().size()) {
+    if (this.getValueFromMap(ERROR.getCode(), prbStudentStatusCodeMap) > 0) {
       pendingRecords = PendingRecords.ALL;
-    } else if (pendingCount > 0) {
+    } else if (this.areSomeRecordsPending(prbStudentStatusCodeMap)) {
       pendingRecords = PendingRecords.SOME;
     } else {
       pendingRecords = PendingRecords.NONE;
     }
-    PenRequestBatchArchivedEmailEvent penRequestBatchArchivedEmailEvent = PenRequestBatchArchivedEmailEvent.builder()
+    final PenRequestBatchArchivedEmailEvent penRequestBatchArchivedEmailEvent = PenRequestBatchArchivedEmailEvent.builder()
       .fromEmail(this.getPenCoordinatorProperties().getFromEmail())
       .mincode(penRequestBatchReturnFilesSagaData.getPenRequestBatch().getMincode())
       .submissionNumber(penRequestBatchReturnFilesSagaData.getPenRequestBatch().getSubmissionNumber())
       .schoolName(penRequestBatchReturnFilesSagaData.getSchoolName())
       .pendingRecords(pendingRecords)
       .build();
-    Event nextEvent = Event.builder().sagaId(saga.getSagaId())
+    val nextEvent = Event.builder().sagaId(saga.getSagaId())
       .replyTo(this.getTopicToSubscribe())
       .build();
 
@@ -212,36 +218,42 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     log.info("message sent to PROFILE_REQUEST_EMAIL_API_TOPIC for {} Event. :: {}", eventType, saga.getSagaId());
   }
 
-  private boolean getPenRequestBatchStudentPendingCountPredicate(PenRequestBatchStudent el) {
-    return el.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.INFOREQ.getCode())
-      || el.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.FIXABLE.getCode())
-      || el.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode());
+  private boolean areSomeRecordsPending(final Map<String, Long> prbStudentStatusCodeMap) {
+    val errorCount = this.getValueFromMap(ERROR.getCode(), prbStudentStatusCodeMap);
+    val reqInfoCount = this.getValueFromMap(INFOREQ.getCode(), prbStudentStatusCodeMap);
+    val fixableCount = this.getValueFromMap(FIXABLE.getCode(), prbStudentStatusCodeMap);
+    return errorCount > 0 || reqInfoCount > 0 || fixableCount > 0;
+  }
+
+  private long getValueFromMap(final String code, final Map<String, Long> prbStudentStatusCodeMap) {
+    val count = prbStudentStatusCodeMap.get(code);
+    return count == null ? 0 : count;
   }
 
 
-  protected boolean hasPenCoordinatorEmail(BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) {
+  protected boolean hasPenCoordinatorEmail(final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) {
     return !this.hasNoPenCoordinatorEmail(penRequestBatchReturnFilesSagaData);
   }
 
-  protected boolean hasNoPenCoordinatorEmail(BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) {
+  protected boolean hasNoPenCoordinatorEmail(final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) {
     return penRequestBatchReturnFilesSagaData.getPenCoordinator() == null ||
       penRequestBatchReturnFilesSagaData.getPenCoordinator().getPenCoordinatorEmail() == null ||
       penRequestBatchReturnFilesSagaData.getPenCoordinator().getPenCoordinatorEmail().isEmpty();
   }
 
-  protected void sendHasNoCoordinatorEmail(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws JsonProcessingException {
+  protected void sendHasNoCoordinatorEmail(final Event event, final Saga saga, final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws JsonProcessingException {
     this.sendArchivedEmail(event, saga, penRequestBatchReturnFilesSagaData, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT);
   }
 
-  protected void sendHasCoordinatorEmail(Event event, Saga saga, BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws JsonProcessingException {
+  protected void sendHasCoordinatorEmail(final Event event, final Saga saga, final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws JsonProcessingException {
     this.sendArchivedEmail(event, saga, penRequestBatchReturnFilesSagaData, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT);
   }
 
-  protected PenCoordinator getPenCoordinator(PenRequestBatchEntity penRequestBatchEntity) {
+  protected PenCoordinator getPenCoordinator(final PenRequestBatchEntity penRequestBatchEntity) {
     try {
-      var penCoordinatorOptional = getPenCoordinatorService().getPenCoordinatorByMinCode(penRequestBatchEntity.getMincode());
+      final var penCoordinatorOptional = this.getPenCoordinatorService().getPenCoordinatorByMinCode(penRequestBatchEntity.getMincode());
       return penCoordinatorOptional.orElse(null);
-    } catch (NullPointerException e) {
+    } catch (final NullPointerException e) {
       log.error("Error while trying to get get pen coordinator. The pen coordinator map is null", e);
       return null;
     }
