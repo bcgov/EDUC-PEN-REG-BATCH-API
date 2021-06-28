@@ -45,6 +45,10 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
   protected static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
   protected static final PenRequestBatchStudentMapper studentMapper = PenRequestBatchStudentMapper.mapper;
   protected static final PenRequestBatchReportDataMapper reportMapper = PenRequestBatchReportDataMapper.mapper;
+  /**
+   * The constant PEN_REQUEST_BATCH_API.
+   */
+  protected static final String PEN_REQUEST_BATCH_API = "PEN_REQUEST_BATCH_API";
   protected final ObjectMapper obMapper = new ObjectMapper();
   /**
    * The Pen request batch service.
@@ -61,10 +65,6 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
   private final RestUtils restUtils;
   @Getter(PROTECTED)
   private final PenCoordinatorProperties penCoordinatorProperties;
-  /**
-   * The constant PEN_REQUEST_BATCH_API.
-   */
-  protected static final String PEN_REQUEST_BATCH_API = "PEN_REQUEST_BATCH_API";
 
   /**
    * Instantiates a new Base orchestrator.
@@ -186,7 +186,9 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
     val prbStudentStatusCodeMap = penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().stream().collect(groupingBy(PenRequestBatchStudent::getPenRequestBatchStudentStatusCode, counting()));
     final PendingRecords pendingRecords;
-    if (this.getValueFromMap(ERROR.getCode(), prbStudentStatusCodeMap) > 0) {
+    // if all PRBStudent records have ERROR status then all of them are pending.
+    if (this.getValueFromMap(ERROR.getCode(), prbStudentStatusCodeMap) > 0
+      && (this.getValueFromMap(ERROR.getCode(), prbStudentStatusCodeMap) == penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().size())) {
       pendingRecords = PendingRecords.ALL;
     } else if (this.areSomeRecordsPending(prbStudentStatusCodeMap)) {
       pendingRecords = PendingRecords.SOME;
