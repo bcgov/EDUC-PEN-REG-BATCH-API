@@ -14,6 +14,7 @@ import java.util.Optional;
  */
 @Slf4j
 public class JsonUtil {
+  public static final ObjectMapper mapper = new ObjectMapper();
   /**
    * Instantiates a new Json util.
    */
@@ -28,7 +29,7 @@ public class JsonUtil {
    * @throws JsonProcessingException the json processing exception
    */
   public static String getJsonStringFromObject(Object payload) throws JsonProcessingException {
-    return new ObjectMapper().writeValueAsString(payload);
+    return mapper.writeValueAsString(payload);
   }
 
   /**
@@ -41,7 +42,7 @@ public class JsonUtil {
    * @throws JsonProcessingException the json processing exception
    */
   public static <T> T getJsonObjectFromString(Class<T> clazz,  String payload) throws JsonProcessingException {
-    return new ObjectMapper().readValue(payload,clazz);
+    return mapper.readValue(payload, clazz);
   }
 
   /**
@@ -54,7 +55,7 @@ public class JsonUtil {
    * @throws IOException the io exception
    */
   public static <T> T getJsonObjectFromByteArray(Class<T> clazz,  byte[] payload) throws IOException {
-    return new ObjectMapper().readValue(payload,clazz);
+    return mapper.readValue(payload, clazz);
   }
 
   /**
@@ -65,7 +66,7 @@ public class JsonUtil {
    */
   public static Optional<String> getJsonString(Object payload){
     try{
-      return Optional.ofNullable(new ObjectMapper().writeValueAsString(payload));
+      return Optional.ofNullable(mapper.writeValueAsString(payload));
     }catch (final Exception ex){
       log.error("Exception while converting object to JSON String :: {}", payload);
     }

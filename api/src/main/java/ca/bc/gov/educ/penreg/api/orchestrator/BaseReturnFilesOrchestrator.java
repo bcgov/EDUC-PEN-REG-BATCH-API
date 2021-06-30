@@ -185,6 +185,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     saga.setSagaState(eventType.toString());
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
     val prbStudentStatusCodeMap = penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().stream().collect(groupingBy(PenRequestBatchStudent::getPenRequestBatchStudentStatusCode, counting()));
+    log.debug("PRBStudent status code map :: {}", prbStudentStatusCodeMap);
     final PendingRecords pendingRecords;
     // if all PRBStudent records have ERROR status then all of them are pending.
     if (this.getValueFromMap(ERROR.getCode(), prbStudentStatusCodeMap) > 0
@@ -195,6 +196,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     } else {
       pendingRecords = PendingRecords.NONE;
     }
+    log.debug("Pending Records value :: {}", pendingRecords);
     final PenRequestBatchArchivedEmailEvent penRequestBatchArchivedEmailEvent = PenRequestBatchArchivedEmailEvent.builder()
       .fromEmail(this.getPenCoordinatorProperties().getFromEmail())
       .mincode(penRequestBatchReturnFilesSagaData.getPenRequestBatch().getMincode())
