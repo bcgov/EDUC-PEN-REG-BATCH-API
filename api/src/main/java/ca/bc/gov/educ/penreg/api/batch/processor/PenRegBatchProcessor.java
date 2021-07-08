@@ -343,7 +343,7 @@ public class PenRegBatchProcessor {
     if(rawTrailer == null || rawTrailer.length() < 6){
       throw new FileUnProcessableException(INVALID_TRAILER, guid, PenRequestBatchStatusCodes.LOAD_FAIL);
     }
-    String studentCount = rawTrailer.substring(3,6).trim();
+    String studentCount = rawTrailer.substring(3,9).trim();
     if(!StringUtils.isNumeric(studentCount)){
       throw new FileUnProcessableException(INVALID_TRAILER_STUDENT_COUNT, guid, PenRequestBatchStatusCodes.LOAD_FAIL);
     }
