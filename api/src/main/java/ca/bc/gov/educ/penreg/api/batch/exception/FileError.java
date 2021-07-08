@@ -25,6 +25,14 @@ public enum FileError {
    */
   STUDENT_COUNT_MISMATCH("Invalid count in trailer record. Stated was $?, Actual was $?"),
   /**
+   * Invalid trailer
+   */
+  INVALID_TRAILER("Invalid trailer record. Student count could not be retrieved"),
+  /**
+   * Invalid trailer for student count
+   */
+  INVALID_TRAILER_STUDENT_COUNT("Invalid trailer record. Student count was not a numeric value"),
+  /**
    * The Invalid transaction code student details.
    */
   INVALID_TRANSACTION_CODE_STUDENT_DETAILS("Invalid transaction code on Detail record $? for student with Local ID $?"),

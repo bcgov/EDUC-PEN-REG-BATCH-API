@@ -108,16 +108,14 @@ public class PenRequestBatchFileValidator {
   private void processDataSetForRowLengthErrors(@NonNull final String guid, @NonNull final DataSet ds) throws FileUnProcessableException {
     if (ds.getErrors() != null && !ds.getErrors().isEmpty()) {
       var message = "";
-      boolean firstErrorFound = false;
+      var firstErrorFound = false;
       for (final DataError error : ds.getErrors()) {
         // ignore the header error to allow all flavours of header
         if (error.getErrorDesc() != null && error.getErrorDesc().contains("SHOULD BE 234")) { // Details Record should be 234 characters long.
           message = this.getDetailRowLengthIncorrectMessage(message, error);
           firstErrorFound = true;
-        } else if (error.getErrorDesc() != null && error.getErrorDesc().contains("SHOULD BE 224")) { // Trailer Record should be 224 characters long.
-          message = this.getTrailerRowLengthIncorrectMessage(message, error);
-          firstErrorFound = true;
         }
+        // ignore the footer error to allow all flavours of footer
         if (firstErrorFound) {
           break; // if system found one error , system breaks the loop.
         }
@@ -144,38 +142,6 @@ public class PenRequestBatchFileValidator {
       message = message.concat("Detail record " + (error.getLineNo() - 1) + " has extraneous characters.");
     } else {
       message = message.concat("Detail record " + (error.getLineNo() - 1) + " is missing characters.");
-    }
-    return message;
-  }
-
-  /**
-   * Gets trailer row length incorrect message.
-   *
-   * @param message the message
-   * @param error   the error
-   * @return the trailer row length incorrect message
-   */
-  private String getTrailerRowLengthIncorrectMessage(String message, final DataError error) {
-    if (error.getErrorDesc().contains(TOO_LONG)) {
-      message = message.concat("Trailer record has extraneous characters.");
-    } else {
-      message = message.concat("Trailer record is missing characters.");
-    }
-    return message;
-  }
-
-  /**
-   * Gets header row length incorrect message.
-   *
-   * @param message the message
-   * @param error   the error
-   * @return the header row length incorrect message
-   */
-  private String getHeaderRowLengthIncorrectMessage(String message, final DataError error) {
-    if (error.getErrorDesc().contains(TOO_LONG)) {
-      message = message.concat("Header record has extraneous characters.");
-    } else {
-      message = message.concat("Header record is missing characters.");
     }
     return message;
   }
