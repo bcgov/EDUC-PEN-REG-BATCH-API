@@ -340,7 +340,7 @@ public class PenRegBatchProcessor {
   private void setManualTrailer(final String guid, final DataSet ds, final BatchFile batchFile) throws FileUnProcessableException {
     String rawTrailer = ds.getErrors().get(ds.getErrors().size()-1).getRawData();
 
-    if(rawTrailer == null || rawTrailer.length() < 6){
+    if(rawTrailer == null || rawTrailer.length() < 9){
       throw new FileUnProcessableException(INVALID_TRAILER, guid, PenRequestBatchStatusCodes.LOAD_FAIL);
     }
     String studentCount = rawTrailer.substring(3,9).trim();
