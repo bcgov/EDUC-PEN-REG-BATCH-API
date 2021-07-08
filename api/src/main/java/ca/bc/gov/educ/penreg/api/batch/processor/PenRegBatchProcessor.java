@@ -331,6 +331,26 @@ public class PenRegBatchProcessor {
       batchFile.getStudentDetails().add(this.getStudentDetailRecordFromFile(ds, guid, index));
       index++;
     }
+
+    if(batchFile.getBatchFileTrailer() == null) {
+      setManualTrailer(guid, ds, batchFile);
+    }
+  }
+
+  private void setManualTrailer(final String guid, final DataSet ds, final BatchFile batchFile) throws FileUnProcessableException {
+    String rawTrailer = ds.getErrors().get(ds.getErrors().size()-1).getRawData();
+
+    if(rawTrailer == null || rawTrailer.length() < 6){
+      throw new FileUnProcessableException(INVALID_TRAILER, guid, PenRequestBatchStatusCodes.LOAD_FAIL);
+    }
+    String studentCount = rawTrailer.substring(3,6).trim();
+    if(!StringUtils.isNumeric(studentCount)){
+      throw new FileUnProcessableException(INVALID_TRAILER_STUDENT_COUNT, guid, PenRequestBatchStatusCodes.LOAD_FAIL);
+    }
+
+    var trailer = new BatchFileTrailer();
+    trailer.setStudentCount(studentCount);
+    batchFile.setBatchFileTrailer(trailer);
   }
 
   /**
