@@ -36,4 +36,15 @@ public interface ListItemMapper {
   @Mapping(target = "birthDate", source = "dob")
   ListItem toListItem(PenRequestBatchStudentEntity penRequestBatchStudentEntity);
 
+  @Mapping(target = "validationIssues", ignore = true)
+  @Mapping(target = "usualSurname", source = "usualLastName")
+  @Mapping(target = "usualGivenName", source = "usualFirstName")
+  @Mapping(target = "pen", source = "submittedPen")
+  @Mapping(target = "mincode", source = "penRequestBatchEntity.mincode")
+  @Mapping(target = "legalSurname", source = "legalLastName")
+  @Mapping(target = "legalGivenName", source = "legalFirstName")
+  @Mapping(target = "gender", source = "genderCode")
+  @Mapping(target = "enrolledGradeCode", source = "gradeCode")
+  @Mapping(target = "birthDate", source = "dob")
+  ListItem toDiffListItem(PenRequestBatchStudentEntity penRequestBatchStudentEntity);
 }
