@@ -90,7 +90,7 @@ public abstract class PenRequestBatchResultDataDecorator implements PenRequestBa
     } else {
       val item = new SchoolMinListItem();
       item.setMin(listItemMapper.toListItem(matchedStudent));
-      item.setSchool(listItemMapper.toListItem(penRequestBatchStudent));
+      item.setSchool(listItemMapper.toDiffListItem(penRequestBatchStudent));
       differencesList.add(item);
     }
   }
@@ -102,7 +102,7 @@ public abstract class PenRequestBatchResultDataDecorator implements PenRequestBa
     } else {
       val item = new SchoolMinListItem();
       item.setMin(listItemMapper.toListItem(student));
-      item.setSchool(listItemMapper.toListItem(penRequestBatchStudent));
+      item.setSchool(listItemMapper.toDiffListItem(penRequestBatchStudent));
       differencesList.add(item);
     }
   }
