@@ -180,7 +180,7 @@ public class RestUtils {
    * @return the field codes
    */
   public List<PenRequestBatchStudentValidationIssueFieldCode> getPenRequestBatchStudentValidationIssueFieldCodes() {
-    log.info("calling pen service api to load penRequestBatchStudentValidationIssueTypeCodes to memory");
+    log.info("calling pen service api to load penRequestBatchStudentValidationIssueFieldCodes to memory");
     return this.webClient.get()
             .uri(this.props.getPenServicesApiURL() + "/api/v1/pen-services/validation/issue-field-code")
             .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)

@@ -13,7 +13,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PenRequestBatchStudentValidationIssueFieldCode {
   /**
-   * The Pen request batch student issue type code.
+   * The Pen request batch student issue field code.
    */
   String code;
 
