@@ -9,6 +9,7 @@ import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueFieldCode;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -68,6 +69,8 @@ public class RestUtils {
 
   private final Map<String, PenRequestBatchStudentValidationIssueTypeCode> penRequestBatchStudentValidationIssueTypeCodeMap = new ConcurrentHashMap<>();
 
+  private final Map<String, PenRequestBatchStudentValidationIssueFieldCode> penRequestBatchStudentValidationIssueFieldCodeMap = new ConcurrentHashMap<>();
+
   /**
    * The School lock.
    */
@@ -100,6 +103,7 @@ public class RestUtils {
   private void initialize() {
     this.populateSchoolMap();
     this.populatePenRequestBatchStudentValidationIssueTypeCodeMap();
+    this.populatePenRequestBatchStudentValidationIssueFieldCodeMap();
   }
 
   /**
@@ -126,6 +130,19 @@ public class RestUtils {
   }
 
   /**
+   * Populate pen request batch student validation issue field code map.
+   */
+  public void populatePenRequestBatchStudentValidationIssueFieldCodeMap() {
+    var issueFieldCodes = this.getPenRequestBatchStudentValidationIssueFieldCodes();
+    penRequestBatchStudentValidationIssueFieldCodeMap.putAll(issueFieldCodes.stream().collect(Collectors.toMap(PenRequestBatchStudentValidationIssueFieldCode::getCode, Function.identity())));
+    var mergedCodes = penRequestBatchStudentValidationIssueFieldCodeMap.keySet();
+    var newCodes = issueFieldCodes.stream().map(PenRequestBatchStudentValidationIssueFieldCode::getCode).collect(Collectors.toSet());
+    var difference = Sets.difference(mergedCodes, newCodes);
+    difference.forEach(penRequestBatchStudentValidationIssueFieldCodeMap::remove);
+    log.info("loaded  {} penRequestBatchStudentValidationIssueFieldCodes to memory", this.penRequestBatchStudentValidationIssueFieldCodeMap.values().size());
+  }
+
+  /**
    * Gets schools.
    *
    * @return the schools
@@ -144,7 +161,7 @@ public class RestUtils {
   /**
    * Gets pen request batch student validation issue type codes.
    *
-   * @return the schools
+   * @return the type codes
    */
   public List<PenRequestBatchStudentValidationIssueTypeCode> getPenRequestBatchStudentValidationIssueTypeCodes() {
     log.info("calling pen service api to load penRequestBatchStudentValidationIssueTypeCodes to memory");
@@ -155,6 +172,22 @@ public class RestUtils {
       .bodyToFlux(PenRequestBatchStudentValidationIssueTypeCode.class)
       .collectList()
       .block();
+  }
+
+  /**
+   * Gets pen request batch student validation issue field codes.
+   *
+   * @return the field codes
+   */
+  public List<PenRequestBatchStudentValidationIssueFieldCode> getPenRequestBatchStudentValidationIssueFieldCodes() {
+    log.info("calling pen service api to load penRequestBatchStudentValidationIssueTypeCodes to memory");
+    return this.webClient.get()
+            .uri(this.props.getPenServicesApiURL() + "/api/v1/pen-services/validation/issue-field-code")
+            .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .retrieve()
+            .bodyToFlux(PenRequestBatchStudentValidationIssueFieldCode.class)
+            .collectList()
+            .block();
   }
 
   /**
@@ -271,6 +304,16 @@ public class RestUtils {
    */
   public Optional<PenRequestBatchStudentValidationIssueTypeCode> getPenRequestBatchStudentValidationIssueTypeCodeInfoByIssueTypeCode(final String issueTypeCode) {
     return Optional.ofNullable(this.penRequestBatchStudentValidationIssueTypeCodeMap.get(issueTypeCode));
+  }
+
+  /**
+   * Gets penRequestBatchStudentValidationIssueTypeCode by issue field code.
+   *
+   * @param issueFieldCode the issue field code
+   * @return the PenRequestBatchStudentValidationIssueFieldCode
+   */
+  public Optional<PenRequestBatchStudentValidationIssueFieldCode> getPenRequestBatchStudentValidationIssueFieldCodeInfoByIssueFieldCode(final String issueFieldCode) {
+    return Optional.ofNullable(this.penRequestBatchStudentValidationIssueFieldCodeMap.get(issueFieldCode));
   }
 
   /**

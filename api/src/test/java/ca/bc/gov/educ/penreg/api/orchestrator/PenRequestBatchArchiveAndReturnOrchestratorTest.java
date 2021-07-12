@@ -1,9 +1,6 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
-import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
-import ca.bc.gov.educ.penreg.api.constants.EventType;
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
-import ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum;
+import ca.bc.gov.educ.penreg.api.constants.*;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
@@ -18,6 +15,7 @@ import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueFieldCode;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -351,6 +349,11 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     when(this.restUtils.getPenRequestBatchStudentValidationIssueTypeCodeInfoByIssueTypeCode(anyString())).
       thenReturn(Optional.of(PenRequestBatchStudentValidationIssueTypeCode.builder().code(ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentValidationIssueTypeCode.INV_CHARS.getCode())
         .description(errorDescription).build()));
+
+    final String errorFieldDescription = "Legal Given";
+    when(this.restUtils.getPenRequestBatchStudentValidationIssueFieldCodeInfoByIssueFieldCode(anyString())).
+            thenReturn(Optional.of(PenRequestBatchStudentValidationIssueFieldCode.builder().code(PenRequestBatchStudentValidationFieldCode.LEGAL_FIRST.getCode())
+                    .description(errorFieldDescription).build()));
     this.saga = penRequestBatchTestUtils.createSaga("19337120", "12345679", PenRequestBatchStudentStatusCodes.ERROR.getCode(), TEST_PEN);
     final var event = Event.builder()
       .eventType(EventType.INITIATED)
@@ -378,7 +381,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     assertThat(payload.getPenCoordinator().getPenCoordinatorName()).isNotEmpty();
     assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
     assertThat(payload.getPenRequestBatch()).isNotNull();
-    assertThat(payload.getPenRequestBatchStudentValidationIssues()).containsValue(errorDescription);
+    assertThat(payload.getPenRequestBatchStudentValidationIssues()).containsValue(errorFieldDescription + " - " + errorDescription);
   }
 
   @Test

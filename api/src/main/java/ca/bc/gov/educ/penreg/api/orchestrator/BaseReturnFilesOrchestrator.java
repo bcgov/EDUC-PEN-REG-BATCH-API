@@ -132,10 +132,16 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
         var errorDescription = this.restUtils.getPenRequestBatchStudentValidationIssueTypeCodeInfoByIssueTypeCode(issue.getPenRequestBatchValidationIssueTypeCode())
           .map(PenRequestBatchStudentValidationIssueTypeCode::getDescription)
           .orElse(issue.getPenRequestBatchValidationIssueTypeCode());
+        var fieldDescription = this.restUtils.getPenRequestBatchStudentValidationIssueFieldCodeInfoByIssueFieldCode(issue.getPenRequestBatchValidationFieldCode())
+                .map(PenRequestBatchStudentValidationIssueFieldCode::getDescription)
+                .orElse(issue.getPenRequestBatchValidationFieldCode());
+
+        var fullError = fieldDescription + " - " + errorDescription;
+
         if (validationIssuesByPrbStudentID.containsKey(prbStudentID)) {
-          errorDescription = validationIssuesByPrbStudentID.get(prbStudentID) + ". " + errorDescription;
+          fullError = validationIssuesByPrbStudentID.get(prbStudentID) + ". " + fullError;
         }
-        validationIssuesByPrbStudentID.put(prbStudentID, errorDescription);
+        validationIssuesByPrbStudentID.put(prbStudentID, fullError);
       }
     });
     return validationIssuesByPrbStudentID;
