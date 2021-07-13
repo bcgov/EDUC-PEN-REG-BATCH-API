@@ -11,6 +11,7 @@ import ca.bc.gov.educ.penreg.api.filter.Associations;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchFilterSpecs;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchStudentFilterSpecs;
 import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
+import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchStudentValidationIssueMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenWebBlobMapper;
@@ -21,16 +22,18 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
+import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentValidationIssueService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequest;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmission;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmissionResult;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestResult;
+import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -45,7 +48,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -60,7 +66,10 @@ import static lombok.AccessLevel.PRIVATE;
 @RestController
 @Slf4j
 public class PenRequestBatchAPIController extends PaginatedController implements PenRequestBatchAPIEndpoint {
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  /**
+   * The constant batchResultMapper.
+   */
+  private static final PenRequestBatchResultDataMapper batchResultMapper = PenRequestBatchResultDataMapper.mapper;
   /**
    * The constant PEN_REQUEST_BATCH_API.
    */
@@ -70,8 +79,6 @@ public class PenRequestBatchAPIController extends PaginatedController implements
    * The constant mapper.
    */
   private static final PenRequestBatchMapper mapper = PenRequestBatchMapper.mapper;
-
-  private static final PenRequestBatchResultDataMapper batchResultMapper = PenRequestBatchResultDataMapper.mapper;
   /**
    * The constant studentMapper.
    */
@@ -109,27 +116,33 @@ public class PenRequestBatchAPIController extends PaginatedController implements
    */
   @Getter(PRIVATE)
   private final SagaService sagaService;
-
+  /**
+   * The Pen request batch student validation issue service.
+   */
+  private final PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService;
 
   /**
    * Instantiates a new Pen request batch api controller.
    *
-   * @param penRegBatchFilterSpecs        the pen reg batch filter specs
-   * @param penRegBatchStudentFilterSpecs the pen reg batch student filter specs
-   * @param service                       the service
-   * @param studentService                the student service
+   * @param penRegBatchFilterSpecs                       the pen reg batch filter specs
+   * @param penRegBatchStudentFilterSpecs                the pen reg batch student filter specs
+   * @param service                                      the service
+   * @param studentService                               the student service
+   * @param sagaService                                  the saga service
+   * @param penRequestBatchStudentValidationIssueService the pen request batch student validation issue service
    */
   @Autowired
   public PenRequestBatchAPIController(final PenRegBatchFilterSpecs penRegBatchFilterSpecs,
                                       final PenRegBatchStudentFilterSpecs penRegBatchStudentFilterSpecs,
                                       final PenRequestBatchService service,
                                       final PenRequestBatchStudentService studentService,
-                                      SagaService sagaService) {
+                                      final SagaService sagaService, final PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService) {
     this.penRegBatchFilterSpecs = penRegBatchFilterSpecs;
     this.penRegBatchStudentFilterSpecs = penRegBatchStudentFilterSpecs;
     this.service = service;
     this.studentService = studentService;
     this.sagaService = sagaService;
+    this.penRequestBatchStudentValidationIssueService = penRequestBatchStudentValidationIssueService;
   }
 
   /**
@@ -166,7 +179,7 @@ public class PenRequestBatchAPIController extends PaginatedController implements
    */
   @Override
   public ResponseEntity<PenRequestBatch> updatePenRequestBatch(final PenRequestBatch penRequestBatch, final UUID penRequestBatchID) {
-    var sagaInProgress = !this.getSagaService().findAllByPenRequestBatchIDInAndStatusIn(List.of(penRequestBatchID), this.getStatusesFilter()).isEmpty();
+    final var sagaInProgress = !this.getSagaService().findAllByPenRequestBatchIDInAndStatusIn(List.of(penRequestBatchID), this.getStatusesFilter()).isEmpty();
     if (sagaInProgress) {
       return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
@@ -191,9 +204,9 @@ public class PenRequestBatchAPIController extends PaginatedController implements
     Specification<PenRequestBatchEntity> penRegBatchSpecs = null;
     final Associations associationNames;
     try {
-      associationNames = this.getSortCriteria(sortCriteriaJson, objectMapper, sorts);
+      associationNames = this.getSortCriteria(sortCriteriaJson, JsonUtil.mapper, sorts);
       if (StringUtils.isNotBlank(searchList)) {
-        final List<Search> searches = objectMapper.readValue(searchList, new TypeReference<>() {
+        final List<Search> searches = JsonUtil.mapper.readValue(searchList, new TypeReference<>() {
         });
         this.getAssociationNamesFromSearchCriterias(associationNames, searches);
         int i = 0;
@@ -337,13 +350,12 @@ public class PenRequestBatchAPIController extends PaginatedController implements
    */
   @Override
   public CompletableFuture<Page<PenRequestBatchStudent>> findAllStudents(final Integer pageNumber, final Integer pageSize, final String sortCriteriaJson, final String searchCriteriaListJson) {
-    final ObjectMapper objectMapper = new ObjectMapper();
     final List<Sort.Order> sorts = new ArrayList<>();
     Specification<PenRequestBatchStudentEntity> penRequestBatchStudentEntitySpecification = null;
     try {
-      final var associationNames = this.getSortCriteria(sortCriteriaJson, objectMapper, sorts);
+      final var associationNames = this.getSortCriteria(sortCriteriaJson, JsonUtil.mapper, sorts);
       if (StringUtils.isNotBlank(searchCriteriaListJson)) {
-        final List<Search> searches = objectMapper.readValue(searchCriteriaListJson, new TypeReference<>() {
+        final List<Search> searches = JsonUtil.mapper.readValue(searchCriteriaListJson, new TypeReference<>() {
         });
         this.getAssociationNamesFromSearchCriterias(associationNames, searches);
         int i = 0;
@@ -436,6 +448,12 @@ public class PenRequestBatchAPIController extends PaginatedController implements
   }
 
 
+  /**
+   * Post pen request response entity.
+   *
+   * @param penRequest the pen request
+   * @return the response entity
+   */
   @Override
   public ResponseEntity<PenRequestResult> postPenRequest(final PenRequest penRequest) {
     val pair = this.service.postPenRequest(penRequest);
@@ -445,19 +463,39 @@ public class PenRequestBatchAPIController extends PaginatedController implements
     return ResponseEntity.status(pair.getKey()).build();
   }
 
+  /**
+   * Find all pen request i ds response entity.
+   *
+   * @param penRequestBatchIDs                the pen request batch i ds
+   * @param penRequestBatchStudentStatusCodes the pen request batch student status codes
+   * @param searchCriteriaListJson            the search criteria list json
+   * @return the response entity
+   * @throws JsonProcessingException the json processing exception
+   */
   @Override
-  public ResponseEntity<List<PenRequestIDs>> findAllPenRequestIDs(List<UUID> penRequestBatchIDs, List<String> penRequestBatchStudentStatusCodes, String searchCriteriaListJson) throws JsonProcessingException {
+  public ResponseEntity<List<PenRequestIDs>> findAllPenRequestIDs(final List<UUID> penRequestBatchIDs, final List<String> penRequestBatchStudentStatusCodes, final String searchCriteriaListJson) throws JsonProcessingException {
     val errorCode = penRequestBatchStudentStatusCodes.stream().filter(statusCode -> PenRequestBatchStudentStatusCodes.valueOfCode(statusCode) == null).findFirst();
-    if(errorCode.isPresent()) {
+    if (errorCode.isPresent()) {
       log.error("Invalid pen request batch student status code provided :: " + errorCode);
       return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
     Map<String, String> searchCriteria = null;
     if (StringUtils.isNotBlank(searchCriteriaListJson)) {
-      searchCriteria = objectMapper.readValue(searchCriteriaListJson, new TypeReference<>() {
+      searchCriteria = JsonUtil.mapper.readValue(searchCriteriaListJson, new TypeReference<>() {
       });
     }
     return ResponseEntity.ok(this.getService().findAllPenRequestIDs(penRequestBatchIDs, penRequestBatchStudentStatusCodes, searchCriteria));
+  }
+
+  /**
+   * Find all pen request batch validation issues by student id response entity.
+   *
+   * @param penRequestBatchStudentID the pen request batch student id
+   * @return the response entity
+   */
+  @Override
+  public ResponseEntity<List<PenRequestBatchStudentValidationIssue>> findAllPenRequestBatchValidationIssuesByStudentID(final UUID penRequestBatchStudentID) {
+    return ResponseEntity.ok(this.penRequestBatchStudentValidationIssueService.findAllValidationIssuesByPRBStudentID(penRequestBatchStudentID).stream().map(PenRequestBatchStudentValidationIssueMapper.mapper::toStruct).collect(Collectors.toList()));
   }
 
   /**
@@ -493,8 +531,13 @@ public class PenRequestBatchAPIController extends PaginatedController implements
     model.setUpdateDate(LocalDateTime.now());
   }
 
+  /**
+   * Gets statuses filter.
+   *
+   * @return the statuses filter
+   */
   protected List<String> getStatusesFilter() {
-    var statuses = new ArrayList<String>();
+    final var statuses = new ArrayList<String>();
     statuses.add(SagaStatusEnum.IN_PROGRESS.toString());
     statuses.add(SagaStatusEnum.STARTED.toString());
     return statuses;

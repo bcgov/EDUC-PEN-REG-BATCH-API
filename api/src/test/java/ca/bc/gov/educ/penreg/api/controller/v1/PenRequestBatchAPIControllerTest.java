@@ -899,7 +899,7 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
     Mockito.when(this.restUtils.requestEventResponseFromServicesAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.VALIDATION_SUCCESS_NO_ERROR_WARNING).build()));
     val matchList = new ArrayList<PenMatchRecord>(1);
     matchList.add(PenMatchRecord.builder().matchingPEN("123456789").studentID("studentID").build());
-    PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("D1").matchingRecords(matchList).build();
+    final PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("D1").matchingRecords(matchList).build();
     Mockito.when(this.restUtils.requestEventResponseFromMatchAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.PEN_MATCH_PROCESSED).eventPayload(JsonUtil.getJsonStringFromObject(penMatchResult)).build()));
     Mockito.when(this.restUtils.getStudentByPEN("123456789")).thenReturn(Optional.of(Student.builder().studentID("studentID").pen("123456789").build()));
     this.mockMvc
@@ -928,7 +928,7 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
     Mockito.when(this.restUtils.requestEventResponseFromServicesAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.VALIDATION_SUCCESS_NO_ERROR_WARNING).build()));
     val matchList = new ArrayList<PenMatchRecord>(1);
     matchList.add(PenMatchRecord.builder().matchingPEN("123456789").studentID("studentID").build());
-    PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("BM").matchingRecords(matchList).build();
+    final PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("BM").matchingRecords(matchList).build();
     Mockito.when(this.restUtils.requestEventResponseFromMatchAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.PEN_MATCH_PROCESSED).eventPayload(JsonUtil.getJsonStringFromObject(penMatchResult)).build()));
     this.mockMvc
       .perform(post("/api/v1/pen-request-batch/pen-request")
@@ -956,7 +956,7 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
     Mockito.when(this.restUtils.requestEventResponseFromServicesAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.VALIDATION_SUCCESS_NO_ERROR_WARNING).build()));
     val matchList = new ArrayList<PenMatchRecord>(1);
     matchList.add(PenMatchRecord.builder().matchingPEN("123456789").studentID("studentID").build());
-    PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("D0").matchingRecords(matchList).build();
+    final PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("D0").matchingRecords(matchList).build();
     Mockito.when(this.restUtils.requestEventResponseFromMatchAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.PEN_MATCH_PROCESSED).eventPayload(JsonUtil.getJsonStringFromObject(penMatchResult)).build()));
     Mockito.when(this.restUtils.getNextPenNumberFromPenServiceAPI(ArgumentMatchers.any())).thenReturn("123456788");
     Mockito.when(this.restUtils.requestEventResponseFromStudentAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.STUDENT_CREATED).build()));
@@ -999,7 +999,7 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
       "  ]").build()));
     val matchList = new ArrayList<PenMatchRecord>(1);
     matchList.add(PenMatchRecord.builder().matchingPEN("123456789").studentID("studentID").build());
-    PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("D1").matchingRecords(matchList).build();
+    final PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("D1").matchingRecords(matchList).build();
     Mockito.when(this.restUtils.requestEventResponseFromMatchAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.PEN_MATCH_PROCESSED).eventPayload(JsonUtil.getJsonStringFromObject(penMatchResult)).build()));
     this.mockMvc
       .perform(post("/api/v1/pen-request-batch/pen-request")
@@ -1027,7 +1027,7 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
   public void testFindAllPenRequestIDs_HasMatchedResultsWithAllSearchCriteria_ShouldReturnStatusOk() throws Exception {
     final String batchIDs = this.createBatchStudentRecords(2);
 
-    Map<String,String> searchCriteria = new HashMap<>();
+    final Map<String, String> searchCriteria = new HashMap<>();
     searchCriteria.put("mincode", "66510518");
     searchCriteria.put("localID", "1488645");
     searchCriteria.put("submittedPen", "123456789");
@@ -1085,6 +1085,19 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
       .andDo(print()).andExpect(status().isBadRequest());
   }
 
+  @Test
+  public void testFindAllValidationIssues_GivenNoData_ShouldReturnStatus200WithEmptyList() throws Exception {
+    final String batchID = this.createBatchStudentRecords(1).split(",")[0];
+    val prbEntity = new PenRequestBatchEntity();
+    prbEntity.setPenRequestBatchID(UUID.fromString(batchID));
+    val studentEntities = this.penRequestBatchStudentRepository.findAllByPenRequestBatchEntity(prbEntity);
+    this.mockMvc
+      .perform(get("/api/v1/pen-request-batch/students/{studentID}/validation-issues", studentEntities.get(0).getPenRequestBatchStudentID())
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .contentType(APPLICATION_JSON))
+      .andDo(print()).andExpect(status().isOk());
+  }
+
   /**
    * Create batch students list.
    *
@@ -1133,7 +1146,7 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
     this.penWebBlobRepository.saveAll(List.of(penBlob, pdfBlob));
   }
 
-  protected String placeholderPenRequestBatchStudentActionsSagaData(String batchID) {
+  protected String placeholderPenRequestBatchStudentActionsSagaData(final String batchID) {
     return " {\n" +
       "    \"createUser\": \"test\",\n" +
       "    \"updateUser\": \"test\",\n" +

@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequest;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmission;
@@ -275,6 +276,12 @@ public interface PenRequestBatchAPIEndpoint {
   PenRequestBatchStats readPenRequestBatchStats();
 
 
+  /**
+   * Create new batch submission response entity.
+   *
+   * @param penRequestBatchSubmission the pen request batch submission
+   * @return the response entity
+   */
   @PostMapping("/pen-request-batch-submission")
   @PreAuthorize("hasAuthority('SCOPE_WRITE_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "201", description = "CREATED"), @ApiResponse(responseCode = "400", description = "BAD REQUEST"), @ApiResponse(responseCode = "409", description = "CONFLICT")})
@@ -285,6 +292,12 @@ public interface PenRequestBatchAPIEndpoint {
   @Schema(name = "PenRequestBatchSubmission", implementation = PenRequestBatchSubmission.class)
   ResponseEntity<UUID> createNewBatchSubmission(@RequestBody PenRequestBatchSubmission penRequestBatchSubmission);
 
+  /**
+   * Batch submission result response entity.
+   *
+   * @param batchSubmissionID the batch submission id
+   * @return the response entity
+   */
   @GetMapping("/pen-request-batch-submission/{batchSubmissionID}/result")
   @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "202", description = "ACCEPTED"), @ApiResponse(responseCode = "404", description =
@@ -302,6 +315,7 @@ public interface PenRequestBatchAPIEndpoint {
    * 300 - Means multiple choice found.
    *
    * @param penRequest the payload with student details
+   * @return the response entity
    */
   @PostMapping("/pen-request")
   @PreAuthorize("hasAuthority('SCOPE_WRITE_PEN_REQUEST_BATCH')")
@@ -315,9 +329,11 @@ public interface PenRequestBatchAPIEndpoint {
   /**
    * Find all pen request ids given list of batch ids and status codes
    *
-   * @param penRequestBatchIDs                              the list of batch ids
-   * @param penRequestBatchStudentStatusCodes               the list of status codes
+   * @param penRequestBatchIDs                the list of batch ids
+   * @param penRequestBatchStudentStatusCodes the list of status codes
+   * @param searchCriteria                    the search criteria
    * @return the list of PenRequestIDs {@link PenRequestIDs}
+   * @throws JsonProcessingException the json processing exception
    */
   @GetMapping("/pen-request-batch-ids")
   @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
@@ -325,9 +341,22 @@ public interface PenRequestBatchAPIEndpoint {
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to support pen request navigation view in frontend.", description = "This API endpoint exposes flexible way to query ids without returning the entire entity.")
   ResponseEntity<List<PenRequestIDs>> findAllPenRequestIDs(@RequestParam(name = "penRequestBatchIDs") List<UUID> penRequestBatchIDs,
-                                           @RequestParam(name = "penRequestBatchStudentStatusCodes") List<String> penRequestBatchStudentStatusCodes,
-                                           @ArraySchema(schema = @Schema(name = "searchCriteria",
-                                             description = "searchCriteria if provided should be a JSON string Map<String,String>",
-                                             implementation = java.util.Map.class))
-                                           @RequestParam(name = "searchCriteria", required = false) String searchCriteria) throws JsonProcessingException;
+                                                           @RequestParam(name = "penRequestBatchStudentStatusCodes") List<String> penRequestBatchStudentStatusCodes,
+                                                           @ArraySchema(schema = @Schema(name = "searchCriteria",
+                                                             description = "searchCriteria if provided should be a JSON string Map<String,String>",
+                                                             implementation = java.util.Map.class))
+                                                           @RequestParam(name = "searchCriteria", required = false) String searchCriteria) throws JsonProcessingException;
+
+  /**
+   * Find all pen request batch validation issues by student id response entity.
+   *
+   * @param penRequestBatchStudentID the pen request batch student id
+   * @return the response entity
+   */
+  @GetMapping("/students/{penRequestBatchStudentID}/validation-issues")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR.")})
+  @Transactional(readOnly = true)
+  @Tag(name = "Endpoint to retrieve the validation issues of a request student.", description = "Endpoint to retrieve the validation issues of a request student.")
+  ResponseEntity<List<PenRequestBatchStudentValidationIssue>> findAllPenRequestBatchValidationIssuesByStudentID(@PathVariable UUID penRequestBatchStudentID);
 }

@@ -1,15 +1,20 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.model.v1.*;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentValidationIssueEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentValidationIssueRepository;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
+
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -29,7 +34,7 @@ public class PenRequestBatchStudentValidationIssueService {
   /**
    * Instantiates a new pen request batch student validation issues service.
    *
-   * @param repository                       the repository
+   * @param repository the repository
    */
   @Autowired
   public PenRequestBatchStudentValidationIssueService(final PenRequestBatchStudentValidationIssueRepository repository) {
@@ -45,5 +50,12 @@ public class PenRequestBatchStudentValidationIssueService {
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
   public List<PenRequestBatchStudentValidationIssueEntity> findAllPenRequestBatchStudentValidationIssueEntities(final PenRequestBatchEntity penRequestBatch) {
     return this.repository.findByPenRequestBatchStudentEntity_penRequestBatchEntity(penRequestBatch);
+  }
+
+  @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+  public List<PenRequestBatchStudentValidationIssueEntity> findAllValidationIssuesByPRBStudentID(final UUID penRequestBatchStudentID) {
+    val penRequestBatchStudentEntity = new PenRequestBatchStudentEntity();
+    penRequestBatchStudentEntity.setPenRequestBatchStudentID(penRequestBatchStudentID);
+    return this.repository.findAllByPenRequestBatchStudentEntity(penRequestBatchStudentEntity);
   }
 }
