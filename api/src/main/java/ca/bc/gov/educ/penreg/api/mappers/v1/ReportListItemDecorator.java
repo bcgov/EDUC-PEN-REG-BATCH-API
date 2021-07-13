@@ -33,6 +33,16 @@ public abstract class ReportListItemDecorator implements ReportListItemMapper {
   }
 
   @Override
+  public ReportUserMatchedListItem toReportUserMatchedDiffListItem (PenRequestBatchStudent penRequestBatchStudent, Student student) {
+    final var data = toReportUserMatchedListItem(penRequestBatchStudent,student);
+    if(StringUtils.isNotBlank(penRequestBatchStudent.getSubmittedPen())){
+      data.getSchool().setPen(penRequestBatchStudent.getSubmittedPen());
+    }
+
+    return data;
+  }
+
+  @Override
   public ReportListItem toReportListItem (PenRequestBatchStudent penRequestBatchStudent, String penRequestBatchStudentValidationIssues) {
     final var studentData = this.delegate.toReportListItem(penRequestBatchStudent, penRequestBatchStudentValidationIssues);
     if(!StringUtils.isBlank(penRequestBatchStudent.getInfoRequest())) {

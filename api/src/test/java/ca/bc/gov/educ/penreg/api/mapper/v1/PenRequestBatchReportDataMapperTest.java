@@ -84,7 +84,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getDiffList().get(0).getSchool().getGender()).isEqualTo("M");
     assertThat(reportData.getDiffList().get(0).getSchool().getGivenName()).isEqualTo("BOY");
     assertThat(reportData.getDiffList().get(0).getSchool().getLegalMiddleNames()).isEqualTo("JAMIESON");
-    assertThat(reportData.getDiffList().get(0).getSchool().getPen()).isEqualTo("123456780");
+    assertThat(reportData.getDiffList().get(0).getSchool().getPen()).isEqualTo("987654321");
     assertThat(reportData.getDiffList().get(0).getSchool().getReason()).isEqualTo("Here's some more info");
     assertThat(reportData.getDiffList().get(0).getSchool().getSchoolID()).isEqualTo("2046302");
     assertThat(reportData.getDiffList().get(0).getSchool().getSurname()).isEqualTo("BRODY");
