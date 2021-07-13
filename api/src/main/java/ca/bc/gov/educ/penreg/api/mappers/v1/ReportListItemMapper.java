@@ -39,4 +39,8 @@ public interface ReportListItemMapper {
     @Mapping(target = "min", ignore = true)
     @Mapping(target = "school", ignore = true)
     ReportUserMatchedListItem toReportUserMatchedListItem(PenRequestBatchStudent penRequestBatchStudent, Student student);
+
+    @Mapping(target = "min", ignore = true)
+    @Mapping(target = "school", ignore = true)
+    ReportUserMatchedListItem toReportUserMatchedDiffListItem(PenRequestBatchStudent penRequestBatchStudent, Student student);
 }

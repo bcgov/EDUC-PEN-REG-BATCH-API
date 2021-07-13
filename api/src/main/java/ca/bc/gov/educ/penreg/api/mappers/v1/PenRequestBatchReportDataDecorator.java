@@ -109,7 +109,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
     if (matchedStudent != null && matchedStudent.getDemogCode() != null && matchedStudent.getDemogCode().equals(StudentDemogCode.CONFIRMED.getCode())) {
       confirmedList.add(listItemMapper.toReportUserMatchedListItem(penRequestBatchStudent, matchedStudent));
     } else {
-      diffList.add(listItemMapper.toReportUserMatchedListItem(penRequestBatchStudent, matchedStudent));
+      diffList.add(listItemMapper.toReportUserMatchedDiffListItem(penRequestBatchStudent, matchedStudent));
     }
   }
 
@@ -118,7 +118,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
     if (PenRegBatchHelper.exactMatch(penRequestBatchStudent, student)) {
       sysMatchedList.add(listItemMapper.toReportListItem(penRequestBatchStudent, ""));
     } else {
-      diffList.add(listItemMapper.toReportUserMatchedListItem(penRequestBatchStudent, student));
+      diffList.add(listItemMapper.toReportUserMatchedDiffListItem(penRequestBatchStudent, student));
     }
   }
 
