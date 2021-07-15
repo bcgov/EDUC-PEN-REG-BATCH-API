@@ -148,7 +148,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       if (StringUtils.isNotBlank(item.getMin().getUsualName())) {
         item.getMin().setUsualName(listItemMapper.populateUsualName(penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames()));
       }
-      diffList.add(listItemMapper.toReportUserMatchedDiffListItem(penRequestBatchStudent, student));
+      diffList.add(item);
     }
   }
 
