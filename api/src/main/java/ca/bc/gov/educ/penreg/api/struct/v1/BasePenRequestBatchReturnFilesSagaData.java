@@ -1,6 +1,5 @@
 package ca.bc.gov.educ.penreg.api.struct.v1;
 
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import lombok.AllArgsConstructor;
 import lombok.Data;
