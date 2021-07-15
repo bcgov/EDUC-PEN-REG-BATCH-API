@@ -57,12 +57,12 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
         case REPEAT:
         case INFOREQ:
         case FIXABLE:
-          var issues = data.getPenRequestBatchStudentValidationIssues().get(penRequestBatchStudent.getPenRequestBatchStudentID());
+          val issues = data.getPenRequestBatchStudentValidationIssues().get(penRequestBatchStudent.getPenRequestBatchStudentID());
           pendingList.add(listItemMapper.toReportListItem(penRequestBatchStudent, issues));
           break;
         case SYS_NEW_PEN:
         case USR_NEW_PEN:
-          populateForNewPenStatus(newPenList, students, penRequestBatchStudent);
+          this.populateForNewPenStatus(newPenList, students, penRequestBatchStudent);
           break;
         case SYS_MATCHED:
           this.populateForSystemMatchedStatus(sysMatchedList, diffList, students, penRequestBatchStudent);
@@ -71,7 +71,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
           this.populateForUserMatchedStatus(diffList, confirmedList, students, penRequestBatchStudent);
           break;
         default:
-          log.error("Unexpected pen request batch student error code encountered while attempting generate report data :: " + penRequestBatchStudent.getPenRequestBatchStudentStatusCode());
+          log.error("Unexpected pen request batch student status code encountered while attempting generate report data :: " + penRequestBatchStudent.getPenRequestBatchStudentStatusCode());
           break;
       }
     }
@@ -82,7 +82,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
     reportData.setDiffList(diffList);
     reportData.setConfirmedList(confirmedList);
 
-    final var processDateTime = LocalDateTime.parse(data.getPenRequestBatch().getProcessDate());
+    val processDateTime = LocalDateTime.parse(data.getPenRequestBatch().getProcessDate());
     reportData.setProcessDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
     reportData.setProcessTime(processDateTime.format(DateTimeFormatter.ofPattern("HH:mm")));
     reportData.setReportDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
@@ -92,12 +92,18 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
     return reportData;
   }
 
-  private void populateForNewPenStatus(List<ReportListItem> newPenList, Map<String, Student> students, PenRequestBatchStudent penRequestBatchStudent) {
+  private void populateForNewPenStatus(final List<ReportListItem> newPenList, final Map<String, Student> students, final PenRequestBatchStudent penRequestBatchStudent) {
     if (students.get(penRequestBatchStudent.getStudentID()) == null) {
       log.error("Error attempting to create report data. Students list should not be null for USR_NEW_PEN status.");
       return;
     }
-    newPenList.add(listItemMapper.toReportListItem(students.get(penRequestBatchStudent.getStudentID())));
+    val item = listItemMapper.toReportListItem(students.get(penRequestBatchStudent.getStudentID()));
+    // override the value here. see https://gww.jira.educ.gov.bc.ca/browse/PEN-1523
+    // since student wont have full usual name , system overrides it from request student data in the batch file.
+    if (StringUtils.isNotBlank(item.getUsualName())) {
+      item.setUsualName(listItemMapper.populateUsualName(penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames()));
+    }
+    newPenList.add(item);
   }
 
   private void populateForUserMatchedStatus(final List<ReportUserMatchedListItem> diffList, final List<ReportUserMatchedListItem> confirmedList, final Map<String, Student> students, final PenRequestBatchStudent penRequestBatchStudent) {
@@ -107,17 +113,41 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
     }
     val matchedStudent = students.get(penRequestBatchStudent.getStudentID());
     if (matchedStudent != null && matchedStudent.getDemogCode() != null && matchedStudent.getDemogCode().equals(StudentDemogCode.CONFIRMED.getCode())) {
-      confirmedList.add(listItemMapper.toReportUserMatchedListItem(penRequestBatchStudent, matchedStudent));
+      val item = listItemMapper.toReportUserMatchedListItem(penRequestBatchStudent, matchedStudent);
+      // override the value here. see https://gww.jira.educ.gov.bc.ca/browse/PEN-1523
+      // since student wont have full usual name , system overrides it from request student data in the batch file.
+      if (StringUtils.isNotBlank(item.getMin().getUsualName())) {
+        item.getMin().setUsualName(listItemMapper.populateUsualName(penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames()));
+      }
+      confirmedList.add(item);
     } else {
-      diffList.add(listItemMapper.toReportUserMatchedDiffListItem(penRequestBatchStudent, matchedStudent));
+      val item = listItemMapper.toReportUserMatchedDiffListItem(penRequestBatchStudent, matchedStudent);
+      // override the value here. see https://gww.jira.educ.gov.bc.ca/browse/PEN-1523
+      // since student wont have full usual name , system overrides it from request student data in the batch file.
+      if (StringUtils.isNotBlank(item.getMin().getUsualName())) {
+        item.getMin().setUsualName(listItemMapper.populateUsualName(penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames()));
+      }
+      diffList.add(item);
     }
   }
 
   private void populateForSystemMatchedStatus(final List<ReportListItem> sysMatchedList, final List<ReportUserMatchedListItem> diffList, final Map<String, Student> students, final PenRequestBatchStudent penRequestBatchStudent) {
     val student = students.get(penRequestBatchStudent.getStudentID());
     if (PenRegBatchHelper.exactMatch(penRequestBatchStudent, student)) {
-      sysMatchedList.add(listItemMapper.toReportListItem(penRequestBatchStudent, ""));
+      val item = listItemMapper.toReportListItem(penRequestBatchStudent, "");
+      // override the value here. see https://gww.jira.educ.gov.bc.ca/browse/PEN-1523
+      // since student wont have full usual name , system overrides it from request student data in the batch file.
+      if (StringUtils.isNotBlank(item.getUsualName())) {
+        item.setUsualName(listItemMapper.populateUsualName(penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames()));
+      }
+      sysMatchedList.add(item);
     } else {
+      val item = listItemMapper.toReportUserMatchedDiffListItem(penRequestBatchStudent, student);
+      // override the value here. see https://gww.jira.educ.gov.bc.ca/browse/PEN-1523
+      // since student wont have full usual name , system overrides it from request student data in the batch file.
+      if (StringUtils.isNotBlank(item.getMin().getUsualName())) {
+        item.getMin().setUsualName(listItemMapper.populateUsualName(penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames()));
+      }
       diffList.add(listItemMapper.toReportUserMatchedDiffListItem(penRequestBatchStudent, student));
     }
   }

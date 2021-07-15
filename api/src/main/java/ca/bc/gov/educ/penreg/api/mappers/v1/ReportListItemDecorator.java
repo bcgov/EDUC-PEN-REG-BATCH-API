@@ -9,7 +9,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.stream.Stream;
 
 @Slf4j
 public abstract class ReportListItemDecorator implements ReportListItemMapper {
@@ -24,18 +23,18 @@ public abstract class ReportListItemDecorator implements ReportListItemMapper {
   }
 
   @Override
-  public ReportUserMatchedListItem toReportUserMatchedListItem (PenRequestBatchStudent penRequestBatchStudent, Student student) {
+  public ReportUserMatchedListItem toReportUserMatchedListItem(final PenRequestBatchStudent penRequestBatchStudent, final Student student) {
     final var data = this.delegate.toReportUserMatchedListItem(penRequestBatchStudent, student);
 
-    data.setMin(toReportListItem(student));
-    data.setSchool(toReportListItem(penRequestBatchStudent, ""));
+    data.setMin(this.toReportListItem(student));
+    data.setSchool(this.toReportListItem(penRequestBatchStudent, ""));
     return data;
   }
 
   @Override
-  public ReportUserMatchedListItem toReportUserMatchedDiffListItem (PenRequestBatchStudent penRequestBatchStudent, Student student) {
-    final var data = toReportUserMatchedListItem(penRequestBatchStudent,student);
-    if(StringUtils.isNotBlank(penRequestBatchStudent.getSubmittedPen())){
+  public ReportUserMatchedListItem toReportUserMatchedDiffListItem(final PenRequestBatchStudent penRequestBatchStudent, final Student student) {
+    final var data = this.toReportUserMatchedListItem(penRequestBatchStudent, student);
+    if (StringUtils.isNotBlank(penRequestBatchStudent.getSubmittedPen())) {
       data.getSchool().setPen(penRequestBatchStudent.getSubmittedPen());
     }
 
@@ -43,40 +42,37 @@ public abstract class ReportListItemDecorator implements ReportListItemMapper {
   }
 
   @Override
-  public ReportListItem toReportListItem (PenRequestBatchStudent penRequestBatchStudent, String penRequestBatchStudentValidationIssues) {
+  public ReportListItem toReportListItem(final PenRequestBatchStudent penRequestBatchStudent, final String penRequestBatchStudentValidationIssues) {
     final var studentData = this.delegate.toReportListItem(penRequestBatchStudent, penRequestBatchStudentValidationIssues);
-    if(!StringUtils.isBlank(penRequestBatchStudent.getInfoRequest())) {
+    if (!StringUtils.isBlank(penRequestBatchStudent.getInfoRequest())) {
       studentData.setReason(penRequestBatchStudent.getInfoRequest());
-    } else if(!StringUtils.isBlank(penRequestBatchStudentValidationIssues)) {
+    } else if (!StringUtils.isBlank(penRequestBatchStudentValidationIssues)) {
       studentData.setReason(penRequestBatchStudentValidationIssues);
     }
-    return setBirthDateAndUsualName(studentData, penRequestBatchStudent.getDob(), penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames(), "yyyyMMdd");
+    return this.setBirthDateAndUsualName(studentData, penRequestBatchStudent.getDob(), penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames(), "yyyyMMdd");
   }
 
   @Override
-  public ReportListItem toReportListItem (Student student) {
+  public ReportListItem toReportListItem(final Student student) {
     final var studentData = this.delegate.toReportListItem(student);
-    return setBirthDateAndUsualName(studentData, student.getDob(), student.getUsualLastName(), student.getUsualFirstName(), student.getUsualMiddleNames(), "yyyy-MM-dd");
+    return this.setBirthDateAndUsualName(studentData, student.getDob(), student.getUsualLastName(), student.getUsualFirstName(), student.getUsualMiddleNames(), "yyyy-MM-dd");
   }
 
-  private ReportListItem setBirthDateAndUsualName (ReportListItem studentData, String dob, String usualLast, String usualFirst, String usualMiddle, String pattern) {
+  private ReportListItem setBirthDateAndUsualName(final ReportListItem studentData, final String dob, final String usualLast, final String usualFirst, final String usualMiddle, final String pattern) {
     if (dob == null || dob.isEmpty()) {
       studentData.setBirthDate("");
     } else {
       try {
         studentData.setBirthDate(
-            LocalDate.parse(dob, java.time.format.DateTimeFormatter.ofPattern(pattern))
-                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd")));
-      } catch (DateTimeParseException e) {
+          LocalDate.parse(dob, java.time.format.DateTimeFormatter.ofPattern(pattern))
+            .format(java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd")));
+      } catch (final DateTimeParseException e) {
         log.warn("Birth date string is un-parsable. Using raw string.");
         studentData.setBirthDate(dob);
       }
     }
 
-    studentData.setUsualName(
-        Stream.of(usualLast, usualFirst, usualMiddle)
-            .filter(x -> x != null && !x.isEmpty())
-            .collect(java.util.stream.Collectors.joining(", ")));
+    studentData.setUsualName(this.populateUsualName(usualLast, usualFirst, usualMiddle));
 
     return studentData;
   }

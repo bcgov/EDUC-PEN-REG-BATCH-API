@@ -78,7 +78,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getDiffList().get(0).getMin().getReason()).isNull();
     assertThat(reportData.getDiffList().get(0).getMin().getSchoolID()).isBlank();
     assertThat(reportData.getDiffList().get(0).getMin().getSurname()).isEqualTo("Jones");
-    assertThat(reportData.getDiffList().get(0).getMin().getUsualName()).isEqualTo("Mr, Steal, Yo Girl");
+    assertThat(reportData.getDiffList().get(0).getMin().getUsualName()).isEqualTo("JOSEPH, BRAYDON, SMIT");
 
     assertThat(reportData.getDiffList().get(0).getSchool().getBirthDate()).isEqualTo("2011/12/08");
     assertThat(reportData.getDiffList().get(0).getSchool().getGender()).isEqualTo("M");
@@ -99,7 +99,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getConfirmedList().get(0).getMin().getReason()).isNull();
     assertThat(reportData.getConfirmedList().get(0).getMin().getSchoolID()).isBlank();
     assertThat(reportData.getConfirmedList().get(0).getMin().getSurname()).isEqualTo("Joe");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getUsualName()).isEqualTo("Smithy, Bob, Smalls");
+    assertThat(reportData.getConfirmedList().get(0).getMin().getUsualName()).isEqualTo("JOSEPH, BRAYDON, KIM");
 
     assertThat(reportData.getConfirmedList().size()).isEqualTo(1);
     assertThat(reportData.getConfirmedList().get(0).getSchool().getBirthDate()).isEqualTo("2011/12/08");
