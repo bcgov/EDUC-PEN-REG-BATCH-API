@@ -4,7 +4,7 @@ import lombok.Getter;
 
 public enum StudentHistoryActivityCode {
   REQ_MATCH("REQMATCH"),
-  USERNEW("USERNEW"),
+  USER_NEW("USERNEW"),
   REQ_NEW("REQNEW");
 
   @Getter
