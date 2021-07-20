@@ -104,7 +104,7 @@ public interface PenRequestBatchMapper {
   @Mapping(target = "legalMiddleNames", source = "request.legalMiddleName")
   @Mapping(target = "legalLastName", source = "request.legalSurname")
   @Mapping(target = "legalFirstName", source = "request.legalGivenName")
-  @Mapping(target = "historyActivityCode", constant = "USERNEW")
+  @Mapping(target = "historyActivityCode", constant = "REQNEW")
   @Mapping(target = "gradeYear", ignore = true)
   @Mapping(target = "gradeCode", source = "request.enrolledGradeCode")
   @Mapping(target = "genderCode", source = "request.gender")
