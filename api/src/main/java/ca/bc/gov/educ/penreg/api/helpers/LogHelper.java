@@ -4,6 +4,7 @@ import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.MDC;
 import org.springframework.http.HttpMethod;
 import org.springframework.lang.NonNull;
@@ -18,6 +19,7 @@ import java.util.Map;
 @Slf4j
 public final class LogHelper {
   private static final ObjectMapper mapper = new ObjectMapper();
+  private static final String EXCEPTION = "Exception ";
 
   private LogHelper() {
 
@@ -39,11 +41,12 @@ public final class LogHelper {
       httpMap.put("server_http_request_processing_time_ms", totalTime);
       httpMap.put("server_http_request_payload", String.valueOf(request.getAttribute("payload")));
       httpMap.put("server_http_request_remote_address", request.getRemoteAddr());
+      httpMap.put("server_http_request_client_name", StringUtils.trimToEmpty(request.getHeader("X-Client-Name")));
       MDC.putCloseable("httpEvent", mapper.writeValueAsString(httpMap));
       log.info("");
       MDC.clear();
     } catch (final Exception exception) {
-      log.error("Exception ", exception);
+      log.error(EXCEPTION, exception);
     }
   }
 
@@ -60,7 +63,7 @@ public final class LogHelper {
       log.info("");
       MDC.clear();
     } catch (final Exception exception) {
-      log.error("Exception ", exception);
+      log.error(EXCEPTION, exception);
     }
   }
 
@@ -75,7 +78,7 @@ public final class LogHelper {
       log.info("");
       MDC.clear();
     } catch (final Exception exception) {
-      log.error("Exception ", exception);
+      log.error(EXCEPTION, exception);
     }
   }
 }
