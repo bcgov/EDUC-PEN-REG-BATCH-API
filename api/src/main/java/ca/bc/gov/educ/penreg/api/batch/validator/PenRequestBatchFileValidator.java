@@ -111,7 +111,7 @@ public class PenRequestBatchFileValidator {
       var firstErrorFound = false;
       for (final DataError error : ds.getErrors()) {
         // ignore the header error to allow all flavours of header
-        if (error.getErrorDesc() != null && error.getErrorDesc().contains("SHOULD BE 234")) { // Details Record should be 234 characters long.
+        if (error.getErrorDesc() != null && error.getErrorDesc().contains("SHOULD BE 235")) { // Details Record should be 235 characters long.
           message = this.getDetailRowLengthIncorrectMessage(message, error);
           firstErrorFound = true;
         }

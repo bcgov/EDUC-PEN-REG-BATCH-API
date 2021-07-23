@@ -38,7 +38,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
@@ -418,12 +417,12 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
    */
   @Test
   @Transactional
-  public void testProcessPenRegBatchFileFromTSW_Given1000RowFile_ShouldCreateRecordsInDB() throws IOException {
+  public void testProcessPenRegBatchFileFromTSW_Given30RowFile_ShouldCreateRecordsInDB() throws IOException {
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
-    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_1000_records_OK.txt")).getFile());
+    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_30_records_OK.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
     final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_1000_records_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_30_records_OK.txt").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
     tsw = this.penRequestBatchTestUtils.savePenWebBlob(tsw);
     this.penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     final var result = this.repository.findAll();
@@ -439,7 +438,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
     assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isNull();
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
-    assertThat(students.size()).isEqualTo(1000);
+    assertThat(students.size()).isEqualTo(30);
   }
 
   /**
@@ -483,10 +482,10 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_BatchToBeHeldBackForSize_ShouldCreateRecordLOADHELDSIZEInDB() throws IOException {
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
-    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5000_records_OK.txt")).getFile());
+    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_100_records_OK.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
     final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5000_records_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_100_records_OK.txt").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
     tsw = this.penRequestBatchTestUtils.savePenWebBlob(tsw);
     this.penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     final var result = this.repository.findAll();

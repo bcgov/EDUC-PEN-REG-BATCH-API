@@ -146,7 +146,7 @@ public class PenRequestBatchStudentEntity {
   /**
    * The Postal code.
    */
-  @Column(name = "POSTAL_CODE", length = 6)
+  @Column(name = "POSTAL_CODE", length = 7)
   String postalCode;
 
   /**

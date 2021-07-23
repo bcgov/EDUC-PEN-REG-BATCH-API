@@ -63,9 +63,9 @@ public class PenRequestBatchFileServiceTest extends BasePenRegAPITest {
   public void testFilterDuplicatesAndRepeatRequests_givenRepeatedStudentsInALargeFile_shouldRemoveRepeatedStudentsFromReturnedSet() throws IOException, FileUnProcessableException {
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
     //sample_5000_records_OK
-    final String submissionNumber = this.penRequestBatchTestUtils.createBatchStudentsFromFile("sample_5000_records_OK" +
+    final String submissionNumber = this.penRequestBatchTestUtils.createBatchStudentsFromFile("sample_30_records_OK" +
       ".txt", ARCHIVED.getCode());
-    final String submissionNumber2 = this.penRequestBatchTestUtils.createBatchStudentsFromFile("sample_5000_records_OK" +
+    final String submissionNumber2 = this.penRequestBatchTestUtils.createBatchStudentsFromFile("sample_30_records_OK" +
       ".txt", LOADED.getCode());
     val previousBatch = this.repository.findBySubmissionNumber(submissionNumber);
     assertThat(previousBatch).isNotEmpty();

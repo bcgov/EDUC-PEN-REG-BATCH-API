@@ -25,7 +25,7 @@
   <COLUMN name="unused" length="16"/>
   <COLUMN name="enrolledGradeCode" length="2"/>
   <COLUMN name="unusedSecond" length="26"/>
-  <COLUMN name="postalCode" length="6"/>
+  <COLUMN name="postalCode" length="7"/>
   <RECORD id="trailer" indicator="BTR" endPosition="3">
     <COLUMN name="transactionCode" length="3"/>
     <COLUMN name="studentCount" length="6"/>
