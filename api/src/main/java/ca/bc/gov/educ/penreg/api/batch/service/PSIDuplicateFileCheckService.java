@@ -43,7 +43,7 @@ public class PSIDuplicateFileCheckService implements DuplicateFileCheckService {
     val penWebBlobs = this.penWebBlobRepository.findAllByMincodeAndInsertDateTimeGreaterThanAndSubmissionNumberNotAndFileTypeAndExtractDateTimeIsNotNull(penWebBlobEntity.getMincode(), dateTimeToCompare, penWebBlobEntity.getSubmissionNumber(), "PEN");
     final boolean result = penWebBlobs.stream().anyMatch(element -> Arrays.equals(element.getFileContents(), penWebBlobEntity.getFileContents()));
     stopwatch.stop();
-    log.info("Time taken is :: {} milli seconds", stopwatch.elapsed(TimeUnit.MILLISECONDS));
+    log.info("Time taken for file duplicate check is :: {} milli seconds", stopwatch.elapsed(TimeUnit.MILLISECONDS));
     return result;
   }
 

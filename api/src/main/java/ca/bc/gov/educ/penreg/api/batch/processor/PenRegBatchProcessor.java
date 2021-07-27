@@ -162,7 +162,7 @@ public class PenRegBatchProcessor {
     } finally {
       batchFileReaderOptional.ifPresent(this::closeBatchFileReader);
       stopwatch.stop();
-      log.info("Time taken is :: {} milli seconds", stopwatch.elapsed(TimeUnit.MILLISECONDS));
+      log.info("Time taken for batch processed is :: {} milli seconds", stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
   }
 
