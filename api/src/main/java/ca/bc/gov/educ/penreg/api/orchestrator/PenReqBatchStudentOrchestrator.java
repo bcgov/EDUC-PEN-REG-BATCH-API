@@ -76,7 +76,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
     super(sagaService, messagePublisher, PenRequestBatchStudentSagaData.class,
         PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC.toString());
     this.applicationProperties = applicationProperties;
-    this.setShouldSendNotificationEvent(false);
+    this.setShouldSendNotificationEvent(true);
     this.penRequestBatchStudentOrchestratorService = penRequestBatchStudentOrchestratorService;
   }
 
