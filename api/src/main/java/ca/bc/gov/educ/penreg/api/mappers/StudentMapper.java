@@ -78,7 +78,7 @@ public interface StudentMapper {
   @Mapping(target = "emailVerified", constant = "N")
   @Mapping(target = "email", ignore = true)
   @Mapping(target = "dob", expression = "java(ca.bc.gov.educ.penreg.api.util.LocalDateTimeUtil.getAPIFormattedDateOfBirth(penRequestBatchStudentSagaData.getDob()))")
-  @Mapping(target = "demogCode", ignore = true)
+  @Mapping(target = "demogCode", constant = "A")
   @Mapping(target = "deceasedDate", ignore = true)
   @Mapping(target = "createUser", source = "penRequestBatchStudentSagaData.createUser")
   Student toStudent(PenRequestBatchStudentSagaData penRequestBatchStudentSagaData);
