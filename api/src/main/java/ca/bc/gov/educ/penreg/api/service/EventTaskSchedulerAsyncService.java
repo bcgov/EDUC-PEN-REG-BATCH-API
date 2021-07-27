@@ -6,6 +6,7 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
 import ca.bc.gov.educ.penreg.api.exception.SagaRuntimeException;
+import ca.bc.gov.educ.penreg.api.helpers.LogHelper;
 import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
@@ -135,7 +136,7 @@ public class EventTaskSchedulerAsyncService {
       final var penReqBatchEntities = new ArrayList<PenRequestBatchEntity>();
       for (final var penRequestBatchEntity : penReqBatches) {
         final String redisKey = penRequestBatchEntity.getPenRequestBatchID().toString().concat(
-            "::markProcessedBatchesActive");
+          "::markProcessedBatchesActive");
         val valueFromRedis = this.stringRedisTemplate.opsForValue().get(redisKey);
         if (StringUtils.isBlank(valueFromRedis)) { // skip if it is already in redis
           this.checkAndUpdateStatusToActiveOrArchived(penReqBatchEntities, penRequestBatchEntity, redisKey);
@@ -179,9 +180,9 @@ public class EventTaskSchedulerAsyncService {
       final long count = studentSagaRecords.stream().filter(saga -> saga.getStatus().equalsIgnoreCase(SagaStatusEnum.COMPLETED.toString())).count();
       if (count == studentSagaRecords.size()) { // All records are processed mark batch to active.
         this.setDifferentCounts(penRequestBatchEntity, studentEntities);
-        if(newPenAndMatchCount == count) { // all records are either New PEN by System or Matched by System
+        if (newPenAndMatchCount == count) { // all records are either New PEN by System or Matched by System
           var sagas = this.getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatchEntity.getPenRequestBatchID(), PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString());
-          if(sagas.size() == 0) {
+          if (sagas.size() == 0) {
             this.startArchiveAndReturnSaga(penRequestBatchEntity);
           } else {
             log.warn("Archive and return saga has already started :: for pen request batch :: {} ", penRequestBatchEntity.getPenRequestBatchID());
@@ -265,6 +266,7 @@ public class EventTaskSchedulerAsyncService {
         if (saga.getCreateDate().isBefore(LocalDateTime.now().minusMinutes(5))
             && this.getSagaOrchestrators().containsKey(saga.getSagaName())) {
           try {
+            this.setRetryCountAndLog(saga);
             this.getSagaOrchestrators().get(saga.getSagaName()).replaySaga(saga);
           } catch (final InterruptedException ex) {
             Thread.currentThread().interrupt();
@@ -300,12 +302,12 @@ public class EventTaskSchedulerAsyncService {
     val penReqBatches = this.getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
     for (val penRequestBatch : penReqBatches) {
       val inProgressStudentIDList =
-          this.getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatch.getPenRequestBatchID(),
-              PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString()).stream().map(Saga::getPenRequestBatchStudentID).collect(Collectors.toSet());
+        this.getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatch.getPenRequestBatchID(),
+          PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString()).stream().map(Saga::getPenRequestBatchStudentID).collect(Collectors.toSet());
       for (val penReqBatchStudent : penRequestBatch.getPenRequestBatchStudentEntities()) {
         if (PenRequestBatchStudentStatusCodes.DUPLICATE.getCode().equals(penReqBatchStudent.getPenRequestBatchStudentStatusCode())
-            || PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(penReqBatchStudent.getPenRequestBatchStudentStatusCode())
-            || inProgressStudentIDList.contains(penReqBatchStudent.getPenRequestBatchStudentID())) {
+          || PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(penReqBatchStudent.getPenRequestBatchStudentStatusCode())
+          || inProgressStudentIDList.contains(penReqBatchStudent.getPenRequestBatchStudentID())) {
           continue;
         }
         penRequestBatchStudents.add(PenRegBatchHelper.createSagaDataFromStudentRequestAndBatch(penReqBatchStudent, penRequestBatch));
@@ -324,7 +326,7 @@ public class EventTaskSchedulerAsyncService {
   public void checkLoadedStudentRecordsForDuplicatesAndRepeatsAndPublishForFurtherProcessing() {
     final LocalDateTime createDateToCompare = LocalDateTime.now().minusMinutes(10);
     final var penReqBatches = this.getPenRequestBatchRepository().findByPenRequestBatchStatusCodeAndCreateDateBefore(
-        LOADED.getCode(), createDateToCompare);
+      LOADED.getCode(), createDateToCompare);
     log.debug("found :: {}  records to be checked for repeats", penReqBatches.size());
     if (!penReqBatches.isEmpty()) {
       this.getPenRegBatchStudentRecordsProcessor().checkLoadedStudentRecordsForDuplicatesAndRepeatsAndPublishForFurtherProcessing(penReqBatches);
@@ -347,4 +349,15 @@ public class EventTaskSchedulerAsyncService {
     }
   }
 
+  private void setRetryCountAndLog(final Saga saga) {
+    Integer retryCount = saga.getRetryCount();
+    if (retryCount == null || retryCount == 0) {
+      retryCount = 1;
+    } else {
+      retryCount += 1;
+    }
+    saga.setRetryCount(retryCount);
+    this.getSagaRepository().save(saga);
+    LogHelper.logSagaRetry(saga);
+  }
 }

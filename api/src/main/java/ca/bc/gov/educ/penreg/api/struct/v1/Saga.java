@@ -26,5 +26,5 @@ public class Saga {
   String updateUser;
   String createDate;
   String updateDate;
-
+  Integer retryCount;
 }
