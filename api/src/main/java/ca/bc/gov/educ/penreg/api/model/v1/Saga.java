@@ -107,6 +107,9 @@ public class Saga {
   @Column(name = "UPDATE_DATE")
   LocalDateTime updateDate;
 
+  @Column(name = "RETRY_COUNT")
+  private Integer retryCount;
+
   public String getPayload() {
     return new String(this.getPayloadBytes(), StandardCharsets.UTF_8);
   }
