@@ -92,7 +92,7 @@ public class PenRequestBatchFileService {
 
   }
 
-  private boolean submissionProcessedPredicate(PenRequestBatchEntity penRequestBatchEntity) {
+  private boolean submissionProcessedPredicate(final PenRequestBatchEntity penRequestBatchEntity) {
     return FLAT_FILE.getCode().equals(penRequestBatchEntity.getPenRequestBatchProcessTypeCode()) && "PEN".equals(penRequestBatchEntity.getFileType());
   }
 
@@ -116,8 +116,11 @@ public class PenRequestBatchFileService {
     final Map<String, PenRequestBatchStudentEntity> entityMap = new HashMap<>();
     studentEntities.forEach(entity -> {
       final var hashKey = this.constructKeyForDuplicateEntity(entity);
-      if (entityMap.containsKey(hashKey)) {
+      val duplicateEntity = entityMap.get(hashKey);
+      if (duplicateEntity != null) {
         entity.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.DUPLICATE.getCode());
+        duplicateEntity.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.DUPLICATE.getCode());
+        filteredStudentEntities.remove(duplicateEntity); // if it is duplicate , remove the earlier record.
       } else {
         entityMap.put(hashKey, entity);
         filteredStudentEntities.add(entity);
@@ -132,7 +135,7 @@ public class PenRequestBatchFileService {
    * @return - the key
    */
   private String constructKeyForDuplicateEntity(final PenRequestBatchStudentEntity entity) {
-    return entity.getLegalLastName() + entity.getLegalFirstName() + entity.getDob();
+    return entity.getLegalLastName() + entity.getLegalFirstName() + entity.getLegalMiddleNames() + entity.getDob() + entity.getUsualFirstName() + entity.getUsualLastName() + entity.getUsualMiddleNames() + entity.getGenderCode() + entity.getGradeCode();
   }
 
   /**
@@ -147,16 +150,16 @@ public class PenRequestBatchFileService {
     final Stopwatch stopwatch = Stopwatch.createStarted();
     final var filteredStudentEntities = new HashSet<PenRequestBatchStudentEntity>();
     final Optional<PenRequestBatchEntity> penRequestBatchEntityOptional =
-        this.findEntity(penRequestBatchEntity.getPenRequestBatchID()); // need to grab it from DB, so that this
+      this.findEntity(penRequestBatchEntity.getPenRequestBatchID()); // need to grab it from DB, so that this
     // becomes an attached hibernate entity, to this current transactional context.
     if (penRequestBatchEntityOptional.isPresent()) {
       final PenRequestBatchEntity penRequestBatchEntityFromDB = penRequestBatchEntityOptional.get();
       final Set<PenRequestBatchStudentEntity> studentEntities =
-          penRequestBatchEntityFromDB.getPenRequestBatchStudentEntities(); // it will make a DB call here, get the
+        penRequestBatchEntityFromDB.getPenRequestBatchStudentEntities(); // it will make a DB call here, get the
       // child entities lazily loaded.
       long numRepeats = 0;
       final Map<String, List<PenRequestBatchStudentEntity>> repeatCheckMap =
-          this.penRequestBatchStudentService.populateRepeatCheckMap(penRequestBatchEntityFromDB);
+        this.penRequestBatchStudentService.populateRepeatCheckMap(penRequestBatchEntityFromDB);
       this.checkBatchForDuplicateRequests(studentEntities, filteredStudentEntities);
 
       if (repeatCheckMap.size() > 0) {
@@ -165,7 +168,7 @@ public class PenRequestBatchFileService {
             continue; // no need to do any checking for DUPLICATE student requests, continue further.
           }
           final String repeatCheckKey =
-              this.penRequestBatchStudentService.constructKeyGivenBatchStudent(penRequestBatchStudent);
+            this.penRequestBatchStudentService.constructKeyGivenBatchStudent(penRequestBatchStudent);
           if (repeatCheckMap.containsKey(repeatCheckKey)) {
             filteredStudentEntities.remove(penRequestBatchStudent); // if it is a repeat remove it from the list to be further processed.
             this.updatePenRequestBatchStudentRequest(repeatCheckMap.get(repeatCheckKey), penRequestBatchStudent);

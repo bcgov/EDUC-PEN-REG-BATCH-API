@@ -38,7 +38,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
@@ -292,7 +291,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
         dupCount++;
       }
     }
-    assertThat(dupCount).isEqualTo(1);
+    assertThat(dupCount).isEqualTo(2); // both the records will be marked DUPLICATE.
   }
 
   /**
@@ -359,11 +358,10 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
     assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchStatusReason()).isNull();
-    assertThat(entity.getRepeatCount()).isEqualTo(1);
+    assertThat(entity.getRepeatCount()).isZero();
     final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(1));
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(2);
-    assertThat(students.stream().filter(s -> PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(s.getPenRequestBatchStudentStatusCode())).count()).isEqualTo(1);
-    assertThat(students.stream().filter(s -> DUPLICATE.getCode().equals(s.getPenRequestBatchStudentStatusCode())).count()).isEqualTo(1);
+    assertThat(students.stream().filter(s -> DUPLICATE.getCode().equals(s.getPenRequestBatchStudentStatusCode())).count()).isEqualTo(2);
   }
 
   /**
