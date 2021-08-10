@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.rest;
 
+import ca.bc.gov.educ.penreg.api.PenRegBatchApiApplication;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
@@ -8,6 +9,7 @@ import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
 import ca.bc.gov.educ.penreg.api.support.NatsMessageImpl;
+import ca.bc.gov.educ.penreg.api.support.TestRedisConfiguration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Message;
@@ -38,7 +40,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.openMocks;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@SpringBootTest(classes = {TestRedisConfiguration.class, PenRegBatchApiApplication.class})
 @ActiveProfiles("testWebclient")
 public class RestUtilsTest {
 
