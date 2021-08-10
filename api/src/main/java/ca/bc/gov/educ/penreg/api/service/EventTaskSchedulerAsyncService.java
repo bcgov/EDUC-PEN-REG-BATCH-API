@@ -175,6 +175,7 @@ public class EventTaskSchedulerAsyncService {
     }
     if (penRequestBatchEntity.getStudentCount() == (rptCount + dupCount)) { // all records are either repeat or
       // duplicates, need to be marked active.
+      this.setDifferentCounts(penRequestBatchEntity, studentEntities);
       this.updatePenRequestBatchStatus(penReqBatchEntities, penRequestBatchEntity, redisKey, PenRequestBatchStatusCodes.ACTIVE.getCode());
     } else if (!studentSagaRecords.isEmpty()) {
       final long count = studentSagaRecords.stream().filter(saga -> saga.getStatus().equalsIgnoreCase(SagaStatusEnum.COMPLETED.toString())).count();
