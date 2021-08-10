@@ -194,6 +194,10 @@ public class PenRequestBatchHistoryEntity {
    */
   @Column(name = "FIXABLE_COUNT")
   Long fixableCount;
+
+  @Column(name = "DUPLICATE_COUNT")
+  Long duplicateCount;
+
   /**
    * The Sis vendor name.
    */
