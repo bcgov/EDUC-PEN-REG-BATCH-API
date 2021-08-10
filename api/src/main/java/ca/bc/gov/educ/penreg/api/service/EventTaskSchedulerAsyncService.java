@@ -233,24 +233,25 @@ public class EventTaskSchedulerAsyncService {
     long fixableCount = 0;
     long matchedCount = 0;
     long newCount = 0;
+    long dupCount = 0;
     for (final var studentReq : studentEntities) {
       if (PenRequestBatchStudentStatusCodes.FIXABLE.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
         fixableCount++;
-      }
-      if (PenRequestBatchStudentStatusCodes.ERROR.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
+      } else if (PenRequestBatchStudentStatusCodes.ERROR.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
         errorCount++;
-      }
-      if (PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
+      } else if (PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
         matchedCount++;
-      }
-      if (PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
+      } else if (PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
         newCount++;
+      } else if (PenRequestBatchStudentStatusCodes.DUPLICATE.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
+        dupCount++;
       }
     }
     penRequestBatchEntity.setErrorCount(errorCount);
     penRequestBatchEntity.setFixableCount(fixableCount);
     penRequestBatchEntity.setMatchedCount(matchedCount);
     penRequestBatchEntity.setNewPenCount(newCount);
+    penRequestBatchEntity.setDuplicateCount(dupCount);
   }
 
   /**
@@ -264,7 +265,7 @@ public class EventTaskSchedulerAsyncService {
     if (!sagas.isEmpty()) {
       for (val saga : sagas) {
         if (saga.getCreateDate().isBefore(LocalDateTime.now().minusMinutes(5))
-            && this.getSagaOrchestrators().containsKey(saga.getSagaName())) {
+          && this.getSagaOrchestrators().containsKey(saga.getSagaName())) {
           try {
             this.setRetryCountAndLog(saga);
             this.getSagaOrchestrators().get(saga.getSagaName()).replaySaga(saga);

@@ -148,4 +148,5 @@ public abstract class BasePenRequestBatch {
    * The count of searched student records
    */
   Long searchedCount;
+  Long duplicateCount;
 }
