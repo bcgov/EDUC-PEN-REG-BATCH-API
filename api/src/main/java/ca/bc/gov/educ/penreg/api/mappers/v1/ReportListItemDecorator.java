@@ -10,6 +10,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.DUPLICATE;
+
 @Slf4j
 public abstract class ReportListItemDecorator implements ReportListItemMapper {
 
@@ -48,6 +50,9 @@ public abstract class ReportListItemDecorator implements ReportListItemMapper {
       studentData.setReason(penRequestBatchStudent.getInfoRequest());
     } else if (!StringUtils.isBlank(penRequestBatchStudentValidationIssues)) {
       studentData.setReason(penRequestBatchStudentValidationIssues);
+    } else if (DUPLICATE.toString().equals(penRequestBatchStudent.getPenRequestBatchStudentStatusCode())) {
+      studentData.setPen("Duplicate");
+      studentData.setReason("This record is likely a duplicate of another record. Please confirm record is valid and resend or remove from your system.");
     }
     return this.setBirthDateAndUsualName(studentData, penRequestBatchStudent.getDob(), penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames(), "yyyyMMdd");
   }
