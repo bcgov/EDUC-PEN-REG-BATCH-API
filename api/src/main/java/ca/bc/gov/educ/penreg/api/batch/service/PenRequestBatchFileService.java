@@ -119,8 +119,8 @@ public class PenRequestBatchFileService {
       val duplicateEntity = entityMap.get(hashKey);
       if (duplicateEntity != null) {
         entity.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.DUPLICATE.getCode());
-        duplicateEntity.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.DUPLICATE.getCode());
         filteredStudentEntities.remove(duplicateEntity); // if it is duplicate , remove the earlier record.
+        duplicateEntity.setPenRequestBatchStudentStatusCode(PenRequestBatchStudentStatusCodes.DUPLICATE.getCode());
       } else {
         entityMap.put(hashKey, entity);
         filteredStudentEntities.add(entity);
