@@ -58,7 +58,11 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
         case INFOREQ:
         case FIXABLE:
           val issues = data.getPenRequestBatchStudentValidationIssues().get(penRequestBatchStudent.getPenRequestBatchStudentID());
-          pendingList.add(listItemMapper.toReportListItem(penRequestBatchStudent, issues));
+          val pendingItem = listItemMapper.toReportListItem(penRequestBatchStudent, issues);
+          if (!"Duplicate".equals(pendingItem.getPen())) {
+            pendingItem.setPen("Pending");
+          }
+          pendingList.add(pendingItem);
           break;
         case SYS_NEW_PEN:
         case USR_NEW_PEN:

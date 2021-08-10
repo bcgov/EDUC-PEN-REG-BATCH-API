@@ -46,7 +46,6 @@ public abstract class ReportListItemDecorator implements ReportListItemMapper {
   @Override
   public ReportListItem toReportListItem(final PenRequestBatchStudent penRequestBatchStudent, final String penRequestBatchStudentValidationIssues) {
     final var studentData = this.delegate.toReportListItem(penRequestBatchStudent, penRequestBatchStudentValidationIssues);
-    studentData.setPen("Pending");
     if (!StringUtils.isBlank(penRequestBatchStudent.getInfoRequest())) {
       studentData.setReason(penRequestBatchStudent.getInfoRequest());
     } else if (!StringUtils.isBlank(penRequestBatchStudentValidationIssues)) {
