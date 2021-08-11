@@ -196,12 +196,13 @@ public class PenRequestBatchStudentService {
   }
 
   private void logCounts(final PenRequestBatchEntity penRequestBatch, final String initialMessage) {
-    log.debug(initialMessage.concat(" counts are  Fixable :: {}, Error :: {}, Repeat :: {}, Matched :: {}, New Pen :: {}"),
-        penRequestBatch.getFixableCount(),
-        penRequestBatch.getErrorCount(),
-        penRequestBatch.getRepeatCount(),
-        penRequestBatch.getMatchedCount(),
-        penRequestBatch.getNewPenCount());
+    log.debug(initialMessage.concat(" counts are  Fixable :: {}, Error :: {}, Repeat :: {}, Matched :: {}, New Pen :: {}, Duplicate :: {}"),
+      penRequestBatch.getFixableCount(),
+      penRequestBatch.getErrorCount(),
+      penRequestBatch.getRepeatCount(),
+      penRequestBatch.getMatchedCount(),
+      penRequestBatch.getNewPenCount(),
+      penRequestBatch.getDuplicateCount());
   }
 
   private boolean useSameSummaryCounter(final PenRequestBatchStudentStatusCodes originalStatus, final PenRequestBatchStudentStatusCodes currentStatus) {
@@ -232,6 +233,9 @@ public class PenRequestBatchStudentService {
       case SYS_NEW_PEN:
       case USR_NEW_PEN:
         penRequestBatch.setNewPenCount((penRequestBatch.getNewPenCount() != null ? penRequestBatch.getNewPenCount() : 0) + count);
+        break;
+      case DUPLICATE:
+        penRequestBatch.setDuplicateCount((penRequestBatch.getDuplicateCount() != null ? penRequestBatch.getDuplicateCount() : 0) + count);
         break;
       default:
     }
