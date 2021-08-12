@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
+import ca.bc.gov.educ.penreg.api.struct.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
@@ -93,4 +94,18 @@ public interface PenRequestBatchSagaEndpoint {
                                                                     description = "searchCriteriaList if provided should be a JSON string of Search Array",
                                                                     implementation = ca.bc.gov.educ.penreg.api.struct.v1.Search.class))
                                                                   @RequestParam(name = "searchCriteriaList", required = false) String searchCriteriaListJson);
+
+  @GetMapping("/{sagaId}/saga-events")
+  @PreAuthorize("hasAuthority('SCOPE_PEN_REQUEST_BATCH_READ_SAGA')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK."), @ApiResponse(responseCode = "404", description = "Not Found.")})
+  @Transactional(readOnly = true)
+  @Tag(name = "Endpoint to retrieve all saga events by its ID (GUID).", description = "Endpoint to retrieve all saga events by its ID (GUID).")
+  ResponseEntity<List<SagaEvent>> getSagaEventsBySagaID(@PathVariable UUID sagaId);
+
+  @PutMapping("/{sagaId}")
+  @PreAuthorize("hasAuthority('SCOPE_PEN_REQUEST_BATCH_WRITE_SAGA')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK."), @ApiResponse(responseCode = "404", description = "Not Found."), @ApiResponse(responseCode = "409", description = "Conflict.")})
+  @Transactional
+  @Tag(name = "Endpoint to update saga by its ID.", description = "Endpoint to update saga by its ID.")
+  ResponseEntity<Saga> updateSaga(@RequestBody Saga saga, @PathVariable UUID sagaId);
 }

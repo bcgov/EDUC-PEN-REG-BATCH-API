@@ -7,6 +7,7 @@ import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
+import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.val;
@@ -295,6 +296,78 @@ public class PenRequestBatchSagaControllerTest extends BasePenRegAPITest {
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)));
   }
 
+  @Test
+  @SuppressWarnings("java:S100")
+  public void testReadSagaEvents_givenSagaDoesntExist_shouldReturnStatusNotFound() throws Exception {
+    this.mockMvc.perform(get("/api/v1/pen-request-batch-saga/{sagaId}/saga-events", UUID.randomUUID())
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_READ_SAGA")))
+      .contentType(APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound());
+  }
+
+  @Test
+  @SuppressWarnings("java:S100")
+  public void testGetSagaEventsBySagaID_whenSagaIDIsValid_shouldReturnStatusOk() throws Exception {
+    final File sagEventsFile = new File(
+      Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-saga-events.json")).getFile()
+    );
+    final File sagFile = new File(
+      Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-saga.json")).getFile()
+    );
+    val sagaEvents = Arrays.asList(JsonUtil.mapper.readValue(sagEventsFile, ca.bc.gov.educ.penreg.api.model.v1.SagaEvent[].class));
+    val saga = JsonUtil.mapper.readValue(sagFile, ca.bc.gov.educ.penreg.api.model.v1.Saga.class);
+    saga.setSagaId(null);
+    saga.setCreateDate(LocalDateTime.now());
+    saga.setUpdateDate(LocalDateTime.now());
+    this.repository.save(saga);
+    for (val sagaEvent : sagaEvents) {
+      sagaEvent.setSaga(saga);
+      sagaEvent.setCreateDate(LocalDateTime.now());
+      sagaEvent.setUpdateDate(LocalDateTime.now());
+    }
+    this.sagaEventRepository.saveAll(sagaEvents);
+    this.mockMvc.perform(get("/api/v1/pen-request-batch-saga/{sagaId}/saga-events", saga.getSagaId())
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_READ_SAGA"))))
+      .andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(8)));
+  }
+
+  @Test
+  public void testUpdateSaga_givenNoBody_shouldReturn400() throws Exception {
+    this.mockMvc.perform(put("/api/v1/pen-request-batch-saga/{sagaId}", UUID.randomUUID())
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_WRITE_SAGA")))
+      .contentType(APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest());
+  }
+
+  @Test
+  public void testUpdateSaga_givenInvalidID_shouldReturn404() throws Exception {
+    val saga = createMockSaga();
+    this.mockMvc.perform(put("/api/v1/pen-request-batch-saga/{sagaId}", UUID.randomUUID()).content(JsonUtil.mapper.writeValueAsBytes(saga))
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_WRITE_SAGA")))
+      .contentType(APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound());
+  }
+
+  @Test
+  public void testUpdateSaga_givenPastUpdateDate_shouldReturn409() throws Exception {
+    final var sagaFromDB = this.sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", "Test", UUID.fromString(this.getPenRequestBatchStudentID),
+      UUID.fromString(this.penRequestBatchID));
+    sagaFromDB.setUpdateDate(LocalDateTime.now());
+    this.mockMvc.perform(put("/api/v1/pen-request-batch-saga/{sagaId}", sagaFromDB.getSagaId()).content(JsonUtil.mapper.writeValueAsBytes(mapper.toStruct(sagaFromDB)))
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_WRITE_SAGA")))
+      .contentType(APPLICATION_JSON)).andDo(print()).andExpect(status().isConflict());
+  }
+
+  @Test
+  public void testUpdateSaga_givenValidData_shouldReturnOk() throws Exception {
+    final var sagaFromDB = this.sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", "Test", UUID.fromString(this.getPenRequestBatchStudentID),
+      UUID.fromString(this.penRequestBatchID));
+    sagaFromDB.setUpdateDate(sagaFromDB.getUpdateDate().withNano((int)Math.round(sagaFromDB.getUpdateDate().getNano()/1000.00)*1000)); //db limits precision, so need to adjust
+    this.mockMvc.perform(put("/api/v1/pen-request-batch-saga/{sagaId}", sagaFromDB.getSagaId()).content(JsonUtil.mapper.writeValueAsBytes(mapper.toStruct(sagaFromDB)))
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_WRITE_SAGA")))
+      .contentType(APPLICATION_JSON)).andDo(print()).andExpect(status().isOk());
+  }
+
+  private Saga createMockSaga() {
+    return Saga.builder().sagaId(UUID.randomUUID()).payload("test").updateDate(LocalDateTime.now().toString()).build();
+  }
 
   protected String placeholderInvalidPenRequestBatchActionsSagaData() {
     return " {\n" +

@@ -8,6 +8,7 @@ import ca.bc.gov.educ.penreg.api.exception.SagaRuntimeException;
 import ca.bc.gov.educ.penreg.api.filter.SagaFilterSpecs;
 import ca.bc.gov.educ.penreg.api.mappers.v1.ArchiveAndReturnSagaResponseMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.SagaMapper;
+import ca.bc.gov.educ.penreg.api.struct.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.Orchestrator;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.BasePenRequestBatchStudentSagaData;
@@ -29,8 +30,10 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -134,6 +137,45 @@ public class PenRequestBatchSagaController extends PaginatedController implement
     return this.getSagaService().findAll(sagaEntitySpecification, pageNumber, pageSize, sorts).thenApplyAsync(sagas -> sagas.map(sagaMapper::toStruct));
   }
 
+  /**
+   * Find all saga events for a given saga id
+   *
+   * @param sagaId  - the saga id
+   * @return        - the list of saga events
+   */
+  @Override
+  public ResponseEntity<List<SagaEvent>> getSagaEventsBySagaID(UUID sagaId) {
+    val sagaOptional = this.getSagaService().findSagaById(sagaId);
+    return sagaOptional.map(saga -> ResponseEntity.ok(this.getSagaService().findAllSagaStates(saga).stream()
+      .map(SagaMapper.mapper::toEventStruct).collect(Collectors.toList())))
+      .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+  }
+
+  /**
+   * Update saga
+   *
+   * @param saga    - the saga
+   * @return        - the updated saga
+   */
+  @Override
+  @Transactional
+  public ResponseEntity<Saga> updateSaga(Saga saga, UUID sagaId) {
+    var sagaOptional = getSagaService().findSagaById(sagaId);
+    if(sagaOptional.isPresent()) {
+      val sagaFromDB = sagaOptional.get();
+      if(!sagaMapper.toStruct(sagaFromDB).getUpdateDate().equals(saga.getUpdateDate())) {
+        log.error("Updating saga failed. The saga has already been updated by another process :: " + saga.getSagaId());
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+      }
+      sagaFromDB.setPayload(saga.getPayload());
+      sagaFromDB.setUpdateDate(LocalDateTime.now());
+      this.getSagaService().updateSagaRecord(sagaFromDB);
+      return ResponseEntity.ok(sagaMapper.toStruct(sagaFromDB));
+    } else {
+      log.error("Error attempting to get saga. Saga id does not exist :: " + saga.getSagaId());
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+  }
 
   private ResponseEntity<String> processStudentRequest(SagaEnum sagaName, BasePenRequestBatchStudentSagaData penRequestBatchStudentSagaData) {
     var penRequestBatchStudentID = penRequestBatchStudentSagaData.getPenRequestBatchStudentID();

@@ -129,6 +129,13 @@ curl -sX POST "https://$SOAM_KC/auth/admin/realms/$SOAM_KC_REALM_ID/client-scope
   -d "{\"description\": \"Fetch Saga information based on saga id.\",\"id\": \"PEN_REQUEST_BATCH_READ_SAGA\",\"name\": \"PEN_REQUEST_BATCH_READ_SAGA\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
 
 echo
+echo Writing scope PEN_REQUEST_BATCH_WRITE_SAGA
+curl -sX POST "https://$SOAM_KC/auth/admin/realms/$SOAM_KC_REALM_ID/client-scopes" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TKN" \
+  -d "{\"description\": \"Write Saga information.\",\"id\": \"PEN_REQUEST_BATCH_WRITE_SAGA\",\"name\": \"PEN_REQUEST_BATCH_WRITE_SAGA\",\"protocol\": \"openid-connect\",\"attributes\" : {\"include.in.token.scope\" : \"true\",\"display.on.consent.screen\" : \"false\"}}"
+
+echo
 echo Writing scope PEN_REQUEST_BATCH_READ_HISTORY
 curl -sX POST "https://$SOAM_KC/auth/admin/realms/$SOAM_KC_REALM_ID/client-scopes" \
   -H "Content-Type: application/json" \
