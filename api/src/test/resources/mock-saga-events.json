@@ -1,0 +1,66 @@
+[
+  {
+    "sagaEventState": "INITIATED",
+    "sagaEventOutcome": "INITIATE_SUCCESS",
+    "sagaStepNumber": 1,
+    "sagaEventResponse": "",
+    "createUser": "PEN_REQUEST_COMPLETE_SAGA",
+    "updateUser": "PEN_REQUEST_COMPLETE_SAGA"
+  },
+  {
+    "sagaEventState": "GET_STUDENT",
+    "sagaEventOutcome": "STUDENT_NOT_FOUND",
+    "sagaStepNumber": 2,
+    "sagaEventResponse": "127054021",
+    "createUser": "PEN_REQUEST_COMPLETE_SAGA",
+    "updateUser": "PEN_REQUEST_COMPLETE_SAGA"
+  },
+  {
+    "sagaEventState": "CREATE_STUDENT",
+    "sagaEventOutcome": "STUDENT_CREATED",
+    "sagaStepNumber": 3,
+    "sagaEventResponse": "{\"createUser\":\"MVILLENE\",\"updateUser\":\"MVILLENE\",\"createDate\":\"2020-11-20T19:06:50.038395\",\"updateDate\":\"2020-11-20T19:06:50.038401\",\"studentID\":\"0a611505-75e7-1e93-8175-e8c4c13602a9\",\"pen\":\"127054021\",\"legalFirstName\":\"JANE\",\"legalMiddleNames\":\"\",\"legalLastName\":\"CHEN\",\"dob\":\"1991-12-17\",\"sexCode\":\"F\",\"genderCode\":\"F\",\"usualFirstName\":\"JANE\",\"usualMiddleNames\":\"\",\"usualLastName\":\"CHEN\",\"email\":\"mingwei.yang@gov.bc.ca\",\"emailVerified\":\"Y\",\"deceasedDate\":null,\"postalCode\":\"\",\"mincode\":\"10200022\",\"localID\":\"\",\"gradeCode\":\"12\",\"gradeYear\":null,\"demogCode\":null,\"statusCode\":null,\"memo\":null}",
+    "createUser": "PEN_REQUEST_COMPLETE_SAGA",
+    "updateUser": "PEN_REQUEST_COMPLETE_SAGA"
+  },
+  {
+    "sagaEventState": "GET_DIGITAL_ID",
+    "sagaEventOutcome": "DIGITAL_ID_FOUND",
+    "sagaStepNumber": 4,
+    "sagaEventResponse": "{\"digitalID\":\"ac337def-704b-169f-8170-653e2f7c0011\",\"studentID\":null,\"identityTypeCode\":\"BASIC\",\"identityValue\":\"3489EA7A86FE4A7DB08D934F342431BF\",\"lastAccessDate\":\"2020-08-21T16:59:44\",\"lastAccessChannelCode\":\"OSPR\",\"createUser\":\"3489EA7A86FE4A7DB08D934F342431BF\",\"createDate\":\"2020-02-21T00:55:39\",\"updateUser\":\"PEN_REQUEST_UNLINK_SAGA\",\"updateDate\":\"2020-08-21T16:59:44\"}",
+    "createUser": "PEN_REQUEST_COMPLETE_SAGA",
+    "updateUser": "PEN_REQUEST_COMPLETE_SAGA"
+  },
+  {
+    "sagaEventState": "UPDATE_DIGITAL_ID",
+    "sagaEventOutcome": "DIGITAL_ID_UPDATED",
+    "sagaStepNumber": 5,
+    "sagaEventResponse": "{\"digitalID\":\"ac337def-704b-169f-8170-653e2f7c0011\",\"studentID\":\"0a611505-75e7-1e93-8175-e8c4c13602a9\",\"identityTypeCode\":\"BASIC\",\"identityValue\":\"3489EA7A86FE4A7DB08D934F342431BF\",\"lastAccessDate\":\"2020-08-21T16:59:44\",\"lastAccessChannelCode\":\"OSPR\",\"createUser\":null,\"createDate\":null,\"updateUser\":\"MVILLENE\",\"updateDate\":\"2020-11-20T19:09:02.035889\"}",
+    "createUser": "PEN_REQUEST_COMPLETE_SAGA",
+    "updateUser": "PEN_REQUEST_COMPLETE_SAGA"
+  },
+  {
+    "sagaEventState": "GET_PEN_REQUEST",
+    "sagaEventOutcome": "PEN_REQUEST_FOUND",
+    "sagaStepNumber": 6,
+    "sagaEventResponse": "{\"createUser\":\"PEN-REQUEST-API\",\"updateUser\":\"PEN-REQUEST-UNLINK-SAGA\",\"createDate\":null,\"updateDate\":null,\"penRequestID\":\"ac33667f-70c0-127b-8170-c628197b000f\",\"digitalID\":\"ac337def-704b-169f-8170-653e2f7c0011\",\"penRequestStatusCode\":\"SUBSREV\",\"legalFirstName\":\"Shelly\",\"legalMiddleNames\":null,\"legalLastName\":\"Band\",\"dob\":\"1986-11-01\",\"genderCode\":\"M\",\"usualFirstName\":null,\"usualMiddleName\":null,\"usualLastName\":null,\"email\":\"mingwei.yang@gov.bc.ca\",\"maidenName\":null,\"pastNames\":null,\"lastBCSchool\":null,\"lastBCSchoolStudentNumber\":null,\"currentSchool\":null,\"reviewer\":\"MVILLENE\",\"failureReason\":\"Can't find your PEN.\",\"initialSubmitDate\":\"2020-03-10T13:35:20\",\"statusUpdateDate\":\"2020-07-02T16:16:43\",\"emailVerified\":\"Y\",\"bcscAutoMatchOutcome\":null,\"bcscAutoMatchDetails\":\"No auto-match performed for Basic BCeID\",\"pen\":null,\"demogChanged\":null,\"completeComment\":null}",
+    "createUser": "PEN_REQUEST_COMPLETE_SAGA",
+    "updateUser": "PEN_REQUEST_COMPLETE_SAGA"
+  },
+  {
+    "sagaEventState": "UPDATE_PEN_REQUEST",
+    "sagaEventOutcome": "PEN_REQUEST_UPDATED",
+    "sagaStepNumber": 7,
+    "sagaEventResponse": "{\"createUser\":null,\"updateUser\":\"MVILLENE\",\"createDate\":null,\"updateDate\":null,\"penRequestID\":\"ac33667f-70c0-127b-8170-c628197b000f\",\"digitalID\":\"ac337def-704b-169f-8170-653e2f7c0011\",\"penRequestStatusCode\":\"MANUAL\",\"legalFirstName\":\"Shelly\",\"legalMiddleNames\":null,\"legalLastName\":\"Band\",\"dob\":\"1986-11-01\",\"genderCode\":\"M\",\"usualFirstName\":null,\"usualMiddleName\":null,\"usualLastName\":null,\"email\":\"mingwei.yang@gov.bc.ca\",\"maidenName\":null,\"pastNames\":null,\"lastBCSchool\":null,\"lastBCSchoolStudentNumber\":null,\"currentSchool\":null,\"reviewer\":\"MVILLENE\",\"failureReason\":\"Can't find your PEN.\",\"initialSubmitDate\":\"2020-03-10T13:35:20\",\"statusUpdateDate\":\"2020-11-20T19:09:04\",\"emailVerified\":\"Y\",\"bcscAutoMatchOutcome\":null,\"bcscAutoMatchDetails\":\"No auto-match performed for Basic BCeID\",\"pen\":\"127054021\",\"demogChanged\":null,\"completeComment\":\"Hi\"}",
+    "createUser": "PEN_REQUEST_COMPLETE_SAGA",
+    "updateUser": "PEN_REQUEST_COMPLETE_SAGA"
+  },
+  {
+    "sagaEventState": "NOTIFY_STUDENT_PEN_REQUEST_COMPLETE",
+    "sagaEventOutcome": "STUDENT_NOTIFIED",
+    "sagaStepNumber": 8,
+    "sagaEventResponse": "{\"firstName\":\"JANE\",\"emailAddress\":\"test@gov.bc.ca\",\"identityType\":\"BASIC\",\"rejectionReason\":null,\"demographicsChanged\":false}",
+    "createUser": "PEN_REQUEST_COMPLETE_SAGA",
+    "updateUser": "PEN_REQUEST_COMPLETE_SAGA"
+  }
+]

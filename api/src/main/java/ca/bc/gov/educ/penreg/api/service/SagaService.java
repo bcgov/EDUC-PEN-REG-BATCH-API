@@ -87,7 +87,7 @@ public class SagaService {
     saga.setUpdateDate(LocalDateTime.now());
     this.getSagaRepository().save(saga);
     val result = this.getSagaEventRepository()
-        .findBySagaAndSagaEventOutcomeAndSagaEventStateAndSagaStepNumber(saga, sagaEvent.getSagaEventOutcome(), sagaEvent.getSagaEventState(), sagaEvent.getSagaStepNumber() - 1); //check if the previous step was same and had same outcome, and it is due to replay.
+      .findBySagaAndSagaEventOutcomeAndSagaEventStateAndSagaStepNumber(saga, sagaEvent.getSagaEventOutcome(), sagaEvent.getSagaEventState(), sagaEvent.getSagaStepNumber() - 1); //check if the previous step was same and had same outcome, and it is due to replay.
     if (result.isEmpty()) {
       this.getSagaEventRepository().save(sagaEvent);
     }
@@ -162,18 +162,18 @@ public class SagaService {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public Saga createSagaRecordInDB(final String sagaName, final String userName, final String payload, final UUID penRequestBatchStudentID, final UUID penRequestBatchID) {
     final var saga = Saga
-        .builder()
-        .payload(payload)
-        .penRequestBatchStudentID(penRequestBatchStudentID)
-        .penRequestBatchID(penRequestBatchID)
-        .sagaName(sagaName)
-        .status(STARTED.toString())
-        .sagaState(INITIATED.toString())
-        .createDate(LocalDateTime.now())
-        .createUser(userName)
-        .updateUser(userName)
-        .updateDate(LocalDateTime.now())
-        .build();
+      .builder()
+      .payload(payload)
+      .penRequestBatchStudentID(penRequestBatchStudentID)
+      .penRequestBatchID(penRequestBatchID)
+      .sagaName(sagaName)
+      .status(STARTED.toString())
+      .sagaState(INITIATED.toString())
+      .createDate(LocalDateTime.now())
+      .createUser(userName)
+      .updateUser(userName)
+      .updateDate(LocalDateTime.now())
+      .build();
     return this.createSagaRecord(saga);
   }
 
@@ -181,9 +181,9 @@ public class SagaService {
   /**
    * Create saga record in db saga.
    *
-   * @param sagaName                 the saga name
-   * @param userName                 the user name
-   * @param payloads                 the list of pen request batch id and the payload
+   * @param sagaName the saga name
+   * @param userName the user name
+   * @param payloads the list of pen request batch id and the payload
    * @return the saga
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -208,10 +208,10 @@ public class SagaService {
   /**
    * Find all completable future.
    *
-   * @param specs            the saga specs
-   * @param pageNumber       the page number
-   * @param pageSize         the page size
-   * @param sorts            the sorts
+   * @param specs      the saga specs
+   * @param pageNumber the page number
+   * @param pageSize   the page size
+   * @param sorts      the sorts
    * @return the completable future
    */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
