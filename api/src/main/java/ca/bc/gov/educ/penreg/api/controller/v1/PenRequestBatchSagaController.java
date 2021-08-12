@@ -144,8 +144,11 @@ public class PenRequestBatchSagaController extends PaginatedController implement
    * @return        - the list of saga events
    */
   @Override
-  public List<SagaEvent> getSagaEventsBySagaID(UUID sagaId) {
-    return this.getSagaService().findAllSagaStates(ca.bc.gov.educ.penreg.api.model.v1.Saga.builder().sagaId(sagaId).build()).stream().map(SagaMapper.mapper::toEventStruct).collect(Collectors.toList());
+  public ResponseEntity<List<SagaEvent>> getSagaEventsBySagaID(UUID sagaId) {
+    val sagaOptional = this.getSagaService().findSagaById(sagaId);
+    return sagaOptional.map(saga -> ResponseEntity.ok(this.getSagaService().findAllSagaStates(saga).stream()
+      .map(SagaMapper.mapper::toEventStruct).collect(Collectors.toList())))
+      .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
   }
 
   /**

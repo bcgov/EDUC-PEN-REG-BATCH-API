@@ -301,7 +301,7 @@ public class PenRequestBatchSagaControllerTest extends BasePenRegAPITest {
   public void testReadSagaEvents_givenSagaDoesntExist_shouldReturnStatusNotFound() throws Exception {
     this.mockMvc.perform(get("/api/v1/pen-request-batch-saga/{sagaId}/saga-events", UUID.randomUUID())
       .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_READ_SAGA")))
-      .contentType(APPLICATION_JSON)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(0)));
+      .contentType(APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound());
   }
 
   @Test

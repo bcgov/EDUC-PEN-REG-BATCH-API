@@ -100,7 +100,7 @@ public interface PenRequestBatchSagaEndpoint {
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK."), @ApiResponse(responseCode = "404", description = "Not Found.")})
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to retrieve all saga events by its ID (GUID).", description = "Endpoint to retrieve all saga events by its ID (GUID).")
-  List<SagaEvent> getSagaEventsBySagaID(@PathVariable UUID sagaId);
+  ResponseEntity<List<SagaEvent>> getSagaEventsBySagaID(@PathVariable UUID sagaId);
 
   @PutMapping("/{sagaId}")
   @PreAuthorize("hasAuthority('SCOPE_PEN_REQUEST_BATCH_WRITE_SAGA')")
