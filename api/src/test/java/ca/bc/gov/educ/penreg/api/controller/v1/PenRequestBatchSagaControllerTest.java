@@ -355,6 +355,21 @@ public class PenRequestBatchSagaControllerTest extends BasePenRegAPITest {
       .contentType(APPLICATION_JSON)).andDo(print()).andExpect(status().isConflict());
   }
 
+  @Test
+  public void testUpdateSaga_givenValidData_shouldReturnOk() throws Exception {
+    final var sagaFromDB = this.sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", "Test", UUID.fromString(this.getPenRequestBatchStudentID),
+      UUID.fromString(this.penRequestBatchID));
+    val nano = sagaFromDB.getUpdateDate().getNano();
+    val divide = sagaFromDB.getUpdateDate().getNano()/1000.00;
+    val round = Math.round(sagaFromDB.getUpdateDate().getNano()/1000.00);
+    val test = Math.round(sagaFromDB.getUpdateDate().getNano()/1000.00)*1000;
+
+    sagaFromDB.setUpdateDate(sagaFromDB.getUpdateDate().withNano((int)Math.round(sagaFromDB.getUpdateDate().getNano()/1000.00)*1000)); //db limits precision, so need to adjust
+    this.mockMvc.perform(put("/api/v1/pen-request-batch-saga/{sagaId}", sagaFromDB.getSagaId()).content(JsonUtil.mapper.writeValueAsBytes(mapper.toStruct(sagaFromDB)))
+      .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_WRITE_SAGA")))
+      .contentType(APPLICATION_JSON)).andDo(print()).andExpect(status().isOk());
+  }
+
   private Saga createMockSaga() {
     return Saga.builder().sagaId(UUID.randomUUID()).payload("test").updateDate(LocalDateTime.now().toString()).build();
   }
