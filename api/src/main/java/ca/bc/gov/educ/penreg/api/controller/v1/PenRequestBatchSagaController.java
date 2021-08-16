@@ -8,10 +8,7 @@ import ca.bc.gov.educ.penreg.api.exception.SagaRuntimeException;
 import ca.bc.gov.educ.penreg.api.filter.SagaFilterSpecs;
 import ca.bc.gov.educ.penreg.api.mappers.v1.ArchiveAndReturnSagaResponseMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.SagaMapper;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultiplePen;
-import ca.bc.gov.educ.penreg.api.struct.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.Orchestrator;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.BasePenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
@@ -50,7 +47,6 @@ public class PenRequestBatchSagaController extends PaginatedController implement
   @Getter(PRIVATE)
   private final SagaService sagaService;
 
-  private final PenRequestBatchStudentRepository penRequestBatchStudentRepository;
   /**
    * The Handlers.
    */
@@ -68,9 +64,8 @@ public class PenRequestBatchSagaController extends PaginatedController implement
   private final SagaFilterSpecs sagaFilterSpecs;
 
   @Autowired
-  public PenRequestBatchSagaController(final SagaService sagaService, final List<Orchestrator> orchestrators, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final SagaFilterSpecs sagaFilterSpecs) {
+  public PenRequestBatchSagaController(final SagaService sagaService, final List<Orchestrator> orchestrators, final SagaFilterSpecs sagaFilterSpecs) {
     this.sagaService = sagaService;
-    this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
     this.sagaFilterSpecs = sagaFilterSpecs;
     orchestrators.forEach(orchestrator -> this.orchestratorMap.put(orchestrator.getSagaName(), orchestrator));
     log.info("'{}' Saga Orchestrators are loaded.", String.join(",", this.orchestratorMap.keySet()));
@@ -101,13 +96,9 @@ public class PenRequestBatchSagaController extends PaginatedController implement
 
   @Override
   public ResponseEntity<List<ArchiveAndReturnSagaResponse>> archiveAndReturnAllFiles(final PenRequestBatchArchiveAndReturnAllSagaData penRequestBatchArchiveAndReturnAllSagaData) {
-    val penRequestBatchIDs = penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchArchiveAndReturnSagaData()
-      .stream().map(PenRequestBatchArchiveAndReturnSagaData::getPenRequestBatchID).collect(Collectors.toList());
-    final List<PenRequestBatchMultiplePen> recordWithMultiples = this.penRequestBatchStudentRepository.findBatchFilesWithMultipleAssignedPens(penRequestBatchIDs);
-    if (!recordWithMultiples.isEmpty()) {
-      final List<ArchiveAndReturnSagaResponse> errorResponse = new ArrayList<>();
-      recordWithMultiples.forEach(el -> errorResponse.add(ArchiveAndReturnSagaResponse.builder().errorMessage("Unable to archive submission number# " + el.getSubmissionNumber() + " due to multiple records assigned the same PEN.").build()));
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    val errorWithDupPenAssigned = this.sagaService.findDuplicatePenAssignedToDiffPenRequestInSameBatch(penRequestBatchArchiveAndReturnAllSagaData);
+    if (!errorWithDupPenAssigned.isEmpty()) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorWithDupPenAssigned);
     }
     return this.processBatchRequest(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA, penRequestBatchArchiveAndReturnAllSagaData);
   }
