@@ -3,7 +3,9 @@ package ca.bc.gov.educ.penreg.api.mappers.v1;
 import ca.bc.gov.educ.penreg.api.mappers.LocalDateTimeMapper;
 import ca.bc.gov.educ.penreg.api.mappers.UUIDMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
+import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 /**
@@ -31,4 +33,7 @@ public interface SagaMapper {
    * @return the saga
    */
   Saga toModel(ca.bc.gov.educ.penreg.api.struct.v1.Saga struct);
+
+  @Mapping(target = "sagaId", source = "saga.sagaId")
+  ca.bc.gov.educ.penreg.api.struct.v1.SagaEvent toEventStruct(SagaEvent sagaEvent);
 }
