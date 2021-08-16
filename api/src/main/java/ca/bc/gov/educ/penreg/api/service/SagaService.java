@@ -1,9 +1,14 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultiplePen;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
+import ca.bc.gov.educ.penreg.api.struct.v1.ArchiveAndReturnSagaResponse;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -22,12 +27,10 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventType.INITIATED;
 import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.STARTED;
@@ -49,17 +52,23 @@ public class SagaService {
    */
   @Getter(PRIVATE)
   private final SagaEventRepository sagaEventRepository;
+  /**
+   * The Pen request batch student repository.
+   */
+  private final PenRequestBatchStudentRepository penRequestBatchStudentRepository;
 
   /**
    * Instantiates a new Saga service.
    *
-   * @param sagaRepository      the saga repository
-   * @param sagaEventRepository the saga event repository
+   * @param sagaRepository                   the saga repository
+   * @param sagaEventRepository              the saga event repository
+   * @param penRequestBatchStudentRepository the pen request batch student repository
    */
   @Autowired
-  public SagaService(final SagaRepository sagaRepository, final SagaEventRepository sagaEventRepository) {
+  public SagaService(final SagaRepository sagaRepository, final SagaEventRepository sagaEventRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository) {
     this.sagaRepository = sagaRepository;
     this.sagaEventRepository = sagaEventRepository;
+    this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
   }
 
 
@@ -128,20 +137,40 @@ public class SagaService {
    * Find by pen request batch student id optional.
    *
    * @param penRequestBatchStudentID the pen request batch student id
+   * @param sagaName                 the saga name
    * @return the list
    */
   public List<Saga> findByPenRequestBatchStudentIDAndSagaName(final UUID penRequestBatchStudentID, final String sagaName) {
     return this.getSagaRepository().findByPenRequestBatchStudentIDAndSagaName(penRequestBatchStudentID, sagaName);
   }
 
+  /**
+   * Find all by pen request batch student id and status in list.
+   *
+   * @param penRequestBatchStudentID the pen request batch student id
+   * @param statuses                 the statuses
+   * @return the list
+   */
   public List<Saga> findAllByPenRequestBatchStudentIDAndStatusIn(final UUID penRequestBatchStudentID, final List<String> statuses) {
     return this.getSagaRepository().findAllByPenRequestBatchStudentIDAndStatusIn(penRequestBatchStudentID, statuses);
   }
 
+  /**
+   * Find all by pen request batch id in and status in list.
+   *
+   * @param penRequestBatchIDs the pen request batch i ds
+   * @param statuses           the statuses
+   * @return the list
+   */
   public List<Saga> findAllByPenRequestBatchIDInAndStatusIn(final List<UUID> penRequestBatchIDs, final List<String> statuses) {
     return this.getSagaRepository().findAllByPenRequestBatchIDInAndStatusIn(penRequestBatchIDs, statuses);
   }
 
+  /**
+   * Update attached entity during saga process.
+   *
+   * @param saga the saga
+   */
   @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void updateAttachedEntityDuringSagaProcess(final Saga saga) {
@@ -187,8 +216,8 @@ public class SagaService {
    * @return the saga
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public List<Saga> createMultipleBatchSagaRecordsInDB(String sagaName, String userName, List<Pair<UUID, String>> payloads) {
-    List<Saga> sagas = new ArrayList<>();
+  public List<Saga> createMultipleBatchSagaRecordsInDB(final String sagaName, final String userName, final List<Pair<UUID, String>> payloads) {
+    final List<Saga> sagas = new ArrayList<>();
     payloads.forEach(payloadPair -> sagas.add(
       Saga.builder()
         .payload(payloadPair.getSecond())
@@ -202,7 +231,7 @@ public class SagaService {
         .updateDate(LocalDateTime.now())
         .build()));
 
-    return getSagaRepository().saveAll(sagas);
+    return this.getSagaRepository().saveAll(sagas);
   }
 
   /**
@@ -224,5 +253,23 @@ public class SagaService {
         throw new CompletionException(ex);
       }
     });
+  }
+
+  /**
+   * Find duplicate pen assigned to diff pen request in same batch list.
+   *
+   * @param penRequestBatchArchiveAndReturnAllSagaData the pen request batch archive and return all saga data
+   * @return the list ArchiveAndReturnSagaResponse with error message.
+   */
+  public List<ArchiveAndReturnSagaResponse> findDuplicatePenAssignedToDiffPenRequestInSameBatch(final PenRequestBatchArchiveAndReturnAllSagaData penRequestBatchArchiveAndReturnAllSagaData) {
+    val penRequestBatchIDs = penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchArchiveAndReturnSagaData()
+      .stream().map(PenRequestBatchArchiveAndReturnSagaData::getPenRequestBatchID).collect(Collectors.toList());
+    final List<PenRequestBatchMultiplePen> recordWithMultiples = this.penRequestBatchStudentRepository.findBatchFilesWithMultipleAssignedPens(penRequestBatchIDs);
+    if (!recordWithMultiples.isEmpty()) {
+      final List<ArchiveAndReturnSagaResponse> errorResponse = new ArrayList<>();
+      recordWithMultiples.forEach(el -> errorResponse.add(ArchiveAndReturnSagaResponse.builder().errorMessage("Unable to archive submission number# " + el.getSubmissionNumber() + " due to multiple records assigned the same PEN.").build()));
+      return errorResponse;
+    }
+    return Collections.emptyList();
   }
 }

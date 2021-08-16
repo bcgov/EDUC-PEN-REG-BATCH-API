@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultiplePen;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -71,4 +72,8 @@ public interface PenRequestBatchStudentRepository extends JpaRepository<PenReque
   List<PenRequestBatchStudentEntity> findAllPenRequestBatchStudentsForGivenCriteria(@Param("mincode") String mincode,
                                                                                     @Param("penRequestBatchStatusCode") String penRequestBatchStatusCode, @Param("startDate") LocalDateTime startDate, List<String> penRequestBatchStudentStatusCodes);
 
+
+  @Query(value = "SELECT PenRequestBatchEntity.SUBMISSION_NO as submissionNumber FROM PEN_REQUEST_BATCH PenRequestBatchEntity WHERE EXISTS(\n" +
+    "(SELECT PEN_REQUEST_BATCH_ID as penRequestBatchID, ASSIGNED_PEN as assignedPen, COUNT(*) as count FROM PEN_REQUEST_BATCH_STUDENT PenRequestBatchStudentEntity WHERE PenRequestBatchStudentEntity.ASSIGNED_PEN IS NOT NULL AND PenRequestBatchStudentEntity.PEN_REQUEST_BATCH_ID = PenRequestBatchEntity.PEN_REQUEST_BATCH_ID AND PenRequestBatchStudentEntity.PEN_REQUEST_BATCH_ID IN :batchIds GROUP BY PEN_REQUEST_BATCH_ID, ASSIGNED_PEN HAVING COUNT(*) > 1))", nativeQuery = true)
+  List<PenRequestBatchMultiplePen> findBatchFilesWithMultipleAssignedPens(@Param("batchIds") List<UUID> batchIds);
 }

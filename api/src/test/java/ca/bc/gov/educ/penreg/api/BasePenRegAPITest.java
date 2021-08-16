@@ -16,7 +16,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 @AutoConfigureMockMvc
 public abstract class BasePenRegAPITest {
   @Autowired
-  private PenRequestBatchTestUtils penRequestBatchTestUtils;
+  protected PenRequestBatchTestUtils penRequestBatchTestUtils;
 
   @Before
   public void resetState() {
