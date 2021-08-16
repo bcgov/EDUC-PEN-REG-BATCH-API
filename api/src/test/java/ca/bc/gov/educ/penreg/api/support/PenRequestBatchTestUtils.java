@@ -10,7 +10,6 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.*;
 import ca.bc.gov.educ.penreg.api.repository.*;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
@@ -19,6 +18,7 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.val;
 import net.sf.flatpack.DataSet;
 import net.sf.flatpack.DefaultParserFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -150,16 +150,16 @@ public class PenRequestBatchTestUtils {
    * Create batch students list.
    *
    * @param penRequestBatchRepository the PenRequestBatchRepository
-   * @param batchFileName the json file of batch data
-   * @param batchStudentFileName the json file of batch student data
-   * @param total the total
-   * @param batchConsumer the function to make changes on the batch entity
+   * @param batchFileName             the json file of batch data
+   * @param batchStudentFileName      the json file of batch student data
+   * @param total                     the total
+   * @param batchConsumer             the function to make changes on the batch entity
    * @return the list
    */
   public static List<PenRequestBatchEntity> createBatchStudents(final PenRequestBatchRepository penRequestBatchRepository, final String batchFileName,
                                                                 final String batchStudentFileName, final Integer total, final Consumer<PenRequestBatchEntity> batchConsumer) throws java.io.IOException {
     final File file = new File(
-        Objects.requireNonNull(PenRequestBatchTestUtils.class.getClassLoader().getResource(batchFileName)).getFile()
+      Objects.requireNonNull(PenRequestBatchTestUtils.class.getClassLoader().getResource(batchFileName)).getFile()
     );
     final List<PenRequestBatch> entities = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
@@ -167,7 +167,7 @@ public class PenRequestBatchTestUtils {
 
     for (int i = 0; i < total && i < models.size(); i++) {
       final File student = new File(
-          Objects.requireNonNull(PenRequestBatchTestUtils.class.getClassLoader().getResource(batchStudentFileName)).getFile()
+        Objects.requireNonNull(PenRequestBatchTestUtils.class.getClassLoader().getResource(batchStudentFileName)).getFile()
       );
       final List<PenRequestBatchStudentEntity> studentEntities = new ObjectMapper().readValue(student, new TypeReference<>() {
       });
@@ -190,19 +190,19 @@ public class PenRequestBatchTestUtils {
     final List<Student> students = new ArrayList<>();
     for (final PenRequestBatchStudentEntity penRequestBatchStudentEntity : penRequestBatchEntity.getPenRequestBatchStudentEntities()) {
       students.add(Student.builder()
-          .mincode(penRequestBatchEntity.getMincode())
-          .genderCode(penRequestBatchStudentEntity.getGenderCode())
-          .gradeCode(penRequestBatchStudentEntity.getGradeCode())
-          .legalFirstName(penRequestBatchStudentEntity.getLegalFirstName())
-          .legalLastName(penRequestBatchStudentEntity.getLegalLastName())
-          .legalMiddleNames(penRequestBatchStudentEntity.getLegalMiddleNames())
-          .dob(penRequestBatchStudentEntity.getDob() == null || penRequestBatchStudentEntity.getDob().isBlank() ? "" : LocalDate.parse(penRequestBatchStudentEntity.getDob(), DateTimeFormatter.ofPattern("yyyyMMdd")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-          .localID(penRequestBatchStudentEntity.getLocalID())
-          .pen(penRequestBatchStudentEntity.getAssignedPEN())
+        .mincode(penRequestBatchEntity.getMincode())
+        .genderCode(penRequestBatchStudentEntity.getGenderCode())
+        .gradeCode(penRequestBatchStudentEntity.getGradeCode())
+        .legalFirstName(penRequestBatchStudentEntity.getLegalFirstName())
+        .legalLastName(penRequestBatchStudentEntity.getLegalLastName())
+        .legalMiddleNames(penRequestBatchStudentEntity.getLegalMiddleNames())
+        .dob(penRequestBatchStudentEntity.getDob() == null || penRequestBatchStudentEntity.getDob().isBlank() ? "" : LocalDate.parse(penRequestBatchStudentEntity.getDob(), DateTimeFormatter.ofPattern("yyyyMMdd")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+        .localID(penRequestBatchStudentEntity.getLocalID())
+        .pen(penRequestBatchStudentEntity.getAssignedPEN())
         .studentID(UUID.randomUUID().toString())
         .build());
-      if(penRequestBatchStudentEntity.getStudentID()!=null){
-        students.get(students.size()-1).setStudentID(penRequestBatchStudentEntity.getStudentID().toString());
+      if (penRequestBatchStudentEntity.getStudentID() != null) {
+        students.get(students.size() - 1).setStudentID(penRequestBatchStudentEntity.getStudentID().toString());
       }
     }
     return students;
@@ -213,37 +213,37 @@ public class PenRequestBatchTestUtils {
     return createBatchStudents(penRequestBatchRepository, batchFileName, batchStudentFileName, total, null);
   }
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void createBatchStudentsInSingleTransaction(final PenRequestBatchRepository penRequestBatchRepository, final String batchFileName,
-                                                         final String batchStudentFileName, final Integer total, final Consumer<PenRequestBatchEntity> batchConsumer) throws java.io.IOException {
-    createBatchStudents(penRequestBatchRepository, batchFileName, batchStudentFileName, total, batchConsumer);
-  }
-
   public static List<Saga> createSagaRecords(final SagaRepository sagaRepository, final List<PenRequestBatchEntity> batches) {
     final var studentSagaRecords = batches.stream().flatMap(batch ->
-        batch.getPenRequestBatchStudentEntities().stream().map(student ->
-            Saga
-                .builder()
-                .payload("")
-                .penRequestBatchStudentID(student.getPenRequestBatchStudentID())
-                .penRequestBatchID(batch.getPenRequestBatchID())
-                .sagaName(SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString())
-                .status(COMPLETED.toString())
-                .sagaState(MARK_SAGA_COMPLETE.toString())
-                .createDate(LocalDateTime.now())
-                .createUser(PEN_REQUEST_BATCH_API)
-                .updateUser(PEN_REQUEST_BATCH_API)
-                .updateDate(LocalDateTime.now())
-                .build()
-        )).collect(toList());
+      batch.getPenRequestBatchStudentEntities().stream().map(student ->
+        Saga
+          .builder()
+          .payload("")
+          .penRequestBatchStudentID(student.getPenRequestBatchStudentID())
+          .penRequestBatchID(batch.getPenRequestBatchID())
+          .sagaName(SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString())
+          .status(COMPLETED.toString())
+          .sagaState(MARK_SAGA_COMPLETE.toString())
+          .createDate(LocalDateTime.now())
+          .createUser(PEN_REQUEST_BATCH_API)
+          .updateUser(PEN_REQUEST_BATCH_API)
+          .updateDate(LocalDateTime.now())
+          .build()
+      )).collect(toList());
     sagaRepository.saveAll(studentSagaRecords);
     return studentSagaRecords;
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void createBatchStudentsInSingleTransaction(final PenRequestBatchRepository penRequestBatchRepository, final String batchFileName,
+                                                     final String batchStudentFileName, final Integer total, final Consumer<PenRequestBatchEntity> batchConsumer) throws java.io.IOException {
+    createBatchStudents(penRequestBatchRepository, batchFileName, batchStudentFileName, total, batchConsumer);
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public String createBatchStudentsFromFile(final String blobFileName, final String studentStatusCode) throws java.io.IOException,
     FileUnProcessableException {
-    return createBatchStudentsFromFile(blobFileName, studentStatusCode, "10210518");
+    return this.createBatchStudentsFromFile(blobFileName, studentStatusCode, "10210518");
   }
 
   /**
@@ -254,7 +254,7 @@ public class PenRequestBatchTestUtils {
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public String createBatchStudentsFromFile(final String blobFileName, final String studentStatusCode, final String mincode) throws java.io.IOException,
-      FileUnProcessableException {
+    FileUnProcessableException {
     try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
       final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource(blobFileName)).getFile());
       final byte[] bFile = Files.readAllBytes(file.toPath());
@@ -268,9 +268,9 @@ public class PenRequestBatchTestUtils {
       assertThat(batchFile.getBatchFileHeader()).isNotNull();
       final String submissionNumber = ("T" + randomNum).substring(0, 8);
       final var tsw =
-          PENWebBlobEntity.builder().penWebBlobId(1L).mincode(mincode).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName(blobFileName).fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(submissionNumber).build();
+        PENWebBlobEntity.builder().penWebBlobId(1L).mincode(mincode).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName(blobFileName).fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(submissionNumber).build();
       final PenRequestBatchEntity entity =
-          PenRequestBatchFileMapper.mapper.toPenReqBatchEntityLoaded(tsw, batchFile); // batch file can be processed
+        PenRequestBatchFileMapper.mapper.toPenReqBatchEntityLoaded(tsw, batchFile); // batch file can be processed
       // further and persisted.
       var counter = 1;
       for (final var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.
@@ -280,8 +280,8 @@ public class PenRequestBatchTestUtils {
         entity.getPenRequestBatchStudentEntities().add(penRequestBatchStudentEntity);
       }
       final PenRequestBatchHistoryEntity penRequestBatchHistory =
-          PenRequestBatchHistoryMapper.mapper.toModelFromBatch(entity,
-              PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
+        PenRequestBatchHistoryMapper.mapper.toModelFromBatch(entity,
+          PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
       entity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
       this.repository.save(entity);
       return submissionNumber;
@@ -317,11 +317,11 @@ public class PenRequestBatchTestUtils {
     penRequestBatchStudentEntity.setGenderCode("M");
     penRequestBatchStudentEntity.setLocalID("20345678");
     penRequestBatchStudentEntity.setGradeCode("01");
-    if(penRequestBatchStudentStatusCode.equals(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode())) {
+    if (penRequestBatchStudentStatusCode.equals(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode())) {
       penRequestBatchStudentEntity.setAssignedPEN("123456789");
       penRequestBatchStudentEntity.setStudentID(UUID.randomUUID());
-    } else if(penRequestBatchStudentStatusCode.equals(PenRequestBatchStudentStatusCodes.ERROR.getCode())) {
-      var issueEntity = PenRequestBatchStudentValidationIssueEntity.builder()
+    } else if (penRequestBatchStudentStatusCode.equals(PenRequestBatchStudentStatusCodes.ERROR.getCode())) {
+      final var issueEntity = PenRequestBatchStudentValidationIssueEntity.builder()
         .penRequestBatchStudentEntity(penRequestBatchStudentEntity)
         .penRequestBatchValidationFieldCode(PenRequestBatchStudentValidationFieldCode.LEGAL_FIRST.getCode())
         .penRequestBatchValidationIssueSeverityCode(PenRequestBatchStudentValidationIssueSeverityCode.ERROR.toString())
@@ -363,18 +363,25 @@ public class PenRequestBatchTestUtils {
       .penRequestBatchID(entity.getPenRequestBatchID()).schoolName("Cataline").build());
 
     final var payload = " {\n" +
-        "    \"createUser\": \"test\",\n" +
-        "    \"updateUser\": \"test\"\n" +
-        "  }";
+      "    \"createUser\": \"test\",\n" +
+      "    \"updateUser\": \"test\"\n" +
+      "  }";
 
     final PenRequestBatchArchiveAndReturnAllSagaData sagaData = JsonUtil.getJsonObjectFromString(PenRequestBatchArchiveAndReturnAllSagaData.class, payload);
     sagaData.setPenRequestBatchArchiveAndReturnSagaData(penRequestBatchIDList);
     return this.sagaService.createMultipleBatchSagaRecordsInDB(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString(), "Test",
-        List.of(Pair.of(entity.getPenRequestBatchID(), JsonUtil.getJsonStringFromObject(penRequestBatchIDList.get(0)))));
+      List.of(Pair.of(entity.getPenRequestBatchID(), JsonUtil.getJsonStringFromObject(penRequestBatchIDList.get(0)))));
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public PENWebBlobEntity savePenWebBlob(final PENWebBlobEntity penWebBlobEntity) {
     return this.penWebBlobRepository.save(penWebBlobEntity);
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void updateAllStudentRecordsToSameAssignedPen() {
+    val students = this.studentRepository.findAll();
+    this.studentRepository.saveAll(students.stream().peek(el -> el.setAssignedPEN("123456789")).collect(Collectors.toList()));
+
   }
 }

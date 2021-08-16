@@ -156,14 +156,25 @@ public class EventTaskSchedulerAsyncService {
    * @param penRequestBatchEntity the pen request batch entity
    * @param redisKey              the redis key
    */
-  private void checkAndUpdateStatusToActiveOrArchived(final ArrayList<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey) {
+  private void checkAndUpdateStatusToActiveOrArchived(final List<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey) {
 
     final var studentSagaRecords = this.getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatchEntity.getPenRequestBatchID(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString());
     final var studentEntities = penRequestBatchEntity.getPenRequestBatchStudentEntities();
     long dupCount = 0;
     long rptCount = 0;
     long newPenAndMatchCount = 0;
+    boolean isSamePenAssignedToMultiplePRForSameBatch = false;
+    // https://www.baeldung.com/java-hashset-arraylist-contains-performance
+    // HashSet is used for performance reasons,please check the above link for detailed info. "As a conclusion, we can learn, that the contains() method works faster in HashSet compared to an ArrayList."
+    final Set<String> pens = new HashSet<>();
     for (val student : studentEntities) {
+      val assignedPen = StringUtils.trim(student.getAssignedPEN());
+      if (!isSamePenAssignedToMultiplePRForSameBatch && StringUtils.isNotBlank(assignedPen)) {
+        if (pens.contains(assignedPen)) {
+          isSamePenAssignedToMultiplePRForSameBatch = true;
+        }
+        pens.add(assignedPen);
+      }
       if (PenRequestBatchStudentStatusCodes.DUPLICATE.getCode().equals(student.getPenRequestBatchStudentStatusCode())) {
         dupCount++;
       } else if (PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(student.getPenRequestBatchStudentStatusCode())) {
@@ -174,28 +185,36 @@ public class EventTaskSchedulerAsyncService {
       }
     }
     if (penRequestBatchEntity.getStudentCount() == (rptCount + dupCount)) { // all records are either repeat or
-      // duplicates, need to be marked active.
-      this.setDifferentCounts(penRequestBatchEntity, studentEntities);
-      this.updatePenRequestBatchStatus(penReqBatchEntities, penRequestBatchEntity, redisKey, PenRequestBatchStatusCodes.ACTIVE.getCode());
+      this.handleAllDuplicateOrRepeat(penReqBatchEntities, penRequestBatchEntity, redisKey, studentEntities);
     } else if (!studentSagaRecords.isEmpty()) {
-      final long count = studentSagaRecords.stream().filter(saga -> saga.getStatus().equalsIgnoreCase(SagaStatusEnum.COMPLETED.toString())).count();
-      if (count == studentSagaRecords.size()) { // All records are processed mark batch to active.
-        this.setDifferentCounts(penRequestBatchEntity, studentEntities);
-        if (newPenAndMatchCount == count) { // all records are either New PEN by System or Matched by System
-          var sagas = this.getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatchEntity.getPenRequestBatchID(), PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString());
-          if (sagas.size() == 0) {
-            this.startArchiveAndReturnSaga(penRequestBatchEntity);
-          } else {
-            log.warn("Archive and return saga has already started :: for pen request batch :: {} ", penRequestBatchEntity.getPenRequestBatchID());
-          }
+      this.updateBasedOnCompletedSagas(penReqBatchEntities, penRequestBatchEntity, redisKey, studentSagaRecords, studentEntities, newPenAndMatchCount, isSamePenAssignedToMultiplePRForSameBatch);
+    }
+  }
+
+  private void updateBasedOnCompletedSagas(final List<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey, final List<Saga> studentSagaRecords, final Set<PenRequestBatchStudentEntity> studentEntities, final long newPenAndMatchCount, final boolean isSamePenAssignedToMultiplePRForSameBatch) {
+    final long count = studentSagaRecords.stream().filter(saga -> saga.getStatus().equalsIgnoreCase(SagaStatusEnum.COMPLETED.toString())).count();
+    if (count == studentSagaRecords.size()) { // All records are processed mark batch to active.
+      this.setDifferentCounts(penRequestBatchEntity, studentEntities);
+      if (newPenAndMatchCount == count && !isSamePenAssignedToMultiplePRForSameBatch) { // all records are either New PEN by System or Matched by System and same pen is not assigned to more than one student for the batch.
+        final var sagas = this.getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatchEntity.getPenRequestBatchID(), PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString());
+        if (sagas.size() == 0) {
+          this.startArchiveAndReturnSaga(penRequestBatchEntity);
         } else {
-          this.updatePenRequestBatchStatus(penReqBatchEntities, penRequestBatchEntity, redisKey, PenRequestBatchStatusCodes.ACTIVE.getCode());
+          log.warn("Archive and return saga has already started :: for pen request batch :: {} ", penRequestBatchEntity.getPenRequestBatchID());
         }
+      } else {
+        this.updatePenRequestBatchStatus(penReqBatchEntities, penRequestBatchEntity, redisKey, PenRequestBatchStatusCodes.ACTIVE.getCode());
       }
     }
   }
 
-  private void updatePenRequestBatchStatus(final ArrayList<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey, final String statusCode) {
+  private void handleAllDuplicateOrRepeat(final List<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey, final Set<PenRequestBatchStudentEntity> studentEntities) {
+    // duplicates, need to be marked active.
+    this.setDifferentCounts(penRequestBatchEntity, studentEntities);
+    this.updatePenRequestBatchStatus(penReqBatchEntities, penRequestBatchEntity, redisKey, PenRequestBatchStatusCodes.ACTIVE.getCode());
+  }
+
+  private void updatePenRequestBatchStatus(final List<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey, final String statusCode) {
     penRequestBatchEntity.setPenRequestBatchStatusCode(statusCode);
     final PenRequestBatchHistoryEntity penRequestBatchHistory = historyMapper.toModelFromBatch(penRequestBatchEntity, PenRequestBatchEventCodes.STATUS_CHANGED.getCode());
     penRequestBatchEntity.getPenRequestBatchHistoryEntities().add(penRequestBatchHistory);
@@ -205,18 +224,18 @@ public class EventTaskSchedulerAsyncService {
   }
 
   private void startArchiveAndReturnSaga(final PenRequestBatchEntity penRequestBatchEntity) {
-    var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder()
+    final var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatchID(penRequestBatchEntity.getPenRequestBatchID())
       .schoolName(penRequestBatchEntity.getSchoolName())
       .createUser(penRequestBatchEntity.getCreateUser())
       .build();
 
-    var orchestrator = getSagaOrchestrators().get(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString());
+    final var orchestrator = this.getSagaOrchestrators().get(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString());
     try {
-      var saga = orchestrator.createSaga(JsonUtil.getJsonStringFromObject(sagaData),
+      final var saga = orchestrator.createSaga(JsonUtil.getJsonStringFromObject(sagaData),
         null, penRequestBatchEntity.getPenRequestBatchID(), sagaData.getCreateUser());
       orchestrator.startSaga(saga);
-    } catch (JsonProcessingException e) {
+    } catch (final JsonProcessingException e) {
       log.error("JsonProcessingException while startArchiveAndReturnSaga", e);
       throw new SagaRuntimeException(e.getMessage());
     }
