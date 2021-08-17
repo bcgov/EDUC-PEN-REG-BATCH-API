@@ -359,4 +359,12 @@ public interface PenRequestBatchAPIEndpoint {
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to retrieve the validation issues of a request student.", description = "Endpoint to retrieve the validation issues of a request student.")
   ResponseEntity<List<PenRequestBatchStudentValidationIssue>> findAllPenRequestBatchValidationIssuesByStudentID(@PathVariable UUID penRequestBatchStudentID);
+
+  @PostMapping("/archive")
+  @PreAuthorize("hasAuthority('SCOPE_WRITE_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "400", description = "BAD REQUEST")})
+  @Transactional
+  @Tag(name = "Endpoint to archive multiple batch files in a single transaction.", description = "Endpoint to archive multiple batch files in a single transaction")
+  @ArraySchema(schema = @Schema(name = "PenRequestBatch", implementation = PenRequestBatch.class))
+  ResponseEntity<List<PenRequestBatch>> archiveBatchFiles(List<PenRequestBatch> penRequestBatches);
 }

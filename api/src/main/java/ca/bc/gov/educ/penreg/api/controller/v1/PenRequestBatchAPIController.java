@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchAPIEndpoint;
@@ -182,11 +183,6 @@ public class PenRequestBatchAPIController extends PaginatedController implements
    */
   @Override
   public ResponseEntity<PenRequestBatch> updatePenRequestBatch(final PenRequestBatch penRequestBatch, final UUID penRequestBatchID) {
-    val errorWithDupPenAssigned = this.sagaService.findDuplicatePenAssignedToDiffPRInSameBatchByBatchIds(List.of(penRequestBatchID));
-    if (errorWithDupPenAssigned.isPresent()) {
-      final ApiError error = ApiError.builder().timestamp(LocalDateTime.now()).message(errorWithDupPenAssigned.get()).status(BAD_REQUEST).build();
-      throw new InvalidPayloadException(error);
-    }
     final var sagaInProgress = !this.getSagaService().findAllByPenRequestBatchIDInAndStatusIn(List.of(penRequestBatchID), this.getStatusesFilter()).isEmpty();
     if (sagaInProgress) {
       return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -504,6 +500,31 @@ public class PenRequestBatchAPIController extends PaginatedController implements
   @Override
   public ResponseEntity<List<PenRequestBatchStudentValidationIssue>> findAllPenRequestBatchValidationIssuesByStudentID(final UUID penRequestBatchStudentID) {
     return ResponseEntity.ok(this.penRequestBatchStudentValidationIssueService.findAllValidationIssuesByPRBStudentID(penRequestBatchStudentID).stream().map(PenRequestBatchStudentValidationIssueMapper.mapper::toStruct).collect(Collectors.toList()));
+  }
+
+  @Override
+  public ResponseEntity<List<PenRequestBatch>> archiveBatchFiles(final List<PenRequestBatch> penRequestBatches) {
+    val batchIds = penRequestBatches.stream().map(PenRequestBatch::getPenRequestBatchID).map(UUID::fromString).collect(Collectors.toList());
+    val errorWithDupPenAssigned = this.sagaService.findDuplicatePenAssignedToDiffPRInSameBatchByBatchIds(batchIds);
+    if (errorWithDupPenAssigned.isPresent()) {
+      final ApiError error = ApiError.builder().timestamp(LocalDateTime.now()).message(errorWithDupPenAssigned.get()).status(BAD_REQUEST).build();
+      throw new InvalidPayloadException(error);
+    }
+    final var sagaInProgress = !this.getSagaService().findAllByPenRequestBatchIDInAndStatusIn(batchIds, this.getStatusesFilter()).isEmpty();
+    if (sagaInProgress) {
+      return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
+    val penRequestBatchesFromDB = this.getService().findAllByBatchIds(batchIds);
+    if (penRequestBatchesFromDB.size() != batchIds.size()) {
+      final ApiError error = ApiError.builder().timestamp(LocalDateTime.now()).message("Invalid Batch Id provided in the payload.").status(BAD_REQUEST).build();
+      throw new InvalidPayloadException(error);
+    }
+    penRequestBatchesFromDB.forEach(el -> {
+      el.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.ARCHIVED.getCode());
+      el.setProcessDate(LocalDateTime.now());
+    });
+    this.getService().updateAllPenRequestBatchAttachedEntities(penRequestBatchesFromDB);
+    return ResponseEntity.ok(penRequestBatchesFromDB.stream().map(PenRequestBatchMapper.mapper::toStructure).collect(Collectors.toList()));
   }
 
   /**
