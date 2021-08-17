@@ -8,8 +8,11 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
+import ca.bc.gov.educ.penreg.api.struct.v1.Saga;
+import ca.bc.gov.educ.penreg.api.struct.v1.Search;
+import ca.bc.gov.educ.penreg.api.struct.v1.SearchCriteria;
+import ca.bc.gov.educ.penreg.api.struct.v1.ValueType;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
-import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,6 +33,7 @@ import java.util.stream.Collectors;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.*;
 import static ca.bc.gov.educ.penreg.api.struct.v1.Condition.AND;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -236,7 +240,7 @@ public class PenRequestBatchSagaControllerTest extends BasePenRegAPITest {
         .contentType(MediaType.APPLICATION_JSON)
         .accept(MediaType.APPLICATION_JSON)
         .content(this.placeholderMultiplePenRequestBatchActionsSagaData(ids)))
-      .andDo(print()).andExpect(status().isBadRequest()).andExpect(jsonPath("$", hasSize(2)));
+      .andDo(print()).andExpect(status().isBadRequest()).andExpect(jsonPath("$.message", is("Unable to archive submission number# T-534093 due to multiple records assigned the same PEN.,Unable to archive submission number# T-428469 due to multiple records assigned the same PEN.")));
   }
 
   @Test

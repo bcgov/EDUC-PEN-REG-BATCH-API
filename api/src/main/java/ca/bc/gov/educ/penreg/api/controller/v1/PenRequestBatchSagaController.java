@@ -4,7 +4,9 @@ import ca.bc.gov.educ.penreg.api.constants.SagaEnum;
 import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchSagaEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
+import ca.bc.gov.educ.penreg.api.exception.InvalidPayloadException;
 import ca.bc.gov.educ.penreg.api.exception.SagaRuntimeException;
+import ca.bc.gov.educ.penreg.api.exception.errors.ApiError;
 import ca.bc.gov.educ.penreg.api.filter.SagaFilterSpecs;
 import ca.bc.gov.educ.penreg.api.mappers.v1.ArchiveAndReturnSagaResponseMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.SagaMapper;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.*;
 import static lombok.AccessLevel.PRIVATE;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @RestController
 @Slf4j
@@ -97,8 +100,9 @@ public class PenRequestBatchSagaController extends PaginatedController implement
   @Override
   public ResponseEntity<List<ArchiveAndReturnSagaResponse>> archiveAndReturnAllFiles(final PenRequestBatchArchiveAndReturnAllSagaData penRequestBatchArchiveAndReturnAllSagaData) {
     val errorWithDupPenAssigned = this.sagaService.findDuplicatePenAssignedToDiffPenRequestInSameBatch(penRequestBatchArchiveAndReturnAllSagaData);
-    if (!errorWithDupPenAssigned.isEmpty()) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorWithDupPenAssigned);
+    if (errorWithDupPenAssigned.isPresent()) {
+      final ApiError error = ApiError.builder().timestamp(LocalDateTime.now()).message(errorWithDupPenAssigned.get()).status(BAD_REQUEST).build();
+      throw new InvalidPayloadException(error);
     }
     return this.processBatchRequest(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA, penRequestBatchArchiveAndReturnAllSagaData);
   }
@@ -144,30 +148,30 @@ public class PenRequestBatchSagaController extends PaginatedController implement
   /**
    * Find all saga events for a given saga id
    *
-   * @param sagaId  - the saga id
-   * @return        - the list of saga events
+   * @param sagaId - the saga id
+   * @return - the list of saga events
    */
   @Override
-  public ResponseEntity<List<SagaEvent>> getSagaEventsBySagaID(UUID sagaId) {
+  public ResponseEntity<List<SagaEvent>> getSagaEventsBySagaID(final UUID sagaId) {
     val sagaOptional = this.getSagaService().findSagaById(sagaId);
     return sagaOptional.map(saga -> ResponseEntity.ok(this.getSagaService().findAllSagaStates(saga).stream()
-      .map(SagaMapper.mapper::toEventStruct).collect(Collectors.toList())))
+        .map(SagaMapper.mapper::toEventStruct).collect(Collectors.toList())))
       .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
   }
 
   /**
    * Update saga
    *
-   * @param saga    - the saga
-   * @return        - the updated saga
+   * @param saga - the saga
+   * @return - the updated saga
    */
   @Override
   @Transactional
-  public ResponseEntity<Saga> updateSaga(Saga saga, UUID sagaId) {
-    var sagaOptional = getSagaService().findSagaById(sagaId);
-    if(sagaOptional.isPresent()) {
+  public ResponseEntity<Saga> updateSaga(final Saga saga, final UUID sagaId) {
+    final var sagaOptional = this.getSagaService().findSagaById(sagaId);
+    if (sagaOptional.isPresent()) {
       val sagaFromDB = sagaOptional.get();
-      if(!sagaMapper.toStruct(sagaFromDB).getUpdateDate().equals(saga.getUpdateDate())) {
+      if (!sagaMapper.toStruct(sagaFromDB).getUpdateDate().equals(saga.getUpdateDate())) {
         log.error("Updating saga failed. The saga has already been updated by another process :: " + saga.getSagaId());
         return ResponseEntity.status(HttpStatus.CONFLICT).build();
       }

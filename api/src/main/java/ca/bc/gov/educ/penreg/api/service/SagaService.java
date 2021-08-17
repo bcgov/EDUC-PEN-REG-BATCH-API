@@ -6,7 +6,6 @@ import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
-import ca.bc.gov.educ.penreg.api.struct.v1.ArchiveAndReturnSagaResponse;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import lombok.AccessLevel;
@@ -27,7 +26,10 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
@@ -261,15 +263,19 @@ public class SagaService {
    * @param penRequestBatchArchiveAndReturnAllSagaData the pen request batch archive and return all saga data
    * @return the list ArchiveAndReturnSagaResponse with error message.
    */
-  public List<ArchiveAndReturnSagaResponse> findDuplicatePenAssignedToDiffPenRequestInSameBatch(final PenRequestBatchArchiveAndReturnAllSagaData penRequestBatchArchiveAndReturnAllSagaData) {
+  public Optional<String> findDuplicatePenAssignedToDiffPenRequestInSameBatch(final PenRequestBatchArchiveAndReturnAllSagaData penRequestBatchArchiveAndReturnAllSagaData) {
     val penRequestBatchIDs = penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchArchiveAndReturnSagaData()
       .stream().map(PenRequestBatchArchiveAndReturnSagaData::getPenRequestBatchID).collect(Collectors.toList());
+    return this.findDuplicatePenAssignedToDiffPRInSameBatchByBatchIds(penRequestBatchIDs);
+  }
+
+  public Optional<String> findDuplicatePenAssignedToDiffPRInSameBatchByBatchIds(final List<UUID> penRequestBatchIDs) {
     final List<PenRequestBatchMultiplePen> recordWithMultiples = this.penRequestBatchStudentRepository.findBatchFilesWithMultipleAssignedPens(penRequestBatchIDs);
     if (!recordWithMultiples.isEmpty()) {
-      final List<ArchiveAndReturnSagaResponse> errorResponse = new ArrayList<>();
-      recordWithMultiples.forEach(el -> errorResponse.add(ArchiveAndReturnSagaResponse.builder().errorMessage("Unable to archive submission number# " + el.getSubmissionNumber() + " due to multiple records assigned the same PEN.").build()));
-      return errorResponse;
+      final List<String> errorResponse = new ArrayList<>();
+      recordWithMultiples.forEach(el -> errorResponse.add("Unable to archive submission number# " + el.getSubmissionNumber() + " due to multiple records assigned the same PEN."));
+      return Optional.of(String.join(",", errorResponse));
     }
-    return Collections.emptyList();
+    return Optional.empty();
   }
 }

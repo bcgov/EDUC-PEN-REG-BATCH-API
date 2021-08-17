@@ -6,7 +6,9 @@ import ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum;
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchAPIEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
+import ca.bc.gov.educ.penreg.api.exception.InvalidPayloadException;
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
+import ca.bc.gov.educ.penreg.api.exception.errors.ApiError;
 import ca.bc.gov.educ.penreg.api.filter.Associations;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchFilterSpecs;
 import ca.bc.gov.educ.penreg.api.filter.PenRegBatchStudentFilterSpecs;
@@ -56,6 +58,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static lombok.AccessLevel.PRIVATE;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 
 /**
@@ -179,6 +182,11 @@ public class PenRequestBatchAPIController extends PaginatedController implements
    */
   @Override
   public ResponseEntity<PenRequestBatch> updatePenRequestBatch(final PenRequestBatch penRequestBatch, final UUID penRequestBatchID) {
+    val errorWithDupPenAssigned = this.sagaService.findDuplicatePenAssignedToDiffPRInSameBatchByBatchIds(List.of(penRequestBatchID));
+    if (errorWithDupPenAssigned.isPresent()) {
+      final ApiError error = ApiError.builder().timestamp(LocalDateTime.now()).message(errorWithDupPenAssigned.get()).status(BAD_REQUEST).build();
+      throw new InvalidPayloadException(error);
+    }
     final var sagaInProgress = !this.getSagaService().findAllByPenRequestBatchIDInAndStatusIn(List.of(penRequestBatchID), this.getStatusesFilter()).isEmpty();
     if (sagaInProgress) {
       return ResponseEntity.status(HttpStatus.CONFLICT).build();
