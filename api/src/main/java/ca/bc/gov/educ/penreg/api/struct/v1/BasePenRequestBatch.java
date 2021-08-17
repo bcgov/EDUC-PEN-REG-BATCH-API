@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.struct.v1;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -15,6 +16,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuppressWarnings("squid:S1700")
+@ToString(callSuper = true)
 public abstract class BasePenRequestBatch {
   /**
    * The Pen request batch id.
