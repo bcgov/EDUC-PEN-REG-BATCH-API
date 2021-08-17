@@ -366,5 +366,5 @@ public interface PenRequestBatchAPIEndpoint {
   @Transactional
   @Tag(name = "Endpoint to archive multiple batch files in a single transaction.", description = "Endpoint to archive multiple batch files in a single transaction")
   @ArraySchema(schema = @Schema(name = "PenRequestBatch", implementation = PenRequestBatch.class))
-  ResponseEntity<List<PenRequestBatch>> archiveBatchFiles(List<PenRequestBatch> penRequestBatches);
+  ResponseEntity<List<PenRequestBatch>> archiveBatchFiles(@Validated @RequestBody List<PenRequestBatch> penRequestBatches);
 }
