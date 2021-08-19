@@ -227,7 +227,7 @@ if [ "$envValue" = "test" ]; then
   SCHEDULED_JOBS_MARK_PROCESSED_BATCHES_ACTIVE_CRON="-"
   SCHEDULED_JOBS_PROCESS_LOADED_BATCHES_FOR_REPEATS_CRON="-"
 fi
-
+# when it will be time for go live the value of SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON will be set to "0 0/10 18-23,00-05 * * *" so that it runs from 6PM to 6AM
 if [ "$envValue" = "prod" ]; then
   PEN_COORDINATOR_EMAIL=pens.coordinator@gov.bc.ca
   SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON="-"
