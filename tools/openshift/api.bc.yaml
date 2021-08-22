@@ -52,6 +52,9 @@ objects:
         type: Git
       strategy:
         dockerStrategy:
+          from:
+            kind: ImageStreamTag
+            name: mavensb:v2.4.3
           pullSecret:
             name: artifactory-creds
           env:
