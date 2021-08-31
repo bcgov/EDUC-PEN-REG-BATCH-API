@@ -261,7 +261,7 @@ public class PenRequestBatchSagaControllerTest extends BasePenRegAPITest {
     this.repository.saveAll(sagaEntities);
     final MvcResult result = this.mockMvc
       .perform(get("/api/v1/pen-request-batch-saga/paginated")
-        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_READ_SAGA")))
         .contentType(APPLICATION_JSON))
       .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(3)));
@@ -272,7 +272,7 @@ public class PenRequestBatchSagaControllerTest extends BasePenRegAPITest {
   public void testGetSagaPaginated_givenNoData_shouldReturnStatusOk() throws Exception {
     final MvcResult result = this.mockMvc
       .perform(get("/api/v1/pen-request-batch-saga/paginated")
-        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_READ_SAGA")))
         .contentType(APPLICATION_JSON))
       .andReturn();
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
@@ -307,7 +307,7 @@ public class PenRequestBatchSagaControllerTest extends BasePenRegAPITest {
 
     final MvcResult result = this.mockMvc
       .perform(get("/api/v1/pen-request-batch-saga/paginated")
-        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_READ_SAGA")))
         .param("searchCriteriaList", criteriaJSON)
         .contentType(APPLICATION_JSON))
       .andReturn();
