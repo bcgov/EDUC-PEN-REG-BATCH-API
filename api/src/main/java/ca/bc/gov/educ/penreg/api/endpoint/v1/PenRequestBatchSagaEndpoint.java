@@ -83,7 +83,7 @@ public interface PenRequestBatchSagaEndpoint {
    * @return the completable future Page {@link Saga}
    */
   @GetMapping("/paginated")
-  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
+  @PreAuthorize("hasAuthority('SCOPE_PEN_REQUEST_BATCH_READ_SAGA')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR.")})
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to support data table view in frontend, with sort, filter and pagination, for Sagas.", description = "This API endpoint exposes flexible way to query the entity by leveraging JPA specifications.")
