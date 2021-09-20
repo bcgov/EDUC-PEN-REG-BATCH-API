@@ -148,7 +148,6 @@ public class PenRegBatchProcessor {
     try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
       batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents())));
       final DataSet ds = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get()).setStoreRawDataToDataError(true).setStoreRawDataToDataSet(true).setNullEmptyStrings(true).parse();
-
       this.penRequestBatchFileValidator.validateFileForFormatAndLength(guid, ds);
       this.penRequestBatchFileValidator.validateMincode(guid, penWebBlobEntity.getMincode());
       this.populateBatchFile(guid, ds, batchFile);
