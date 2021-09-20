@@ -1,6 +1,8 @@
 package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.SchoolTypeCode;
+import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentValidationIssueEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
@@ -14,16 +16,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static lombok.AccessLevel.PRIVATE;
@@ -53,20 +52,20 @@ public class PenRequestBatchStudentOrchestratorService {
   /**
    * The Processing service.
    */
-  private final PenMatchResultProcessingService<BatchStudentPenMatchProcessingPayload, Optional<Event>> processingService;
+  private final Map<SchoolTypeCode, PenMatchResultProcessingService<BatchStudentPenMatchProcessingPayload, Optional<Event>>> processingServiceMap;
 
   /**
    * Instantiates a new Pen request batch student orchestrator service.
    *
    * @param penRequestBatchStudentService the pen request batch student service
    * @param penService                    the pen service
-   * @param processingService             the processing service
+   * @param processingServices            the processing services
    */
   public PenRequestBatchStudentOrchestratorService(final PenRequestBatchStudentService penRequestBatchStudentService, final PenService penService,
-                                                   @Qualifier("penRequestBatchStudentPenMatchResultProcessingService") final PenMatchResultProcessingService<BatchStudentPenMatchProcessingPayload, Optional<Event>> processingService) {
+                                                   final List<PenMatchResultProcessingService<BatchStudentPenMatchProcessingPayload, Optional<Event>>> processingServices) {
     this.penRequestBatchStudentService = penRequestBatchStudentService;
     this.penService = penService;
-    this.processingService = processingService;
+    this.processingServiceMap = processingServices.stream().collect(Collectors.toMap(PenMatchResultProcessingService::getSchoolTypeCode, Function.identity()));
   }
 
 
@@ -191,7 +190,7 @@ public class PenRequestBatchStudentOrchestratorService {
    *
    * @param usualMiddleName the usual middle name
    * @param sagaData        the sagaData
-   * @return boolean boolean
+   * @return boolean true if middle names needs to be blank.
    */
   private boolean doesMiddleNameNeedsToBeBlank(final String usualMiddleName, final PenRequestBatchStudentSagaData sagaData) {
     return StringUtils.isNotEmpty(usualMiddleName)
@@ -237,6 +236,7 @@ public class PenRequestBatchStudentOrchestratorService {
    * @return the optional
    */
   public Optional<Event> processPenMatchResult(final Saga saga, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, final PenMatchResult penMatchResult) {
-    return this.processingService.processPenMatchResults(BatchStudentPenMatchProcessingPayload.builder().penMatchResult(penMatchResult).penRequestBatchStudentSagaData(penRequestBatchStudentSagaData).saga(saga).build());
+    final SchoolTypeCode schoolTypeCode = PenRegBatchHelper.getSchoolTypeCodeFromMincode(penRequestBatchStudentSagaData.getMincode());
+    return this.processingServiceMap.get(schoolTypeCode).processPenMatchResults(BatchStudentPenMatchProcessingPayload.builder().penMatchResult(penMatchResult).penRequestBatchStudentSagaData(penRequestBatchStudentSagaData).saga(saga).build());
   }
 }

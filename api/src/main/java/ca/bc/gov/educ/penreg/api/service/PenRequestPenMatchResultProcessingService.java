@@ -3,6 +3,7 @@ package ca.bc.gov.educ.penreg.api.service;
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.constants.MatchAlgorithmStatusCode;
+import ca.bc.gov.educ.penreg.api.constants.SchoolTypeCode;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.Event;
@@ -22,6 +23,9 @@ import org.springframework.util.CollectionUtils;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * this is MyEd specific implementation.
+ */
 @Slf4j
 @Service("penRequestPenMatchResultProcessingService")
 public class PenRequestPenMatchResultProcessingService extends BasePenMatchResultProcessingService<PenRequestPenMatchProcessingPayload, Pair<Integer, Optional<PenRequestResult>>> {
@@ -44,6 +48,11 @@ public class PenRequestPenMatchResultProcessingService extends BasePenMatchResul
     }
     final var algorithmStatusCode = MatchAlgorithmStatusCode.valueOf(penMatchResult.getPenStatus());
     return super.handleBasedOnPenStatus(algorithmStatusCode, payload);
+  }
+
+  @Override
+  public SchoolTypeCode getSchoolTypeCode() {
+    return SchoolTypeCode.NONE;
   }
 
 

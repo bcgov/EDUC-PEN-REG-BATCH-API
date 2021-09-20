@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.helpers;
 
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchStudentSagaDataMapper;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
+import ca.bc.gov.educ.penreg.api.constants.SchoolTypeCode;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
@@ -85,5 +86,15 @@ public final class PenRegBatchHelper {
       && StringUtils.equalsIgnoreCase(penRequestBatchStudent.getGenderCode(), student.getSexCode())
       && (StringUtils.isBlank(penRequestBatchStudent.getSubmittedPen())
       || StringUtils.equalsIgnoreCase(penRequestBatchStudent.getSubmittedPen(), penRequestBatchStudent.getAssignedPEN()));
+  }
+
+  /**
+   * this method determines what is the school group code based on different parameters.
+   */
+  public static SchoolTypeCode getSchoolTypeCodeFromMincode(String mincode) {
+    if (StringUtils.equals(StringUtils.substring(mincode, 3, 5), "90")) {
+      return SchoolTypeCode.SUMMER_SCHOOL;
+    }
+    return SchoolTypeCode.DEFAULT;
   }
 }
