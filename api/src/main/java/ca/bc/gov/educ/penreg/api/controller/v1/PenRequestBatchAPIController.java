@@ -334,13 +334,13 @@ public class PenRequestBatchAPIController extends PaginatedController implements
   /**
    * Update pen web blob pen web blob.
    *
-   * @param penWebBlob   the pen web blob
-   * @param penWebBlobId the pen web blob id
+   * @param penWebBlob the pen web blob
+   * @param sourceID   the pen web blob id
    * @return the pen web blob
    */
   @Override
-  public PENWebBlob updatePenWebBlob(final PENWebBlob penWebBlob, final Long penWebBlobId) {
-    return penWebBlobMapper.toStructure(this.getService().updatePenWebBlob(penWebBlobMapper.toModel(penWebBlob), penWebBlobId));
+  public PENWebBlob updatePenWebBlob(final PENWebBlob penWebBlob, final Long sourceID) {
+    return penWebBlobMapper.toStructure(this.getService().updatePenWebBlob(penWebBlobMapper.toModel(penWebBlob), sourceID));
   }
 
   /**
