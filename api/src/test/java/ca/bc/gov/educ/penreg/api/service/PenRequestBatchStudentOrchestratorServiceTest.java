@@ -420,6 +420,10 @@ public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestra
       "hi\t,HI",
       "hello.,HELLO",
       "  he    llo      ,HE LLO",
+      "john - jack,JOHN-JACK",
+      "john- jack,JOHN-JACK",
+      "john -jack,JOHN-JACK",
+      "john    -   jack,JOHN-JACK",
   })
   public void scrubNameField(final String fieldValue, final String scrubbedValue) {
     final var result = this.orchestratorService.scrubNameField(fieldValue);
