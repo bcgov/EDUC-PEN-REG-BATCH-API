@@ -219,12 +219,13 @@ public class PenRequestBatchStudentOrchestratorService {
    * 3.Change tab characters within name elements to single spaces
    * 4.Remove leading and trailing spaces from all name elements
    * 5.Convert multiple contiguous spaces within any name element to a single space
+   * 6.Scrub leading and trailing spaces around hyphens in names, updated for https://gww.jira.educ.gov.bc.ca/browse/PEN-1702
    *
    * @param nameFieldValue the value of the name field
    * @return modified string value.
    */
   protected String scrubNameField(final String nameFieldValue) {
-    return nameFieldValue.trim().toUpperCase().replace("\t", " ").replace(".", "").replaceAll("\\s{2,}", " ");
+    return nameFieldValue.trim().toUpperCase().replace("\t", " ").replace(".", "").replaceAll("\\s{2,}", " ").replaceAll("\\s+-\\s+|\\s+-|-\\s+", "-");
   }
 
   /**
