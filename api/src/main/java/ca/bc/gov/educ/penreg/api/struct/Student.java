@@ -153,4 +153,7 @@ public class Student implements Serializable {
   String historyActivityCode;
 
   String trueStudentID;
+  String documentTypeCode;
+
+  String dateOfConfirmation;
 }
