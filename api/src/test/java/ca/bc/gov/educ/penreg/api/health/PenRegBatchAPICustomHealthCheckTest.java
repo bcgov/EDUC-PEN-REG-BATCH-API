@@ -1,9 +1,9 @@
 package ca.bc.gov.educ.penreg.api.health;
 
-import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import io.nats.client.Connection;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.redisnode.RedisCluster;
@@ -12,6 +12,10 @@ import org.redisson.api.redisnode.RedisClusterSlave;
 import org.redisson.api.redisnode.RedisNodes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Status;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -20,19 +24,22 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-public class PenRegBatchAPICustomHealthCheckTest extends BasePenRegAPITest {
+@SpringBootTest
+@ActiveProfiles("test")
+@RunWith(SpringRunner.class)
+public class PenRegBatchAPICustomHealthCheckTest {
 
   @Autowired
   Connection natsConnection;
-  @Autowired
+  @MockBean
   RedissonClient redissonClient;
+  @Autowired
+  private PenRegBatchAPICustomHealthCheck penRegBatchAPICustomHealthCheck;
 
   @Before
   public void setup() {
     Mockito.reset(redissonClient);
   }
-  @Autowired
-  private PenRegBatchAPICustomHealthCheck penRegBatchAPICustomHealthCheck;
 
   @Test
   public void testGetHealth_givenClosedNatsConnection_shouldReturnStatusDown() {

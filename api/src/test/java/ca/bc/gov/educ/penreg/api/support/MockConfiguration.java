@@ -1,4 +1,5 @@
 package ca.bc.gov.educ.penreg.api.support;
+
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.messaging.MessageSubscriber;
 import ca.bc.gov.educ.penreg.api.messaging.NatsConnection;
@@ -6,7 +7,6 @@ import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.schedulers.EventTaskScheduler;
 import io.nats.client.Connection;
 import org.mockito.Mockito;
-import org.redisson.api.RedissonClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -76,9 +76,4 @@ public class MockConfiguration {
     return Mockito.mock(NatsConnection.class);
   }
 
-  @Bean
-  @Primary
-  public RedissonClient redissonClient() {
-    return Mockito.mock(RedissonClient.class);
-  }
 }
