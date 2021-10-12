@@ -6,6 +6,7 @@ import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.schedulers.EventTaskScheduler;
 import io.nats.client.Connection;
 import org.mockito.Mockito;
+import org.redisson.api.RedissonClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -73,5 +74,11 @@ public class MockConfiguration {
   @Primary
   public NatsConnection natsConnection() {
     return Mockito.mock(NatsConnection.class);
+  }
+
+  @Bean
+  @Primary
+  public RedissonClient redissonClient() {
+    return Mockito.mock(RedissonClient.class);
   }
 }

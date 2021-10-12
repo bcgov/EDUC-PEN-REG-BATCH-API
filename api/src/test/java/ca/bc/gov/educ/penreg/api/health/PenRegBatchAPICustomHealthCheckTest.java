@@ -12,7 +12,6 @@ import org.redisson.api.redisnode.RedisClusterSlave;
 import org.redisson.api.redisnode.RedisNodes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Status;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -25,7 +24,7 @@ public class PenRegBatchAPICustomHealthCheckTest extends BasePenRegAPITest {
 
   @Autowired
   Connection natsConnection;
-  @MockBean
+  @Autowired
   RedissonClient redissonClient;
 
   @Before
