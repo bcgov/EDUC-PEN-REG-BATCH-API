@@ -121,6 +121,7 @@ public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestra
     this.sagaData.setPenRequestBatchStudentID(batches.get(0).getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow().getPenRequestBatchStudentID());
     this.saga = this.sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), "Test", JsonUtil.getJsonStringFromObject(this.sagaData),
             UUID.fromString(this.penRequestBatchStudentID), UUID.fromString(this.penRequestBatchID));
+    Mockito.reset(this.restUtils);
 
   }
 
