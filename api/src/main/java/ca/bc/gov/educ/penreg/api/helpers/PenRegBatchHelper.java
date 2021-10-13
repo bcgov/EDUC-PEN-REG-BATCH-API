@@ -94,6 +94,8 @@ public final class PenRegBatchHelper {
   public static SchoolTypeCode getSchoolTypeCodeFromMincode(String mincode) {
     if (StringUtils.equals(StringUtils.substring(mincode, 3, 5), "90")) {
       return SchoolTypeCode.SUMMER_SCHOOL;
+    } else if(mincode.equals("10200030")) {
+      return SchoolTypeCode.SFAS;
     }
     return SchoolTypeCode.DEFAULT;
   }

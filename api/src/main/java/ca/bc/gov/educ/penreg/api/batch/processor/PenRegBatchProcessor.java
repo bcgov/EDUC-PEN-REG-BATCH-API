@@ -152,6 +152,7 @@ public class PenRegBatchProcessor {
       this.penRequestBatchFileValidator.validateMincode(guid, penWebBlobEntity.getMincode());
       this.populateBatchFile(guid, ds, batchFile);
       this.penRequestBatchFileValidator.validateStudentCountForMismatchAndSize(guid, batchFile);
+      this.penRequestBatchFileValidator.validateMincodeForSFAS(guid, penWebBlobEntity.getMincode());
       this.checkForDuplicateFile(penWebBlobEntity, guid); // if all other validations passed check if it is a duplicate file from PSI.
       final Set<PenRequestBatchStudentSagaData> studentSagaDataSet = this.processLoadedRecordsInBatchFile(guid, batchFile, penWebBlobEntity);
       this.getPenRegBatchStudentRecordsProcessor().publishUnprocessedStudentRecordsForProcessing(studentSagaDataSet);
@@ -277,7 +278,8 @@ public class PenRegBatchProcessor {
     return fileUnProcessableException.getFileError() != INVALID_MINCODE_SCHOOL_CLOSED
       && fileUnProcessableException.getFileError() != INVALID_MINCODE_HEADER
       && fileUnProcessableException.getFileError() != DUPLICATE_BATCH_FILE_PSI
-      && fileUnProcessableException.getFileError() != HELD_BACK_FOR_SIZE;
+      && fileUnProcessableException.getFileError() != HELD_BACK_FOR_SIZE
+      && fileUnProcessableException.getFileError() != HELD_BACK_FOR_SFAS;
   }
 
 

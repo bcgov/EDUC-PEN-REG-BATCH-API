@@ -185,7 +185,13 @@ public class PenRequestBatchFileValidator {
     if (!StringUtils.isNumeric(studentCount) || Integer.parseInt(studentCount) != batchFile.getStudentDetails().size()) {
       throw new FileUnProcessableException(STUDENT_COUNT_MISMATCH, guid, PenRequestBatchStatusCodes.LOAD_FAIL, studentCount, String.valueOf(batchFile.getStudentDetails().size()));
     } else if (batchFile.getStudentDetails().size() >= this.applicationProperties.getNumRecordsForBatchHold()) {
-      throw new FileUnProcessableException(HELD_BACK_FOR_SIZE, guid, PenRequestBatchStatusCodes.HOLD_SIZE);
+      throw new FileUnProcessableException(HELD_BACK_FOR_SIZE, guid, PenRequestBatchStatusCodes.HOLD_FOR_REVIEW);
+    }
+  }
+
+  public void validateMincodeForSFAS(final String guid, final String mincode) throws FileUnProcessableException {
+    if(mincode.equals("10200030")) {
+      throw new FileUnProcessableException(HELD_BACK_FOR_SFAS, guid, PenRequestBatchStatusCodes.HOLD_FOR_REVIEW);
     }
   }
 }
