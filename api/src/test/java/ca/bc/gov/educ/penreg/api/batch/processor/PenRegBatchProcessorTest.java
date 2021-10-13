@@ -484,14 +484,14 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5000_records_OK.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
     final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
-    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5000_records_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("10210518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5000_records_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
     tsw = this.penRequestBatchTestUtils.savePenWebBlob(tsw);
     this.penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     final var result = this.repository.findAll();
     assertThat(result.size()).isEqualTo(1);
     final var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
-    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(PSI.getCode());
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(HOLD_FOR_REVIEW.getCode());
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
     final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().min(new PenRequestBatchHistoryComparator());
