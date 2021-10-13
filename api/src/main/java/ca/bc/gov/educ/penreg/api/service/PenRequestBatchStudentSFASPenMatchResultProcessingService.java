@@ -6,7 +6,6 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
-import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.BatchStudentPenMatchProcessingPayload;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,19 +34,16 @@ public class PenRequestBatchStudentSFASPenMatchResultProcessingService extends B
   }
 
   /**
-   * No updates to student for SFAS flow.
-   */
-  @Override
-  protected void updateStudentData(final Student studentFromStudentAPI, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, final PenRequestBatchEntity penRequestBatchEntity, final PenRequestBatchStudentEntity penRequestBatchStudent) {
-    log.debug("SFAS flow, No updates to students.");
-  }
-
-  /**
    * No new pens created for SFAS, and it goes to FIXABLE status.
    */
   @Override
   protected Optional<Event> handleCreateNewStudentStatus(final BatchStudentPenMatchProcessingPayload batchStudentPenMatchProcessingPayload) {
     return super.handleDefault(batchStudentPenMatchProcessingPayload);
+  }
+
+  @Override
+  protected void updateStudent(String studentID, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, PenRequestBatchEntity penRequestBatch, PenRequestBatchStudentEntity penRequestBatchStudent) {
+    log.debug("SFAS flow, No updates to students.");
   }
 
   @Override

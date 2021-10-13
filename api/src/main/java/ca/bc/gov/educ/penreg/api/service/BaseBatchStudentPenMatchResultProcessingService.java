@@ -239,10 +239,7 @@ public abstract class BaseBatchStudentPenMatchResultProcessingService extends Ba
       penRequestBatchStudent.setAssignedPEN(penMatchRecord.getMatchingPEN());
       penRequestBatchStudent.setBestMatchPEN(penMatchRecord.getMatchingPEN());
       this.getPenRequestBatchStudentService().saveAttachedEntity(penRequestBatchStudent);
-      final var studentFromStudentAPI = this.getRestUtils().getStudentByStudentID(studentID);
-      this.updateStudentData(studentFromStudentAPI, penRequestBatchStudentSagaData, penRequestBatch, penRequestBatchStudent);
-      log.debug("Student payload for update :: {}", studentFromStudentAPI);
-      this.getRestUtils().updateStudent(studentFromStudentAPI);
+      updateStudent(studentID, penRequestBatchStudentSagaData, penRequestBatch, penRequestBatchStudent);
       return Event.builder().sagaId(saga.getSagaId())
         .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
         .eventPayload(penMatchResult.getPenStatus()).build();
@@ -250,6 +247,13 @@ public abstract class BaseBatchStudentPenMatchResultProcessingService extends Ba
       log.error("PenMatchRecord in priority queue is empty for matched status, this should not have happened.");
       throw new PenRegAPIRuntimeException("PenMatchRecord in priority queue is empty for matched status, this should not have happened.");
     }
+  }
+
+  protected void updateStudent(String studentID, PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, PenRequestBatchEntity penRequestBatch, PenRequestBatchStudentEntity penRequestBatchStudent) {
+    final var studentFromStudentAPI = this.getRestUtils().getStudentByStudentID(studentID);
+    this.updateStudentData(studentFromStudentAPI, penRequestBatchStudentSagaData, penRequestBatch, penRequestBatchStudent);
+    log.debug("Student payload for update :: {}", studentFromStudentAPI);
+    this.getRestUtils().updateStudent(studentFromStudentAPI);
   }
 
 
