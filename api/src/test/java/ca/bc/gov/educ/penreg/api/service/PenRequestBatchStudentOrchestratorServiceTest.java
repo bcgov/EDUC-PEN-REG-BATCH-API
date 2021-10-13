@@ -40,8 +40,7 @@ import java.util.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * The type Pen request batch student orchestrator service test.
@@ -265,8 +264,6 @@ public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestra
     record.setMatchingPEN("123456789");
     eventPayload.setMatchingRecords(new ArrayList<>());
     eventPayload.getMatchingRecords().add(record);
-    final ArgumentCaptor<Student> argument = ArgumentCaptor.forClass(Student.class);
-    doNothing().when(this.restUtils).updateStudent(argument.capture());
     this.sagaData.setMincode("10200030");
     this.orchestratorService.processPenMatchResult(this.saga, this.sagaData, eventPayload);
 
@@ -274,13 +271,7 @@ public class PenRequestBatchStudentOrchestratorServiceTest extends BaseOrchestra
     assertThat(sagaFromDB).isPresent();
     batches = this.penRequestBatchRepository.findAll();
     assertThat(batches.get(0).getPenRequestBatchStudentEntities().stream().findFirst().orElseThrow().getPenRequestBatchStudentStatusCode()).isEqualTo(PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode());
-    final Student studentUpdate = argument.getValue();
-    assertThat(studentUpdate).isNotNull();
-    assertThat(studentUpdate.getLocalID()).isNull();;
-    assertThat(studentUpdate.getUsualLastName()).isNull();
-    assertThat(studentUpdate.getUsualMiddleNames()).isNull();
-    assertThat(studentUpdate.getUsualFirstName()).isNull();
-    assertThat(studentUpdate.getMincode()).isNull();
+    verify(this.restUtils, never()).updateStudent(any());
   }
 
   @Test
