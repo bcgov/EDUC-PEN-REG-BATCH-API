@@ -55,7 +55,13 @@ public enum FileError {
   /**
    * The Held back for size.
    */
-  HELD_BACK_FOR_SIZE("Held Back For Size.");
+  HELD_BACK_FOR_SIZE("Held Back For Size."),
+
+  /**
+   * The held back for sfas code
+   */
+  HELD_BACK_FOR_SFAS("Held back for SFAS.");
+
   /**
    * The Message.
    */

@@ -6,5 +6,6 @@ package ca.bc.gov.educ.penreg.api.constants;
 public enum SchoolTypeCode {
   DEFAULT,
   SUMMER_SCHOOL,
+  SFAS,
   NONE // this is for myed-api flow.
 }

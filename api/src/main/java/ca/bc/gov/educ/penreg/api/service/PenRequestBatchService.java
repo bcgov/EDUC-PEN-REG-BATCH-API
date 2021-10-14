@@ -312,7 +312,7 @@ public class PenRequestBatchService {
       List<String> penReqBatchStatusCodes = Arrays.asList(PenRequestBatchStatusCodes.UNARCHIVED.getCode(), PenRequestBatchStatusCodes.UNARCHIVED_CHANGED.getCode());
       stats.setUnarchivedCount(this.getRepository().countAllByPenRequestBatchStatusCodeInAndSchoolGroupCode(penReqBatchStatusCodes, schoolGroupCode.getCode()));
       if (schoolGroupCode == SchoolGroupCodes.PSI) {
-        penReqBatchStatusCodes = Arrays.asList(PenRequestBatchStatusCodes.HOLD_SIZE.getCode(), PenRequestBatchStatusCodes.DUPLICATE.getCode());
+        penReqBatchStatusCodes = Arrays.asList(PenRequestBatchStatusCodes.HOLD_FOR_REVIEW.getCode(), PenRequestBatchStatusCodes.DUPLICATE.getCode());
         stats.setHeldForReviewCount(this.getRepository().countAllByPenRequestBatchStatusCodeInAndSchoolGroupCode(penReqBatchStatusCodes, schoolGroupCode.getCode()));
       } else {
         stats.setHeldForReviewCount(0L);

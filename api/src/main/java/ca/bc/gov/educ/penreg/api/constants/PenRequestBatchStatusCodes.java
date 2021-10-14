@@ -45,7 +45,7 @@ public enum PenRequestBatchStatusCodes {
   /**
    * Status code for loads held back for size.
    */
-  HOLD_SIZE("HOLD_SIZE"),
+  HOLD_FOR_REVIEW("HOLD_SIZE"),
   /**
    * Deleted pen request batch status codes.
    */
