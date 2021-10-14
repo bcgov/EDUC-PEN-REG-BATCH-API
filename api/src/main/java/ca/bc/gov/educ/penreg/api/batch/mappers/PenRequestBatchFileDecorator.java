@@ -75,10 +75,8 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
       if (batchFile.getStudentDetails() != null) {
         entity.setStudentCount((long) batchFile.getStudentDetails().size());
       }
-      if (batchFile.getBatchFileHeader() != null) {
-        entity.setSchoolGroupCode(this.computeSchoolGroupCode(penWebBlobEntity.getMincode()));
-        entity.setMincode(penWebBlobEntity.getMincode());
-      }
+      entity.setSchoolGroupCode(this.computeSchoolGroupCode(penWebBlobEntity.getMincode()));
+      entity.setMincode(penWebBlobEntity.getMincode());
     }
     if (persistStudentRecords && batchFile != null) { // for certain business exception, system needs to store the student details as well.
       int counter = 1;
