@@ -209,7 +209,6 @@ public class PenRegBatchProcessor {
     final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityForBusinessException(penWebBlobEntity, fileUnProcessableException.getReason(), fileUnProcessableException.getPenRequestBatchStatusCode(), batchFile, fileUnProcessableException.getFileError() == HELD_BACK_FOR_SIZE); // batch file can be processed further and persisted.
     final Optional<School> school = this.restUtils.getSchoolByMincode(penWebBlobEntity.getMincode());
     school.ifPresent(value -> entity.setSchoolName(value.getSchoolName()));
-    entity.setMincode(penWebBlobEntity.getMincode());
     //wait here if notification was sent, if there was any error this file will be picked up again as it wont be persisted.
     if (notifySchoolForFileFormatErrorsOptional.isPresent()) {
       final boolean isNotified = this.waitForNotificationToCompleteIfPresent(guid, notifySchoolForFileFormatErrorsOptional.get());
