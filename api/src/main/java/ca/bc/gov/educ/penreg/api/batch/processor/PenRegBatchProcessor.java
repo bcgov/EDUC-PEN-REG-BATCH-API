@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.batch.processor;
 
+import ca.bc.gov.educ.penreg.api.batch.exception.FileError;
 import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper;
 import ca.bc.gov.educ.penreg.api.batch.mappers.StringMapper;
@@ -206,7 +207,7 @@ public class PenRegBatchProcessor {
    */
   private void processFileUnProcessableException(@NonNull final String guid, @NonNull final PENWebBlobEntity penWebBlobEntity, @NonNull final FileUnProcessableException fileUnProcessableException, final BatchFile batchFile) {
     val notifySchoolForFileFormatErrorsOptional = this.notifySchoolForFileFormatErrors(guid, penWebBlobEntity, fileUnProcessableException);
-    final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityForBusinessException(penWebBlobEntity, fileUnProcessableException.getReason(), fileUnProcessableException.getPenRequestBatchStatusCode(), batchFile, fileUnProcessableException.getFileError() == HELD_BACK_FOR_SIZE || fileUnProcessableException.getFileError() == HELD_BACK_FOR_SFAS); // batch file can be processed further and persisted.
+    final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityForBusinessException(penWebBlobEntity, fileUnProcessableException.getReason(), fileUnProcessableException.getPenRequestBatchStatusCode(), batchFile, persistStudentRecords(fileUnProcessableException.getFileError())); // batch file can be processed further and persisted.
     final Optional<School> school = this.restUtils.getSchoolByMincode(penWebBlobEntity.getMincode());
     school.ifPresent(value -> entity.setSchoolName(value.getSchoolName()));
     entity.setMincode(penWebBlobEntity.getMincode());
@@ -223,6 +224,9 @@ public class PenRegBatchProcessor {
       log.info("going to persist data with FileUnProcessableException for batch :: {}", guid);
       this.getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
     }
+  }
+  private boolean persistStudentRecords(FileError fileError) {
+    return fileError == HELD_BACK_FOR_SIZE || fileError == HELD_BACK_FOR_SFAS;
   }
 
   /**
