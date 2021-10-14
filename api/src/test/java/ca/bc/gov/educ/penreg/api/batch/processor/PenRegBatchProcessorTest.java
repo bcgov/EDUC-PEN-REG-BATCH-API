@@ -643,7 +643,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     final var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12);
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
     final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().min(new PenRequestBatchHistoryComparator());
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
@@ -671,7 +671,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     final var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12);
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
     final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().min(new PenRequestBatchHistoryComparator());
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
@@ -699,7 +699,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     final var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12);
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
     final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().min(new PenRequestBatchHistoryComparator());
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
@@ -727,7 +727,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     final var entity = result.get(0);
     assertThat(entity.getPenRequestBatchID()).isNotNull();
     assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(LOAD_FAIL.getCode());
-    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12);
+    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
     assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(1);
     final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().min(new PenRequestBatchHistoryComparator());
     assertThat(penRequestBatchHistoryEntityOptional).isPresent();
