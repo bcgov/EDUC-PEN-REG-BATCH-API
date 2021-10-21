@@ -5,6 +5,7 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
+import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentStatusCodeEntity;
@@ -16,6 +17,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RPermitExpirableSemaphore;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.lang.NonNull;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -30,10 +34,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.*;
 import static lombok.AccessLevel.PRIVATE;
@@ -74,21 +80,29 @@ public class PenRequestBatchStudentService {
   @Getter
   private final ApplicationProperties applicationProperties;
 
+  @Getter
+  private final RedissonClient redissonClient;
+  @Getter
+  private final StringRedisTemplate stringRedisTemplate;
+
   /**
    * Instantiates a new Pen request batch student service.
-   *
-   * @param repository                  the repository
+   *  @param repository                  the repository
    * @param penRequestBatchRepository   the pen request batch repository
    * @param studentStatusCodeRepository the student status code repository
    * @param applicationProperties       the application properties
+   * @param redissonClient the redis client
+   * @param stringRedisTemplate the string redis template
    */
   @Autowired
-  public PenRequestBatchStudentService(final PenRequestBatchStudentRepository repository, final PenRequestBatchRepository penRequestBatchRepository, final PenRequestBatchStudentStatusCodeRepository studentStatusCodeRepository, final PenRequestBatchService penRequestBatchService, final ApplicationProperties applicationProperties) {
+  public PenRequestBatchStudentService(final PenRequestBatchStudentRepository repository, final PenRequestBatchRepository penRequestBatchRepository, final PenRequestBatchStudentStatusCodeRepository studentStatusCodeRepository, final PenRequestBatchService penRequestBatchService, final ApplicationProperties applicationProperties, final RedissonClient redissonClient, StringRedisTemplate stringRedisTemplate) {
     this.repository = repository;
     this.penRequestBatchRepository = penRequestBatchRepository;
     this.studentStatusCodeRepository = studentStatusCodeRepository;
     this.penRequestBatchService = penRequestBatchService;
     this.applicationProperties = applicationProperties;
+    this.redissonClient = redissonClient;
+    this.stringRedisTemplate = stringRedisTemplate;
   }
 
 
@@ -207,9 +221,9 @@ public class PenRequestBatchStudentService {
 
   private boolean useSameSummaryCounter(final PenRequestBatchStudentStatusCodes originalStatus, final PenRequestBatchStudentStatusCodes currentStatus) {
     return originalStatus.equals(currentStatus) ||
-        ((originalStatus.equals(ERROR) || originalStatus.equals(INFOREQ)) && (currentStatus.equals(ERROR) || currentStatus.equals(INFOREQ))) ||
-        ((originalStatus.equals(SYS_MATCHED) || originalStatus.equals(USR_MATCHED)) && (currentStatus.equals(SYS_MATCHED) || currentStatus.equals(USR_MATCHED))) ||
-        ((originalStatus.equals(SYS_NEW_PEN) || originalStatus.equals(USR_NEW_PEN)) && (currentStatus.equals(SYS_NEW_PEN) || currentStatus.equals(USR_NEW_PEN)));
+      ((originalStatus.equals(ERROR) || originalStatus.equals(INFOREQ)) && (currentStatus.equals(ERROR) || currentStatus.equals(INFOREQ))) ||
+      ((originalStatus.equals(SYS_MATCHED) || originalStatus.equals(USR_MATCHED)) && (currentStatus.equals(SYS_MATCHED) || currentStatus.equals(USR_MATCHED))) ||
+      ((originalStatus.equals(SYS_NEW_PEN) || originalStatus.equals(USR_NEW_PEN)) && (currentStatus.equals(SYS_NEW_PEN) || currentStatus.equals(USR_NEW_PEN)));
 
   }
 
@@ -333,8 +347,8 @@ public class PenRequestBatchStudentService {
     }
     final LocalDateTime startDate = LocalDateTime.now().minusDays(repeatTimeWindow);
     val result = this.repository.findAllPenRequestBatchStudentsForGivenCriteria(penRequestBatchEntity.getMincode(),
-        PenRequestBatchStatusCodes.ARCHIVED.getCode(), startDate,
-        Arrays.asList(FIXABLE.getCode(), ERROR.getCode(), LOADED.getCode()));
+      PenRequestBatchStatusCodes.ARCHIVED.getCode(), startDate,
+      Arrays.asList(FIXABLE.getCode(), ERROR.getCode(), LOADED.getCode()));
     if (result.isEmpty()) {
       return Collections.emptyMap();
     }
@@ -355,5 +369,28 @@ public class PenRequestBatchStudentService {
 
   public String constructKeyGivenBatchStudent(@NonNull final PenRequestBatchStudentEntity prbsEntity) {
     return prbsEntity.getLocalID() + prbsEntity.getSubmittedPen() + prbsEntity.getLegalFirstName() + prbsEntity.getLegalMiddleNames() + prbsEntity.getLegalLastName() + prbsEntity.getUsualFirstName() + prbsEntity.getUsualMiddleNames() + prbsEntity.getUsualLastName() + prbsEntity.getDob() + prbsEntity.getGenderCode() + prbsEntity.getGradeCode() + prbsEntity.getPostalCode();
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public boolean isPenAlreadyAssigned(final PenRequestBatchEntity penRequestBatch, final String assignedPen) {
+    boolean penAlreadyAssigned = false;
+    log.debug("checking for multiples in batch:: {}", penRequestBatch.getPenRequestBatchID());
+    final RPermitExpirableSemaphore semaphore = this.getRedissonClient().getPermitExpirableSemaphore("checkForMultiple::" + penRequestBatch.getPenRequestBatchID());
+    semaphore.trySetPermits(1);
+    semaphore.expire(120, TimeUnit.SECONDS);
+    try {
+      final String id = semaphore.tryAcquire(120, 40, TimeUnit.SECONDS);
+      final String assignedPEN = this.getStringRedisTemplate().opsForValue().get(penRequestBatch.getPenRequestBatchID().toString().concat(assignedPen));
+      if (StringUtils.isNotBlank(assignedPEN)) {
+        penAlreadyAssigned = true;
+      } else {
+        this.getStringRedisTemplate().opsForValue().set(penRequestBatch.getPenRequestBatchID().toString().concat(assignedPen), "true", Duration.ofDays(1));
+      }
+      semaphore.tryRelease(id);
+    } catch (final Exception e) {
+      log.error("PenMatchRecord in priority queue is empty for matched status, this should not have happened.");
+      throw new PenRegAPIRuntimeException("PenMatchRecord in priority queue is empty for matched status, this should not have happened.");
+    }
+    return penAlreadyAssigned;
   }
 }
