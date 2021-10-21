@@ -374,17 +374,18 @@ public class PenRequestBatchStudentService {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public boolean isPenAlreadyAssigned(final PenRequestBatchEntity penRequestBatch, final String assignedPen) {
     boolean penAlreadyAssigned = false;
+    val redisKey = "multiple-assigned-pen-check::".concat(penRequestBatch.getPenRequestBatchID().toString()).concat("::").concat(assignedPen);
     log.debug("checking for multiples in batch:: {}", penRequestBatch.getPenRequestBatchID());
     final RPermitExpirableSemaphore semaphore = this.getRedissonClient().getPermitExpirableSemaphore("checkForMultiple::" + penRequestBatch.getPenRequestBatchID());
     semaphore.trySetPermits(1);
     semaphore.expire(120, TimeUnit.SECONDS);
     try {
       final String id = semaphore.tryAcquire(120, 40, TimeUnit.SECONDS);
-      final String assignedPEN = this.getStringRedisTemplate().opsForValue().get(penRequestBatch.getPenRequestBatchID().toString().concat(assignedPen));
+      final String assignedPEN = this.getStringRedisTemplate().opsForValue().get(redisKey);
       if (StringUtils.isNotBlank(assignedPEN)) {
         penAlreadyAssigned = true;
       } else {
-        this.getStringRedisTemplate().opsForValue().set(penRequestBatch.getPenRequestBatchID().toString().concat(assignedPen), "true", Duration.ofDays(1));
+        this.getStringRedisTemplate().opsForValue().set(redisKey, "true", Duration.ofDays(1));
       }
       semaphore.tryRelease(id);
     } catch (final Exception e) {
