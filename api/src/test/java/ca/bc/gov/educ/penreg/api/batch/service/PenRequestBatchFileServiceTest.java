@@ -81,6 +81,29 @@ public class PenRequestBatchFileServiceTest extends BasePenRegAPITest {
 
   }
 
+  @Test
+  public void testFilterDuplicatesAndRepeatRequests_givenSFASFileAndRepeats_shouldRemoveNotRepeatedStudentsFromReturnedSet() throws IOException, FileUnProcessableException {
+    when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
+    //sample_5000_records_OK
+    final String submissionNumber = this.penRequestBatchTestUtils.createBatchStudentsFromFile("sample_5000_records_OK" +
+      ".txt", ARCHIVED.getCode());
+    final String submissionNumber2 = this.penRequestBatchTestUtils.createBatchStudentsFromFile("sample_5000_records_OK" +
+      ".txt", LOADED.getCode());
+    val previousBatch = this.repository.findBySubmissionNumber(submissionNumber);
+    assertThat(previousBatch).isNotEmpty();
+    val prvbatchEntity = previousBatch.get(0);
+    prvbatchEntity.setPenRequestBatchStatusCode(ARCHIVED.getCode());
+    prvbatchEntity.setProcessDate(LocalDateTime.now().minusDays(2));
+    this.penRequestBatchTestUtils.updateBatchInNewTransaction(prvbatchEntity);
+    final var result = this.repository.findBySubmissionNumber(submissionNumber2);
+    assertThat(result).isNotEmpty();
+    result.get(0).setMincode("10200030");
+    val filteredSet = this.penRequestBatchFileService.filterDuplicatesAndRepeatRequests(UUID.randomUUID().toString(),
+      result.get(0));
+    assertThat(filteredSet.size()).isEqualTo(5000);
+
+  }
+
 
   private School createMockSchool() {
     final School school = new School();

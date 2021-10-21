@@ -138,6 +138,28 @@ public class PenRequestBatchFileService {
     return entity.getLegalLastName() + entity.getLegalFirstName() + entity.getLegalMiddleNames() + entity.getDob() + entity.getUsualFirstName() + entity.getUsualLastName() + entity.getUsualMiddleNames() + entity.getGenderCode() + entity.getGradeCode();
   }
 
+  private void checkBatchForRepeatRequests(String guid, PenRequestBatchEntity penRequestBatchEntity, Set<PenRequestBatchStudentEntity> studentEntities, Set<PenRequestBatchStudentEntity> filteredStudentEntities) {
+    long numRepeats = 0;
+    final Map<String, List<PenRequestBatchStudentEntity>> repeatCheckMap =
+      this.penRequestBatchStudentService.populateRepeatCheckMap(penRequestBatchEntity);
+    if (repeatCheckMap.size() > 0) {
+      for (final PenRequestBatchStudentEntity penRequestBatchStudent : studentEntities) {
+        if (PenRequestBatchStudentStatusCodes.DUPLICATE.getCode().equals(penRequestBatchStudent.getPenRequestBatchStudentStatusCode())) {
+          continue; // no need to do any checking for DUPLICATE student requests, continue further.
+        }
+        final String repeatCheckKey =
+          this.penRequestBatchStudentService.constructKeyGivenBatchStudent(penRequestBatchStudent);
+        if (repeatCheckMap.containsKey(repeatCheckKey)) {
+          filteredStudentEntities.remove(penRequestBatchStudent); // if it is a repeat remove it from the list to be further processed.
+          this.updatePenRequestBatchStudentRequest(repeatCheckMap.get(repeatCheckKey), penRequestBatchStudent);
+          numRepeats++;
+        }
+      }
+    }
+    log.debug("{} :: Found {} total repeats", guid, numRepeats);
+    penRequestBatchEntity.setRepeatCount(numRepeats);
+  }
+
   /**
    * Filter out repeat requests
    *
@@ -157,27 +179,12 @@ public class PenRequestBatchFileService {
       final Set<PenRequestBatchStudentEntity> studentEntities =
         penRequestBatchEntityFromDB.getPenRequestBatchStudentEntities(); // it will make a DB call here, get the
       // child entities lazily loaded.
-      long numRepeats = 0;
-      final Map<String, List<PenRequestBatchStudentEntity>> repeatCheckMap =
-        this.penRequestBatchStudentService.populateRepeatCheckMap(penRequestBatchEntityFromDB);
+
       this.checkBatchForDuplicateRequests(studentEntities, filteredStudentEntities);
 
-      if (repeatCheckMap.size() > 0) {
-        for (final PenRequestBatchStudentEntity penRequestBatchStudent : studentEntities) {
-          if (PenRequestBatchStudentStatusCodes.DUPLICATE.getCode().equals(penRequestBatchStudent.getPenRequestBatchStudentStatusCode())) {
-            continue; // no need to do any checking for DUPLICATE student requests, continue further.
-          }
-          final String repeatCheckKey =
-            this.penRequestBatchStudentService.constructKeyGivenBatchStudent(penRequestBatchStudent);
-          if (repeatCheckMap.containsKey(repeatCheckKey)) {
-            filteredStudentEntities.remove(penRequestBatchStudent); // if it is a repeat remove it from the list to be further processed.
-            this.updatePenRequestBatchStudentRequest(repeatCheckMap.get(repeatCheckKey), penRequestBatchStudent);
-            numRepeats++;
-          }
-        }
+      if(!penRequestBatchEntity.getMincode().equals("10200030")) {
+        this.checkBatchForRepeatRequests(guid, penRequestBatchEntityFromDB, studentEntities, filteredStudentEntities);
       }
-      log.debug("{} :: Found {} total repeats", guid, numRepeats);
-      penRequestBatchEntityFromDB.setRepeatCount(numRepeats);
       penRequestBatchEntityFromDB.setPenRequestBatchStatusCode(PenRequestBatchStatusCodes.REPEATS_CHECKED.getCode());
       this.getPenRequestBatchService().savePenRequestBatch(penRequestBatchEntityFromDB); // finally update the
     }
