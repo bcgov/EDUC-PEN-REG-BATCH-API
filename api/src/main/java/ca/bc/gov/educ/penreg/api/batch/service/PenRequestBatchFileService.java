@@ -135,7 +135,7 @@ public class PenRequestBatchFileService {
    * @return - the key
    */
   private String constructKeyForDuplicateEntity(final PenRequestBatchStudentEntity entity) {
-    return entity.getLegalLastName() + entity.getLegalFirstName() + entity.getLegalMiddleNames() + entity.getDob() + entity.getUsualFirstName() + entity.getUsualLastName() + entity.getUsualMiddleNames() + entity.getGenderCode() + entity.getGradeCode();
+    return entity.getLegalLastName() + entity.getLegalFirstName() + entity.getLegalMiddleNames() + entity.getDob() + entity.getUsualFirstName() + entity.getUsualLastName() + entity.getUsualMiddleNames() + entity.getGenderCode() + entity.getGradeCode() + entity.getPostalCode();
   }
 
   private void checkBatchForRepeatRequests(String guid, PenRequestBatchEntity penRequestBatchEntity, Set<PenRequestBatchStudentEntity> studentEntities, Set<PenRequestBatchStudentEntity> filteredStudentEntities) {
