@@ -75,4 +75,6 @@ public class ApplicationProperties {
   @Value("${number.records.for.batch.hold}")
   private int numRecordsForBatchHold;
 
+  @Value("${student.threshold.generate.pdf}")
+  private Integer blockPdfGenerationThreshold;
 }

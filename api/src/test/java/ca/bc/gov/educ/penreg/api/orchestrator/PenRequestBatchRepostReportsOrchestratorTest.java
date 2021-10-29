@@ -9,6 +9,7 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
+import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
@@ -88,6 +89,9 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
   RestUtils restUtils;
 
   @Autowired
+  ApplicationProperties props;
+
+  @Autowired
   RestTemplate restTemplate;
 
   @Autowired
@@ -106,6 +110,7 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-pen-coordinator.json")).getFile());
     final List<ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator> structs = new ObjectMapper().readValue(file, new TypeReference<>() {
     });
+    when(this.restUtils.getProps()).thenReturn(this.props);
   }
 
   @Test
