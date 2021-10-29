@@ -1,9 +1,7 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
-import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
-import ca.bc.gov.educ.penreg.api.constants.EventType;
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentValidationIssueSeverityCode;
-import ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum;
+import ca.bc.gov.educ.penreg.api.constants.*;
+import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchReportDataMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
@@ -17,6 +15,7 @@ import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.*;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -249,6 +248,14 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     return penRequestBatchReturnFilesSagaData.getPenCoordinator() == null ||
       penRequestBatchReturnFilesSagaData.getPenCoordinator().getPenCoordinatorEmail() == null ||
       penRequestBatchReturnFilesSagaData.getPenCoordinator().getPenCoordinatorEmail().isEmpty();
+  }
+
+  protected boolean isSfasBatchFile(final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) {
+    return PenRegBatchHelper.getSchoolTypeCodeFromMincode(penRequestBatchReturnFilesSagaData.getPenRequestBatch().getMincode()) == SchoolTypeCode.SFAS;
+  }
+
+  protected boolean isNotSfasBatchFile(final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) {
+    return !this.isSfasBatchFile(penRequestBatchReturnFilesSagaData);
   }
 
   protected void sendHasNoCoordinatorEmail(final Event event, final Saga saga, final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws JsonProcessingException {

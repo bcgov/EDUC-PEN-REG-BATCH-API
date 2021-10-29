@@ -10,6 +10,7 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
+import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
@@ -71,6 +72,9 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
    */
   @Autowired
   private SagaService sagaService;
+
+  @Autowired
+  private PenRequestBatchService prbService;
 
   private final String payload_archive_return = "{\n" +
     "  \"createUser\": null,\n" +
@@ -480,6 +484,88 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(GET_STUDENTS.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENTS_FOUND.toString());
 
+  }
+
+  @Test
+  public void testSaveReportsWithoutPDF_givenEventAndSagaDataHasPenCoordinatorEmail_and_SfasBatchFile_shouldBeMarkedNOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT() throws InterruptedException, TimeoutException, IOException {
+    final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
+    PenRequestBatchEntity penRequestBatchEntity = penRequestBatchTestUtils.createBatchEntity("10200030", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), TEST_PEN);
+    PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
+      .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
+      .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
+      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+      .mailingAddress("123 st")
+      .fromEmail("test@email.com")
+      .facsimile("5555555555")
+      .telephone("2222222222")
+      .students(PenRequestBatchTestUtils.createStudents(penRequestBatchEntity))
+      .penRequestBatchID(penRequestBatchEntity.getPenRequestBatchID())
+      .build();
+    this.saga.get(0).setPayload(JsonUtil.getJsonStringFromObject(payload));
+    this.sagaService.updateAttachedEntityDuringSagaProcess(this.saga.get(0));
+    final var event = Event.builder()
+      .eventType(EventType.ARCHIVE_PEN_REQUEST_BATCH)
+      .eventOutcome(EventOutcome.PEN_REQUEST_BATCH_UPDATED)
+      .eventPayload(JsonUtil.getJsonStringFromObject(batchMapper.toStructure(penRequestBatchEntity)))
+      .sagaId(this.saga.get(0).getSagaId())
+      .build();
+    this.orchestrator.handleEvent(event);
+    verify(this.messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(SagaTopicsEnum.PROFILE_REQUEST_EMAIL_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
+    assertThat(newEvent.getEventType()).isEqualTo(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT);
+    assertThat(newEvent.getEventPayload()).isNotEmpty();
+    assertThat(newEvent.getEventPayload()).contains("pen@email.com");
+    assertThat(newEvent.getEventPayload()).contains("\"pendingRecords\":\"NONE\"");
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.get(0).getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    assertThat(sagaFromDB.get().getSagaState()).isEqualTo(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT.toString());
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga.get(0));
+    assertThat(sagaStates.size()).isEqualTo(2);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(ARCHIVE_PEN_REQUEST_BATCH.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_REQUEST_BATCH_UPDATED.toString());
+    assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(EventType.SAVE_REPORTS.toString());
+    assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.REPORTS_SAVED.toString());
+    final var penWebBlobsDB = this.prbService.findPenWebBlobBySubmissionNumber(penRequestBatchEntity.getSubmissionNumber());
+    assertThat(penWebBlobsDB.size()).isEqualTo(1);
+  }
+
+
+  @Test
+  public void testGeneratePDFReport_givenEventAndSagaDataHasPenCoordinatorEmail_and_NotSfasBatchFile_shouldBeMarkedGENERATE_PEN_REQUEST_BATCH_REPORTS() throws InterruptedException, TimeoutException, IOException {
+    final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
+    PenRequestBatchEntity penRequestBatchEntity = penRequestBatchTestUtils.createBatchEntity("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), TEST_PEN);
+    PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
+      .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
+      .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
+      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+      .mailingAddress("123 st")
+      .fromEmail("test@email.com")
+      .facsimile("5555555555")
+      .telephone("2222222222")
+      .students(PenRequestBatchTestUtils.createStudents(penRequestBatchEntity))
+      .penRequestBatchID(penRequestBatchEntity.getPenRequestBatchID())
+      .build();
+    this.saga.get(0).setPayload(JsonUtil.getJsonStringFromObject(payload));
+    this.sagaService.updateAttachedEntityDuringSagaProcess(this.saga.get(0));
+    final var event = Event.builder()
+      .eventType(EventType.ARCHIVE_PEN_REQUEST_BATCH)
+      .eventOutcome(EventOutcome.PEN_REQUEST_BATCH_UPDATED)
+      .eventPayload(JsonUtil.getJsonStringFromObject(batchMapper.toStructure(penRequestBatchEntity)))
+      .sagaId(this.saga.get(0).getSagaId())
+      .build();
+    this.orchestrator.handleEvent(event);
+    verify(this.messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(SagaTopicsEnum.PEN_REPORT_GENERATION_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
+    assertThat(newEvent.getEventType()).isEqualTo(GENERATE_PEN_REQUEST_BATCH_REPORTS);
+    assertThat(newEvent.getEventPayload()).isNotEmpty();
+    assertThat(newEvent.getEventPayload()).contains("pdf");
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.get(0).getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    assertThat(sagaFromDB.get().getSagaState()).isEqualTo(GENERATE_PEN_REQUEST_BATCH_REPORTS.toString());
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga.get(0));
+    assertThat(sagaStates.size()).isEqualTo(1);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(ARCHIVE_PEN_REQUEST_BATCH.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_REQUEST_BATCH_UPDATED.toString());
   }
 
   @Test
