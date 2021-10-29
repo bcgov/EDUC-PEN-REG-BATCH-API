@@ -194,14 +194,16 @@ public class ResponseFileGeneratorService {
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void saveReports(final String pdfReport, PenRequestBatchEntity penRequestBatchEntity, List<PenRequestBatchStudent> penRequestBatchStudents,
                           List<Student> students, PenRequestBatchReportData reportData) {
-    List<PENWebBlobEntity> reports = new ArrayList<>(Arrays.asList(
-      this.getPDFBlob(pdfReport, penRequestBatchEntity),
-      this.getIDSBlob(penRequestBatchEntity, penRequestBatchStudents, students)));
-    if (penRequestBatchEntity.getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())) {
-      reports.add(this.getPARBlob(reportData, penRequestBatchEntity));
-      reports.add(this.getTxtBlob(penRequestBatchEntity, penRequestBatchStudents));
-    }
-    this.getPenWebBlobRepository().saveAll(reports);
+    List<PENWebBlobEntity> reports = new ArrayList<>(Collections.singletonList(
+      this.getPDFBlob(pdfReport, penRequestBatchEntity)));
+    this.saveReports(reports, penRequestBatchEntity, penRequestBatchStudents, students, reportData);
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void saveReports(PenRequestBatchEntity penRequestBatchEntity, List<PenRequestBatchStudent> penRequestBatchStudents,
+                          List<Student> students, PenRequestBatchReportData reportData) {
+    List<PENWebBlobEntity> reports = new ArrayList<>();
+    this.saveReports(reports, penRequestBatchEntity, penRequestBatchStudents, students, reportData);
   }
 
   /**
@@ -236,6 +238,16 @@ public class ResponseFileGeneratorService {
       .insertDateTime(LocalDateTime.now())
       .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
       .build();
+  }
+
+  private void saveReports(final List<PENWebBlobEntity> reports, PenRequestBatchEntity penRequestBatchEntity, List<PenRequestBatchStudent> penRequestBatchStudents,
+                          List<Student> students, PenRequestBatchReportData reportData) {
+    reports.add(this.getIDSBlob(penRequestBatchEntity, penRequestBatchStudents, students));
+    if (penRequestBatchEntity.getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())) {
+      reports.add(this.getPARBlob(reportData, penRequestBatchEntity));
+      reports.add(this.getTxtBlob(penRequestBatchEntity, penRequestBatchStudents));
+    }
+    this.getPenWebBlobRepository().saveAll(reports);
   }
 
   private String createHeader(final PenRequestBatchEntity penRequestBatchEntity, String applicationCode) {
