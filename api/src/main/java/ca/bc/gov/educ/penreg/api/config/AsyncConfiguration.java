@@ -23,7 +23,7 @@ public class AsyncConfiguration {
   public Executor threadPoolTaskExecutor() {
     return new EnhancedQueueExecutor.Builder()
       .setThreadFactory(new ThreadFactoryBuilder().withNameFormat("message-subscriber-%d").get())
-      .setCorePoolSize(4).setMaximumPoolSize(4).setKeepAliveTime(Duration.ofSeconds(60)).build();
+      .setCorePoolSize(8).setMaximumPoolSize(8).setKeepAliveTime(Duration.ofSeconds(60)).build();
   }
 
   /**

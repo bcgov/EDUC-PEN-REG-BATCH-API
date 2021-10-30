@@ -20,7 +20,6 @@ import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.NotificationService;
 import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import com.google.common.base.Stopwatch;
 import lombok.Getter;
@@ -154,8 +153,7 @@ public class PenRegBatchProcessor {
       this.populateBatchFile(guid, ds, batchFile);
       this.penRequestBatchFileValidator.validateStudentCountForMismatchAndSize(guid, batchFile, penWebBlobEntity.getMincode());
       this.checkForDuplicateFile(penWebBlobEntity, guid); // if all other validations passed check if it is a duplicate file from PSI.
-      final Set<PenRequestBatchStudentSagaData> studentSagaDataSet = this.processLoadedRecordsInBatchFile(guid, batchFile, penWebBlobEntity);
-      this.getPenRegBatchStudentRecordsProcessor().publishUnprocessedStudentRecordsForProcessing(studentSagaDataSet);
+      this.processLoadedRecordsInBatchFile(guid, batchFile, penWebBlobEntity);
     } catch (final FileUnProcessableException fileUnProcessableException) { // system needs to persist the data in this case.
       this.processFileUnProcessableException(guid, penWebBlobEntity, fileUnProcessableException, batchFile);
     } catch (final Exception e) { // need to check what to do in case of general exception.
@@ -294,9 +292,8 @@ public class PenRegBatchProcessor {
    * @param guid             the guid
    * @param batchFile        the batch file
    * @param penWebBlobEntity the pen web blob entity
-   * @return set {@link PenRequestBatchStudentSagaData}
    */
-  private Set<PenRequestBatchStudentSagaData> processLoadedRecordsInBatchFile(@NonNull final String guid, @NonNull final BatchFile batchFile, @NonNull final PENWebBlobEntity penWebBlobEntity) {
+  private void processLoadedRecordsInBatchFile(@NonNull final String guid, @NonNull final BatchFile batchFile, @NonNull final PENWebBlobEntity penWebBlobEntity) {
     var counter = 1;
     log.info("going to persist data for batch :: {}", guid);
     final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityLoaded(penWebBlobEntity, batchFile); // batch file can be processed further and persisted.
@@ -310,9 +307,8 @@ public class PenRegBatchProcessor {
     this.getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
     if (entity.getPenRequestBatchID() != null) { // this could happen when the same submission number is picked up again, system should not process the same submission.
       // the entity was saved in propagation new context , so system needs to get it again from DB to have an attached entity bound to the current thread.
-      return PenRegBatchHelper.createSagaDataFromStudentRequestsAndBatch(this.getPenRequestBatchFileService().filterDuplicatesAndRepeatRequests(guid, entity), entity);
+      PenRegBatchHelper.createSagaDataFromStudentRequestsAndBatch(this.getPenRequestBatchFileService().filterDuplicatesAndRepeatRequests(guid, entity), entity);
     }
-    return new HashSet<>();
   }
 
 

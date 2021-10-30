@@ -76,4 +76,14 @@ public interface PenRequestBatchStudentRepository extends JpaRepository<PenReque
   @Query(value = "SELECT PenRequestBatchEntity.SUBMISSION_NO as submissionNumber FROM PEN_REQUEST_BATCH PenRequestBatchEntity WHERE EXISTS(\n" +
     "(SELECT PEN_REQUEST_BATCH_ID as penRequestBatchID, ASSIGNED_PEN as assignedPen, COUNT(*) as count FROM PEN_REQUEST_BATCH_STUDENT PenRequestBatchStudentEntity WHERE PenRequestBatchStudentEntity.ASSIGNED_PEN IS NOT NULL AND PenRequestBatchStudentEntity.PEN_REQUEST_BATCH_ID = PenRequestBatchEntity.PEN_REQUEST_BATCH_ID AND PenRequestBatchStudentEntity.PEN_REQUEST_BATCH_ID IN :batchIds GROUP BY PEN_REQUEST_BATCH_ID, ASSIGNED_PEN HAVING COUNT(*) > 1))", nativeQuery = true)
   List<PenRequestBatchMultiplePen> findBatchFilesWithMultipleAssignedPens(@Param("batchIds") List<UUID> batchIds);
+
+  long countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(PenRequestBatchEntity penRequestBatchEntity, List<String> penRequestBatchStudentStatusCodes);
+
+  /**
+   * Find all by pen request batch entity list.
+   *
+   * @param penRequestBatchEntity the pen request batch entity
+   * @return the list
+   */
+  List<PenRequestBatchStudentEntity> findTop100ByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeInOrderByCreateDate(PenRequestBatchEntity penRequestBatchEntity, List<String> penRequestBatchStudentStatusCodes);
 }

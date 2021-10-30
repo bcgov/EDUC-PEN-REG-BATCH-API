@@ -1,8 +1,10 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentIDProjection;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -67,4 +69,9 @@ public interface SagaRepository extends JpaRepository<Saga, UUID>, JpaSpecificat
   List<Saga> findAllByPenRequestBatchIDInAndStatusIn(List<UUID> penRequestBatchIDs, List<String> statuses);
 
   List<Saga> findAllByCreateDateBefore(LocalDateTime createDate);
+  long countAllByStatusIn(List<String> statuses);
+  long countAllByPenRequestBatchIDAndSagaNameAndStatus(UUID penRequestBatchID, String sagaName, String status);
+
+  @Query(value = "SELECT prbs.PEN_REQUEST_BATCH_STUDENT_ID as penRequestBatchStudentID FROM PEN_REQUEST_BATCH_SAGA prbs WHERE PEN_REQUEST_BATCH_ID=:penRequestBatchID AND SAGA_NAME=:sagaName", nativeQuery = true)
+  List<PenRequestBatchStudentIDProjection> findAllPenRequestBatchStudentIDByPenRequestBatchIDAndSagaName(UUID penRequestBatchID, String sagaName);
 }
