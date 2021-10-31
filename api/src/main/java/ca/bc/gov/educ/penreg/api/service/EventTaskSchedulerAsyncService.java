@@ -288,7 +288,7 @@ public class EventTaskSchedulerAsyncService {
    */
   private Set<PenRequestBatchStudentSagaData> findRepeatsCheckedStudentRecordsToBeProcessed() {
     val penRequestBatchStudents = new HashSet<PenRequestBatchStudentSagaData>();
-    val penReqBatches = this.getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
+    val penReqBatches = this.getPenRequestBatchRepository().findAllByPenRequestBatchStatusCodeOrderByCreateDate(REPEATS_CHECKED.getCode());
     for (val penRequestBatch : penReqBatches) {
       val prbStudents = this.getPenRequestBatchStudentRepository().findAllPenRequestBatchStudentEntitiesInLoadedStatusToBeProcessed(penRequestBatch.getPenRequestBatchID(), 100);
       for (val penReqBatchStudent : prbStudents) {

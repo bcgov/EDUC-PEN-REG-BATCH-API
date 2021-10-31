@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -39,5 +38,5 @@ public interface PenRequestBatchRepository extends JpaRepository<PenRequestBatch
   long countAllByPenRequestBatchStatusCodeInAndSchoolGroupCode(List<String> penRequestBatchStatusCodes, String schoolGroupCode);
 
   List<PenRequestBatchEntity> findByPenRequestBatchStatusCodeAndCreateDateBefore(String penRequestBatchStatusCode, LocalDateTime createDate);
-  Optional<PenRequestBatchEntity> findTopByPenRequestBatchStatusCodeOrderByCreateDate(String penRequestBatchStatusCode);
+  List<PenRequestBatchEntity> findAllByPenRequestBatchStatusCodeOrderByCreateDate(String penRequestBatchStatusCode);
 }
