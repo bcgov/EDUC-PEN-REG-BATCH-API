@@ -13,7 +13,6 @@ import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
 import ca.bc.gov.educ.penreg.api.batch.validator.PenRequestBatchFileValidator;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
-import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
@@ -307,7 +306,7 @@ public class PenRegBatchProcessor {
     this.getPenRequestBatchFileService().markInitialLoadComplete(entity, penWebBlobEntity);
     if (entity.getPenRequestBatchID() != null) { // this could happen when the same submission number is picked up again, system should not process the same submission.
       // the entity was saved in propagation new context , so system needs to get it again from DB to have an attached entity bound to the current thread.
-      PenRegBatchHelper.createSagaDataFromStudentRequestsAndBatch(this.getPenRequestBatchFileService().filterDuplicatesAndRepeatRequests(guid, entity), entity);
+      this.getPenRequestBatchFileService().filterDuplicatesAndRepeatRequests(guid, entity);
     }
   }
 
