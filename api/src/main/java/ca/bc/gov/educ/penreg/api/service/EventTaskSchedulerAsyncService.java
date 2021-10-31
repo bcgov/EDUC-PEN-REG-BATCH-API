@@ -9,7 +9,10 @@ import ca.bc.gov.educ.penreg.api.exception.SagaRuntimeException;
 import ca.bc.gov.educ.penreg.api.helpers.LogHelper;
 import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
-import ca.bc.gov.educ.penreg.api.model.v1.*;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultiplePen;
+import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.Orchestrator;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
@@ -35,7 +38,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REPEATS_CHECKED;
@@ -288,16 +290,10 @@ public class EventTaskSchedulerAsyncService {
     val penRequestBatchStudents = new HashSet<PenRequestBatchStudentSagaData>();
     val penReqBatches = this.getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
     for (val penRequestBatch : penReqBatches) {
-      val inProgressStudentIDList =
-        this.getSagaRepository().findAllPenRequestBatchStudentIDByPenRequestBatchIDAndSagaName(penRequestBatch.getPenRequestBatchID(),
-          PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString()).stream().map(PenRequestBatchStudentIDProjection::getPenRequestBatchStudentID).collect(Collectors.toSet());
-      val prbStudents = this.getPenRequestBatchStudentRepository().findTop100ByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeInOrderByCreateDate(penRequestBatch, List.of(LOADED.getCode()));
-      for (val penReqBatchStudent : prbStudents) {
-        if (inProgressStudentIDList.contains(penReqBatchStudent.getPenRequestBatchStudentID())) {
-          continue;
+        val prbStudents = this.getPenRequestBatchStudentRepository().findAllPenRequestBatchStudentEntitiesInLoadedStatusToBeProcessed(penRequestBatch.getPenRequestBatchID(), 100);
+        for (val penReqBatchStudent : prbStudents) {
+          penRequestBatchStudents.add(PenRegBatchHelper.createSagaDataFromStudentRequestAndBatch(penReqBatchStudent, penRequestBatch));
         }
-        penRequestBatchStudents.add(PenRegBatchHelper.createSagaDataFromStudentRequestAndBatch(penReqBatchStudent, penRequestBatch));
-      }
     }
     return penRequestBatchStudents;
   }

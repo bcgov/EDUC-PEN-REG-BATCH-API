@@ -79,11 +79,15 @@ public interface PenRequestBatchStudentRepository extends JpaRepository<PenReque
 
   long countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(PenRequestBatchEntity penRequestBatchEntity, List<String> penRequestBatchStudentStatusCodes);
 
-  /**
-   * Find all by pen request batch entity list.
-   *
-   * @param penRequestBatchEntity the pen request batch entity
-   * @return the list
-   */
-  List<PenRequestBatchStudentEntity> findTop100ByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeInOrderByCreateDate(PenRequestBatchEntity penRequestBatchEntity, List<String> penRequestBatchStudentStatusCodes);
+  @Query(value = " SELECT *\n" +
+    "         FROM PEN_REQUEST_BATCH_STUDENT prbs\n" +
+    "         WHERE NOT EXISTS(SELECT PEN_REQUEST_BATCH_STUDENT_ID as penRequestBatchStudentID\n" +
+    "                          FROM PEN_REQUEST_BATCH_SAGA prbsaga\n" +
+    "                          WHERE prbsaga.SAGA_NAME = 'PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA'\n" +
+    "                            AND prbsaga.PEN_REQUEST_BATCH_STUDENT_ID = prbs.PEN_REQUEST_BATCH_STUDENT_ID)\n" +
+    "           AND prbs.PEN_REQUEST_BATCH_ID = :penRequestBatchID\n" +
+    "           AND prbs.PEN_REQUEST_BATCH_STUDENT_STATUS_CODE = 'LOADED'\n" +
+    "           AND ROWNUM < :maxResults\n" +
+    "         ORDER BY CREATE_DATE", nativeQuery = true)
+  List<PenRequestBatchStudentEntity> findAllPenRequestBatchStudentEntitiesInLoadedStatusToBeProcessed(UUID penRequestBatchID, Integer maxResults);
 }
