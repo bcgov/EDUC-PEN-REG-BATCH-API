@@ -48,51 +48,50 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
     final List<ReportListItem> sysMatchedList = new ArrayList<>();
     final List<ReportUserMatchedListItem> diffList = new ArrayList<>();
     final List<ReportUserMatchedListItem> confirmedList = new ArrayList<>();
-    final Map<String, Student> students = this.setStudents(data.getStudents());
-
-    for (final PenRequestBatchStudent penRequestBatchStudent : data.getPenRequestBatchStudents()) {
-      switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.valueOfCode(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
-        case DUPLICATE:
-        case ERROR:
-        case REPEAT:
-        case INFOREQ:
-        case FIXABLE:
-          val issues = data.getPenRequestBatchStudentValidationIssues().get(penRequestBatchStudent.getPenRequestBatchStudentID());
-          val pendingItem = listItemMapper.toReportListItem(penRequestBatchStudent, issues);
-          if (!"Duplicate".equals(pendingItem.getPen())) {
-            pendingItem.setPen("Pending");
-          }
-          pendingList.add(pendingItem);
-          break;
-        case SYS_NEW_PEN:
-        case USR_NEW_PEN:
-          this.populateForNewPenStatus(newPenList, students, penRequestBatchStudent);
-          break;
-        case SYS_MATCHED:
-          this.populateForSystemMatchedStatus(sysMatchedList, diffList, students, penRequestBatchStudent);
-          break;
-        case USR_MATCHED:
-          this.populateForUserMatchedStatus(diffList, confirmedList, students, penRequestBatchStudent);
-          break;
-        default:
-          log.error("Unexpected pen request batch student status code encountered while attempting generate report data :: " + penRequestBatchStudent.getPenRequestBatchStudentStatusCode());
-          break;
+    if (data != null && !CollectionUtils.isEmpty(data.getPenRequestBatchStudents())) {
+      final Map<String, Student> students = this.setStudents(data.getStudents());
+      for (final PenRequestBatchStudent penRequestBatchStudent : data.getPenRequestBatchStudents()) {
+        switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.valueOfCode(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
+          case DUPLICATE:
+          case ERROR:
+          case REPEAT:
+          case INFOREQ:
+          case FIXABLE:
+            val issues = data.getPenRequestBatchStudentValidationIssues().get(penRequestBatchStudent.getPenRequestBatchStudentID());
+            val pendingItem = listItemMapper.toReportListItem(penRequestBatchStudent, issues);
+            if (!"Duplicate".equals(pendingItem.getPen())) {
+              pendingItem.setPen("Pending");
+            }
+            pendingList.add(pendingItem);
+            break;
+          case SYS_NEW_PEN:
+          case USR_NEW_PEN:
+            this.populateForNewPenStatus(newPenList, students, penRequestBatchStudent);
+            break;
+          case SYS_MATCHED:
+            this.populateForSystemMatchedStatus(sysMatchedList, diffList, students, penRequestBatchStudent);
+            break;
+          case USR_MATCHED:
+            this.populateForUserMatchedStatus(diffList, confirmedList, students, penRequestBatchStudent);
+            break;
+          default:
+            log.error("Unexpected pen request batch student status code encountered while attempting generate report data :: " + penRequestBatchStudent.getPenRequestBatchStudentStatusCode());
+            break;
+        }
       }
+      val processDateTime = data.getPenRequestBatch() == null || data.getPenRequestBatch().getProcessDate() == null ? LocalDateTime.now() : LocalDateTime.parse(data.getPenRequestBatch().getProcessDate());
+      reportData.setProcessDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
+      reportData.setProcessTime(processDateTime.format(DateTimeFormatter.ofPattern("HH:mm")));
+      reportData.setReportDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
+      reportData.setReviewer(this.setReviewer(data.getPenCoordinator()));
     }
+
 
     reportData.setSysMatchedList(sysMatchedList);
     reportData.setPendingList(pendingList);
     reportData.setNewPenList(newPenList);
     reportData.setDiffList(diffList);
     reportData.setConfirmedList(confirmedList);
-
-    val processDateTime = LocalDateTime.parse(data.getPenRequestBatch().getProcessDate());
-    reportData.setProcessDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
-    reportData.setProcessTime(processDateTime.format(DateTimeFormatter.ofPattern("HH:mm")));
-    reportData.setReportDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
-
-    reportData.setReviewer(this.setReviewer(data.getPenCoordinator()));
-
     return reportData;
   }
 
@@ -111,7 +110,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
   }
 
   private void populateForUserMatchedStatus(final List<ReportUserMatchedListItem> diffList, final List<ReportUserMatchedListItem> confirmedList, final Map<String, Student> students, final PenRequestBatchStudent penRequestBatchStudent) {
-    if (students.get(penRequestBatchStudent.getStudentID()) == null) {
+    if (students == null || students.get(penRequestBatchStudent.getStudentID()) == null) {
       log.error("Error attempting to create report data. Students list should not be null for USR_MATCHED status.");
       return;
     }

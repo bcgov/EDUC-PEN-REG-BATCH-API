@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -190,7 +189,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(eventType.toString());
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-    val prbStudentStatusCodeMap = penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().stream().collect(groupingBy(PenRequestBatchStudent::getPenRequestBatchStudentStatusCode, counting()));
+    val prbStudentStatusCodeMap = penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents() == null ? new HashMap<String, Long>() : penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().stream().collect(groupingBy(PenRequestBatchStudent::getPenRequestBatchStudentStatusCode, counting()));
     log.debug("PRBStudent status code map :: {}", prbStudentStatusCodeMap);
     final PendingRecords pendingRecords;
     // if all PRBStudent records have ERROR status then all of them are pending.
@@ -256,9 +255,13 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
   }
 
   protected boolean isNotSupportingPDFGeneration(final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) {
-    return PenRegBatchHelper.getSchoolTypeCodeFromMincode(penRequestBatchReturnFilesSagaData.getPenRequestBatch().getMincode()) == SchoolTypeCode.SFAS
-      || (!CollectionUtils.isEmpty(penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents())
-      && penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().size() > this.restUtils.getProps().getBlockPdfGenerationThreshold());
+    if (penRequestBatchReturnFilesSagaData.getPenRequestBatch() == null || penRequestBatchReturnFilesSagaData.getPenRequestBatch().getMincode() == null) {
+      return true;
+    }
+    return PenRegBatchHelper.getSchoolTypeCodeFromMincode(penRequestBatchReturnFilesSagaData.getPenRequestBatch().getMincode()) == SchoolTypeCode.SFAS ||
+      (penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents() != null
+        && !penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().isEmpty()
+        && penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().size() > this.restUtils.getProps().getBlockPdfGenerationThreshold());
   }
 
   protected void sendHasNoCoordinatorEmail(final Event event, final Saga saga, final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) throws JsonProcessingException {
