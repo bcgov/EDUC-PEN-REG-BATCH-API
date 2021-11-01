@@ -77,4 +77,13 @@ public class ApplicationProperties {
 
   @Value("${student.threshold.generate.pdf}")
   private Integer blockPdfGenerationThreshold;
+
+  @Value("${threads.min.subscriber}")
+  private Integer minSubscriberThreads;
+  @Value("${threads.max.subscriber}")
+  private Integer maxSubscriberThreads;
+  @Value("${sagas.max.pending}")
+  private Integer maxPendingSagas;
+  @Value("${sagas.max.parallel}")
+  private Integer maxParallelSagas;
 }

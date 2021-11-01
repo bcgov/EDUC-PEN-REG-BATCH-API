@@ -48,8 +48,6 @@ public class EventTaskScheduler {
   }
 
   /**
-   * This is for edge case scenario when a pod processing the repeat checked batches dies before publishing all
-   * student requests for further processing.
    * Process repeats checked pen request batches.
    */
   @Scheduled(cron = "${scheduled.jobs.extract.unprocessed.students.cron}")

@@ -3,7 +3,6 @@ package ca.bc.gov.educ.penreg.api.batch.processor;
 import ca.bc.gov.educ.penreg.api.batch.service.PenRequestBatchFileService;
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
-import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.struct.Event;
@@ -99,14 +98,12 @@ public class PenRegBatchStudentRecordsProcessor {
   public void checkLoadedStudentRecordsForDuplicatesAndRepeatsAndPublishForFurtherProcessing(final List<PenRequestBatchEntity> penRequestBatchEntities) {
     for (val prbEntity : penRequestBatchEntities) {
       final String redisKey = prbEntity.getPenRequestBatchID().toString().concat(
-          "::checkLoadedStudentRecordsForDuplicatesAndRepeatsAndPublishForFurtherProcessing");
+        "::checkLoadedStudentRecordsForDuplicatesAndRepeatsAndPublishForFurtherProcessing");
       val valueFromRedis = this.stringRedisTemplate.opsForValue().get(redisKey);
       if (StringUtils.isBlank(valueFromRedis)) { // skip if it is already in redis
         this.stringRedisTemplate.opsForValue().set(redisKey, "true", 5, TimeUnit.MINUTES);
-        val prbStudentEntities =
-            this.getPenRequestBatchFileService()
-                .filterDuplicatesAndRepeatRequests(prbEntity.getPenRequestBatchID().toString(), prbEntity);
-        this.publishUnprocessedStudentRecordsForProcessing(PenRegBatchHelper.createSagaDataFromStudentRequestsAndBatch(prbStudentEntities, prbEntity));
+        this.getPenRequestBatchFileService()
+          .filterDuplicatesAndRepeatRequests(prbEntity.getPenRequestBatchID().toString(), prbEntity);
       }
 
     }

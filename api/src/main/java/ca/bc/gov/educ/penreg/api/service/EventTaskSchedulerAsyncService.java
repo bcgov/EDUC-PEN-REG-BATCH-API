@@ -11,9 +11,10 @@ import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultiplePen;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.Orchestrator;
+import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -38,10 +39,11 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REPEATS_CHECKED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.DUPLICATE;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.REPEAT;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA;
 import static lombok.AccessLevel.PRIVATE;
@@ -97,29 +99,31 @@ public class EventTaskSchedulerAsyncService {
   @Setter
   private List<String> statusFilters;
 
+  private final ApplicationProperties applicationProperties;
   /**
    * Instantiates a new Event task scheduler async service.
-   *
-   * @param sagaRepository                     the saga repository
+   *  @param sagaRepository                     the saga repository
    * @param penRequestBatchRepository          the pen request batch repository
    * @param penRequestBatchStudentRepository   the pen request batch student repository
    * @param penRegBatchStudentRecordsProcessor the pen reg batch student records processor
    * @param penRequestBatchEventRepository     the pen request batch event repository
    * @param orchestrators                      the orchestrators
    * @param redisConnectionFactory             the redis template
+   * @param applicationProperties
    */
   public EventTaskSchedulerAsyncService(final SagaRepository sagaRepository, final PenRequestBatchRepository penRequestBatchRepository,
                                         final PenRequestBatchStudentRepository penRequestBatchStudentRepository,
                                         final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor,
                                         final PenRequestBatchEventRepository penRequestBatchEventRepository,
                                         final List<Orchestrator> orchestrators,
-                                        final RedisConnectionFactory redisConnectionFactory) {
+                                        final RedisConnectionFactory redisConnectionFactory, ApplicationProperties applicationProperties) {
     this.sagaRepository = sagaRepository;
     this.penRequestBatchRepository = penRequestBatchRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
     this.penRegBatchStudentRecordsProcessor = penRegBatchStudentRecordsProcessor;
     this.penRequestBatchEventRepository = penRequestBatchEventRepository;
     this.stringRedisTemplate = new StringRedisTemplate(redisConnectionFactory);
+    this.applicationProperties = applicationProperties;
     orchestrators.forEach(orchestrator -> this.sagaOrchestrators.put(orchestrator.getSagaName(), orchestrator));
   }
 
@@ -159,43 +163,25 @@ public class EventTaskSchedulerAsyncService {
   private void checkAndUpdateStatusToActiveOrArchived(final List<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey) {
 
     final var studentSagaRecords = this.getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatchEntity.getPenRequestBatchID(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString());
-    final var studentEntities = penRequestBatchEntity.getPenRequestBatchStudentEntities();
-    long dupCount = 0;
-    long rptCount = 0;
-    long newPenAndMatchCount = 0;
-    boolean isSamePenAssignedToMultiplePRForSameBatch = false;
-    // https://www.baeldung.com/java-hashset-arraylist-contains-performance
-    // HashSet is used for performance reasons,please check the above link for detailed info. "As a conclusion, we can learn, that the contains() method works faster in HashSet compared to an ArrayList."
-    final Set<String> pens = new HashSet<>();
-    for (val student : studentEntities) {
-      val assignedPen = StringUtils.trim(student.getAssignedPEN());
-      if (!isSamePenAssignedToMultiplePRForSameBatch && StringUtils.isNotBlank(assignedPen)) {
-        if (pens.contains(assignedPen)) {
-          isSamePenAssignedToMultiplePRForSameBatch = true;
-        }
-        pens.add(assignedPen);
-      }
-      if (PenRequestBatchStudentStatusCodes.DUPLICATE.getCode().equals(student.getPenRequestBatchStudentStatusCode())) {
-        dupCount++;
-      } else if (PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(student.getPenRequestBatchStudentStatusCode())) {
-        rptCount++;
-      } else if (PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode().equals(student.getPenRequestBatchStudentStatusCode()) ||
-        PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode().equals(student.getPenRequestBatchStudentStatusCode())) {
-        newPenAndMatchCount++;
-      }
-    }
+    long dupCount = this.penRequestBatchStudentRepository.countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(penRequestBatchEntity, List.of(DUPLICATE.getCode()));
+    long rptCount = this.penRequestBatchStudentRepository.countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(penRequestBatchEntity, List.of(REPEAT.getCode()));
+    long newPenAndMatchCount = this.penRequestBatchStudentRepository.countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(penRequestBatchEntity, List.of(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode()));
+
+    final List<PenRequestBatchMultiplePen> recordWithMultiples = this.penRequestBatchStudentRepository.findBatchFilesWithMultipleAssignedPens(List.of(penRequestBatchEntity.getPenRequestBatchID()));
+    boolean isSamePenAssignedToMultiplePRForSameBatch = !recordWithMultiples.isEmpty();
+
     if (penRequestBatchEntity.getStudentCount() == (rptCount + dupCount)) { // all records are either repeat or
-      this.handleAllDuplicateOrRepeat(penReqBatchEntities, penRequestBatchEntity, redisKey, studentEntities);
+      this.handleAllDuplicateOrRepeat(penReqBatchEntities, penRequestBatchEntity, redisKey);
     } else if (!studentSagaRecords.isEmpty()) {
-      this.updateBasedOnCompletedSagas(penReqBatchEntities, penRequestBatchEntity, redisKey, studentSagaRecords, studentEntities, newPenAndMatchCount, isSamePenAssignedToMultiplePRForSameBatch);
+      this.updateBasedOnCompletedSagas(penReqBatchEntities, penRequestBatchEntity, redisKey, studentSagaRecords, newPenAndMatchCount, isSamePenAssignedToMultiplePRForSameBatch);
     }
   }
 
-  private void updateBasedOnCompletedSagas(final List<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey, final List<Saga> studentSagaRecords, final Set<PenRequestBatchStudentEntity> studentEntities, final long newPenAndMatchCount, final boolean isSamePenAssignedToMultiplePRForSameBatch) {
-    final long count = studentSagaRecords.stream().filter(saga -> saga.getStatus().equalsIgnoreCase(SagaStatusEnum.COMPLETED.toString())).count();
-    if (count == studentSagaRecords.size()) { // All records are processed mark batch to active.
-      this.setDifferentCounts(penRequestBatchEntity, studentEntities);
-      if (newPenAndMatchCount == count && !isSamePenAssignedToMultiplePRForSameBatch) { // all records are either New PEN by System or Matched by System and same pen is not assigned to more than one student for the batch.
+  private void updateBasedOnCompletedSagas(final List<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey, final List<Saga> studentSagaRecords, final long newPenAndMatchCount, final boolean isSamePenAssignedToMultiplePRForSameBatch) {
+    final long completedCount = this.sagaRepository.countAllByPenRequestBatchIDAndSagaNameAndStatus(penRequestBatchEntity.getPenRequestBatchID(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString(), SagaStatusEnum.COMPLETED.toString());
+    if (completedCount == studentSagaRecords.size()) { // All records are processed mark batch to active.
+      this.setDifferentCounts(penRequestBatchEntity);
+      if (newPenAndMatchCount == completedCount && !isSamePenAssignedToMultiplePRForSameBatch) { // all records are either New PEN by System or Matched by System and same pen is not assigned to more than one student for the batch.
         final var sagas = this.getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatchEntity.getPenRequestBatchID(), PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString());
         if (sagas.size() == 0) {
           this.startArchiveAndReturnSaga(penRequestBatchEntity);
@@ -208,9 +194,9 @@ public class EventTaskSchedulerAsyncService {
     }
   }
 
-  private void handleAllDuplicateOrRepeat(final List<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey, final Set<PenRequestBatchStudentEntity> studentEntities) {
+  private void handleAllDuplicateOrRepeat(final List<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey) {
     // duplicates, need to be marked active.
-    this.setDifferentCounts(penRequestBatchEntity, studentEntities);
+    this.setDifferentCounts(penRequestBatchEntity);
     this.updatePenRequestBatchStatus(penReqBatchEntities, penRequestBatchEntity, redisKey, PenRequestBatchStatusCodes.ACTIVE.getCode());
   }
 
@@ -245,33 +231,13 @@ public class EventTaskSchedulerAsyncService {
    * Sets different counts.
    *
    * @param penRequestBatchEntity the pen request batch entity
-   * @param studentEntities       the student entities
    */
-  private void setDifferentCounts(final PenRequestBatchEntity penRequestBatchEntity, final Set<PenRequestBatchStudentEntity> studentEntities) {
-    //run through the student records and update the counts on the header record...
-    long errorCount = 0;
-    long fixableCount = 0;
-    long matchedCount = 0;
-    long newCount = 0;
-    long dupCount = 0;
-    for (final var studentReq : studentEntities) {
-      if (PenRequestBatchStudentStatusCodes.FIXABLE.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
-        fixableCount++;
-      } else if (PenRequestBatchStudentStatusCodes.ERROR.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
-        errorCount++;
-      } else if (PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
-        matchedCount++;
-      } else if (PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
-        newCount++;
-      } else if (PenRequestBatchStudentStatusCodes.DUPLICATE.getCode().equals(studentReq.getPenRequestBatchStudentStatusCode())) {
-        dupCount++;
-      }
-    }
-    penRequestBatchEntity.setErrorCount(errorCount);
-    penRequestBatchEntity.setFixableCount(fixableCount);
-    penRequestBatchEntity.setMatchedCount(matchedCount);
-    penRequestBatchEntity.setNewPenCount(newCount);
-    penRequestBatchEntity.setDuplicateCount(dupCount);
+  private void setDifferentCounts(final PenRequestBatchEntity penRequestBatchEntity) {
+    penRequestBatchEntity.setErrorCount(this.penRequestBatchStudentRepository.countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(penRequestBatchEntity, List.of(PenRequestBatchStudentStatusCodes.ERROR.getCode())));
+    penRequestBatchEntity.setFixableCount(this.penRequestBatchStudentRepository.countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(penRequestBatchEntity, List.of(PenRequestBatchStudentStatusCodes.FIXABLE.getCode())));
+    penRequestBatchEntity.setMatchedCount(this.penRequestBatchStudentRepository.countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(penRequestBatchEntity, List.of(PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode())));
+    penRequestBatchEntity.setNewPenCount(this.penRequestBatchStudentRepository.countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(penRequestBatchEntity, List.of(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode())));
+    penRequestBatchEntity.setDuplicateCount(this.penRequestBatchStudentRepository.countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(penRequestBatchEntity, List.of(DUPLICATE.getCode())));
   }
 
   /**
@@ -306,6 +272,11 @@ public class EventTaskSchedulerAsyncService {
   @Async("taskExecutor")
   @Transactional
   public void publishRepeatCheckedStudentsForFurtherProcessing() {
+    long pendingSagaCount = this.sagaRepository.countAllByStatusIn(this.getStatusFilters());
+    if (pendingSagaCount > this.applicationProperties.getMaxPendingSagas()) {
+      log.info("Pending saga count is {}. No need to publish unprocessed student records.", pendingSagaCount);
+      return;
+    }
     final Set<PenRequestBatchStudentSagaData> penRequestBatchStudents = this.findRepeatsCheckedStudentRecordsToBeProcessed();
     log.debug("found :: {}  records to be processed", penRequestBatchStudents.size());
     if (!penRequestBatchStudents.isEmpty()) {
@@ -320,18 +291,14 @@ public class EventTaskSchedulerAsyncService {
    */
   private Set<PenRequestBatchStudentSagaData> findRepeatsCheckedStudentRecordsToBeProcessed() {
     val penRequestBatchStudents = new HashSet<PenRequestBatchStudentSagaData>();
-    val penReqBatches = this.getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
+    val penReqBatches = this.getPenRequestBatchRepository().findAllByPenRequestBatchStatusCodeOrderByCreateDate(REPEATS_CHECKED.getCode());
     for (val penRequestBatch : penReqBatches) {
-      val inProgressStudentIDList =
-        this.getSagaRepository().findByPenRequestBatchIDAndSagaName(penRequestBatch.getPenRequestBatchID(),
-          PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString()).stream().map(Saga::getPenRequestBatchStudentID).collect(Collectors.toSet());
-      for (val penReqBatchStudent : penRequestBatch.getPenRequestBatchStudentEntities()) {
-        if (PenRequestBatchStudentStatusCodes.DUPLICATE.getCode().equals(penReqBatchStudent.getPenRequestBatchStudentStatusCode())
-          || PenRequestBatchStudentStatusCodes.REPEAT.getCode().equals(penReqBatchStudent.getPenRequestBatchStudentStatusCode())
-          || inProgressStudentIDList.contains(penReqBatchStudent.getPenRequestBatchStudentID())) {
-          continue;
-        }
+      val prbStudents = this.getPenRequestBatchStudentRepository().findAllPenRequestBatchStudentEntitiesInLoadedStatusToBeProcessed(penRequestBatch.getPenRequestBatchID(), this.applicationProperties.getMaxParallelSagas());
+      for (val penReqBatchStudent : prbStudents) {
         penRequestBatchStudents.add(PenRegBatchHelper.createSagaDataFromStudentRequestAndBatch(penReqBatchStudent, penRequestBatch));
+      }
+      if (penRequestBatchStudents.size() > this.applicationProperties.getMaxParallelSagas()) {
+        break;
       }
     }
     return penRequestBatchStudents;

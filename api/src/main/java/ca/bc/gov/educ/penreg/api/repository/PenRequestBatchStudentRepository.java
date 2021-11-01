@@ -76,4 +76,18 @@ public interface PenRequestBatchStudentRepository extends JpaRepository<PenReque
   @Query(value = "SELECT PenRequestBatchEntity.SUBMISSION_NO as submissionNumber FROM PEN_REQUEST_BATCH PenRequestBatchEntity WHERE EXISTS(\n" +
     "(SELECT PEN_REQUEST_BATCH_ID as penRequestBatchID, ASSIGNED_PEN as assignedPen, COUNT(*) as count FROM PEN_REQUEST_BATCH_STUDENT PenRequestBatchStudentEntity WHERE PenRequestBatchStudentEntity.ASSIGNED_PEN IS NOT NULL AND PenRequestBatchStudentEntity.PEN_REQUEST_BATCH_ID = PenRequestBatchEntity.PEN_REQUEST_BATCH_ID AND PenRequestBatchStudentEntity.PEN_REQUEST_BATCH_ID IN :batchIds GROUP BY PEN_REQUEST_BATCH_ID, ASSIGNED_PEN HAVING COUNT(*) > 1))", nativeQuery = true)
   List<PenRequestBatchMultiplePen> findBatchFilesWithMultipleAssignedPens(@Param("batchIds") List<UUID> batchIds);
+
+  long countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(PenRequestBatchEntity penRequestBatchEntity, List<String> penRequestBatchStudentStatusCodes);
+
+  @Query(value = " SELECT *\n" +
+    "         FROM PEN_REQUEST_BATCH_STUDENT prbs\n" +
+    "         WHERE NOT EXISTS(SELECT PEN_REQUEST_BATCH_STUDENT_ID as penRequestBatchStudentID\n" +
+    "                          FROM PEN_REQUEST_BATCH_SAGA prbsaga\n" +
+    "                          WHERE prbsaga.SAGA_NAME = 'PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA'\n" +
+    "                            AND prbsaga.PEN_REQUEST_BATCH_STUDENT_ID = prbs.PEN_REQUEST_BATCH_STUDENT_ID)\n" +
+    "           AND prbs.PEN_REQUEST_BATCH_ID = :penRequestBatchID\n" +
+    "           AND prbs.PEN_REQUEST_BATCH_STUDENT_STATUS_CODE = 'LOADED'\n" +
+    "           AND ROWNUM < :maxResults\n" +
+    "         ORDER BY CREATE_DATE", nativeQuery = true)
+  List<PenRequestBatchStudentEntity> findAllPenRequestBatchStudentEntitiesInLoadedStatusToBeProcessed(UUID penRequestBatchID, Integer maxResults);
 }

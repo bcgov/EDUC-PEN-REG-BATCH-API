@@ -38,4 +38,5 @@ public interface PenRequestBatchRepository extends JpaRepository<PenRequestBatch
   long countAllByPenRequestBatchStatusCodeInAndSchoolGroupCode(List<String> penRequestBatchStatusCodes, String schoolGroupCode);
 
   List<PenRequestBatchEntity> findByPenRequestBatchStatusCodeAndCreateDateBefore(String penRequestBatchStatusCode, LocalDateTime createDate);
+  List<PenRequestBatchEntity> findAllByPenRequestBatchStatusCodeOrderByCreateDate(String penRequestBatchStatusCode);
 }
