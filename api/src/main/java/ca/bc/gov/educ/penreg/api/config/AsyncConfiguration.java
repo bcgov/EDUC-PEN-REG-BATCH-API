@@ -1,7 +1,9 @@
 package ca.bc.gov.educ.penreg.api.config;
 
+import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.util.ThreadFactoryBuilder;
 import org.jboss.threads.EnhancedQueueExecutor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -20,10 +22,11 @@ public class AsyncConfiguration {
    * @return the executor
    */
   @Bean(name = "subscriberExecutor")
-  public Executor threadPoolTaskExecutor() {
+  @Autowired
+  public Executor threadPoolTaskExecutor(final ApplicationProperties applicationProperties) {
     return new EnhancedQueueExecutor.Builder()
       .setThreadFactory(new ThreadFactoryBuilder().withNameFormat("message-subscriber-%d").get())
-      .setCorePoolSize(8).setMaximumPoolSize(8).setKeepAliveTime(Duration.ofSeconds(60)).build();
+      .setCorePoolSize(applicationProperties.getMinSubscriberThreads()).setMaximumPoolSize(applicationProperties.getMaxSubscriberThreads()).setKeepAliveTime(Duration.ofSeconds(60)).build();
   }
 
   /**

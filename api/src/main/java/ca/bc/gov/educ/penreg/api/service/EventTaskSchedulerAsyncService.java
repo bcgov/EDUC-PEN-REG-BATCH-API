@@ -14,6 +14,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultiplePen;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.Orchestrator;
+import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -98,29 +99,31 @@ public class EventTaskSchedulerAsyncService {
   @Setter
   private List<String> statusFilters;
 
+  private final ApplicationProperties applicationProperties;
   /**
    * Instantiates a new Event task scheduler async service.
-   *
-   * @param sagaRepository                     the saga repository
+   *  @param sagaRepository                     the saga repository
    * @param penRequestBatchRepository          the pen request batch repository
    * @param penRequestBatchStudentRepository   the pen request batch student repository
    * @param penRegBatchStudentRecordsProcessor the pen reg batch student records processor
    * @param penRequestBatchEventRepository     the pen request batch event repository
    * @param orchestrators                      the orchestrators
    * @param redisConnectionFactory             the redis template
+   * @param applicationProperties
    */
   public EventTaskSchedulerAsyncService(final SagaRepository sagaRepository, final PenRequestBatchRepository penRequestBatchRepository,
                                         final PenRequestBatchStudentRepository penRequestBatchStudentRepository,
                                         final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor,
                                         final PenRequestBatchEventRepository penRequestBatchEventRepository,
                                         final List<Orchestrator> orchestrators,
-                                        final RedisConnectionFactory redisConnectionFactory) {
+                                        final RedisConnectionFactory redisConnectionFactory, ApplicationProperties applicationProperties) {
     this.sagaRepository = sagaRepository;
     this.penRequestBatchRepository = penRequestBatchRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
     this.penRegBatchStudentRecordsProcessor = penRegBatchStudentRecordsProcessor;
     this.penRequestBatchEventRepository = penRequestBatchEventRepository;
     this.stringRedisTemplate = new StringRedisTemplate(redisConnectionFactory);
+    this.applicationProperties = applicationProperties;
     orchestrators.forEach(orchestrator -> this.sagaOrchestrators.put(orchestrator.getSagaName(), orchestrator));
   }
 
@@ -270,7 +273,7 @@ public class EventTaskSchedulerAsyncService {
   @Transactional
   public void publishRepeatCheckedStudentsForFurtherProcessing() {
     long pendingSagaCount = this.sagaRepository.countAllByStatusIn(this.getStatusFilters());
-    if (pendingSagaCount > 100) {
+    if (pendingSagaCount > this.applicationProperties.getMaxPendingSagas()) {
       log.info("Pending saga count is {}. No need to publish unprocessed student records.", pendingSagaCount);
       return;
     }
@@ -290,11 +293,11 @@ public class EventTaskSchedulerAsyncService {
     val penRequestBatchStudents = new HashSet<PenRequestBatchStudentSagaData>();
     val penReqBatches = this.getPenRequestBatchRepository().findAllByPenRequestBatchStatusCodeOrderByCreateDate(REPEATS_CHECKED.getCode());
     for (val penRequestBatch : penReqBatches) {
-      val prbStudents = this.getPenRequestBatchStudentRepository().findAllPenRequestBatchStudentEntitiesInLoadedStatusToBeProcessed(penRequestBatch.getPenRequestBatchID(), 100);
+      val prbStudents = this.getPenRequestBatchStudentRepository().findAllPenRequestBatchStudentEntitiesInLoadedStatusToBeProcessed(penRequestBatch.getPenRequestBatchID(), this.applicationProperties.getMaxParallelSagas());
       for (val penReqBatchStudent : prbStudents) {
         penRequestBatchStudents.add(PenRegBatchHelper.createSagaDataFromStudentRequestAndBatch(penReqBatchStudent, penRequestBatch));
       }
-      if (penRequestBatchStudents.size() > 100) {
+      if (penRequestBatchStudents.size() > this.applicationProperties.getMaxParallelSagas()) {
         break;
       }
     }
