@@ -79,6 +79,9 @@ public final class PenRegBatchHelper {
    * @return if exact match true else false.
    */
   public static boolean exactMatch(final PenRequestBatchStudent penRequestBatchStudent, final Student student) {
+    if(penRequestBatchStudent == null || student == null) {
+      return false;
+    }
     return StringUtils.equalsIgnoreCase(penRequestBatchStudent.getLegalLastName(), student.getLegalLastName())
       && StringUtils.equalsIgnoreCase(penRequestBatchStudent.getLegalFirstName(), student.getLegalFirstName())
       && StringUtils.equalsIgnoreCase(penRequestBatchStudent.getLegalMiddleNames(), student.getLegalMiddleNames())
@@ -92,9 +95,12 @@ public final class PenRegBatchHelper {
    * this method determines what is the school group code based on different parameters.
    */
   public static SchoolTypeCode getSchoolTypeCodeFromMincode(String mincode) {
+    if (StringUtils.isBlank(mincode)) {
+      return SchoolTypeCode.DEFAULT;
+    }
     if (StringUtils.equals(StringUtils.substring(mincode, 3, 5), "90")) {
       return SchoolTypeCode.SUMMER_SCHOOL;
-    } else if(mincode.equals("10200030")) {
+    } else if (mincode.equals("10200030")) {
       return SchoolTypeCode.SFAS;
     }
     return SchoolTypeCode.DEFAULT;
