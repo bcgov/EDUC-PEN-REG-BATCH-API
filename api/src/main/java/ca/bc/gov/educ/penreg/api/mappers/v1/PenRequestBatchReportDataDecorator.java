@@ -135,6 +135,10 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
   }
 
   private void populateForSystemMatchedStatus(final List<ReportListItem> sysMatchedList, final List<ReportUserMatchedListItem> diffList, final Map<String, Student> students, final PenRequestBatchStudent penRequestBatchStudent) {
+    if (students == null || students.get(penRequestBatchStudent.getStudentID()) == null) {
+      log.error("Error attempting to create report data. Students list should not be null for USR_MATCHED status.");
+      return;
+    }
     val student = students.get(penRequestBatchStudent.getStudentID());
     if (PenRegBatchHelper.exactMatch(penRequestBatchStudent, student)) {
       val item = listItemMapper.toReportListItem(penRequestBatchStudent, "");
