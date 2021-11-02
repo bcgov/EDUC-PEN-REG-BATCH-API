@@ -8,6 +8,7 @@ import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.v1.GradeCode;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueFieldCode;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
@@ -51,7 +52,7 @@ import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 @Component
 @Slf4j
 public class RestUtils {
-
+  public static final String GRADE_CODES = "gradeCodes";
   private static final String CONTENT_TYPE = "Content-Type";
   private final ObjectMapper obMapper = new ObjectMapper();
   /**
@@ -72,7 +73,8 @@ public class RestUtils {
   private final Map<String, PenRequestBatchStudentValidationIssueTypeCode> penRequestBatchStudentValidationIssueTypeCodeMap = new ConcurrentHashMap<>();
 
   private final Map<String, PenRequestBatchStudentValidationIssueFieldCode> penRequestBatchStudentValidationIssueFieldCodeMap = new ConcurrentHashMap<>();
-
+  private final Map<String, List<GradeCode>> gradeCodesMap = new ConcurrentHashMap<>();
+  private final ReadWriteLock gradeLock = new ReentrantReadWriteLock();
   /**
    * The School lock.
    */
@@ -106,8 +108,27 @@ public class RestUtils {
     this.populateSchoolMap();
     this.populatePenRequestBatchStudentValidationIssueTypeCodeMap();
     this.populatePenRequestBatchStudentValidationIssueFieldCodeMap();
+    this.setGradeCodesMap();
+    log.info("Called student api and loaded {} grade codes", this.gradeCodesMap.values().size());
   }
 
+  /**
+   * Sets grade codes map.
+   */
+  public void setGradeCodesMap() {
+    val writeLock = this.gradeLock.writeLock();
+    try {
+      writeLock.lock();
+      this.gradeCodesMap.clear();
+      final List<GradeCode> gradeCodes = this.webClient.get().uri(this.props.getStudentApiURL(), uri -> uri.path("/grade-codes").build()).header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).retrieve().bodyToFlux(GradeCode.class).collectList().block();
+      this.gradeCodesMap.put(GRADE_CODES, gradeCodes);
+    } finally {
+      writeLock.unlock();
+    }
+  }
+  public List<GradeCode> getGradeCodes() {
+    return this.gradeCodesMap.get(GRADE_CODES);
+  }
   /**
    * Populate school map.
    */

@@ -4,6 +4,7 @@ import ca.bc.gov.educ.penreg.api.constants.TwinReasonCodes;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
@@ -13,9 +14,12 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PossibleMatch;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
@@ -33,16 +37,19 @@ import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ
 @Slf4j
 public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrator<PenRequestBatchUserActionsSagaData> {
 
+  private final RestUtils restUtils;
 
   /**
    * Instantiates a new Base orchestrator.
    *
    * @param sagaService      the saga service
    * @param messagePublisher the message publisher
+   * @param restUtils
    */
-  public PenReqBatchUserMatchOrchestrator(final SagaService sagaService, final MessagePublisher messagePublisher) {
+  public PenReqBatchUserMatchOrchestrator(final SagaService sagaService, final MessagePublisher messagePublisher, final RestUtils restUtils) {
     super(sagaService, messagePublisher, PenRequestBatchUserActionsSagaData.class,
-        PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_TOPIC.toString());
+      PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_TOPIC.toString());
+    this.restUtils = restUtils;
   }
 
   /**
@@ -51,14 +58,14 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
   @Override
   public void populateStepsToExecuteMap() {
     this.stepBuilder()
-        .begin(GET_STUDENT, this::getStudentByPen)
-        .step(GET_STUDENT, STUDENT_FOUND, UPDATE_STUDENT, this::updateStudent)
-        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isPossibleMatchAddRequired, ADD_POSSIBLE_MATCH, this::addPossibleMatchToStudent)
-        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isPossibleMatchAddNotRequired, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
-        .step(ADD_POSSIBLE_MATCH, POSSIBLE_MATCH_ADDED, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
-        .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_UPDATED)
-        .or()
-        .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_NOT_FOUND, this::logPenRequestBatchStudentNotFound);
+      .begin(GET_STUDENT, this::getStudentByPen)
+      .step(GET_STUDENT, STUDENT_FOUND, UPDATE_STUDENT, this::updateStudent)
+      .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isPossibleMatchAddRequired, ADD_POSSIBLE_MATCH, this::addPossibleMatchToStudent)
+      .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isPossibleMatchAddNotRequired, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
+      .step(ADD_POSSIBLE_MATCH, POSSIBLE_MATCH_ADDED, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
+      .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_UPDATED)
+      .or()
+      .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_NOT_FOUND, this::logPenRequestBatchStudentNotFound);
   }
 
   private boolean isPossibleMatchAddRequired(final PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
@@ -83,19 +90,19 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
     saga.setSagaState(ADD_POSSIBLE_MATCH.toString()); // set current event as saga state.
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
     final var possibleMatches = penRequestBatchUserActionsSagaData
-        .getMatchedStudentIDList().stream()
-        .map(matchedStudentID -> PossibleMatch.builder()
-            .createUser(penRequestBatchUserActionsSagaData.getCreateUser())
-            .updateUser(penRequestBatchUserActionsSagaData.getUpdateUser())
-            .studentID(penRequestBatchUserActionsSagaData.getStudentID())
-            .matchedStudentID(matchedStudentID)
-            .matchReasonCode(TwinReasonCodes.PEN_MATCH.getCode())
-            .build()).collect(Collectors.toList());
+      .getMatchedStudentIDList().stream()
+      .map(matchedStudentID -> PossibleMatch.builder()
+        .createUser(penRequestBatchUserActionsSagaData.getCreateUser())
+        .updateUser(penRequestBatchUserActionsSagaData.getUpdateUser())
+        .studentID(penRequestBatchUserActionsSagaData.getStudentID())
+        .matchedStudentID(matchedStudentID)
+        .matchReasonCode(TwinReasonCodes.PEN_MATCH.getCode())
+        .build()).collect(Collectors.toList());
     final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-        .eventType(ADD_POSSIBLE_MATCH)
-        .replyTo(this.getTopicToSubscribe())
-        .eventPayload(JsonUtil.getJsonStringFromObject(possibleMatches))
-        .build();
+      .eventType(ADD_POSSIBLE_MATCH)
+      .replyTo(this.getTopicToSubscribe())
+      .eventPayload(JsonUtil.getJsonStringFromObject(possibleMatches))
+      .build();
     this.postMessageToTopic(PEN_MATCH_API_TOPIC.toString(), nextEvent);
     log.info("message sent to PEN_MATCH_API_TOPIC for ADD_POSSIBLE_MATCH Event.");
   }
@@ -113,10 +120,10 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
     saga.setSagaState(GET_STUDENT.toString()); // set current event as saga state.
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
     final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-        .eventType(GET_STUDENT)
-        .replyTo(this.getTopicToSubscribe())
-        .eventPayload(penRequestBatchUserActionsSagaData.getAssignedPEN())
-        .build();
+      .eventType(GET_STUDENT)
+      .replyTo(this.getTopicToSubscribe())
+      .eventPayload(penRequestBatchUserActionsSagaData.getAssignedPEN())
+      .build();
     this.postMessageToTopic(STUDENT_API_TOPIC.toString(), nextEvent);
     log.info("message sent to STUDENT_API_TOPIC for GET_STUDENT Event.");
   }
@@ -134,23 +141,27 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
    * @throws JsonProcessingException the json processing exception
    */
   protected void updateStudent(final Event event, final Saga saga, final PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) throws JsonProcessingException {
+    final var gradeCodes = this.restUtils.getGradeCodes();
+    val isGradeCodeValid = gradeCodes.stream().anyMatch(gradeCode1 -> LocalDateTime.now().isAfter(gradeCode1.getEffectiveDate())
+      && LocalDateTime.now().isBefore(gradeCode1.getExpiryDate())
+      && StringUtils.equalsIgnoreCase(penRequestBatchUserActionsSagaData.getGradeCode(), gradeCode1.getGradeCode()));
     final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(UPDATE_STUDENT.toString()); // set current event as saga state.
     final Student studentDataFromEventResponse = JsonUtil.getJsonObjectFromString(Student.class, event.getEventPayload());
     studentDataFromEventResponse.setUpdateUser(penRequestBatchUserActionsSagaData.getUpdateUser());
     studentDataFromEventResponse.setMincode(penRequestBatchUserActionsSagaData.getMincode());
     studentDataFromEventResponse.setLocalID(penRequestBatchUserActionsSagaData.getLocalID());
-    studentDataFromEventResponse.setGradeCode(penRequestBatchUserActionsSagaData.getGradeCode());
+    studentDataFromEventResponse.setGradeCode(isGradeCodeValid ? penRequestBatchUserActionsSagaData.getGradeCode() : null);
     studentDataFromEventResponse.setPostalCode(penRequestBatchUserActionsSagaData.getPostalCode());
     studentDataFromEventResponse.setHistoryActivityCode(REQ_MATCH.getCode());
     penRequestBatchUserActionsSagaData.setStudentID(studentDataFromEventResponse.getStudentID());
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
     final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-        .eventType(UPDATE_STUDENT)
-        .replyTo(this.getTopicToSubscribe())
-        .eventPayload(JsonUtil.getJsonStringFromObject(studentDataFromEventResponse))
-        .build();
+      .eventType(UPDATE_STUDENT)
+      .replyTo(this.getTopicToSubscribe())
+      .eventPayload(JsonUtil.getJsonStringFromObject(studentDataFromEventResponse))
+      .build();
     this.postMessageToTopic(STUDENT_API_TOPIC.toString(), nextEvent);
     log.info("message sent to STUDENT_API_TOPIC for UPDATE_STUDENT Event.");
   }
