@@ -145,6 +145,8 @@ public class EventTaskSchedulerAsyncService {
         val valueFromRedis = this.stringRedisTemplate.opsForValue().get(redisKey);
         if (StringUtils.isBlank(valueFromRedis)) { // skip if it is already in redis
           this.checkAndUpdateStatusToActiveOrArchived(penReqBatchEntities, penRequestBatchEntity, redisKey);
+        }else{
+          log.info("skipping {} as it is already in redis", redisKey);
         }
       }
       if (!penReqBatchEntities.isEmpty()) {

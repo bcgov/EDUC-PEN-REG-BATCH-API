@@ -104,6 +104,8 @@ public class PenRegBatchStudentRecordsProcessor {
         this.stringRedisTemplate.opsForValue().set(redisKey, "true", 5, TimeUnit.MINUTES);
         this.getPenRequestBatchFileService()
           .filterDuplicatesAndRepeatRequests(prbEntity.getPenRequestBatchID().toString(), prbEntity);
+      }else {
+        log.info("Skipping loaded record for duplicate check as it is already present in redis :: {}", redisKey);
       }
     }
   }
