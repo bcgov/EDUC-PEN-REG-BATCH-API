@@ -93,30 +93,31 @@ public class EventTaskSchedulerAsyncService {
    */
   @Getter(PRIVATE)
   private final PenRequestBatchEventRepository penRequestBatchEventRepository;
+  private final ApplicationProperties applicationProperties;
   /**
    * The Status filters.
    */
   @Setter
   private List<String> statusFilters;
 
-  private final ApplicationProperties applicationProperties;
   /**
    * Instantiates a new Event task scheduler async service.
-   *  @param sagaRepository                     the saga repository
+   *
+   * @param sagaRepository                     the saga repository
    * @param penRequestBatchRepository          the pen request batch repository
    * @param penRequestBatchStudentRepository   the pen request batch student repository
    * @param penRegBatchStudentRecordsProcessor the pen reg batch student records processor
    * @param penRequestBatchEventRepository     the pen request batch event repository
    * @param orchestrators                      the orchestrators
    * @param redisConnectionFactory             the redis template
-   * @param applicationProperties
+   * @param applicationProperties              the application properties
    */
   public EventTaskSchedulerAsyncService(final SagaRepository sagaRepository, final PenRequestBatchRepository penRequestBatchRepository,
                                         final PenRequestBatchStudentRepository penRequestBatchStudentRepository,
                                         final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor,
                                         final PenRequestBatchEventRepository penRequestBatchEventRepository,
                                         final List<Orchestrator> orchestrators,
-                                        final RedisConnectionFactory redisConnectionFactory, ApplicationProperties applicationProperties) {
+                                        final RedisConnectionFactory redisConnectionFactory, final ApplicationProperties applicationProperties) {
     this.sagaRepository = sagaRepository;
     this.penRequestBatchRepository = penRequestBatchRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
@@ -134,9 +135,9 @@ public class EventTaskSchedulerAsyncService {
   @Async("taskExecutor")
   @Transactional
   public void markProcessedBatchesActiveOrArchived() {
-    final var penReqBatches = this.getPenRequestBatchRepository().findByPenRequestBatchStatusCode(REPEATS_CHECKED.getCode());
-    log.debug("found {} records in repeat checked state", penReqBatches.size());
+    final var penReqBatches = this.getPenRequestBatchRepository().findTop10ByPenRequestBatchStatusCodeOrderByCreateDate(REPEATS_CHECKED.getCode());
     if (!penReqBatches.isEmpty()) {
+      log.debug("found {} records in repeat checked state", penReqBatches.size());
       final var penReqBatchEntities = new ArrayList<PenRequestBatchEntity>();
       for (final var penRequestBatchEntity : penReqBatches) {
         final String redisKey = penRequestBatchEntity.getPenRequestBatchID().toString().concat(
@@ -247,7 +248,7 @@ public class EventTaskSchedulerAsyncService {
   @Async("taskExecutor")
   @Transactional
   public void findAndProcessUncompletedSagas() {
-    final var sagas = this.getSagaRepository().findAllByStatusIn(this.getStatusFilters());
+    final var sagas = this.getSagaRepository().findTop100ByStatusInOrderByCreateDate(this.getStatusFilters());
     if (!sagas.isEmpty()) {
       for (val saga : sagas) {
         if (saga.getCreateDate().isBefore(LocalDateTime.now().minusMinutes(5))
@@ -291,7 +292,7 @@ public class EventTaskSchedulerAsyncService {
    */
   private Set<PenRequestBatchStudentSagaData> findRepeatsCheckedStudentRecordsToBeProcessed() {
     val penRequestBatchStudents = new HashSet<PenRequestBatchStudentSagaData>();
-    val penReqBatches = this.getPenRequestBatchRepository().findAllByPenRequestBatchStatusCodeOrderByCreateDate(REPEATS_CHECKED.getCode());
+    val penReqBatches = this.getPenRequestBatchRepository().findTop10ByPenRequestBatchStatusCodeOrderByCreateDate(REPEATS_CHECKED.getCode());
     for (val penRequestBatch : penReqBatches) {
       val prbStudents = this.getPenRequestBatchStudentRepository().findAllPenRequestBatchStudentEntitiesInLoadedStatusToBeProcessed(penRequestBatch.getPenRequestBatchID(), this.applicationProperties.getMaxParallelSagas());
       for (val penReqBatchStudent : prbStudents) {
@@ -301,6 +302,7 @@ public class EventTaskSchedulerAsyncService {
         break;
       }
     }
+    log.info("Publishing {} batch student  records to be processed", penRequestBatchStudents.size());
     return penRequestBatchStudents;
   }
 
@@ -313,10 +315,10 @@ public class EventTaskSchedulerAsyncService {
   @Transactional
   public void checkLoadedStudentRecordsForDuplicatesAndRepeatsAndPublishForFurtherProcessing() {
     final LocalDateTime createDateToCompare = LocalDateTime.now().minusMinutes(10);
-    final var penReqBatches = this.getPenRequestBatchRepository().findByPenRequestBatchStatusCodeAndCreateDateBefore(
+    final var penReqBatches = this.getPenRequestBatchRepository().findTop10ByPenRequestBatchStatusCodeAndCreateDateBeforeOrderByCreateDate(
       LOADED.getCode(), createDateToCompare);
-    log.debug("found :: {}  records to be checked for repeats", penReqBatches.size());
     if (!penReqBatches.isEmpty()) {
+      log.info("found :: {}  records to be checked for repeats", penReqBatches.size());
       this.getPenRegBatchStudentRecordsProcessor().checkLoadedStudentRecordsForDuplicatesAndRepeatsAndPublishForFurtherProcessing(penReqBatches);
     }
   }
