@@ -137,7 +137,7 @@ public class EventTaskSchedulerAsyncService {
   public void markProcessedBatchesActiveOrArchived() {
     final var penReqBatches = this.getPenRequestBatchRepository().findTop10ByPenRequestBatchStatusCodeOrderByCreateDate(REPEATS_CHECKED.getCode());
     if (!penReqBatches.isEmpty()) {
-      log.debug("found {} records in repeat checked state", penReqBatches.size());
+      log.info("found {} records in repeat checked state to be processed for ACTIVE or ARCHIVE", penReqBatches.size());
       final var penReqBatchEntities = new ArrayList<PenRequestBatchEntity>();
       for (final var penRequestBatchEntity : penReqBatches) {
         final String redisKey = penRequestBatchEntity.getPenRequestBatchID().toString().concat(
@@ -148,8 +148,8 @@ public class EventTaskSchedulerAsyncService {
         }
       }
       if (!penReqBatchEntities.isEmpty()) {
-        log.info("marking {} records ACTIVE or ARCHIVED", penReqBatchEntities.size());
         this.getPenRequestBatchRepository().saveAll(penReqBatchEntities); // update all of them in one commit.
+        log.info("marked {} records ACTIVE or ARCHIVED", penReqBatchEntities.size());
       }
     }
   }
