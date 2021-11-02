@@ -40,7 +40,7 @@ public interface PenRequestBatchRepository extends JpaRepository<PenRequestBatch
   List<PenRequestBatchEntity> findByPenRequestBatchStatusCodeAndCreateDateBefore(String penRequestBatchStatusCode, LocalDateTime createDate);
 
 
-  List<PenRequestBatchEntity> findTop10ByPenRequestBatchStatusCodeOrderByCreateDate(String penRequestBatchStatusCode);
+  List<PenRequestBatchEntity> findTop100ByPenRequestBatchStatusCodeOrderByCreateDate(String penRequestBatchStatusCode);
 
   List<PenRequestBatchEntity> findTop10ByPenRequestBatchStatusCodeAndCreateDateBeforeOrderByCreateDate(String penRequestBatchStatusCode, LocalDateTime createDate);
 }

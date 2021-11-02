@@ -135,7 +135,7 @@ public class EventTaskSchedulerAsyncService {
   @Async("taskExecutor")
   @Transactional
   public void markProcessedBatchesActiveOrArchived() {
-    final var penReqBatches = this.getPenRequestBatchRepository().findTop10ByPenRequestBatchStatusCodeOrderByCreateDate(REPEATS_CHECKED.getCode());
+    final var penReqBatches = this.getPenRequestBatchRepository().findTop100ByPenRequestBatchStatusCodeOrderByCreateDate(REPEATS_CHECKED.getCode());
     if (!penReqBatches.isEmpty()) {
       log.info("found {} records in repeat checked state to be processed for ACTIVE or ARCHIVE", penReqBatches.size());
       final var penReqBatchEntities = new ArrayList<PenRequestBatchEntity>();
@@ -294,7 +294,7 @@ public class EventTaskSchedulerAsyncService {
    */
   private Set<PenRequestBatchStudentSagaData> findRepeatsCheckedStudentRecordsToBeProcessed() {
     val penRequestBatchStudents = new HashSet<PenRequestBatchStudentSagaData>();
-    val penReqBatches = this.getPenRequestBatchRepository().findTop10ByPenRequestBatchStatusCodeOrderByCreateDate(REPEATS_CHECKED.getCode());
+    val penReqBatches = this.getPenRequestBatchRepository().findTop100ByPenRequestBatchStatusCodeOrderByCreateDate(REPEATS_CHECKED.getCode());
     for (val penRequestBatch : penReqBatches) {
       val prbStudents = this.getPenRequestBatchStudentRepository().findAllPenRequestBatchStudentEntitiesInLoadedStatusToBeProcessed(penRequestBatch.getPenRequestBatchID(), this.applicationProperties.getMaxParallelSagas());
       if(!prbStudents.isEmpty()){
