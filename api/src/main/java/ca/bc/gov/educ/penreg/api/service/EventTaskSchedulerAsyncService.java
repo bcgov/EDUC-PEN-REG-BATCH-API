@@ -295,15 +295,19 @@ public class EventTaskSchedulerAsyncService {
     val penReqBatches = this.getPenRequestBatchRepository().findTop10ByPenRequestBatchStatusCodeOrderByCreateDate(REPEATS_CHECKED.getCode());
     for (val penRequestBatch : penReqBatches) {
       val prbStudents = this.getPenRequestBatchStudentRepository().findAllPenRequestBatchStudentEntitiesInLoadedStatusToBeProcessed(penRequestBatch.getPenRequestBatchID(), this.applicationProperties.getMaxParallelSagas());
-      log.info("Found {} student records to be processed for batch ID :: {}", prbStudents.size(), penRequestBatch.getPenRequestBatchID());
-      for (val penReqBatchStudent : prbStudents) {
-        penRequestBatchStudents.add(PenRegBatchHelper.createSagaDataFromStudentRequestAndBatch(penReqBatchStudent, penRequestBatch));
+      if(!prbStudents.isEmpty()){
+        log.info("Found {} student records to be processed for batch ID :: {}", prbStudents.size(), penRequestBatch.getPenRequestBatchID());
+        for (val penReqBatchStudent : prbStudents) {
+          penRequestBatchStudents.add(PenRegBatchHelper.createSagaDataFromStudentRequestAndBatch(penReqBatchStudent, penRequestBatch));
+        }
       }
       if (penRequestBatchStudents.size() > this.applicationProperties.getMaxParallelSagas()) {
         break;
       }
     }
-    log.info("Publishing {} batch student  records to be processed", penRequestBatchStudents.size());
+    if(!penRequestBatchStudents.isEmpty()){
+      log.info("Publishing {} batch student  records to be processed", penRequestBatchStudents.size());
+    }
     return penRequestBatchStudents;
   }
 
