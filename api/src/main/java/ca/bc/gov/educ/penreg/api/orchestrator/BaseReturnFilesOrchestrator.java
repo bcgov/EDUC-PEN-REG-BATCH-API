@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
 import ca.bc.gov.educ.penreg.api.constants.*;
+import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchReportDataMapper;
@@ -152,7 +153,9 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
     val nextEvent = Event.builder().sagaId(saga.getSagaId()).eventType(EventType.GET_STUDENTS).replyTo(this.getTopicToSubscribe()).build();
-
+    if (penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents() == null) {
+      throw new PenRegAPIRuntimeException("penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents() is null which is not expected in this flow for batch id :: " + penRequestBatchReturnFilesSagaData.getPenRequestBatchID());
+    }
     final List<String> studentIDs = penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents().stream()
       .map(PenRequestBatchStudent::getStudentID).filter(Objects::nonNull).collect(Collectors.toList());
 
