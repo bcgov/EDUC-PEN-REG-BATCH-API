@@ -73,8 +73,10 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
       final Student student = JsonUtil.getJsonObjectFromString(Student.class, event.getEventPayload());
       studentID = student.getStudentID();
     }
+    penRequestBatchUserActionsSagaData.setStudentID(studentID);
     final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(ADD_POSSIBLE_MATCH.toString()); // set current event as saga state.
+    saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchUserActionsSagaData)); // resave the updated saga data.
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
     final var possibleMatches = penRequestBatchUserActionsSagaData
         .getMatchedStudentIDList().stream()
@@ -164,15 +166,11 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
    */
   @Override
   protected PenRequestBatchStudent updateSagaDataAndCreatePRBStudent(final Event event, final PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) throws JsonProcessingException {
-    final var student = JsonUtil.getJsonObjectFromString(Student.class, event.getEventPayload());
-
     final var prbStudent = penRequestBatchStudentMapper.toPrbStudent(penRequestBatchUserActionsSagaData);
     prbStudent.setPenRequestBatchStudentStatusCode(USR_NEW_PEN.getCode());
-    prbStudent.setStudentID(student.getStudentID());
+    prbStudent.setStudentID(penRequestBatchUserActionsSagaData.getStudentID());
     prbStudent.setAssignedPEN(penRequestBatchUserActionsSagaData.getAssignedPEN());
     prbStudent.setRecordNumber(penRequestBatchUserActionsSagaData.getRecordNumber());
-
-    penRequestBatchUserActionsSagaData.setStudentID(student.getStudentID());
     return prbStudent;
   }
 
