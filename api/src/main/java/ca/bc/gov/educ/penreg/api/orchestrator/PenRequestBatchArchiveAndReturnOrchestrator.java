@@ -86,7 +86,7 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
         SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
         saga.setSagaState(ARCHIVE_PEN_REQUEST_BATCH.toString());
         List<Student> students = obMapper.readValue(event.getEventPayload(), new TypeReference<>(){});
-        penRequestBatchArchiveAndReturnSagaData.setStudents(students);
+        penRequestBatchArchiveAndReturnSagaData.setStudents(event,students);
         saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnSagaData)); // save the updated payload to DB...
         this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 

@@ -78,7 +78,7 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
     SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(GENERATE_PEN_REQUEST_BATCH_REPORTS.toString());
     List<Student> students = obMapper.readValue(event.getEventPayload(), new TypeReference<>(){});
-    penRequestBatchRepostReportsFilesSagaData.setStudents(students);
+    penRequestBatchRepostReportsFilesSagaData.setStudents(event,students);
     saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchRepostReportsFilesSagaData)); // save the updated payload to DB...
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
@@ -101,7 +101,7 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
     SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(SAVE_REPORTS.toString());
     List<Student> students = obMapper.readValue(event.getEventPayload(), new TypeReference<>(){});
-    penRequestBatchRepostReportsFilesSagaData.setStudents(students);
+    penRequestBatchRepostReportsFilesSagaData.setStudents(event,students);
     saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchRepostReportsFilesSagaData)); // save the updated payload to DB...
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 

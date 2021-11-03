@@ -1,8 +1,10 @@
 package ca.bc.gov.educ.penreg.api.struct.v1;
 
+import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -15,6 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
+@Slf4j
 public class BasePenRequestBatchReturnFilesSagaData extends BaseRequest {
 
     /**
@@ -31,7 +34,16 @@ public class BasePenRequestBatchReturnFilesSagaData extends BaseRequest {
      */
     PenRequestBatch penRequestBatch;
     List<PenRequestBatchStudent> penRequestBatchStudents;
+
+  @Setter(AccessLevel.NONE)
     List<Student> students;
+
+  public void setStudents(Event event, List<Student> students) {
+    if (students == null || students.isEmpty()) {
+      log.info("changing students to null in BasePenRequestBatchReturnFilesSagaData for saga id :: {} and event type:: {} and event outcome :: {}",event.getSagaId(), event.getEventType(), event.getEventOutcome());
+    }
+    this.students = students;
+  }
     Map<String, String> penRequestBatchStudentValidationIssues;
     PenCoordinator penCoordinator;
 
