@@ -15,14 +15,17 @@ import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.*;
 import ca.bc.gov.educ.penreg.api.struct.Event;
+import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -174,7 +177,17 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(SAVE_REPORTS.toString());
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-
+    if(CollectionUtils.isEmpty(penRequestBatchReturnFilesSagaData.getStudents())){
+      log.info("students in saga data is null or empty for batch id :: {} and saga id :: {}, setting it from event states table", penRequestBatchReturnFilesSagaData.getPenRequestBatchID(), saga.getSagaId());
+      SagaEvent sagaEvent = SagaEvent.builder().sagaEventState(GET_STUDENTS.toString()).sagaEventOutcome(STUDENTS_FOUND.toString()).sagaStepNumber(3).build();
+      val sagaEventOptional = this.getSagaService().findSagaEvent(saga,sagaEvent);
+      if(sagaEventOptional.isPresent()){
+        List<Student> students = obMapper.readValue(sagaEventOptional.get().getSagaEventResponse(), new TypeReference<>(){});
+        penRequestBatchReturnFilesSagaData.setStudents(event,students);
+      }else{
+        throw new PenRegAPIRuntimeException("students not found in event states table for saga id :: "+saga.getSagaId());
+      }
+    }
     this.getResponseFileGeneratorService().saveReports(event.getEventPayload(),
       mapper.toModel(penRequestBatchReturnFilesSagaData.getPenRequestBatch()),
       penRequestBatchReturnFilesSagaData.getPenRequestBatchStudents(),

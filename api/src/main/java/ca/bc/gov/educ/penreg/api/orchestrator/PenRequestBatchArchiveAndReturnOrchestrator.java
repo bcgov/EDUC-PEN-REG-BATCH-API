@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.orchestrator;
 
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum;
+import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
@@ -20,6 +21,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -132,7 +134,17 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
         penRequestBatchArchiveAndReturnSagaData.setPenRequestBatch(JsonUtil.getJsonObjectFromString(PenRequestBatch.class, event.getEventPayload()));
         saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnSagaData)); // save the updated payload to DB...
         this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-
+        if(CollectionUtils.isEmpty(penRequestBatchArchiveAndReturnSagaData.getStudents())){
+          log.info("students in saga data is null or empty for batch id :: {} and saga id :: {}, setting it from event states table", penRequestBatchArchiveAndReturnSagaData.getPenRequestBatchID(), saga.getSagaId());
+          SagaEvent sagaEvent = SagaEvent.builder().sagaEventState(GET_STUDENTS.toString()).sagaEventOutcome(STUDENTS_FOUND.toString()).sagaStepNumber(3).build();
+          val sagaEventOptional = this.getSagaService().findSagaEvent(saga,sagaEvent);
+          if(sagaEventOptional.isPresent()){
+            List<Student> students = obMapper.readValue(sagaEventOptional.get().getSagaEventResponse(), new TypeReference<>(){});
+            penRequestBatchArchiveAndReturnSagaData.setStudents(event,students);
+          }else{
+            throw new PenRegAPIRuntimeException("students not found in event states table for saga id :: "+saga.getSagaId());
+          }
+        }
         this.getResponseFileGeneratorService().saveReports(mapper.toModel(penRequestBatchArchiveAndReturnSagaData.getPenRequestBatch()),
           penRequestBatchArchiveAndReturnSagaData.getPenRequestBatchStudents(),
           penRequestBatchArchiveAndReturnSagaData.getStudents(),
