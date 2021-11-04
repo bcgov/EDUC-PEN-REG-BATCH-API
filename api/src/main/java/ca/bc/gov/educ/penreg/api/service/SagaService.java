@@ -278,4 +278,7 @@ public class SagaService {
     }
     return Optional.empty();
   }
+  public Optional<SagaEvent> findSagaEvent(final Saga saga, final SagaEvent sagaEvent) {
+    return this.sagaEventRepository.findBySagaAndSagaEventOutcomeAndSagaEventStateAndSagaStepNumber(saga, sagaEvent.getSagaEventOutcome(), sagaEvent.getSagaEventState(), sagaEvent.getSagaStepNumber());
+  }
 }

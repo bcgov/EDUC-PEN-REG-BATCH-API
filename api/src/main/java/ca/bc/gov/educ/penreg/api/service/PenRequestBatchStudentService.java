@@ -133,6 +133,7 @@ public class PenRequestBatchStudentService {
   @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public PenRequestBatchStudentEntity saveAttachedEntity(final PenRequestBatchStudentEntity entity) {
+    entity.setUpdateDate(LocalDateTime.now());
     return this.repository.save(entity);
   }
 
