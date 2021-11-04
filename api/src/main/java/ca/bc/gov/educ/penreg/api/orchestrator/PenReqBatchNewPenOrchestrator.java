@@ -4,6 +4,7 @@ import ca.bc.gov.educ.penreg.api.constants.TwinReasonCodes;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
@@ -13,10 +14,13 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PossibleMatch;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
@@ -32,17 +36,18 @@ import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ
 @Component
 @Slf4j
 public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<PenRequestBatchUserActionsSagaData> {
-
+  private final RestUtils restUtils;
   /**
    * Instantiates a new Pen req batch student orchestrator.
-   *
-   * @param sagaService      the saga service
+   *  @param sagaService      the saga service
    * @param messagePublisher the message publisher
+   * @param restUtils        the rest utils
    */
   @Autowired
-  public PenReqBatchNewPenOrchestrator(final SagaService sagaService, final MessagePublisher messagePublisher) {
+  public PenReqBatchNewPenOrchestrator(final SagaService sagaService, final MessagePublisher messagePublisher, RestUtils restUtils) {
     super(sagaService, messagePublisher, PenRequestBatchUserActionsSagaData.class,
       PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC.toString());
+    this.restUtils = restUtils;
   }
 
   /**
@@ -140,7 +145,12 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
     student.setPen(pen);
     student.setDemogCode("A");
     student.setHistoryActivityCode(REQ_NEW.getCode());
+    final var gradeCodes = this.restUtils.getGradeCodes();
+    val isGradeCodeValid = gradeCodes.stream().anyMatch(gradeCode1 -> LocalDateTime.now().isAfter(gradeCode1.getEffectiveDate())
+      && LocalDateTime.now().isBefore(gradeCode1.getExpiryDate())
+      && StringUtils.equalsIgnoreCase(penRequestBatchUserActionsSagaData.getGradeCode(), gradeCode1.getGradeCode()));
     penRequestBatchUserActionsSagaData.setAssignedPEN(pen);
+    student.setGradeCode(isGradeCodeValid ? student.getGradeCode() : null);
     saga.setSagaState(CREATE_STUDENT.toString());
     saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchUserActionsSagaData));
     final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
