@@ -6,6 +6,7 @@ import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
@@ -80,13 +81,15 @@ public class PenReqBatchNewPenOrchestratorTest extends BaseOrchestratorTest {
   ArgumentCaptor<byte[]> eventCaptor;
 
 
+  @Autowired
+  RestUtils restUtils;
   /**
    * Sets up.
    */
   @Before
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    this.orchestrator = new PenReqBatchNewPenOrchestrator(this.sagaService, this.messagePublisher);
+    this.orchestrator = new PenReqBatchNewPenOrchestrator(this.sagaService, this.messagePublisher, restUtils);
     final var payload = this.placeholderPenRequestBatchActionsSagaData();
     this.sagaData = this.getPenRequestBatchUserActionsSagaDataFromJsonString(payload);
     this.saga = this.sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA.toString(), "Test", payload,
