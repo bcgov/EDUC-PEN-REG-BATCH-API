@@ -70,4 +70,5 @@ public interface SagaRepository extends JpaRepository<Saga, UUID>, JpaSpecificat
   long countAllByStatusIn(List<String> statuses);
   long countAllByPenRequestBatchIDAndSagaNameAndStatus(UUID penRequestBatchID, String sagaName, String status);
   List<Saga> findTop100ByStatusInOrderByCreateDate(List<String> statuses);
+  long countAllByPenRequestBatchIDAndSagaName(UUID penRequestBatchID, String sagaName);
 }
