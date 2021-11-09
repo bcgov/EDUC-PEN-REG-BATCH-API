@@ -164,7 +164,10 @@ public class EventTaskSchedulerAsyncService {
    * @param redisKey              the redis key
    */
   private void checkAndUpdateStatusToActiveOrArchived(final List<PenRequestBatchEntity> penReqBatchEntities, final PenRequestBatchEntity penRequestBatchEntity, final String redisKey) {
-
+    long loadedCount = this.penRequestBatchStudentRepository.countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(penRequestBatchEntity, List.of(LOADED.getCode()));
+    if(loadedCount > 0){
+      return; // all the records are not processed yet.
+    }
     val studentSagaRecordsCount = this.getSagaRepository().countAllByPenRequestBatchIDAndSagaName(penRequestBatchEntity.getPenRequestBatchID(), PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA.toString());
     long dupCount = this.penRequestBatchStudentRepository.countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(penRequestBatchEntity, List.of(DUPLICATE.getCode()));
     long rptCount = this.penRequestBatchStudentRepository.countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(penRequestBatchEntity, List.of(REPEAT.getCode()));
