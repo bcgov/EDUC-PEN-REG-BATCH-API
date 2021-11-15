@@ -281,7 +281,7 @@ public class ResponseFileGeneratorService {
   private String createBody(final PenRequestBatchStudent penRequestBatchStudentEntity) {
     final StringBuilder body = new StringBuilder();
 
-    String localID = StringUtils.leftPad(penRequestBatchStudentEntity.getLocalID(), 12, "0");
+    String localID = StringUtils.rightPad(penRequestBatchStudentEntity.getLocalID(), 12, " ");
     String applicationKey = "";
 
     body.append("SRM")
