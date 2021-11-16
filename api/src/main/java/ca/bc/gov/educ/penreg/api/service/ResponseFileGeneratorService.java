@@ -109,7 +109,7 @@ public class ResponseFileGeneratorService {
         if(student != null) {
           idsFile.append("E03")
           .append(student.getMincode())
-          .append(String.format("%12s", localID))
+          .append(String.format("%-12s", localID))
           .append(student.getPen()).append(" ")
           .append(String.format("%-25s", student.getLegalLastName()))
           .append("\n");
