@@ -109,7 +109,7 @@ public class ResponseFileGeneratorService {
         if(student != null) {
           idsFile.append("E03")
           .append(student.getMincode())
-          .append(String.format("%12s", localID).replace(' ', '0'))
+          .append(String.format("%12s", localID))
           .append(student.getPen()).append(" ")
           .append(String.format("%-25s", student.getLegalLastName()))
           .append("\n");
@@ -281,7 +281,7 @@ public class ResponseFileGeneratorService {
   private String createBody(final PenRequestBatchStudent penRequestBatchStudentEntity) {
     final StringBuilder body = new StringBuilder();
 
-    String localID = StringUtils.rightPad(penRequestBatchStudentEntity.getLocalID(), 12, " ");
+    String localID = StringUtils.leftPad(penRequestBatchStudentEntity.getLocalID(), 12, "0");
     String applicationKey = "";
 
     body.append("SRM")
