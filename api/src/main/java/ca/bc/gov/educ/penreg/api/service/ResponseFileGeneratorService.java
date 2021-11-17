@@ -112,7 +112,7 @@ public class ResponseFileGeneratorService {
           .append(String.format("%-12s", localID))
           .append(student.getPen()).append(" ")
           .append(String.format("%-25s", student.getLegalLastName()))
-          .append("\n");
+          .append("\r\n");
         } else {
           log.error("StudentId was not found. This should not have happened.");
         }
