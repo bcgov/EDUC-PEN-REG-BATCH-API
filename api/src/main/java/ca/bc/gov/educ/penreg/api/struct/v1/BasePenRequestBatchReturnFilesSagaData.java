@@ -39,7 +39,7 @@ public class BasePenRequestBatchReturnFilesSagaData extends BaseRequest {
     List<Student> students;
 
   public void setStudents(Event event, List<Student> students) {
-    if (students == null || students.isEmpty()) {
+    if (students == null) {
       log.info("changing students to null in BasePenRequestBatchReturnFilesSagaData for saga id :: {} and event type:: {} and event outcome :: {}",event.getSagaId(), event.getEventType(), event.getEventOutcome());
     }
     this.students = students;
