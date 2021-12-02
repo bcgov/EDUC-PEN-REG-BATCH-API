@@ -111,6 +111,17 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
         penRequestBatchArchiveAndReturnSagaData.setPenRequestBatch(JsonUtil.getJsonObjectFromString(PenRequestBatch.class, event.getEventPayload()));
         saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchArchiveAndReturnSagaData)); // save the updated payload to DB...
         this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
+        if(penRequestBatchArchiveAndReturnSagaData.getStudents() == null){
+          log.info("students in saga data is null or empty for batch id :: {} and saga id :: {}, setting it from event states table", penRequestBatchArchiveAndReturnSagaData.getPenRequestBatchID(), saga.getSagaId());
+          SagaEvent sagaEvent = SagaEvent.builder().sagaEventState(GET_STUDENTS.toString()).sagaEventOutcome(STUDENTS_FOUND.toString()).sagaStepNumber(3).build();
+          val sagaEventOptional = this.getSagaService().findSagaEvent(saga,sagaEvent);
+          if(sagaEventOptional.isPresent()){
+            List<Student> students = obMapper.readValue(sagaEventOptional.get().getSagaEventResponse(), new TypeReference<>(){});
+            penRequestBatchArchiveAndReturnSagaData.setStudents(event,students);
+          }else{
+            throw new PenRegAPIRuntimeException("students not found in event states table for saga id :: "+saga.getSagaId());
+          }
+        }
 
         Event nextEvent = Event.builder().sagaId(saga.getSagaId())
                 .eventType(GENERATE_PEN_REQUEST_BATCH_REPORTS)
