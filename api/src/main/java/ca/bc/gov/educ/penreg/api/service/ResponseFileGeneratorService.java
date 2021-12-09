@@ -189,7 +189,7 @@ public class ResponseFileGeneratorService {
   }
 
   private String getSourceApplication(String batchSourceApplication){
-    if(batchSourceApplication.equalsIgnoreCase(ASPEN)){
+    if(ASPEN.equalsIgnoreCase(batchSourceApplication)){
       return MYED;
     }
     return PENWEB;
