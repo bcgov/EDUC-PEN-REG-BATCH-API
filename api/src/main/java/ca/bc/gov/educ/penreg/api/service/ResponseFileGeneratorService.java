@@ -252,7 +252,7 @@ public class ResponseFileGeneratorService {
   private void saveReports(final List<PENWebBlobEntity> reports, PenRequestBatchEntity penRequestBatchEntity, List<PenRequestBatchStudent> penRequestBatchStudents,
                           List<Student> students, PenRequestBatchReportData reportData) {
     reports.add(this.getIDSBlob(penRequestBatchEntity, penRequestBatchStudents, students));
-    if (penRequestBatchEntity.getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())) {
+    if (penRequestBatchEntity.getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode()) || penRequestBatchEntity.getMincode().matches("[0][0-9]{4}000$")) {
       reports.add(this.getPARBlob(reportData, penRequestBatchEntity));
       reports.add(this.getTxtBlob(penRequestBatchEntity, penRequestBatchStudents));
     }
