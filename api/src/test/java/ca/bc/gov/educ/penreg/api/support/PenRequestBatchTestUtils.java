@@ -268,7 +268,7 @@ public class PenRequestBatchTestUtils {
       assertThat(batchFile.getBatchFileHeader()).isNotNull();
       final String submissionNumber = ("T" + randomNum).substring(0, 8);
       final var tsw =
-        PENWebBlobEntity.builder().penWebBlobId(1L).mincode(mincode).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName(blobFileName).fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(submissionNumber).build();
+        PENWebBlobEntity.builder().penWebBlobId(1L).mincode(mincode).sourceApplication("MYED").tswAccount((randomNum + "").substring(0, 8)).fileName(blobFileName).fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(submissionNumber).build();
       final PenRequestBatchEntity entity =
         PenRequestBatchFileMapper.mapper.toPenReqBatchEntityLoaded(tsw, batchFile); // batch file can be processed
       // further and persisted.

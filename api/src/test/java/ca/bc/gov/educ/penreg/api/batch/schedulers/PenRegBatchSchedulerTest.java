@@ -114,12 +114,12 @@ public class PenRegBatchSchedulerTest extends BasePenRegAPITest {
       final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
       final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
       final byte[] bFile = Files.readAllBytes(file.toPath());
-      return PENWebBlobEntity.builder().penWebBlobId(1L).studentCount(5L).mincode("66510518").sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+      return PENWebBlobEntity.builder().penWebBlobId(1L).studentCount(5L).mincode("66510518").sourceApplication("MYED").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_K12_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
     } else {
       final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
       final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_PSI_OK.txt")).getFile());
       final byte[] bFile = Files.readAllBytes(file.toPath());
-      return PENWebBlobEntity.builder().penWebBlobId(2L).mincode("10210518").studentCount(5L).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_PSI_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+      return PENWebBlobEntity.builder().penWebBlobId(2L).mincode("10210518").studentCount(5L).sourceApplication("MYED").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_PSI_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
     }
   }
 
@@ -206,7 +206,7 @@ public class PenRegBatchSchedulerTest extends BasePenRegAPITest {
     for (var index = 0; index < 2; index++) {
       final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
       long id = 1;
-      val penWebBlob = PENWebBlobEntity.builder().penWebBlobId(id).mincode("10210518").studentCount(5L).sourceApplication("TSW").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_PSI_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+      val penWebBlob = PENWebBlobEntity.builder().penWebBlobId(id).mincode("10210518").studentCount(5L).sourceApplication("MYED").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_5_PSI_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
       if (index == 0) {
         penWebBlob.setExtractDateTime(LocalDateTime.now());
       }
