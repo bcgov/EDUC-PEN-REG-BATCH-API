@@ -72,7 +72,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
             this.populateForSystemMatchedStatus(sysMatchedList, diffList, students, penRequestBatchStudent);
             break;
           case USR_MATCHED:
-            this.populateForUserMatchedStatus(diffList, confirmedList, students, penRequestBatchStudent);
+            this.populateForUserMatchedStatus(sysMatchedList, diffList, confirmedList, students, penRequestBatchStudent);
             break;
           default:
             log.error("Unexpected pen request batch student status code encountered while attempting generate report data :: " + penRequestBatchStudent.getPenRequestBatchStudentStatusCode());
@@ -109,7 +109,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
     newPenList.add(item);
   }
 
-  private void populateForUserMatchedStatus(final List<ReportUserMatchedListItem> diffList, final List<ReportUserMatchedListItem> confirmedList, final Map<String, Student> students, final PenRequestBatchStudent penRequestBatchStudent) {
+  private void populateForUserMatchedStatus(final List<ReportListItem> sysMatchedList, final List<ReportUserMatchedListItem> diffList, final List<ReportUserMatchedListItem> confirmedList, final Map<String, Student> students, final PenRequestBatchStudent penRequestBatchStudent) {
     if (students == null || students.get(penRequestBatchStudent.getStudentID()) == null) {
       log.error("Error attempting to create report data. Students list should not be null for USR_MATCHED status.");
       return;
@@ -124,13 +124,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       }
       confirmedList.add(item);
     } else {
-      val item = listItemMapper.toReportUserMatchedDiffListItem(penRequestBatchStudent, matchedStudent);
-      // override the value here. see https://gww.jira.educ.gov.bc.ca/browse/PEN-1523
-      // since student wont have full usual name , system overrides it from request student data in the batch file.
-      if (StringUtils.isNotBlank(item.getMin().getUsualName())) {
-        item.getMin().setUsualName(listItemMapper.populateUsualName(penRequestBatchStudent.getUsualLastName(), penRequestBatchStudent.getUsualFirstName(), penRequestBatchStudent.getUsualMiddleNames()));
-      }
-      diffList.add(item);
+      addToSysMatchOrDiffList(sysMatchedList, diffList, students, penRequestBatchStudent);
     }
   }
 
@@ -139,6 +133,10 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       log.error("Error attempting to create report data. Students list should not be null for USR_MATCHED status.");
       return;
     }
+    addToSysMatchOrDiffList(sysMatchedList, diffList, students, penRequestBatchStudent);
+  }
+
+  private void addToSysMatchOrDiffList(final List<ReportListItem> sysMatchedList, final List<ReportUserMatchedListItem> diffList, final Map<String, Student> students, final PenRequestBatchStudent penRequestBatchStudent){
     val student = students.get(penRequestBatchStudent.getStudentID());
     if (PenRegBatchHelper.exactMatch(penRequestBatchStudent, student)) {
       val item = listItemMapper.toReportListItem(penRequestBatchStudent, "");
