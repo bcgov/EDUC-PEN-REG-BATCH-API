@@ -198,6 +198,24 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
   @Test
   @Transactional
+  public void testSaveReports_givenContinuingEdBatch_shouldCreatePARandTXTReports() throws IOException {
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+      "mock_pen_req_batch_student_ids.json", 1);
+    this.batchList.get(0).setMincode("03333000");
+    this.batchList.get(0).setSchoolGroupCode("02");
+    when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool(batchList.get(0).getMincode())));
+
+    final var students = PenRequestBatchTestUtils.createStudents(batchList.get(0));
+    this.responseFileGeneratorService.saveReports(Base64.getEncoder().encodeToString("Here's a fake pdf file".getBytes()), this.batchList.get(0),
+      this.batchList.get(0).getPenRequestBatchStudentEntities().stream().map(mapper::toStructure).collect(Collectors.toList()), students,
+      getPenRequestBatchReportData(this.batchList.get(0)));
+
+    final var penWebBlobsDB = this.prbService.findPenWebBlobBySubmissionNumber(batchList.get(0).getSubmissionNumber());
+    assertThat(penWebBlobsDB.size()).isEqualTo(4);
+  }
+
+  @Test
+  @Transactional
   public void testSavePDFReport_givenPDFString_and_Batch_shouldCreatePDFReport() throws IOException {
     this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
       "mock_pen_req_batch_student_ids.json", 1);
