@@ -174,7 +174,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
         (batch) -> batch.setProcessDate(LocalDateTime.parse("2021-03-23T13:04:48.840098")));
 
     final var student1 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130002").pen("123456785").demogCode("C").build();
-    final var student2 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130003").pen("123456780").build();
+    final var student2 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130003").pen("123456780").legalLastName("BILL").build();
     final List<Student> students = new ArrayList<>();
     students.add(student1);
     students.add(student2);
@@ -212,7 +212,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getDiffList().get(0).getMin().getPen()).isEqualTo("123456780");
     assertThat(reportData.getDiffList().get(0).getMin().getReason()).isEqualTo(null);
     assertThat(reportData.getDiffList().get(0).getMin().getSchoolID()).isEqualTo("");
-    assertThat(reportData.getDiffList().get(0).getMin().getSurname()).isEqualTo("");
+    assertThat(reportData.getDiffList().get(0).getMin().getSurname()).isEqualTo("BILL");
     assertThat(reportData.getDiffList().get(0).getMin().getUsualName()).isEqualTo("");
 
     assertThat(reportData.getDiffList().size()).isEqualTo(1);
