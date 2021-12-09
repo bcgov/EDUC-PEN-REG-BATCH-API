@@ -85,7 +85,6 @@ public class ResponseFileGeneratorService {
     this.restUtils = restUtils;
     this.templateEngine = templateEngine;
   }
-
   /**
    * Create an IDS file for a pen request batch entity
    *
@@ -96,11 +95,11 @@ public class ResponseFileGeneratorService {
 
     Map<String, Student> studentsMap = students.stream().collect(Collectors.toMap(Student::getStudentID, student -> student));
     final List<PenRequestBatchStudent> filteredStudents = penRequestBatchStudentEntities.stream().filter(x ->
-      (x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode()) ||
-        x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.USR_NEW_PEN.getCode()) ||
-        x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode()) ||
-        x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode())) &&
-        x.getLocalID() != null).collect(Collectors.toList());
+            (x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode()) ||
+            x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.USR_NEW_PEN.getCode()) ||
+            x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode()) ||
+            x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode())) &&
+            x.getLocalID() != null).collect(Collectors.toList());
 
     byte[] bFile;
     if (!filteredStudents.isEmpty()) {
@@ -108,14 +107,14 @@ public class ResponseFileGeneratorService {
 
       for (final PenRequestBatchStudent entity : filteredStudents) {
         final var student = studentsMap.get(entity.getStudentID());
-        val localID = PenRegBatchHelper.getSchoolTypeCodeFromMincode(penRequestBatchEntity.getMincode()) == SchoolTypeCode.SFAS ? entity.getLocalID() : student.getLocalID();
-        if (student != null) {
+        val localID = PenRegBatchHelper.getSchoolTypeCodeFromMincode(penRequestBatchEntity.getMincode()) == SchoolTypeCode.SFAS? entity.getLocalID():student.getLocalID();
+        if(student != null) {
           idsFile.append("E03")
-            .append(student.getMincode())
-            .append(String.format("%-12s", localID))
-            .append(student.getPen()).append(" ")
-            .append(String.format("%-25s", student.getLegalLastName()))
-            .append("\r\n");
+          .append(student.getMincode())
+          .append(String.format("%-12s", localID))
+          .append(student.getPen()).append(" ")
+          .append(String.format("%-25s", student.getLegalLastName()))
+          .append("\r\n");
         } else {
           log.error("StudentId was not found. This should not have happened.");
         }
@@ -125,14 +124,14 @@ public class ResponseFileGeneratorService {
       bFile = "No NEW PENS have been assigned by this PEN request".getBytes();
     }
     return PENWebBlobEntity.builder()
-      .mincode(penRequestBatchEntity.getMincode())
-      .sourceApplication(getSourceApplication(penRequestBatchEntity.getSourceApplication()))
-      .fileName(penRequestBatchEntity.getMincode() + ".IDS")
-      .fileType("IDS")
-      .fileContents(bFile)
-      .insertDateTime(LocalDateTime.now())
-      .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
-      .build();
+            .mincode(penRequestBatchEntity.getMincode())
+            .sourceApplication(getSourceApplication(penRequestBatchEntity.getSourceApplication()))
+            .fileName(penRequestBatchEntity.getMincode() + ".IDS")
+            .fileType("IDS")
+            .fileContents(bFile)
+            .insertDateTime(LocalDateTime.now())
+            .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
+            .build();
   }
 
   /**
@@ -145,7 +144,7 @@ public class ResponseFileGeneratorService {
   public PENWebBlobEntity getTxtBlob(final PenRequestBatchEntity penRequestBatchEntity, final List<PenRequestBatchStudent> penRequestBatchStudentEntities) {
 
     final List<PenRequestBatchStudent> filteredStudents = penRequestBatchStudentEntities.stream().filter(x ->
-      (x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode()))).collect(Collectors.toList());
+            (x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode()))).collect(Collectors.toList());
 
     byte[] bFile;
 
@@ -167,30 +166,30 @@ public class ResponseFileGeneratorService {
       bFile = EMPTY_TXT_FILE_CONTENT;
     }
     return PENWebBlobEntity.builder()
-      .mincode(penRequestBatchEntity.getMincode())
-      .sourceApplication(getSourceApplication(penRequestBatchEntity.getSourceApplication()))
-      .fileName(penRequestBatchEntity.getMincode() + ".TXT")
-      .fileType("TXT")
-      .fileContents(bFile)
-      .insertDateTime(LocalDateTime.now())
-      .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
-      .build();
+            .mincode(penRequestBatchEntity.getMincode())
+            .sourceApplication(getSourceApplication(penRequestBatchEntity.getSourceApplication()))
+            .fileName(penRequestBatchEntity.getMincode() + ".TXT")
+            .fileType("TXT")
+            .fileContents(bFile)
+            .insertDateTime(LocalDateTime.now())
+            .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
+            .build();
   }
 
   public PENWebBlobEntity getPDFBlob(String pdfReport, PenRequestBatchEntity penRequestBatchEntity) {
     return PENWebBlobEntity.builder()
-      .mincode(penRequestBatchEntity.getMincode())
-      .sourceApplication(getSourceApplication(penRequestBatchEntity.getSourceApplication()))
-      .fileName(penRequestBatchEntity.getMincode() + ".PDF")
-      .fileType("PDF")
-      .fileContents(Base64.getDecoder().decode(pdfReport.getBytes(StandardCharsets.UTF_8)))
-      .insertDateTime(LocalDateTime.now())
-      .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
-      .build();
+            .mincode(penRequestBatchEntity.getMincode())
+            .sourceApplication(getSourceApplication(penRequestBatchEntity.getSourceApplication()))
+            .fileName(penRequestBatchEntity.getMincode() + ".PDF")
+            .fileType("PDF")
+            .fileContents(Base64.getDecoder().decode(pdfReport.getBytes(StandardCharsets.UTF_8)))
+            .insertDateTime(LocalDateTime.now())
+            .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
+            .build();
   }
 
-  private String getSourceApplication(String batchSourceApplication) {
-    if (batchSourceApplication.equalsIgnoreCase(ASPEN)) {
+  private String getSourceApplication(String batchSourceApplication){
+    if(batchSourceApplication.equalsIgnoreCase(ASPEN)){
       return MYED;
     }
     return PENWEB;
@@ -251,7 +250,7 @@ public class ResponseFileGeneratorService {
   }
 
   private void saveReports(final List<PENWebBlobEntity> reports, PenRequestBatchEntity penRequestBatchEntity, List<PenRequestBatchStudent> penRequestBatchStudents,
-                           List<Student> students, PenRequestBatchReportData reportData) {
+                          List<Student> students, PenRequestBatchReportData reportData) {
     reports.add(this.getIDSBlob(penRequestBatchEntity, penRequestBatchStudents, students));
     if (penRequestBatchEntity.getSchoolGroupCode().equals(SchoolGroupCodes.PSI.getCode())) {
       reports.add(this.getPARBlob(reportData, penRequestBatchEntity));
@@ -266,26 +265,26 @@ public class ResponseFileGeneratorService {
     Optional<PenCoordinator> penCoordinator = this.getPenCoordinatorService().getPenCoordinatorByMinCode(penRequestBatchEntity.getMincode());
 
     header.append("FFI")
-      .append(String.format("%-8.8s", print(penRequestBatchEntity.getMincode())))
-      .append(String.format("%-40.40s", print(penRequestBatchEntity.getSchoolName())))
-      .append(String.format("%-8.8s", penRequestBatchEntity.getProcessDate().format(DateTimeFormatter.ofPattern("yyyyMMdd"))))
-      .append(String.format("%-100.100s", print(penCoordinator.isPresent() ? penCoordinator.get().getPenCoordinatorEmail() : "")))
-      .append(String.format("%-10.10s", print(penCoordinator.map(coordinator -> coordinator.getPenCoordinatorFax().replaceAll("[^0-9]+", "")).orElse(""))))
-      .append(String.format("%-40.40s", print(penCoordinator.isPresent() ? penCoordinator.get().getPenCoordinatorName() : "")))
-      .append("  ")
-      .append(String.format("%-4.4s", print(applicationCode)))
-      .append("\n");
+            .append(String.format("%-8.8s", print(penRequestBatchEntity.getMincode())))
+            .append(String.format("%-40.40s", print(penRequestBatchEntity.getSchoolName())))
+            .append(String.format("%-8.8s", penRequestBatchEntity.getProcessDate().format(DateTimeFormatter.ofPattern("yyyyMMdd"))))
+            .append(String.format("%-100.100s", print(penCoordinator.isPresent()? penCoordinator.get().getPenCoordinatorEmail() : "")))
+            .append(String.format("%-10.10s", print(penCoordinator.map(coordinator -> coordinator.getPenCoordinatorFax().replaceAll("[^0-9]+", "")).orElse(""))))
+            .append(String.format("%-40.40s", print(penCoordinator.isPresent()? penCoordinator.get().getPenCoordinatorName() : "")))
+            .append("  ")
+            .append(String.format("%-4.4s", print(applicationCode)))
+            .append("\n");
 
     return header.toString();
   }
 
   private String createFooter(final PenRequestBatchEntity penRequestBatchEntity, final int studentCount) {
     return "BTR" +
-      String.format("%06d", studentCount) +
-      String.format("%-100.100s", print(penRequestBatchEntity.getSisVendorName())) +
-      String.format("%-100.100s", print(penRequestBatchEntity.getSisProductName())) +
-      String.format("%-15.15s", print(penRequestBatchEntity.getSisProductID())) +
-      "\n";
+            String.format("%06d", studentCount) +
+            String.format("%-100.100s", print(penRequestBatchEntity.getSisVendorName())) +
+            String.format("%-100.100s", print(penRequestBatchEntity.getSisProductName())) +
+            String.format("%-15.15s", print(penRequestBatchEntity.getSisProductID())) +
+            "\n";
   }
 
   private String createBody(final PenRequestBatchStudent penRequestBatchStudentEntity) {
@@ -295,22 +294,22 @@ public class ResponseFileGeneratorService {
     String applicationKey = "";
 
     body.append("SRM")
-      .append(String.format("%-12.12s", print(localID)))
-      .append(String.format("%-10.10s", print(penRequestBatchStudentEntity.getSubmittedPen())))
-      .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getLegalLastName())))
-      .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getLegalFirstName())))
-      .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getLegalMiddleNames())))
-      .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getUsualLastName())))
-      .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getUsualFirstName())))
-      .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getUsualMiddleNames())))
-      .append(String.format("%-8.8s", print(penRequestBatchStudentEntity.getDob())))
-      .append(String.format("%1.1s", print(penRequestBatchStudentEntity.getGenderCode())))
-      .append(StringUtils.leftPad("", 16, " "))
-      .append(String.format("%-2.2s", print(penRequestBatchStudentEntity.getGradeCode())))
-      .append(StringUtils.leftPad("", 26, " "))
-      .append(String.format("%-7.7s", print(penRequestBatchStudentEntity.getPostalCode())))
-      .append(String.format("%-20.20s", print(applicationKey)))
-      .append("\n");
+            .append(String.format("%-12.12s", print(localID)))
+            .append(String.format("%-10.10s", print(penRequestBatchStudentEntity.getSubmittedPen())))
+            .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getLegalLastName())))
+            .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getLegalFirstName())))
+            .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getLegalMiddleNames())))
+            .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getUsualLastName())))
+            .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getUsualFirstName())))
+            .append(String.format("%-25.25s", print(penRequestBatchStudentEntity.getUsualMiddleNames())))
+            .append(String.format("%-8.8s", print(penRequestBatchStudentEntity.getDob())))
+            .append(String.format("%1.1s", print(penRequestBatchStudentEntity.getGenderCode())))
+            .append(StringUtils.leftPad("", 16, " "))
+            .append(String.format("%-2.2s", print(penRequestBatchStudentEntity.getGradeCode())))
+            .append(StringUtils.leftPad("", 26, " "))
+            .append(String.format("%-7.7s", print(penRequestBatchStudentEntity.getPostalCode())))
+            .append(String.format("%-20.20s", print(applicationKey)))
+            .append("\n");
 
     return body.toString();
   }
@@ -319,11 +318,11 @@ public class ResponseFileGeneratorService {
     var applicationCode = "PEN";
     var school = this.restUtils.getSchoolByMincode(mincode).
       orElseThrow(() -> new PenRegAPIRuntimeException("Cannot find the school data by mincode :: " + mincode));
-    if (school.getDistNo().equals("104")) {
+    if(school.getDistNo().equals("104")) {
       applicationCode = "MISC";
-    } else if (school.getDistNo().equals("102") && school.getSchlNo().equals("00030")) {
+    } else if(school.getDistNo().equals("102") && school.getSchlNo().equals("00030")) {
       applicationCode = "SFAS";
-    } else if (school.getFacilityTypeCode().equals("12")) {
+    } else if(school.getFacilityTypeCode().equals("12")) {
       applicationCode = "SS";
     }
     return applicationCode;
