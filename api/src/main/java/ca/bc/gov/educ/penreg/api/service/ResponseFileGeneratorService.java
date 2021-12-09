@@ -42,7 +42,9 @@ import static lombok.AccessLevel.PRIVATE;
 @Slf4j
 public class ResponseFileGeneratorService {
 
-  public static final String SOURCE_APPLICATION = "PENWEB";
+  public static final String PENWEB = "PENWEB";
+  public static final String MYED = "MYED";
+  public static final String ASPEN = "Aspen";
   private static final int PAR_FILE_PAGE_LINES = 52;
   private static final byte[] EMPTY_TXT_FILE_CONTENT = "No errors have been identified in this request".getBytes();
   /**
@@ -123,7 +125,7 @@ public class ResponseFileGeneratorService {
     }
     return PENWebBlobEntity.builder()
             .mincode(penRequestBatchEntity.getMincode())
-            .sourceApplication(SOURCE_APPLICATION)
+            .sourceApplication(getSourceApplication(penRequestBatchEntity.getSourceApplication()))
             .fileName(penRequestBatchEntity.getMincode() + ".IDS")
             .fileType("IDS")
             .fileContents(bFile)
@@ -165,7 +167,7 @@ public class ResponseFileGeneratorService {
     }
     return PENWebBlobEntity.builder()
             .mincode(penRequestBatchEntity.getMincode())
-            .sourceApplication(SOURCE_APPLICATION)
+            .sourceApplication(getSourceApplication(penRequestBatchEntity.getSourceApplication()))
             .fileName(penRequestBatchEntity.getMincode() + ".TXT")
             .fileType("TXT")
             .fileContents(bFile)
@@ -177,13 +179,20 @@ public class ResponseFileGeneratorService {
   public PENWebBlobEntity getPDFBlob(String pdfReport, PenRequestBatchEntity penRequestBatchEntity) {
     return PENWebBlobEntity.builder()
             .mincode(penRequestBatchEntity.getMincode())
-            .sourceApplication(SOURCE_APPLICATION)
+            .sourceApplication(getSourceApplication(penRequestBatchEntity.getSourceApplication()))
             .fileName(penRequestBatchEntity.getMincode() + ".PDF")
             .fileType("PDF")
             .fileContents(Base64.getDecoder().decode(pdfReport.getBytes(StandardCharsets.UTF_8)))
             .insertDateTime(LocalDateTime.now())
             .submissionNumber(penRequestBatchEntity.getSubmissionNumber())
             .build();
+  }
+
+  private String getSourceApplication(String batchSourceApplication){
+    if(ASPEN.equalsIgnoreCase(batchSourceApplication)){
+      return MYED;
+    }
+    return PENWEB;
   }
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -231,7 +240,7 @@ public class ResponseFileGeneratorService {
 
     return PENWebBlobEntity.builder()
       .mincode(penRequestBatchEntity.getMincode())
-      .sourceApplication(SOURCE_APPLICATION)
+      .sourceApplication(getSourceApplication(penRequestBatchEntity.getSourceApplication()))
       .fileName(penRequestBatchEntity.getMincode() + ".PAR")
       .fileType("PAR")
       .fileContents(content.getBytes())

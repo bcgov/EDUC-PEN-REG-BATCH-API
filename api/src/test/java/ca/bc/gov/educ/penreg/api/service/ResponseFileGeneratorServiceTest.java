@@ -99,6 +99,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
     assertThat(penWebBlob.getPenWebBlobId()).isEqualTo(penWebBlob.getPenWebBlobId());
     assertThat(penWebBlob.getFileName()).isEqualTo(penWebBlob.getMincode() + ".TXT");
+    assertThat(penWebBlob.getSourceApplication()).isEqualTo("MYED");
     assertThat(penWebBlob.getFileContents().length > 0).isTrue();
     assertThat(new String(penWebBlob.getFileContents())).contains("2046291");
     assertThat(new String(penWebBlob.getFileContents())).contains("221024");
