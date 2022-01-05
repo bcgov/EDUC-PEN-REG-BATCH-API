@@ -1,10 +1,16 @@
 package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.MatchAlgorithmStatusCode;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentValidationIssueEntity;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.interfaces.PenMatchResultProcessingService;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+import java.util.Set;
 
 import static lombok.AccessLevel.PROTECTED;
 
@@ -63,6 +69,25 @@ public abstract class BasePenMatchResultProcessingService<T, R> implements PenMa
         break;
     }
     return r;
+  }
+  /**
+   * check if there is a warning present in the validation.
+   *
+   * @param validationIssueEntities the validation issues
+   * @return the boolean true if validation of grade code resulted in warning else false.
+   */
+  protected boolean isGradeCodeWarningPresent(final List<PenRequestBatchStudentValidationIssue> validationIssueEntities) {
+    return validationIssueEntities.stream().anyMatch(entity -> "GRADECODE".equals(entity.getPenRequestBatchValidationFieldCode()));
+  }
+
+  /**
+   * check if there is a warning present in the validation.
+   *
+   * @param validationIssueEntities the validation issues
+   * @return the boolean true if validation of grade code resulted in warning else false.
+   */
+  protected boolean isGradeCodeWarningPresentForEntity(final Set<PenRequestBatchStudentValidationIssueEntity> validationIssueEntities) {
+    return validationIssueEntities.stream().anyMatch(entity -> "GRADECODE".equals(entity.getPenRequestBatchValidationFieldCode()));
   }
 
   protected abstract R handleDefault(T t);
