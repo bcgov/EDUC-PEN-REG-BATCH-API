@@ -185,7 +185,7 @@ public abstract class BaseBatchStudentPenMatchResultProcessingService extends Ba
       student.setCreateUser(ALGORITHM);
       student.setUpdateUser(ALGORITHM);
       penRequestBatchStudent.setAssignedPEN(pen);
-      if (this.isGradeCodeWarningPresent(penRequestBatchStudent)) {
+      if (this.isGradeCodeWarningPresentForEntity(penRequestBatchStudent.getPenRequestBatchStudentValidationIssueEntities())) {
         student.setGradeCode(null);
       }
       final var studentFromStudentAPIOptional = this.getRestUtils().getStudentByPEN(pen);
@@ -204,16 +204,6 @@ public abstract class BaseBatchStudentPenMatchResultProcessingService extends Ba
     return Event.builder().sagaId(saga.getSagaId())
       .eventType(PROCESS_PEN_MATCH_RESULTS).eventOutcome(PEN_MATCH_RESULTS_PROCESSED)
       .eventPayload(penMatchResult.getPenStatus()).build();
-  }
-
-  /**
-   * check if there is a warning present in the validation.
-   *
-   * @param penRequestBatchStudent the incoming record from school
-   * @return the boolean true if validation of grade code resulted in warning else false.
-   */
-  protected boolean isGradeCodeWarningPresent(final PenRequestBatchStudentEntity penRequestBatchStudent) {
-    return penRequestBatchStudent.getPenRequestBatchStudentValidationIssueEntities().stream().anyMatch(entity -> "GRADECODE".equals(entity.getPenRequestBatchValidationFieldCode()));
   }
 
   /**
@@ -313,7 +303,7 @@ public abstract class BaseBatchStudentPenMatchResultProcessingService extends Ba
    */
   protected void updateGradeCodeAndGradeYear(final Student studentFromStudentAPI, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, final PenRequestBatchEntity penRequestBatchEntity, final PenRequestBatchStudentEntity penRequestBatchStudent) {
     if (!StringUtils.startsWith(penRequestBatchEntity.getMincode(), "102")
-      && !this.isGradeCodeWarningPresent(penRequestBatchStudent)
+      && !this.isGradeCodeWarningPresentForEntity(penRequestBatchStudent.getPenRequestBatchStudentValidationIssueEntities())
       && ((StringUtils.isNotBlank(penRequestBatchStudentSagaData.getGradeCode()) && StringUtils.isNotBlank(studentFromStudentAPI.getGradeCode()))
       || (StringUtils.isNotBlank(penRequestBatchStudentSagaData.getGradeCode())))) {
       studentFromStudentAPI.setGradeCode(penRequestBatchStudentSagaData.getGradeCode());
