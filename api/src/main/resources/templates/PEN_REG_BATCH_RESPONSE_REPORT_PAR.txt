@@ -71,9 +71,8 @@ have the old PEN nulled by your MyEd HelpDesk.
     --------- ------------------------- ------------------------- ------------------------- ---------- -- ------------
 [# th:each="diff : ${d.diffList}"]
 [# th:with="pen=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.school.pen, 9)},surname=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.school.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.school.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.school.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.school.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.school.gender, 2)}" ]SCH [(${pen})] [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${diff.school.schoolID})][/]
-               Usual Name: [(${diff.school.usualName})]
+
 [# th:with="pen=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.pen, 9)},surname=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.gender, 2)}" ]Min [(${pen})] [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${diff.min.schoolID})][/]
-               Usual Name: [(${diff.min.usualName})]
 
 [/]----------------------------------------------------------------------------------------------------------------------[/]
 [# th:if="${d.confirmedList.size() > 0}"]
