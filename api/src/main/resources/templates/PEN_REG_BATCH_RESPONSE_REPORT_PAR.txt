@@ -75,19 +75,7 @@ have the old PEN nulled by your MyEd HelpDesk.
 [# th:with="pen=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.pen, 9)},surname=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(diff.min.gender, 2)}" ]Min [(${pen})] [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${diff.min.schoolID})][/]
 
 [/]----------------------------------------------------------------------------------------------------------------------[/]
-[# th:if="${d.confirmedList.size() > 0}"]
-CONFIRMED – The record you submitted has matched an Official Ministry Record, however your record differs from the
-Official Ministry Record which has been confirmed with legal documentation. PLEASE update your record with the
-information from the Official Ministry Record or fax the PEN Coordinator any legal documentation that indicates the
-record you submitted is correct.
 
-       PEN    Legal Surname             Legal Given Name          Legal Middle Names        Birth Date Gn School Id
-    --------- ------------------------- ------------------------- ------------------------- ---------- -- ------------
-[# th:each="confirmed : ${d.confirmedList}"]
-[# th:with="pen=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.pen, 9)},surname=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.school.gender, 2)}" ]SCH [(${pen})] [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${confirmed.school.schoolID})][/]
-[# th:with="pen=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.pen, 9)},surname=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.surname, 25)},givenName=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.givenName, 25)},legalMiddleNames=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.legalMiddleNames, 25)},birthDate=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.birthDate, 10)},gender=${T(org.apache.commons.lang3.StringUtils).rightPad(confirmed.min.gender, 2)}" ]MIN [(${pen})] [(${surname})] [(${givenName})] [(${legalMiddleNames})] [(${birthDate})] [(${gender})] [(${confirmed.min.schoolID})][/]
-
-[/]----------------------------------------------------------------------------------------------------------------------[/]
 The PEN request file was processed by the PEN system on [(${d.processDate})] at [(${d.processTime})], PENWEB Submission #[(${d.submissionNumber})]
 
 END OF REPORT
