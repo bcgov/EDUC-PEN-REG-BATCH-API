@@ -69,48 +69,47 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getMailingAddress()).isEqualTo("mailing address");
     assertThat(reportData.getPenCordinatorEmail()).isEqualTo("test@abc.com");
 
-    assertThat(reportData.getDiffList().size()).isEqualTo(1);
-    assertThat(reportData.getDiffList().get(0).getMin().getBirthDate()).isEqualTo("1990/07/03");
-    assertThat(reportData.getDiffList().get(0).getMin().getGender()).isEqualTo("F");
-    assertThat(reportData.getDiffList().get(0).getMin().getGivenName()).isEqualTo("Ted");
-    assertThat(reportData.getDiffList().get(0).getMin().getLegalMiddleNames()).isEqualTo("Jim");
-    assertThat(reportData.getDiffList().get(0).getMin().getPen()).isEqualTo("123456780");
+    assertThat(reportData.getDiffList().size()).isEqualTo(2);
+    assertThat(reportData.getDiffList().get(0).getMin().getBirthDate()).isEqualTo("1990/07/04");
+    assertThat(reportData.getDiffList().get(0).getMin().getGender()).isEqualTo("M");
+    assertThat(reportData.getDiffList().get(0).getMin().getGivenName()).isEqualTo("Mike");
+    assertThat(reportData.getDiffList().get(0).getMin().getLegalMiddleNames()).isEqualTo("Tim");
+    assertThat(reportData.getDiffList().get(0).getMin().getPen()).isEqualTo("123456785");
     assertThat(reportData.getDiffList().get(0).getMin().getReason()).isNull();
     assertThat(reportData.getDiffList().get(0).getMin().getSchoolID()).isBlank();
-    assertThat(reportData.getDiffList().get(0).getMin().getSurname()).isEqualTo("Jones");
-    assertThat(reportData.getDiffList().get(0).getMin().getUsualName()).isEqualTo("JOSEPH, BRAYDON, SMIT");
+    assertThat(reportData.getDiffList().get(0).getMin().getSurname()).isEqualTo("Joe");
+    assertThat(reportData.getDiffList().get(0).getMin().getUsualName()).isEqualTo("JOSEPH, BRAYDON, KIM");
 
     assertThat(reportData.getDiffList().get(0).getSchool().getBirthDate()).isEqualTo("2011/12/08");
     assertThat(reportData.getDiffList().get(0).getSchool().getGender()).isEqualTo("M");
-    assertThat(reportData.getDiffList().get(0).getSchool().getGivenName()).isEqualTo("BOY");
+    assertThat(reportData.getDiffList().get(0).getSchool().getGivenName()).isEqualTo("BRAYDON");
     assertThat(reportData.getDiffList().get(0).getSchool().getLegalMiddleNames()).isEqualTo("JAMIESON");
-    assertThat(reportData.getDiffList().get(0).getSchool().getPen()).isEqualTo("987654321");
-    assertThat(reportData.getDiffList().get(0).getSchool().getReason()).isEqualTo("Here's some more info");
+    assertThat(reportData.getDiffList().get(0).getSchool().getPen()).isEqualTo("123456785");
+    assertThat(reportData.getDiffList().get(0).getSchool().getReason()).isEqualTo("Here's some info");
     assertThat(reportData.getDiffList().get(0).getSchool().getSchoolID()).isEqualTo("2046302");
-    assertThat(reportData.getDiffList().get(0).getSchool().getSurname()).isEqualTo("BRODY");
-    assertThat(reportData.getDiffList().get(0).getSchool().getUsualName()).isEqualTo("JOSEPH, BRAYDON, SMIT");
+    assertThat(reportData.getDiffList().get(0).getSchool().getSurname()).isEqualTo("JOSEPH");
+    assertThat(reportData.getDiffList().get(0).getSchool().getUsualName()).isEqualTo("JOSEPH, BRAYDON, KIM");
 
-    assertThat(reportData.getConfirmedList().size()).isEqualTo(1);
-    assertThat(reportData.getConfirmedList().get(0).getMin().getBirthDate()).isEqualTo("1990/07/04");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getGender()).isEqualTo("M");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getGivenName()).isEqualTo("Mike");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getLegalMiddleNames()).isEqualTo("Tim");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getPen()).isEqualTo("123456785");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getReason()).isNull();
-    assertThat(reportData.getConfirmedList().get(0).getMin().getSchoolID()).isBlank();
-    assertThat(reportData.getConfirmedList().get(0).getMin().getSurname()).isEqualTo("Joe");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getUsualName()).isEqualTo("JOSEPH, BRAYDON, KIM");
+    assertThat(reportData.getDiffList().size()).isEqualTo(2);
+    assertThat(reportData.getDiffList().get(1).getMin().getBirthDate()).isEqualTo("1990/07/03");
+    assertThat(reportData.getDiffList().get(1).getMin().getGender()).isEqualTo("F");
+    assertThat(reportData.getDiffList().get(1).getMin().getGivenName()).isEqualTo("Ted");
+    assertThat(reportData.getDiffList().get(1).getMin().getLegalMiddleNames()).isEqualTo("Jim");
+    assertThat(reportData.getDiffList().get(1).getMin().getPen()).isEqualTo("123456780");
+    assertThat(reportData.getDiffList().get(1).getMin().getReason()).isNull();
+    assertThat(reportData.getDiffList().get(1).getMin().getSchoolID()).isBlank();
+    assertThat(reportData.getDiffList().get(1).getMin().getSurname()).isEqualTo("Jones");
+    assertThat(reportData.getDiffList().get(1).getMin().getUsualName()).isEqualTo("JOSEPH, BRAYDON, SMIT");
 
-    assertThat(reportData.getConfirmedList().size()).isEqualTo(1);
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getBirthDate()).isEqualTo("2011/12/08");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getGender()).isEqualTo("M");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getGivenName()).isEqualTo("BRAYDON");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getLegalMiddleNames()).isEqualTo("JAMIESON");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getPen()).isEqualTo("123456785");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getReason()).isEqualTo("Here's some info");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getSchoolID()).isEqualTo("2046302");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getSurname()).isEqualTo("JOSEPH");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getUsualName()).isEqualTo("JOSEPH, BRAYDON, KIM");
+    assertThat(reportData.getDiffList().get(1).getSchool().getBirthDate()).isEqualTo("2011/12/08");
+    assertThat(reportData.getDiffList().get(1).getSchool().getGender()).isEqualTo("M");
+    assertThat(reportData.getDiffList().get(1).getSchool().getGivenName()).isEqualTo("BOY");
+    assertThat(reportData.getDiffList().get(1).getSchool().getLegalMiddleNames()).isEqualTo("JAMIESON");
+    assertThat(reportData.getDiffList().get(1).getSchool().getPen()).isEqualTo("987654321");
+    assertThat(reportData.getDiffList().get(1).getSchool().getReason()).isEqualTo("Here's some more info");
+    assertThat(reportData.getDiffList().get(1).getSchool().getSchoolID()).isEqualTo("2046302");
+    assertThat(reportData.getDiffList().get(1).getSchool().getSurname()).isEqualTo("BRODY");
+    assertThat(reportData.getDiffList().get(1).getSchool().getUsualName()).isEqualTo("JOSEPH, BRAYDON, SMIT");
 
     assertThat(reportData.getNewPenList().size()).isEqualTo(2);
     assertThat(reportData.getPendingList().size()).isEqualTo(5);
@@ -226,31 +225,20 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getDiffList().get(0).getSchool().getSurname()).isEqualTo("");
     assertThat(reportData.getDiffList().get(0).getSchool().getUsualName()).isEqualTo("");
 
-    assertThat(reportData.getConfirmedList().size()).isEqualTo(1);
-    assertThat(reportData.getConfirmedList().get(0).getMin().getBirthDate()).isEqualTo("");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getGender()).isEqualTo("");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getGivenName()).isEqualTo("");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getLegalMiddleNames()).isEqualTo("");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getPen()).isEqualTo("123456785");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getReason()).isEqualTo(null);
-    assertThat(reportData.getConfirmedList().get(0).getMin().getSchoolID()).isEqualTo("");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getSurname()).isEqualTo("");
-    assertThat(reportData.getConfirmedList().get(0).getMin().getUsualName()).isEqualTo("");
-
-    assertThat(reportData.getConfirmedList().size()).isEqualTo(1);
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getBirthDate()).isEqualTo("");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getGender()).isEqualTo("");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getGivenName()).isEqualTo("");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getLegalMiddleNames()).isEqualTo("");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getPen()).isEqualTo("");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getReason()).isEqualTo(null);
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getSchoolID()).isEqualTo("");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getSurname()).isEqualTo("");
-    assertThat(reportData.getConfirmedList().get(0).getSchool().getUsualName()).isEqualTo("");
+    assertThat(reportData.getSysMatchedList().size()).isEqualTo(2);
+    assertThat(reportData.getSysMatchedList().get(1).getBirthDate()).isEqualTo("");
+    assertThat(reportData.getSysMatchedList().get(1).getGender()).isEqualTo("");
+    assertThat(reportData.getSysMatchedList().get(1).getGivenName()).isEqualTo("");
+    assertThat(reportData.getSysMatchedList().get(1).getLegalMiddleNames()).isEqualTo("");
+    assertThat(reportData.getSysMatchedList().get(1).getPen()).isEqualTo("");
+    assertThat(reportData.getSysMatchedList().get(1).getReason()).isEqualTo(null);
+    assertThat(reportData.getSysMatchedList().get(1).getSchoolID()).isEqualTo("");
+    assertThat(reportData.getSysMatchedList().get(1).getSurname()).isEqualTo("");
+    assertThat(reportData.getSysMatchedList().get(1).getUsualName()).isEqualTo("");
 
     assertThat(reportData.getNewPenList().size()).isEqualTo(2);
     assertThat(reportData.getPendingList().size()).isEqualTo(4);
-    assertThat(reportData.getSysMatchedList().size()).isEqualTo(1);
+    assertThat(reportData.getSysMatchedList().size()).isEqualTo(2);
   }
 
     public String formatMincode(String mincode) {
