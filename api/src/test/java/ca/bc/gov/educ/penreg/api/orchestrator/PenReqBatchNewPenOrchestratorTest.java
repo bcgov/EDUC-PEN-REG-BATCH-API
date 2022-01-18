@@ -2,8 +2,10 @@ package ca.bc.gov.educ.penreg.api.orchestrator;
 
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
+import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
+import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
@@ -23,13 +25,17 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_ALREADY_EXIST;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_CREATED;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.*;
 
 /**
@@ -194,5 +200,123 @@ public class PenReqBatchNewPenOrchestratorTest extends BaseOrchestratorTest {
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_CREATED.toString());
   }
 
+  /**
+   * Test update pen request batch student
+   *
+   * @throws JsonProcessingException the json processing exception
+   */
+  @Test
+  public void testUpdatePenRequestBatchStudent_givenEventAndSagaDataWithNullStudentID_AndNoCreateStudentEventRecord_shouldThrowException() throws JsonProcessingException {
+    final var pen = "123456789";
+    final var studentID = UUID.randomUUID().toString();
+    final var student = Student.builder().studentID(studentID).pen(pen).legalFirstName("Jack").build();
+    final var event = Event.builder()
+      .eventType(ADD_POSSIBLE_MATCH)
+      .eventOutcome(EventOutcome.POSSIBLE_MATCH_ADDED)
+      .sagaId(this.saga.getSagaId())
+      .eventPayload(JsonUtil.getJsonStringFromObject(student))
+      .build();
+    this.sagaData.setAssignedPEN(pen);
+    Exception exception = assertThrows(PenRegAPIRuntimeException.class, () -> {
+      this.orchestrator.updatePenRequestBatchStudent(event, this.saga, this.sagaData);
+    });
+    assertThat(exception.getMessage()).contains("CREATE_STUDENT event not found in event states table for saga id");
+  }
+
+  /**
+   * Test update pen request batch student.
+   *
+   * @throws JsonProcessingException the json processing exception
+   */
+  @Test
+  public void testUpdatePenRequestBatchStudent_givenEventAndSagaDataWithNullStudentID_AndStudentCreatedEventRecord_shouldPostEventToBatchApi() throws JsonProcessingException {
+    final var pen = "123456789";
+    final var studentID = UUID.randomUUID().toString();
+    final var student = Student.builder().studentID(studentID).pen(pen).legalFirstName("Jack").build();
+    final var event = Event.builder()
+      .eventType(ADD_POSSIBLE_MATCH)
+      .eventOutcome(EventOutcome.POSSIBLE_MATCH_ADDED)
+      .sagaId(this.saga.getSagaId())
+      .eventPayload(JsonUtil.getJsonStringFromObject(student))
+      .build();
+    this.sagaData.setAssignedPEN(pen);
+    final var sagaEvent = SagaEvent.builder()
+      .saga(this.saga)
+      .sagaEventState(CREATE_STUDENT.toString())
+      .sagaEventOutcome(STUDENT_CREATED.toString())
+      .sagaStepNumber(3)
+      .sagaEventResponse(JsonUtil.getJsonStringFromObject(student))
+      .createDate(LocalDateTime.now())
+      .createUser("Test")
+      .updateUser("Test")
+      .updateDate(LocalDateTime.now())
+      .build();
+    this.sagaEventRepository.save(sagaEvent);
+    this.orchestrator.updatePenRequestBatchStudent(event, this.saga, this.sagaData);
+    verify(this.messagePublisher, atMostOnce()).dispatchMessage(eq(PEN_REQUEST_BATCH_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
+    assertThat(newEvent.getEventType()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT);
+    final var prbStudent = new ObjectMapper().readValue(newEvent.getEventPayload(), PenRequestBatchStudent.class);
+    assertThat(prbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.getCode());
+    assertThat(prbStudent.getStudentID()).isEqualTo(studentID);
+    assertThat(prbStudent.getAssignedPEN()).isEqualTo(pen);
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    final var currentSaga = sagaFromDB.get();
+    assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
+    assertThat(sagaStates.size()).isEqualTo(2);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.CREATE_STUDENT.toString());
+    assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(EventType.ADD_POSSIBLE_MATCH.toString());
+    assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.POSSIBLE_MATCH_ADDED.toString());
+  }
+
+  /**
+   * Test update pen request batch student.
+   *
+   * @throws JsonProcessingException the json processing exception
+   */
+  @Test
+  public void testUpdatePenRequestBatchStudent_givenEventAndSagaDataWithNullStudentID_AndStudentAlreadyExistEventRecord_shouldPostEventToBatchApi() throws JsonProcessingException {
+    final var pen = "123456789";
+    final var studentID = UUID.randomUUID().toString();
+    final var student = Student.builder().studentID(studentID).pen(pen).legalFirstName("Jack").build();
+    final var event = Event.builder()
+      .eventType(ADD_POSSIBLE_MATCH)
+      .eventOutcome(EventOutcome.POSSIBLE_MATCH_ADDED)
+      .sagaId(this.saga.getSagaId())
+      .eventPayload(JsonUtil.getJsonStringFromObject(student))
+      .build();
+    this.sagaData.setAssignedPEN(pen);
+    final var sagaEvent = SagaEvent.builder()
+      .saga(this.saga)
+      .sagaEventState(CREATE_STUDENT.toString())
+      .sagaEventOutcome(STUDENT_ALREADY_EXIST.toString())
+      .sagaStepNumber(3)
+      .sagaEventResponse(student.getStudentID())
+      .createDate(LocalDateTime.now())
+      .createUser("Test")
+      .updateUser("Test")
+      .updateDate(LocalDateTime.now())
+      .build();
+    this.sagaEventRepository.save(sagaEvent);
+    this.orchestrator.updatePenRequestBatchStudent(event, this.saga, this.sagaData);
+    verify(this.messagePublisher, atMostOnce()).dispatchMessage(eq(PEN_REQUEST_BATCH_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
+    assertThat(newEvent.getEventType()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT);
+    final var prbStudent = new ObjectMapper().readValue(newEvent.getEventPayload(), PenRequestBatchStudent.class);
+    assertThat(prbStudent.getPenRequestBatchStudentStatusCode()).isEqualTo(USR_NEW_PEN.getCode());
+    assertThat(prbStudent.getStudentID()).isEqualTo(studentID);
+    assertThat(prbStudent.getAssignedPEN()).isEqualTo(pen);
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    final var currentSaga = sagaFromDB.get();
+    assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
+    assertThat(sagaStates.size()).isEqualTo(2);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.CREATE_STUDENT.toString());
+    assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(EventType.ADD_POSSIBLE_MATCH.toString());
+    assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(EventOutcome.POSSIBLE_MATCH_ADDED.toString());
+  }
 
 }

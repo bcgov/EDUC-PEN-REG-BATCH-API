@@ -106,7 +106,7 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
    * @return the pen request batch student
    */
   @Override
-  protected PenRequestBatchStudent updateSagaDataAndCreatePRBStudent(final Event event, final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
+  protected PenRequestBatchStudent createPRBStudent(final Event event, final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
     final var prbStudent = penRequestBatchStudentMapper.toPrbStudent(penRequestBatchUnmatchSagaData);
     prbStudent.setPenRequestBatchStudentStatusCode(FIXABLE.getCode());
     prbStudent.setAssignedPEN(null);
