@@ -349,7 +349,7 @@ public class PenRequestBatchStudentService {
     final LocalDateTime startDate = LocalDateTime.now().minusDays(repeatTimeWindow);
     val result = this.repository.findAllPenRequestBatchStudentsForGivenCriteria(penRequestBatchEntity.getMincode(),
       PenRequestBatchStatusCodes.ARCHIVED.getCode(), startDate,
-      Arrays.asList(FIXABLE.getCode(), ERROR.getCode(), LOADED.getCode()));
+      Arrays.asList(FIXABLE.getCode(), ERROR.getCode(), LOADED.getCode(), INFOREQ.getCode()));
     if (result.isEmpty()) {
       return Collections.emptyMap();
     }
