@@ -36,11 +36,9 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
         (batch) -> batch.setProcessDate(LocalDateTime.parse("2021-03-23T13:04:48.840098")));
 
     final var student1 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130002").dob("1990-07-04").genderCode("M").legalFirstName("Mike").pen("123456785").legalLastName("Joe").legalMiddleNames("Tim").usualFirstName("Bob").usualLastName("Smithy").usualMiddleNames("Smalls").mincode(batchEntities.get(0).getMincode()).demogCode("C").build();
-    final var student2 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130003").dob("1990-07-03").genderCode("F").legalFirstName("Ted").pen("123456780").legalLastName("Jones").legalMiddleNames("Jim").usualFirstName("Steal").usualLastName("Mr").usualMiddleNames("Yo Girl").mincode(batchEntities.get(0).getMincode()).demogCode("A").build();
     final var student3 = Student.builder().studentID("566ee980-8e5f-11eb-8dcd-0242ac130009").dob("2011-12-07").genderCode("M").sexCode("M").legalFirstName("BRAYDON").pen("123456784").legalLastName("JOSEPH").legalMiddleNames("JAMIESON").usualFirstName("BRAYDON").usualLastName("JOSEPH").usualMiddleNames(null).mincode(batchEntities.get(0).getMincode()).demogCode("A").build();
     final List<Student> students = new ArrayList<>();
     students.add(student1);
-    students.add(student2);
     students.add(student3);
 
     final var sagaData = PenRequestBatchArchiveAndReturnSagaData.builder()
@@ -69,7 +67,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getMailingAddress()).isEqualTo("mailing address");
     assertThat(reportData.getPenCordinatorEmail()).isEqualTo("test@abc.com");
 
-    assertThat(reportData.getDiffList().size()).isEqualTo(2);
+    assertThat(reportData.getDiffList().size()).isEqualTo(1);
     assertThat(reportData.getDiffList().get(0).getMin().getBirthDate()).isEqualTo("1990/07/04");
     assertThat(reportData.getDiffList().get(0).getMin().getGender()).isEqualTo("M");
     assertThat(reportData.getDiffList().get(0).getMin().getGivenName()).isEqualTo("Mike");
@@ -90,28 +88,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getDiffList().get(0).getSchool().getSurname()).isEqualTo("JOSEPH");
     assertThat(reportData.getDiffList().get(0).getSchool().getUsualName()).isEqualTo("JOSEPH, BRAYDON, KIM");
 
-    assertThat(reportData.getDiffList().size()).isEqualTo(2);
-    assertThat(reportData.getDiffList().get(1).getMin().getBirthDate()).isEqualTo("1990/07/03");
-    assertThat(reportData.getDiffList().get(1).getMin().getGender()).isEqualTo("F");
-    assertThat(reportData.getDiffList().get(1).getMin().getGivenName()).isEqualTo("Ted");
-    assertThat(reportData.getDiffList().get(1).getMin().getLegalMiddleNames()).isEqualTo("Jim");
-    assertThat(reportData.getDiffList().get(1).getMin().getPen()).isEqualTo("123456780");
-    assertThat(reportData.getDiffList().get(1).getMin().getReason()).isNull();
-    assertThat(reportData.getDiffList().get(1).getMin().getSchoolID()).isBlank();
-    assertThat(reportData.getDiffList().get(1).getMin().getSurname()).isEqualTo("Jones");
-    assertThat(reportData.getDiffList().get(1).getMin().getUsualName()).isEqualTo("JOSEPH, BRAYDON, SMIT");
-
-    assertThat(reportData.getDiffList().get(1).getSchool().getBirthDate()).isEqualTo("2011/12/08");
-    assertThat(reportData.getDiffList().get(1).getSchool().getGender()).isEqualTo("M");
-    assertThat(reportData.getDiffList().get(1).getSchool().getGivenName()).isEqualTo("BOY");
-    assertThat(reportData.getDiffList().get(1).getSchool().getLegalMiddleNames()).isEqualTo("JAMIESON");
-    assertThat(reportData.getDiffList().get(1).getSchool().getPen()).isEqualTo("987654321");
-    assertThat(reportData.getDiffList().get(1).getSchool().getReason()).isEqualTo("Here's some more info");
-    assertThat(reportData.getDiffList().get(1).getSchool().getSchoolID()).isEqualTo("2046302");
-    assertThat(reportData.getDiffList().get(1).getSchool().getSurname()).isEqualTo("BRODY");
-    assertThat(reportData.getDiffList().get(1).getSchool().getUsualName()).isEqualTo("JOSEPH, BRAYDON, SMIT");
-
-    assertThat(reportData.getNewPenList().size()).isEqualTo(2);
+    assertThat(reportData.getNewPenList().size()).isEqualTo(1);
     assertThat(reportData.getPendingList().size()).isEqualTo(5);
     assertThat(reportData.getSysMatchedList().size()).isEqualTo(1); // exact match
 }

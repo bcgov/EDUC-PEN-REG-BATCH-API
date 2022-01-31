@@ -6,6 +6,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.struct.BasePenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestIDs;
+import org.mapstruct.DecoratedWith;
 import org.mapstruct.InheritInverseConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -14,6 +15,7 @@ import org.mapstruct.factory.Mappers;
 /**
  * The interface Pen request batch student mapper.
  */
+@DecoratedWith(PenRequestBatchStudentDecorator.class)
 @Mapper(uses = {UUIDMapper.class, LocalDateTimeMapper.class})
 public interface PenRequestBatchStudentMapper {
 
