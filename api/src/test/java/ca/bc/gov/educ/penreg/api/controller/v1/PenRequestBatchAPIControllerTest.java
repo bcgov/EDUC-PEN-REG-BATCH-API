@@ -860,6 +860,18 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
   }
 
   @Test
+  public void testCreateNewBatchSubmissionDiacritical_GivenValidBatchSubmission_ShouldCreateNewRecordInDBUppercase() throws Exception {
+    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("ExternalBatchSubmissionMixedCaseDiacritical.json")).getFile());
+    final PenRequestBatchSubmission entity = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).readValue(file, PenRequestBatchSubmission.class);
+    this.mockMvc
+      .perform(post("/api/v1/pen-request-batch/pen-request-batch-submission")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRITE_PEN_REQUEST_BATCH")))
+        .content(JsonUtil.getJsonStringFromObject(entity))
+        .contentType(APPLICATION_JSON))
+      .andDo(print()).andExpect(status().isCreated()).andExpect(jsonPath("$", isA(String.class)));
+  }
+
+  @Test
   public void testCreateNewBatchSubmission_GivenSameSubmissionTwice_ShouldReturnConflictForTheSecond() throws Exception {
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("ExternalBatchSubmission.json")).getFile());
     final PenRequestBatchSubmission entity = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false).readValue(file, PenRequestBatchSubmission.class);
