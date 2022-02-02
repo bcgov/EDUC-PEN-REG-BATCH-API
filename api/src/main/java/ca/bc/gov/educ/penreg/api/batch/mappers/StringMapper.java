@@ -24,9 +24,9 @@ public final class StringMapper {
     return value;
   }
 
-  public static String toUpperCase(String value) {
+  public static String uppercaseAndCleanDiacriticalMarks(String value){
     if (StringUtils.isNotBlank(value)) {
-      return value.trim().toUpperCase();
+      return StringUtils.stripAccents(value).toUpperCase();
     }
     return value;
   }
