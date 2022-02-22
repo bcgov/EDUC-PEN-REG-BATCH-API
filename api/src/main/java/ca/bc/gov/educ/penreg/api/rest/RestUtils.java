@@ -127,6 +127,9 @@ public class RestUtils {
     }
   }
   public List<GradeCode> getGradeCodes() {
+    if(this.gradeCodesMap.isEmpty() || this.gradeCodesMap.get(GRADE_CODES) == null || this.gradeCodesMap.get(GRADE_CODES).isEmpty()) {
+      setGradeCodesMap();
+    }
     return this.gradeCodesMap.get(GRADE_CODES);
   }
   /**

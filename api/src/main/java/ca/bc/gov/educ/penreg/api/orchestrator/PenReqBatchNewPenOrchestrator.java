@@ -165,7 +165,6 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
     log.info("message sent to STUDENT_API_TOPIC for CREATE_STUDENT Event. :: {}", saga.getSagaId());
   }
 
-
   /**
    * Update saga data and create prb student pen request batch student.
    *
