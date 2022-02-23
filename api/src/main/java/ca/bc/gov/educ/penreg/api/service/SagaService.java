@@ -13,10 +13,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.util.Pair;
 import org.springframework.retry.annotation.Backoff;
@@ -280,5 +277,9 @@ public class SagaService {
   }
   public Optional<SagaEvent> findSagaEvent(final Saga saga, final SagaEvent sagaEvent) {
     return this.sagaEventRepository.findBySagaAndSagaEventOutcomeAndSagaEventStateAndSagaStepNumber(saga, sagaEvent.getSagaEventOutcome(), sagaEvent.getSagaEventState(), sagaEvent.getSagaStepNumber());
+  }
+
+  public Optional<SagaEvent> findSagaEvent(final Saga saga, final String eventState, int stepNumber) {
+    return this.sagaEventRepository.findBySagaAndSagaEventStateAndSagaStepNumber(saga, eventState, stepNumber);
   }
 }

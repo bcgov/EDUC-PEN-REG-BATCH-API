@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
 import ca.bc.gov.educ.penreg.api.constants.TwinReasonCodes;
+import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
@@ -13,6 +14,8 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.PossibleMatch;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;
@@ -21,6 +24,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
@@ -37,6 +41,7 @@ import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ
 @Slf4j
 public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<PenRequestBatchUserActionsSagaData> {
   private final RestUtils restUtils;
+  private final ObjectMapper obMapper = new ObjectMapper();
   /**
    * Instantiates a new Pen req batch student orchestrator.
    *  @param sagaService      the saga service
@@ -166,15 +171,14 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
   }
 
   /**
-   * Update saga data and create prb student pen request batch student.
+   * Update saga data.
    *
    * @param event                              the event
    * @param penRequestBatchUserActionsSagaData the pen request batch user actions saga data
-   * @return the pen request batch student
+   * @return the pen request batch user actions saga data
    * @throws JsonProcessingException the json processing exception
    */
-  @Override
-  protected PenRequestBatchStudent updateSagaDataAndCreatePRBStudent(final Event event, final PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) throws JsonProcessingException {
+  protected PenRequestBatchUserActionsSagaData updateSagaData(final Event event, final PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) throws JsonProcessingException {
     if (event.getEventType() == CREATE_STUDENT) {
       if (event.getEventOutcome() == STUDENT_ALREADY_EXIST) {
         penRequestBatchUserActionsSagaData.setStudentID(event.getEventPayload());
@@ -183,6 +187,18 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
         penRequestBatchUserActionsSagaData.setStudentID(student.getStudentID());
       }
     }
+    return penRequestBatchUserActionsSagaData;
+  }
+
+  /**
+   * Create prb student pen request batch student.
+   *
+   * @param event                              the event
+   * @param penRequestBatchUserActionsSagaData the pen request batch user actions saga data
+   * @return the pen request batch student
+   */
+  @Override
+  protected PenRequestBatchStudent createPRBStudent(final Event event, final PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
     final var prbStudent = penRequestBatchStudentMapper.toPrbStudent(penRequestBatchUserActionsSagaData);
     prbStudent.setPenRequestBatchStudentStatusCode(USR_NEW_PEN.getCode());
     prbStudent.setStudentID(penRequestBatchUserActionsSagaData.getStudentID());
@@ -191,5 +207,48 @@ public class PenReqBatchNewPenOrchestrator extends BaseUserActionsOrchestrator<P
     return prbStudent;
   }
 
+  /**
+   * Update PEN Request Batch record and PRB Student record.
+   *
+   * @param event the event
+   * @param saga  the saga
+   * @param penRequestBatchUserActionsSagaData     the pen request batch student saga data
+   * @throws JsonProcessingException the json processing exception
+   */
+  @Override
+  protected void updatePenRequestBatchStudent(final Event event, final Saga saga, final PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) throws JsonProcessingException {
+    this.updateSagaData(event, penRequestBatchUserActionsSagaData);
+    saga.setSagaState(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
+    saga.setPayload(JsonUtil.getJsonStringFromObject(penRequestBatchUserActionsSagaData));
+    final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
+    this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
+    if(penRequestBatchUserActionsSagaData.getStudentID() == null){
+      log.info("studentID in saga data is null for batch student id :: {} and saga id :: {}, setting it from event states table", penRequestBatchUserActionsSagaData.getPenRequestBatchStudentID(), saga.getSagaId());
+      val sagaEventOptional = this.getSagaService().findSagaEvent(saga, CREATE_STUDENT.toString(), 3);
+      if(sagaEventOptional.isPresent()){
+        val sagaEvent = sagaEventOptional.get();
+        if(STUDENT_CREATED.toString().equals(sagaEvent.getSagaEventOutcome())) {
+          final Student student = JsonUtil.getJsonObjectFromString(Student.class, sagaEvent.getSagaEventResponse());
+          penRequestBatchUserActionsSagaData.setStudentID(student.getStudentID());
+        } else if(STUDENT_ALREADY_EXIST.toString().equals(sagaEvent.getSagaEventOutcome())) {
+          penRequestBatchUserActionsSagaData.setStudentID(sagaEvent.getSagaEventResponse());
+        } else {
+          throw new PenRegAPIRuntimeException("CREATE_STUDENT event with outcome not found in event states table for saga id :: "+saga.getSagaId());
+        }
+      }else{
+        throw new PenRegAPIRuntimeException("CREATE_STUDENT event not found in event states table for saga id :: "+saga.getSagaId());
+      }
+    }
+
+    final PenRequestBatchStudent prbStudent = this.createPRBStudent(event, penRequestBatchUserActionsSagaData);
+
+    final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
+      .eventType(UPDATE_PEN_REQUEST_BATCH_STUDENT)
+      .replyTo(this.getTopicToSubscribe())
+      .eventPayload(JsonUtil.getJsonStringFromObject(prbStudent))
+      .build();
+    this.postMessageToTopic(PEN_REQUEST_BATCH_API_TOPIC.toString(), nextEvent);
+    log.info("message sent to PEN_REQUEST_BATCH_API_TOPIC for UPDATE_PEN_REQUEST_BATCH_STUDENT Event. :: {}", saga.getSagaId());
+  }
 }

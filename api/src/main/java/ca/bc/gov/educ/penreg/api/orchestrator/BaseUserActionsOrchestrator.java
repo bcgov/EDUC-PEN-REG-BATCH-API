@@ -56,9 +56,8 @@ public abstract class BaseUserActionsOrchestrator<T> extends BaseOrchestrator<T>
    * @throws JsonProcessingException the json processing exception
    */
   protected void updatePenRequestBatchStudent(final Event event, final Saga saga, final T t) throws JsonProcessingException {
-    final PenRequestBatchStudent prbStudent = this.updateSagaDataAndCreatePRBStudent(event, t);
+    final PenRequestBatchStudent prbStudent = this.createPRBStudent(event, t);
     saga.setSagaState(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
-    saga.setPayload(JsonUtil.getJsonStringFromObject(t));
     final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
@@ -72,14 +71,13 @@ public abstract class BaseUserActionsOrchestrator<T> extends BaseOrchestrator<T>
   }
 
   /**
-   * Update saga data and create prb student pen request batch student.
+   * Create prb student pen request batch student.
    *
    * @param event the event
    * @param t     the t
    * @return the pen request batch student
-   * @throws JsonProcessingException the json processing exception
    */
-  protected abstract PenRequestBatchStudent updateSagaDataAndCreatePRBStudent(Event event, T t) throws JsonProcessingException;
+  protected abstract PenRequestBatchStudent createPRBStudent(Event event, T t);
 
   /**
    * Update PEN Request Batch record and PRB Student record.

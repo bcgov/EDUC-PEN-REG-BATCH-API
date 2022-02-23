@@ -32,4 +32,14 @@ public interface SagaEventRepository extends CrudRepository<SagaEvent, UUID> {
    * @return the optional
    */
   Optional<SagaEvent> findBySagaAndSagaEventOutcomeAndSagaEventStateAndSagaStepNumber(Saga saga, String eventOutcome, String eventState, int stepNumber);
+
+  /**
+   * Find by saga and saga event state and saga step number optional.
+   *
+   * @param saga         the saga
+   * @param eventState   the event state
+   * @param stepNumber   the step number
+   * @return the optional
+   */
+  Optional<SagaEvent> findBySagaAndSagaEventStateAndSagaStepNumber(Saga saga, String eventState, int stepNumber);
 }
