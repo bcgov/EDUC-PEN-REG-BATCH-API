@@ -367,21 +367,21 @@ public class PenRegBatchProcessor {
       throw new FileUnProcessableException(INVALID_TRANSACTION_CODE_STUDENT_DETAILS, guid, PenRequestBatchStatusCodes.LOAD_FAIL, String.valueOf(index), ds.getString(LOCAL_STUDENT_ID.getName()));
     }
     return StudentDetails.builder()
-      .birthDate(StringMapper.uppercaseAndCleanDiacriticalMarks(ds.getString(BIRTH_DATE.getName())))
-      .enrolledGradeCode(StringMapper.uppercaseAndCleanDiacriticalMarks(ds.getString(ENROLLED_GRADE_CODE.getName())))
-      .gender(StringMapper.uppercaseAndCleanDiacriticalMarks(ds.getString(GENDER.getName())))
-      .legalGivenName(StringMapper.uppercaseAndCleanDiacriticalMarks(ds.getString(LEGAL_GIVEN_NAME.getName())))
-      .legalMiddleName(StringMapper.uppercaseAndCleanDiacriticalMarks(ds.getString(LEGAL_MIDDLE_NAME.getName())))
-      .legalSurname(StringMapper.uppercaseAndCleanDiacriticalMarks(ds.getString(LEGAL_SURNAME.getName())))
-      .localStudentID(StringMapper.uppercaseAndCleanDiacriticalMarks(ds.getString(LOCAL_STUDENT_ID.getName())))
+      .birthDate(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(BIRTH_DATE.getName())))
+      .enrolledGradeCode(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(ENROLLED_GRADE_CODE.getName())))
+      .gender(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(GENDER.getName())))
+      .legalGivenName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(LEGAL_GIVEN_NAME.getName())))
+      .legalMiddleName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(LEGAL_MIDDLE_NAME.getName())))
+      .legalSurname(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(LEGAL_SURNAME.getName())))
+      .localStudentID(StringMapper.uppercaseAndTrim(ds.getString(LOCAL_STUDENT_ID.getName())))
       .pen(ds.getString(PEN.getName()))
-      .postalCode(StringMapper.uppercaseAndCleanDiacriticalMarks(ds.getString(POSTAL_CODE.getName())))
+      .postalCode(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(POSTAL_CODE.getName())))
       .transactionCode(transactionCode)
       .unused(ds.getString(UNUSED.getName()))
       .unusedSecond(ds.getString(UNUSED_SECOND.getName()))
-      .usualGivenName(StringMapper.uppercaseAndCleanDiacriticalMarks(ds.getString(USUAL_GIVEN_NAME.getName())))
-      .usualMiddleName(StringMapper.uppercaseAndCleanDiacriticalMarks(ds.getString(USUAL_MIDDLE_NAME.getName())))
-      .usualSurname(StringMapper.uppercaseAndCleanDiacriticalMarks(ds.getString(USUAL_SURNAME.getName())))
+      .usualGivenName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(USUAL_GIVEN_NAME.getName())))
+      .usualMiddleName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(USUAL_MIDDLE_NAME.getName())))
+      .usualSurname(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(USUAL_SURNAME.getName())))
       .build();
   }
 

@@ -104,6 +104,22 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
     final var entity = this.delegate.toPenRequestBatchStudentEntity(studentDetails, penRequestBatchEntity);
     entity.setPenRequestBatchEntity(penRequestBatchEntity); // add thePK/FK relationship
     entity.setPenRequestBatchStudentStatusCode(LOADED.getCode());
+
+    entity.setPostalCode(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getPostalCode()));
+    entity.setGenderCode(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getGender()));
+    entity.setDob(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getBirthDate()));
+    entity.setGradeCode(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getEnrolledGradeCode()));
+
+    entity.setLegalLastName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getLegalSurname()));
+    entity.setLegalFirstName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getLegalGivenName()));
+    entity.setLegalMiddleNames(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getLegalMiddleName()));
+    entity.setUsualLastName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getUsualSurname()));
+    entity.setUsualFirstName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getUsualGivenName()));
+    entity.setUsualMiddleNames(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getUsualMiddleName()));
+
+    entity.setSubmittedPen(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getPen()));
+    entity.setLocalID(StringMapper.uppercaseAndTrim(studentDetails.getLocalStudentID()));
+
     return entity;
   }
 

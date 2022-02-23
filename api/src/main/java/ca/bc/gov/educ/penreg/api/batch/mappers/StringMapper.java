@@ -24,9 +24,16 @@ public final class StringMapper {
     return value;
   }
 
-  public static String uppercaseAndCleanDiacriticalMarks(String value){
+  public static String uppercaseAndTrim(String value){
     if (StringUtils.isNotBlank(value)) {
-      return StringUtils.stripAccents(value).toUpperCase();
+      return StringUtils.trim(value).toUpperCase();
+    }
+    return value;
+  }
+
+  public static String uppercaseTrimAndCleanDiacriticalMarks(String value){
+    if (StringUtils.isNotBlank(value)) {
+      return StringUtils.stripAccents(StringUtils.trim(value)).toUpperCase();
     }
     return value;
   }
