@@ -44,4 +44,28 @@ public class PenRequestBatchStudentMapperTest extends BasePenRegAPITest {
     assertThat(diacriticalMarksData.getUsualLastName()).isEqualTo("MRIUN");
   }
 
+  @Test
+  public void testToStudentWithStandardDiacriticalMarks() throws IOException {
+
+    // created a student with NA
+    final var diacriticalMarks = PenRequestBatchStudent.builder()
+      .studentID("566ee980-8e5f-11eb-8dcd-0242ac130003")
+      .genderCode("F")
+      .legalFirstName("ÀÁÂÄÅÃÆÇÉÈÊËÍÌÎÏÑÓÒÔÖÕOEÚÙÛÜÝY")
+      .localID("NA")
+      .penRequestBatchStudentID(UUID.randomUUID().toString())
+      .legalLastName("Lîúý")
+      .legalMiddleNames("Jím")
+      .usualFirstName("Stêàlöü")
+      .usualLastName("MrÎÙŇ")
+      .mincode("345678")
+      .build();
+
+    // pass the student to mapper
+    final var diacriticalMarksData = studentMapper.toModel(diacriticalMarks);
+
+    assertThat(diacriticalMarksData.getLegalFirstName()).isEqualTo("AAAAAAÆCEEEEIIIINOOOOOOEUUUUYY");
+
+  }
+
 }
