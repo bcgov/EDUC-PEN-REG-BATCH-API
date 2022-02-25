@@ -35,6 +35,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -147,13 +149,8 @@ public class PenRegBatchProcessor {
     val batchFile = new BatchFile();
     Optional<InputStreamReader> batchFileReaderOptional = Optional.empty();
     try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
-      batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents())));
-
-      if(log.isDebugEnabled()) {
-        log.debug("InputStream character encoding :: {}", batchFileReaderOptional.get().getEncoding());
-        log.debug("InputStream value with given encoding :: {}", IOUtils.toString(batchFileReaderOptional.get()));
-        log.debug("InputStream value with UTF-8 encoding :: {}", IOUtils.toString(batchFileReaderOptional.get()), StandardCharsets.UTF_8);
-      }
+      CharsetDecoder charsetDecoder = StandardCharsets.UTF_8.newDecoder();
+      batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents()), charsetDecoder));
       final DataSet ds = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get()).setStoreRawDataToDataError(true).setStoreRawDataToDataSet(true).setNullEmptyStrings(true).parse();
       this.penRequestBatchFileValidator.validateFileForFormatAndLength(guid, ds);
       this.penRequestBatchFileValidator.validateMincode(guid, penWebBlobEntity.getMincode());
