@@ -149,7 +149,7 @@ public class PenRegBatchProcessor {
     val batchFile = new BatchFile();
     Optional<InputStreamReader> batchFileReaderOptional = Optional.empty();
     try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
-      CharsetDecoder charsetDecoder = StandardCharsets.UTF_8.newDecoder();
+      CharsetDecoder charsetDecoder =Charset.forName("Cp1252").newDecoder();
       batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents()), charsetDecoder));
       final DataSet ds = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get()).setStoreRawDataToDataError(true).setStoreRawDataToDataSet(true).setNullEmptyStrings(true).parse();
       this.penRequestBatchFileValidator.validateFileForFormatAndLength(guid, ds);
