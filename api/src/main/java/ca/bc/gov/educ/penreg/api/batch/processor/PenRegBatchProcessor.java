@@ -28,12 +28,14 @@ import lombok.val;
 import net.sf.flatpack.DataSet;
 import net.sf.flatpack.DefaultParserFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.core.util.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -143,9 +145,15 @@ public class PenRegBatchProcessor {
     final var guid = UUID.randomUUID().toString(); // this guid will be used throughout the logs for easy tracking.
     log.info("Started processing row from Pen Web Blobs with submission Number :: {} and guid :: {}", penWebBlobEntity.getSubmissionNumber(), guid);
     val batchFile = new BatchFile();
-    Optional<Reader> batchFileReaderOptional = Optional.empty();
+    Optional<InputStreamReader> batchFileReaderOptional = Optional.empty();
     try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
       batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents())));
+
+      if(log.isDebugEnabled()) {
+        log.debug("InputStream character encoding :: {}", batchFileReaderOptional.get().getEncoding());
+        log.debug("InputStream value with given encoding :: {}", IOUtils.toString(batchFileReaderOptional.get()));
+        log.debug("InputStream value with UTF-8 encoding :: {}", IOUtils.toString(batchFileReaderOptional.get()), StandardCharsets.UTF_8);
+      }
       final DataSet ds = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get()).setStoreRawDataToDataError(true).setStoreRawDataToDataSet(true).setNullEmptyStrings(true).parse();
       this.penRequestBatchFileValidator.validateFileForFormatAndLength(guid, ds);
       this.penRequestBatchFileValidator.validateMincode(guid, penWebBlobEntity.getMincode());
@@ -366,6 +374,22 @@ public class PenRegBatchProcessor {
     if (!TRANSACTION_CODE_STUDENT_DETAILS_RECORD.equals(transactionCode)) {
       throw new FileUnProcessableException(INVALID_TRANSACTION_CODE_STUDENT_DETAILS, guid, PenRequestBatchStatusCodes.LOAD_FAIL, String.valueOf(index), ds.getString(LOCAL_STUDENT_ID.getName()));
     }
+
+    if(log.isDebugEnabled()) {
+      log.debug("PEN Value: ", ds.getString(PEN.getName()));
+      log.debug("BIRTH_DATE Value: ", ds.getString(BIRTH_DATE.getName()));
+      log.debug("ENROLLED_GRADE_CODE Value: ", ds.getString(ENROLLED_GRADE_CODE.getName()));
+      log.debug("GENDER Value: ", ds.getString(GENDER.getName()));
+      log.debug("LEGAL_GIVEN_NAME Value: ", ds.getString(LEGAL_GIVEN_NAME.getName()));
+      log.debug("LEGAL_MIDDLE_NAME Value: ", ds.getString(LEGAL_MIDDLE_NAME.getName()));
+      log.debug("LEGAL_SURNAME Value: ", ds.getString(LEGAL_SURNAME.getName()));
+      log.debug("LOCAL_STUDENT_ID Value: ", ds.getString(LOCAL_STUDENT_ID.getName()));
+      log.debug("POSTAL_CODE Value: ", ds.getString(POSTAL_CODE.getName()));
+      log.debug("USUAL_GIVEN_NAME Value: ", ds.getString(USUAL_GIVEN_NAME.getName()));
+      log.debug("USUAL_MIDDLE_NAME Value: ", ds.getString(USUAL_MIDDLE_NAME.getName()));
+      log.debug("USUAL_SURNAME Value: ", ds.getString(USUAL_SURNAME.getName()));
+    }
+
     return StudentDetails.builder()
       .birthDate(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(BIRTH_DATE.getName())))
       .enrolledGradeCode(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(ENROLLED_GRADE_CODE.getName())))
