@@ -7,5 +7,6 @@ public enum SchoolTypeCode {
   DEFAULT,
   SUMMER_SCHOOL,
   SFAS,
+  PSI,
   NONE // this is for myed-api flow.
 }
