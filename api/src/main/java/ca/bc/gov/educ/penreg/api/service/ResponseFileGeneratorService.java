@@ -107,10 +107,20 @@ public class ResponseFileGeneratorService {
 
       for (final PenRequestBatchStudent entity : filteredStudents) {
         final var student = studentsMap.get(entity.getStudentID());
-        val localID = PenRegBatchHelper.getSchoolTypeCodeFromMincode(penRequestBatchEntity.getMincode()) == SchoolTypeCode.SFAS? entity.getLocalID():student.getLocalID();
+        var schoolType = PenRegBatchHelper.getSchoolTypeCodeFromMincode(penRequestBatchEntity.getMincode());
+        String localID;
+        String mincode;
+        if(schoolType.equals(SchoolTypeCode.SFAS) || schoolType.equals(SchoolTypeCode.PSI)) {
+          localID = entity.getLocalID();
+          mincode = entity.getMincode();
+        }else{
+          localID = student.getLocalID();
+          mincode = student.getMincode();
+        }
+
         if(student != null) {
           idsFile.append("E03")
-          .append(student.getMincode())
+          .append(mincode)
           .append(String.format("%-12s", localID))
           .append(student.getPen()).append(" ")
           .append(String.format("%-25s", student.getLegalLastName()))
@@ -331,13 +341,6 @@ public class ResponseFileGeneratorService {
   private String print(String value) {
     if (value == null) {
       return "";
-    }
-    return value;
-  }
-
-  private Long print(Long value) {
-    if (value == null) {
-      return 0L;
     }
     return value;
   }

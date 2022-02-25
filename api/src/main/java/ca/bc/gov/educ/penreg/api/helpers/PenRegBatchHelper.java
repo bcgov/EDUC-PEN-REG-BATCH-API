@@ -102,6 +102,8 @@ public final class PenRegBatchHelper {
       return SchoolTypeCode.SUMMER_SCHOOL;
     } else if (mincode.equals("10200030")) {
       return SchoolTypeCode.SFAS;
+    } else if (mincode.startsWith("102")) {
+      return SchoolTypeCode.PSI;
     }
     return SchoolTypeCode.DEFAULT;
   }
