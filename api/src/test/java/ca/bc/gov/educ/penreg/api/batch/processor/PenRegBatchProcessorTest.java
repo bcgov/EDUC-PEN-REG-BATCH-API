@@ -265,34 +265,14 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_Given30RowValidFile_ShouldCreateRecordsInDBWithScrub() throws IOException {
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
-    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_Diacritical.txt")).getFile());
+    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_Diacritical_ANSI.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
     final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
     var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("MYED").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_30_records_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
     tsw = this.penRequestBatchTestUtils.savePenWebBlob(tsw);
     this.penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     final var result = this.repository.findAll();
-    assertThat(result.size()).isEqualTo(1);
-    final var entity = result.get(0);
-    assertThat(entity.getPenRequestBatchID()).isNotNull();
-    assertThat(entity.getPenRequestBatchStatusCode()).isEqualTo(REPEATS_CHECKED.getCode());
-    assertThat(entity.getSchoolGroupCode()).isEqualTo(K12.getCode());
-    assertThat(entity.getPenRequestBatchStatusReason()).isNull();
-    assertThat(entity.getRepeatCount()).isZero();
-    final var students = this.studentRepository.findAllByPenRequestBatchEntity(result.get(0));
-    assertThat(entity.getPenRequestBatchHistoryEntities().size()).isEqualTo(2);
-    final Optional<PenRequestBatchHistoryEntity> penRequestBatchHistoryEntityOptional = entity.getPenRequestBatchHistoryEntities().stream().min(new PenRequestBatchHistoryComparator());
-    assertThat(penRequestBatchHistoryEntityOptional).isPresent();
-    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchEventCode()).isEqualTo(STATUS_CHANGED.getCode());
-    assertThat(penRequestBatchHistoryEntityOptional.get().getPenRequestBatchStatusReason()).isNull();
-    assertThat(students.size()).isEqualTo(30);
-
-    students.sort(Comparator.comparing(PenRequestBatchStudentEntity::getRecordNumber));
-    log.error("students {}",students);
-    var counter = 1;
-    for (final PenRequestBatchStudentEntity student : students) {
-      assertThat(counter++).isEqualTo(student.getRecordNumber());
-    }
+    assertThat(result.size()).isZero();
   }
 
   @Test
