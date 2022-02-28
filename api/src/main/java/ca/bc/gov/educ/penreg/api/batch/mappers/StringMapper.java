@@ -31,10 +31,4 @@ public final class StringMapper {
     return value;
   }
 
-  public static String uppercaseTrimAndCleanDiacriticalMarks(String value){
-    if (StringUtils.isNotBlank(value)) {
-      return StringUtils.stripAccents(StringUtils.trim(value)).toUpperCase();
-    }
-    return value;
-  }
 }

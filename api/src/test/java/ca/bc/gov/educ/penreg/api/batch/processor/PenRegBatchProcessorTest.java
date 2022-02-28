@@ -272,7 +272,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
     tsw = this.penRequestBatchTestUtils.savePenWebBlob(tsw);
     this.penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
     final var result = this.repository.findAll();
-    assertThat(result.size()).isZero();
+    assertThat(result.size()).isEqualTo(1);
   }
 
   @Test

@@ -105,19 +105,19 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
     entity.setPenRequestBatchEntity(penRequestBatchEntity); // add thePK/FK relationship
     entity.setPenRequestBatchStudentStatusCode(LOADED.getCode());
 
-    entity.setPostalCode(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getPostalCode()));
-    entity.setGenderCode(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getGender()));
-    entity.setDob(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getBirthDate()));
-    entity.setGradeCode(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getEnrolledGradeCode()));
+    entity.setPostalCode(StringMapper.uppercaseAndTrim(studentDetails.getPostalCode()));
+    entity.setGenderCode(StringMapper.uppercaseAndTrim(studentDetails.getGender()));
+    entity.setDob(StringMapper.uppercaseAndTrim(studentDetails.getBirthDate()));
+    entity.setGradeCode(StringMapper.uppercaseAndTrim(studentDetails.getEnrolledGradeCode()));
 
-    entity.setLegalLastName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getLegalSurname()));
-    entity.setLegalFirstName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getLegalGivenName()));
-    entity.setLegalMiddleNames(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getLegalMiddleName()));
-    entity.setUsualLastName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getUsualSurname()));
-    entity.setUsualFirstName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getUsualGivenName()));
-    entity.setUsualMiddleNames(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getUsualMiddleName()));
+    entity.setLegalLastName(StringMapper.uppercaseAndTrim(studentDetails.getLegalSurname()));
+    entity.setLegalFirstName(StringMapper.uppercaseAndTrim(studentDetails.getLegalGivenName()));
+    entity.setLegalMiddleNames(StringMapper.uppercaseAndTrim(studentDetails.getLegalMiddleName()));
+    entity.setUsualLastName(StringMapper.uppercaseAndTrim(studentDetails.getUsualSurname()));
+    entity.setUsualFirstName(StringMapper.uppercaseAndTrim(studentDetails.getUsualGivenName()));
+    entity.setUsualMiddleNames(StringMapper.uppercaseAndTrim(studentDetails.getUsualMiddleName()));
 
-    entity.setSubmittedPen(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(studentDetails.getPen()));
+    entity.setSubmittedPen(StringMapper.uppercaseAndTrim(studentDetails.getPen()));
     entity.setLocalID(StringMapper.uppercaseAndTrim(studentDetails.getLocalStudentID()));
 
     return entity;
