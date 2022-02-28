@@ -28,16 +28,12 @@ import lombok.val;
 import net.sf.flatpack.DataSet;
 import net.sf.flatpack.DefaultParserFactory;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.core.util.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -147,10 +143,9 @@ public class PenRegBatchProcessor {
     final var guid = UUID.randomUUID().toString(); // this guid will be used throughout the logs for easy tracking.
     log.info("Started processing row from Pen Web Blobs with submission Number :: {} and guid :: {}", penWebBlobEntity.getSubmissionNumber(), guid);
     val batchFile = new BatchFile();
-    Optional<InputStreamReader> batchFileReaderOptional = Optional.empty();
+    Optional<Reader> batchFileReaderOptional = Optional.empty();
     try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
-      CharsetDecoder charsetDecoder =Charset.forName("Cp1252").newDecoder();
-      batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents()), charsetDecoder));
+      batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents())));
       final DataSet ds = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get()).setStoreRawDataToDataError(true).setStoreRawDataToDataSet(true).setNullEmptyStrings(true).parse();
       this.penRequestBatchFileValidator.validateFileForFormatAndLength(guid, ds);
       this.penRequestBatchFileValidator.validateMincode(guid, penWebBlobEntity.getMincode());
@@ -371,38 +366,22 @@ public class PenRegBatchProcessor {
     if (!TRANSACTION_CODE_STUDENT_DETAILS_RECORD.equals(transactionCode)) {
       throw new FileUnProcessableException(INVALID_TRANSACTION_CODE_STUDENT_DETAILS, guid, PenRequestBatchStatusCodes.LOAD_FAIL, String.valueOf(index), ds.getString(LOCAL_STUDENT_ID.getName()));
     }
-
-    if(log.isDebugEnabled()) {
-      log.debug("PEN Value: ", ds.getString(PEN.getName()));
-      log.debug("BIRTH_DATE Value: ", ds.getString(BIRTH_DATE.getName()));
-      log.debug("ENROLLED_GRADE_CODE Value: ", ds.getString(ENROLLED_GRADE_CODE.getName()));
-      log.debug("GENDER Value: ", ds.getString(GENDER.getName()));
-      log.debug("LEGAL_GIVEN_NAME Value: ", ds.getString(LEGAL_GIVEN_NAME.getName()));
-      log.debug("LEGAL_MIDDLE_NAME Value: ", ds.getString(LEGAL_MIDDLE_NAME.getName()));
-      log.debug("LEGAL_SURNAME Value: ", ds.getString(LEGAL_SURNAME.getName()));
-      log.debug("LOCAL_STUDENT_ID Value: ", ds.getString(LOCAL_STUDENT_ID.getName()));
-      log.debug("POSTAL_CODE Value: ", ds.getString(POSTAL_CODE.getName()));
-      log.debug("USUAL_GIVEN_NAME Value: ", ds.getString(USUAL_GIVEN_NAME.getName()));
-      log.debug("USUAL_MIDDLE_NAME Value: ", ds.getString(USUAL_MIDDLE_NAME.getName()));
-      log.debug("USUAL_SURNAME Value: ", ds.getString(USUAL_SURNAME.getName()));
-    }
-
     return StudentDetails.builder()
-      .birthDate(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(BIRTH_DATE.getName())))
-      .enrolledGradeCode(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(ENROLLED_GRADE_CODE.getName())))
-      .gender(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(GENDER.getName())))
-      .legalGivenName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(LEGAL_GIVEN_NAME.getName())))
-      .legalMiddleName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(LEGAL_MIDDLE_NAME.getName())))
-      .legalSurname(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(LEGAL_SURNAME.getName())))
+      .birthDate(StringMapper.uppercaseAndTrim(ds.getString(BIRTH_DATE.getName())))
+      .enrolledGradeCode(StringMapper.uppercaseAndTrim(ds.getString(ENROLLED_GRADE_CODE.getName())))
+      .gender(StringMapper.uppercaseAndTrim(ds.getString(GENDER.getName())))
+      .legalGivenName(StringMapper.uppercaseAndTrim(ds.getString(LEGAL_GIVEN_NAME.getName())))
+      .legalMiddleName(StringMapper.uppercaseAndTrim(ds.getString(LEGAL_MIDDLE_NAME.getName())))
+      .legalSurname(StringMapper.uppercaseAndTrim(ds.getString(LEGAL_SURNAME.getName())))
       .localStudentID(StringMapper.uppercaseAndTrim(ds.getString(LOCAL_STUDENT_ID.getName())))
       .pen(ds.getString(PEN.getName()))
-      .postalCode(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(POSTAL_CODE.getName())))
+      .postalCode(StringMapper.uppercaseAndTrim(ds.getString(POSTAL_CODE.getName())))
       .transactionCode(transactionCode)
       .unused(ds.getString(UNUSED.getName()))
       .unusedSecond(ds.getString(UNUSED_SECOND.getName()))
-      .usualGivenName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(USUAL_GIVEN_NAME.getName())))
-      .usualMiddleName(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(USUAL_MIDDLE_NAME.getName())))
-      .usualSurname(StringMapper.uppercaseTrimAndCleanDiacriticalMarks(ds.getString(USUAL_SURNAME.getName())))
+      .usualGivenName(StringMapper.uppercaseAndTrim(ds.getString(USUAL_GIVEN_NAME.getName())))
+      .usualMiddleName(StringMapper.uppercaseAndTrim(ds.getString(USUAL_MIDDLE_NAME.getName())))
+      .usualSurname(StringMapper.uppercaseAndTrim(ds.getString(USUAL_SURNAME.getName())))
       .build();
   }
 
