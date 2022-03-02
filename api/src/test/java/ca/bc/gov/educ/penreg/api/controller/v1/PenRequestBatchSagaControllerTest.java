@@ -244,6 +244,20 @@ public class PenRequestBatchSagaControllerTest extends BasePenRegAPITest {
   }
 
   @Test
+  public void testArchiveAndReturnAllFiles_GivenBatchFilesWithMultipleLocalIDs_ShouldReturnStatusBadRequest() throws Exception {
+    PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch.json",
+      "mock_pen_req_batch_student.json", 20);
+    val ids = this.penRequestBatchRepository.findAll().stream().map(PenRequestBatchEntity::getPenRequestBatchID).collect(Collectors.toList());
+    penRequestBatchTestUtils.updateAllStudentRecordsToSameLocalID();
+    this.mockMvc.perform(post("/api/v1/pen-request-batch-saga/archive-and-return")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "PEN_REQUEST_BATCH_ARCHIVE_SAGA")))
+        .contentType(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON)
+        .content(this.placeholderMultiplePenRequestBatchActionsSagaData(ids)))
+      .andDo(print()).andExpect(status().isBadRequest()).andExpect(jsonPath("$.message", is("Unable to archive submission number# T-534093 due to multiple records assigned the same LOCAL ID.,Unable to archive submission number# T-428469 due to multiple records assigned the same LOCAL ID.")));
+  }
+
+  @Test
   @SuppressWarnings("java:S100")
   public void testGetSagaPaginated_givenNoSearchCriteria_shouldReturnAllWithStatusOk() throws Exception {
     final File file = new File(

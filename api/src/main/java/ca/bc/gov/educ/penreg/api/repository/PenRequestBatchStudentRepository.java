@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultipleLocalID;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultiplePen;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -76,6 +77,10 @@ public interface PenRequestBatchStudentRepository extends JpaRepository<PenReque
   @Query(value = "SELECT PenRequestBatchEntity.SUBMISSION_NO as submissionNumber FROM PEN_REQUEST_BATCH PenRequestBatchEntity WHERE EXISTS(\n" +
     "(SELECT PEN_REQUEST_BATCH_ID as penRequestBatchID, ASSIGNED_PEN as assignedPen, COUNT(*) as count FROM PEN_REQUEST_BATCH_STUDENT PenRequestBatchStudentEntity WHERE PenRequestBatchStudentEntity.ASSIGNED_PEN IS NOT NULL AND PenRequestBatchStudentEntity.PEN_REQUEST_BATCH_ID = PenRequestBatchEntity.PEN_REQUEST_BATCH_ID AND PenRequestBatchStudentEntity.PEN_REQUEST_BATCH_ID IN :batchIds GROUP BY PEN_REQUEST_BATCH_ID, ASSIGNED_PEN HAVING COUNT(*) > 1))", nativeQuery = true)
   List<PenRequestBatchMultiplePen> findBatchFilesWithMultipleAssignedPens(@Param("batchIds") List<UUID> batchIds);
+
+  @Query(value = "SELECT PenRequestBatchEntity.SUBMISSION_NO as submissionNumber FROM PEN_REQUEST_BATCH PenRequestBatchEntity WHERE EXISTS(\n" +
+    "(SELECT PEN_REQUEST_BATCH_ID as penRequestBatchID, LOCAL_ID as assignedPen, COUNT(*) as count FROM PEN_REQUEST_BATCH_STUDENT PenRequestBatchStudentEntity WHERE PenRequestBatchStudentEntity.LOCAL_ID IS NOT NULL AND PenRequestBatchStudentEntity.PEN_REQUEST_BATCH_ID = PenRequestBatchEntity.PEN_REQUEST_BATCH_ID AND PenRequestBatchStudentEntity.PEN_REQUEST_BATCH_ID IN :batchIds GROUP BY PEN_REQUEST_BATCH_ID, LOCAL_ID HAVING COUNT(*) > 1))", nativeQuery = true)
+  List<PenRequestBatchMultipleLocalID> findBatchFilesWithMultipleAssignedLocalIDs(@Param("batchIds") List<UUID> batchIds);
 
   long countAllByPenRequestBatchEntityAndPenRequestBatchStudentStatusCodeIn(PenRequestBatchEntity penRequestBatchEntity, List<String> penRequestBatchStudentStatusCodes);
 

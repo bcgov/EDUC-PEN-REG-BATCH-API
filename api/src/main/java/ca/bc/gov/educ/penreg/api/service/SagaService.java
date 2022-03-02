@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultipleLocalID;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultiplePen;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
@@ -264,6 +265,28 @@ public class SagaService {
     val penRequestBatchIDs = penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchArchiveAndReturnSagaData()
       .stream().map(PenRequestBatchArchiveAndReturnSagaData::getPenRequestBatchID).collect(Collectors.toList());
     return this.findDuplicatePenAssignedToDiffPRInSameBatchByBatchIds(penRequestBatchIDs);
+  }
+
+  /**
+   * Find duplicate local ID assigned to diff pen request in same batch list.
+   *
+   * @param penRequestBatchArchiveAndReturnAllSagaData the pen request batch archive and return all saga data
+   * @return the list ArchiveAndReturnSagaResponse with error message.
+   */
+  public Optional<String> findDuplicateLocalIDAssignedToDiffPenRequestInSameBatch(final PenRequestBatchArchiveAndReturnAllSagaData penRequestBatchArchiveAndReturnAllSagaData) {
+    val penRequestBatchIDs = penRequestBatchArchiveAndReturnAllSagaData.getPenRequestBatchArchiveAndReturnSagaData()
+      .stream().map(PenRequestBatchArchiveAndReturnSagaData::getPenRequestBatchID).collect(Collectors.toList());
+    return this.findDuplicateLocalIDAssignedToDiffPRInSameBatchByBatchIds(penRequestBatchIDs);
+  }
+
+  public Optional<String> findDuplicateLocalIDAssignedToDiffPRInSameBatchByBatchIds(final List<UUID> penRequestBatchIDs) {
+    final List<PenRequestBatchMultipleLocalID> recordWithMultiples = this.penRequestBatchStudentRepository.findBatchFilesWithMultipleAssignedLocalIDs(penRequestBatchIDs);
+    if (!recordWithMultiples.isEmpty()) {
+      final List<String> errorResponse = new ArrayList<>();
+      recordWithMultiples.forEach(el -> errorResponse.add("Unable to archive submission number# " + el.getSubmissionNumber() + " due to multiple records assigned the same LOCAL ID."));
+      return Optional.of(String.join(",", errorResponse));
+    }
+    return Optional.empty();
   }
 
   public Optional<String> findDuplicatePenAssignedToDiffPRInSameBatchByBatchIds(final List<UUID> penRequestBatchIDs) {

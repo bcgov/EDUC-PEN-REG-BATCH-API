@@ -382,6 +382,11 @@ public class PenRequestBatchTestUtils {
   public void updateAllStudentRecordsToSameAssignedPen() {
     val students = this.studentRepository.findAll();
     this.studentRepository.saveAll(students.stream().peek(el -> el.setAssignedPEN("123456789")).collect(Collectors.toList()));
+  }
 
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void updateAllStudentRecordsToSameLocalID() {
+    val students = this.studentRepository.findAll();
+    this.studentRepository.saveAll(students.stream().peek(el -> el.setLocalID("12345678")).collect(Collectors.toList()));
   }
 }
