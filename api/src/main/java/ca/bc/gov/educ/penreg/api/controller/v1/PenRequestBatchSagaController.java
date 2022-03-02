@@ -100,8 +100,9 @@ public class PenRequestBatchSagaController extends PaginatedController implement
   @Override
   public ResponseEntity<List<ArchiveAndReturnSagaResponse>> archiveAndReturnAllFiles(final PenRequestBatchArchiveAndReturnAllSagaData penRequestBatchArchiveAndReturnAllSagaData) {
     val errorWithDupPenAssigned = this.sagaService.findDuplicatePenAssignedToDiffPenRequestInSameBatch(penRequestBatchArchiveAndReturnAllSagaData);
-    if (errorWithDupPenAssigned.isPresent()) {
-      final ApiError error = ApiError.builder().timestamp(LocalDateTime.now()).message(errorWithDupPenAssigned.get()).status(BAD_REQUEST).build();
+    val errorWithDupLocalIDAssigned = this.sagaService.findDuplicateLocalIDAssignedToDiffPenRequestInSameBatch(penRequestBatchArchiveAndReturnAllSagaData);
+    if (errorWithDupPenAssigned.isPresent() || errorWithDupLocalIDAssigned.isPresent()) {
+      final ApiError error = ApiError.builder().timestamp(LocalDateTime.now()).message(errorWithDupPenAssigned.isPresent() ? errorWithDupPenAssigned.get(): errorWithDupLocalIDAssigned.get()).status(BAD_REQUEST).build();
       throw new InvalidPayloadException(error);
     }
     return this.processBatchRequest(PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA, penRequestBatchArchiveAndReturnAllSagaData);
