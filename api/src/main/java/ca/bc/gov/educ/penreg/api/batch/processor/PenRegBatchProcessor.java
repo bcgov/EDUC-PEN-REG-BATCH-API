@@ -34,6 +34,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -143,9 +145,11 @@ public class PenRegBatchProcessor {
     final var guid = UUID.randomUUID().toString(); // this guid will be used throughout the logs for easy tracking.
     log.info("Started processing row from Pen Web Blobs with submission Number :: {} and guid :: {}", penWebBlobEntity.getSubmissionNumber(), guid);
     val batchFile = new BatchFile();
-    Optional<Reader> batchFileReaderOptional = Optional.empty();
+    Optional<InputStreamReader> batchFileReaderOptional = Optional.empty();
     try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
-      batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents())));
+      CharsetDecoder charsetDecoder = StandardCharsets.UTF_8.newDecoder();
+      batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents()), charsetDecoder));
+
       final DataSet ds = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get()).setStoreRawDataToDataError(true).setStoreRawDataToDataSet(true).setNullEmptyStrings(true).parse();
       this.penRequestBatchFileValidator.validateFileForFormatAndLength(guid, ds);
       this.penRequestBatchFileValidator.validateMincode(guid, penWebBlobEntity.getMincode());
