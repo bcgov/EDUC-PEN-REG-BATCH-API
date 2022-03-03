@@ -506,9 +506,8 @@ public class PenRequestBatchAPIController extends PaginatedController implements
   public ResponseEntity<List<PenRequestBatch>> archiveBatchFiles(final List<PenRequestBatch> penRequestBatches) {
     val batchIds = penRequestBatches.stream().map(PenRequestBatch::getPenRequestBatchID).map(UUID::fromString).collect(Collectors.toList());
     val errorWithDupPenAssigned = this.sagaService.findDuplicatePenAssignedToDiffPRInSameBatchByBatchIds(batchIds);
-    val errorWithDupLocalIDAssigned = this.sagaService.findDuplicateLocalIDAssignedToDiffPRInSameBatchByBatchIds(batchIds);
-    if (errorWithDupPenAssigned.isPresent() || errorWithDupLocalIDAssigned.isPresent()) {
-      final ApiError error = ApiError.builder().timestamp(LocalDateTime.now()).message(errorWithDupPenAssigned.isPresent() ? errorWithDupPenAssigned.get(): errorWithDupLocalIDAssigned.get()).status(BAD_REQUEST).build();
+    if (errorWithDupPenAssigned.isPresent()) {
+      final ApiError error = ApiError.builder().timestamp(LocalDateTime.now()).message(errorWithDupPenAssigned.get()).status(BAD_REQUEST).build();
       throw new InvalidPayloadException(error);
     }
     final var sagaInProgress = !this.getSagaService().findAllByPenRequestBatchIDInAndStatusIn(batchIds, this.getStatusesFilter()).isEmpty();
