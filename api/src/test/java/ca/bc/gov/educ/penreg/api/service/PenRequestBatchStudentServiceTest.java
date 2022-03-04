@@ -178,7 +178,7 @@ public class PenRequestBatchStudentServiceTest extends BasePenRegAPITest {
   @Test
   @Transactional
   public void testGetAllSamePensWithinPenRequestBatchByID_givenSameAssignedPens_shouldReturnResults() throws IOException {
-    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch.json",
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch_for_same_student.json",
         "mock_pen_req_batch_student_with_same_student_id.json", 2);
 
     assertThat(this.batchList).isNotEmpty();
@@ -188,6 +188,6 @@ public class PenRequestBatchStudentServiceTest extends BasePenRegAPITest {
 
     List<PenRequestBatchStudentEntity> ids = this.prbStudentService.getAllSamePensWithinPenRequestBatchByID(batchIds);
 
-    assertThat(ids.size()).isEqualTo(1);
+    assertThat(ids.size()).isEqualTo(10);
   }
 }

@@ -97,7 +97,7 @@ public interface PenRequestBatchStudentRepository extends JpaRepository<PenReque
    * @param  penRequestBatchID the pen request batch ID
    * @return a list of PEN numbers that were assigned to more than one student
    */
-  @Query(value = "select PEN_REQUEST_BATCH_STUDENT_ID\n"
+  @Query(value = "select *\n"
       + "from PEN_REQUEST_BATCH_STUDENT\n"
       + "where STUDENT_ID in (\n"
       + "SELECT\n"
