@@ -90,4 +90,27 @@ public interface PenRequestBatchStudentRepository extends JpaRepository<PenReque
     "           AND ROWNUM < :maxResults\n" +
     "         ORDER BY CREATE_DATE", nativeQuery = true)
   List<PenRequestBatchStudentEntity> findAllPenRequestBatchStudentEntitiesInLoadedStatusToBeProcessed(UUID penRequestBatchID, Integer maxResults);
+
+  /**
+   * Find all pen numbers that were issued to more than one student in pen batch.
+   *
+   * @param  penRequestBatchID the pen request batch ID
+   * @return a list of PEN numbers that were assigned to more than one student
+   */
+  @Query(value = "select PEN_REQUEST_BATCH_STUDENT_ID\n"
+      + "from PEN_REQUEST_BATCH_STUDENT\n"
+      + "where STUDENT_ID in (\n"
+      + "SELECT\n"
+      + "    student_id\n"
+      + "FROM\n"
+      + "    PEN_REQUEST_BATCH_STUDENT\n"
+      + "WHERE PEN_REQUEST_BATCH_ID in :penRequestBatchIDs\n"
+      + "GROUP BY\n"
+      + "    student_id\n"
+      + "HAVING\n"
+      + "    COUNT( student_id ) > 1)\n"
+      + "AND PEN_REQUEST_BATCH_ID in :penRequestBatchIDs",
+      nativeQuery = true)
+  List<PenRequestBatchStudentEntity> findSameAssignedPensByPenRequestBatchID(@Param("penRequestBatchIDs") List<UUID> penRequestBatchID);
+
 }

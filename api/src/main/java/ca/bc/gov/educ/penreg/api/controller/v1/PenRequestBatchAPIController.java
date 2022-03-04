@@ -168,15 +168,15 @@ public class PenRequestBatchAPIController extends PaginatedController implements
    * @return a list of the same PEN numbers that were issued to more than one student.
    */
   @Override
-  public List<String> findAllSamePensWithinPenRequestBatchByID(final String penRequestBatchID) {
+  public List<PenRequestBatchStudentEntity> findAllSamePensWithinPenRequestBatchByID(final String penRequestBatchID) {
     List<UUID> listOfPenRequestBatchIDAsUUID = new ArrayList<UUID>();
     List<String> listOfPenRequestBatchID = new ArrayList<String>(Arrays.asList(penRequestBatchID.split(",")));
 
-    for(int i=0;i<listOfPenRequestBatchIDAsUUID.size();i++){
+    for(int i=0;i<listOfPenRequestBatchID.size();i++){
       listOfPenRequestBatchIDAsUUID.set(i, UUID.fromString(listOfPenRequestBatchID.get(i)));
     }
 
-    return this.getService().getAllSamePensWithinPenRequestBatchByID(listOfPenRequestBatchIDAsUUID);
+    return this.getStudentService().getAllSamePensWithinPenRequestBatchByID(listOfPenRequestBatchIDAsUUID);
   }
 
   /**

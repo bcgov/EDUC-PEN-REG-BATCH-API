@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
@@ -64,7 +65,7 @@ public interface PenRequestBatchAPIEndpoint {
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to get list of Pen Request Batch Student Ids that have the same assigned PEN number in batches", description = "Endpoint to get list of Pen Request Batch Student Ids that have the same assigned PEN number in batches")
   @Schema(name = "String", implementation = String.class)
-  List<String> findAllSamePensWithinPenRequestBatchByID(@RequestParam(name = "penRequestBatchID") String penRequestBatchID);
+  List<PenRequestBatchStudentEntity> findAllSamePensWithinPenRequestBatchByID(@RequestParam(name = "penRequestBatchID") String penRequestBatchID);
 
   /**
    * Create pen request batch pen request batch.

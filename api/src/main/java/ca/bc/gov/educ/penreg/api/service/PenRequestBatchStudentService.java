@@ -395,4 +395,16 @@ public class PenRequestBatchStudentService {
     }
     return penAlreadyAssigned;
   }
+
+  /**
+   * Find all of the same PEN numbers issued to more than one student within a list of pen request batch ids.
+   *
+   * @param penRequestBatchID the pen request batch id
+   * @return a list of pen batch request student ids that have the same assigned pen number.
+   */
+  @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+  public List<PenRequestBatchStudentEntity> getAllSamePensWithinPenRequestBatchByID(final List<UUID> penRequestBatchID) {
+    return this.getRepository().findSameAssignedPensByPenRequestBatchID(penRequestBatchID);
+  }
+
 }

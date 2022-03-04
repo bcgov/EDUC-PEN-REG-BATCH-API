@@ -5,6 +5,7 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
@@ -203,21 +204,6 @@ public class PenRequestBatchServiceTest extends BasePenRegAPITest {
       searchCriteria);
     assertThat(ids.size()).isEqualTo(1);
     assertThat(ids.get(0).getPenRequestBatchID()).isEqualTo(batchIds.get(0));
-  }
-
-  @Test
-  @Transactional
-  public void testGetAllSamePensWithinPenRequestBatchByID_givenSameAssignedPens_shouldReturnResults() throws IOException {
-    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch.json",
-        "mock_pen_req_batch_student.json", 2);
-
-    assertThat(this.batchList).isNotEmpty();
-    var batchIds = this.batchList.stream()
-        .map(PenRequestBatchEntity::getPenRequestBatchID)
-        .collect(toList());
-
-    List<String> ids = this.prbService.getAllSamePensWithinPenRequestBatchByID(batchIds);
-    assertThat(ids.size()).isEqualTo(1);
   }
 
 }

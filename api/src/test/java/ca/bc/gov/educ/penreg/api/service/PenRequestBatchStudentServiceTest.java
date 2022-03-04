@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.*;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -172,5 +173,21 @@ public class PenRequestBatchStudentServiceTest extends BasePenRegAPITest {
   private UUID getFirstPenRequestBatchStudentID(final String status) {
     return this.batchList.get(0).getPenRequestBatchStudentEntities().stream()
         .filter(student -> student.getPenRequestBatchStudentStatusCode().equals(status)).findFirst().orElseThrow().getPenRequestBatchStudentID();
+  }
+
+  @Test
+  @Transactional
+  public void testGetAllSamePensWithinPenRequestBatchByID_givenSameAssignedPens_shouldReturnResults() throws IOException {
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.penRequestBatchRepository, "mock_pen_req_batch.json",
+        "mock_pen_req_batch_student_with_same_student_id.json", 2);
+
+    assertThat(this.batchList).isNotEmpty();
+    var batchIds = this.batchList.stream()
+        .map(PenRequestBatchEntity::getPenRequestBatchID)
+        .collect(toList());
+
+    List<PenRequestBatchStudentEntity> ids = this.prbStudentService.getAllSamePensWithinPenRequestBatchByID(batchIds);
+
+    assertThat(ids.size()).isEqualTo(1);
   }
 }
