@@ -28,12 +28,15 @@ import lombok.val;
 import net.sf.flatpack.DataSet;
 import net.sf.flatpack.DefaultParserFactory;
 import org.apache.commons.lang3.StringUtils;
+import org.mozilla.universalchardet.UniversalDetector;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -145,7 +148,13 @@ public class PenRegBatchProcessor {
     val batchFile = new BatchFile();
     Optional<Reader> batchFileReaderOptional = Optional.empty();
     try (final Reader mapperReader = new FileReader(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mapper.xml")).getFile())) {
-      batchFileReaderOptional = Optional.of(new InputStreamReader(new ByteArrayInputStream(penWebBlobEntity.getFileContents())));
+      var byteArrayOutputStream = new ByteArrayInputStream(penWebBlobEntity.getFileContents());
+      var encoding = UniversalDetector.detectCharset(byteArrayOutputStream);
+      byteArrayOutputStream.reset();
+      if(!encoding.equals("UTF-8")){
+        encoding = "windows-1252";
+      }
+      batchFileReaderOptional = Optional.of(new InputStreamReader(byteArrayOutputStream, Charset.forName(encoding).newDecoder()));
       final DataSet ds = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get()).setStoreRawDataToDataError(true).setStoreRawDataToDataSet(true).setNullEmptyStrings(true).parse();
       this.penRequestBatchFileValidator.validateFileForFormatAndLength(guid, ds);
       this.penRequestBatchFileValidator.validateMincode(guid, penWebBlobEntity.getMincode());
@@ -367,21 +376,21 @@ public class PenRegBatchProcessor {
       throw new FileUnProcessableException(INVALID_TRANSACTION_CODE_STUDENT_DETAILS, guid, PenRequestBatchStatusCodes.LOAD_FAIL, String.valueOf(index), ds.getString(LOCAL_STUDENT_ID.getName()));
     }
     return StudentDetails.builder()
-      .birthDate(StringMapper.uppercaseAndTrim(ds.getString(BIRTH_DATE.getName())))
-      .enrolledGradeCode(StringMapper.uppercaseAndTrim(ds.getString(ENROLLED_GRADE_CODE.getName())))
-      .gender(StringMapper.uppercaseAndTrim(ds.getString(GENDER.getName())))
-      .legalGivenName(StringMapper.uppercaseAndTrim(ds.getString(LEGAL_GIVEN_NAME.getName())))
-      .legalMiddleName(StringMapper.uppercaseAndTrim(ds.getString(LEGAL_MIDDLE_NAME.getName())))
-      .legalSurname(StringMapper.uppercaseAndTrim(ds.getString(LEGAL_SURNAME.getName())))
-      .localStudentID(StringMapper.uppercaseAndTrim(ds.getString(LOCAL_STUDENT_ID.getName())))
+      .birthDate(StringMapper.trimUppercaseAndScrubDiacriticalMarks(ds.getString(BIRTH_DATE.getName())))
+      .enrolledGradeCode(StringMapper.trimUppercaseAndScrubDiacriticalMarks(ds.getString(ENROLLED_GRADE_CODE.getName())))
+      .gender(StringMapper.trimUppercaseAndScrubDiacriticalMarks(ds.getString(GENDER.getName())))
+      .legalGivenName(StringMapper.trimUppercaseAndScrubDiacriticalMarks(ds.getString(LEGAL_GIVEN_NAME.getName())))
+      .legalMiddleName(StringMapper.trimUppercaseAndScrubDiacriticalMarks(ds.getString(LEGAL_MIDDLE_NAME.getName())))
+      .legalSurname(StringMapper.trimUppercaseAndScrubDiacriticalMarks(ds.getString(LEGAL_SURNAME.getName())))
+      .localStudentID(StringMapper.trimUppercaseAndScrubDiacriticalMarks(ds.getString(LOCAL_STUDENT_ID.getName())))
       .pen(ds.getString(PEN.getName()))
-      .postalCode(StringMapper.uppercaseAndTrim(ds.getString(POSTAL_CODE.getName())))
+      .postalCode(StringMapper.trimUppercaseAndScrubDiacriticalMarks(ds.getString(POSTAL_CODE.getName())))
       .transactionCode(transactionCode)
       .unused(ds.getString(UNUSED.getName()))
       .unusedSecond(ds.getString(UNUSED_SECOND.getName()))
-      .usualGivenName(StringMapper.uppercaseAndTrim(ds.getString(USUAL_GIVEN_NAME.getName())))
-      .usualMiddleName(StringMapper.uppercaseAndTrim(ds.getString(USUAL_MIDDLE_NAME.getName())))
-      .usualSurname(StringMapper.uppercaseAndTrim(ds.getString(USUAL_SURNAME.getName())))
+      .usualGivenName(StringMapper.trimUppercaseAndScrubDiacriticalMarks(ds.getString(USUAL_GIVEN_NAME.getName())))
+      .usualMiddleName(StringMapper.trimUppercaseAndScrubDiacriticalMarks(ds.getString(USUAL_MIDDLE_NAME.getName())))
+      .usualSurname(StringMapper.trimUppercaseAndScrubDiacriticalMarks(ds.getString(USUAL_SURNAME.getName())))
       .build();
   }
 

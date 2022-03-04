@@ -2,9 +2,7 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
-import ca.bc.gov.educ.penreg.api.constants.SchoolTypeCode;
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
-import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
@@ -16,7 +14,6 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -107,21 +104,10 @@ public class ResponseFileGeneratorService {
 
       for (final PenRequestBatchStudent entity : filteredStudents) {
         final var student = studentsMap.get(entity.getStudentID());
-        var schoolType = PenRegBatchHelper.getSchoolTypeCodeFromMincode(penRequestBatchEntity.getMincode());
-        String localID;
-        String mincode;
-        if(schoolType.equals(SchoolTypeCode.SFAS) || schoolType.equals(SchoolTypeCode.PSI)) {
-          localID = entity.getLocalID();
-          mincode = entity.getMincode();
-        }else{
-          localID = student.getLocalID();
-          mincode = student.getMincode();
-        }
-
         if(student != null) {
           idsFile.append("E03")
-          .append(mincode)
-          .append(String.format("%-12s", localID))
+          .append(entity.getMincode())
+          .append(String.format("%-12s", entity.getLocalID()))
           .append(student.getPen()).append(" ")
           .append(String.format("%-25s", student.getLegalLastName()))
           .append("\r\n");

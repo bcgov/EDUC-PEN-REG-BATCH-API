@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultipleLocalID;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultiplePen;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
