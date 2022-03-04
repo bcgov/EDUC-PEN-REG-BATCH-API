@@ -37,6 +37,7 @@ import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestResult;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.Arrays;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -158,6 +159,24 @@ public class PenRequestBatchAPIController extends PaginatedController implements
   @Override
   public PenRequestBatch readPenRequestBatch(final UUID penRequestBatchID) {
     return this.getService().getPenRequestBatchEntityByID(penRequestBatchID).map(mapper::toStructure).orElseThrow(EntityNotFoundException::new);
+  }
+
+  /**
+   * Find all of the same PEN numbers issued to more than one student within a pen request batch.
+   *
+   * @param penRequestBatchID the pen request batch id
+   * @return a list of the same PEN numbers that were issued to more than one student.
+   */
+  @Override
+  public List<String> findAllSamePensWithinPenRequestBatchByID(final String penRequestBatchID) {
+    List<UUID> listOfPenRequestBatchIDAsUUID = new ArrayList<UUID>();
+    List<String> listOfPenRequestBatchID = new ArrayList<String>(Arrays.asList(penRequestBatchID.split(",")));
+
+    for(int i=0;i<listOfPenRequestBatchIDAsUUID.size();i++){
+      listOfPenRequestBatchIDAsUUID.set(i, UUID.fromString(listOfPenRequestBatchID.get(i)));
+    }
+
+    return this.getService().getAllSamePensWithinPenRequestBatchByID(listOfPenRequestBatchIDAsUUID);
   }
 
   /**

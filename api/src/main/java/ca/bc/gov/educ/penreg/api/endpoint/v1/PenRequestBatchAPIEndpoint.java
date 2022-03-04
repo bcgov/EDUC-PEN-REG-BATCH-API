@@ -52,6 +52,19 @@ public interface PenRequestBatchAPIEndpoint {
   @Schema(name = "PenRequestBatch", implementation = PenRequestBatch.class)
   PenRequestBatch readPenRequestBatch(@PathVariable UUID penRequestBatchID);
 
+  /**
+   * Find the same pen numbers issued to multiple students within a list of batches.
+   *
+   * @param penRequestBatchID the pen request batch id
+   * @return list of Pen Request Batch Student Ids
+   */
+  @GetMapping(value = "same-pen")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
+  @Transactional(readOnly = true)
+  @Tag(name = "Endpoint to get list of Pen Request Batch Student Ids that have the same assigned PEN number in batches", description = "Endpoint to get list of Pen Request Batch Student Ids that have the same assigned PEN number in batches")
+  @Schema(name = "String", implementation = String.class)
+  List<String> findAllSamePensWithinPenRequestBatchByID(@RequestParam(name = "penRequestBatchID") String penRequestBatchID);
 
   /**
    * Create pen request batch pen request batch.
@@ -368,3 +381,4 @@ public interface PenRequestBatchAPIEndpoint {
   @ArraySchema(schema = @Schema(name = "PenRequestBatch", implementation = PenRequestBatch.class))
   ResponseEntity<List<PenRequestBatch>> archiveBatchFiles(@Validated @RequestBody List<PenRequestBatch> penRequestBatches);
 }
+
