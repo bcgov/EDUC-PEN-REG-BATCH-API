@@ -263,9 +263,28 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
    */
   @Test
   @Transactional
-  public void testProcessPenRegBatchFileFromTSW_Given30RowValidFile_ShouldCreateRecordsInDBWithScrub() throws IOException {
+  public void testProcessPenRegBatchFileFromTSW_Given30RowValidFile_ShouldCreateRecordsInDBWithANSI() throws IOException {
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_Diacritical_ANSI.txt")).getFile());
+    final byte[] bFile = Files.readAllBytes(file.toPath());
+    final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
+    var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("MYED").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_30_records_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();
+    tsw = this.penRequestBatchTestUtils.savePenWebBlob(tsw);
+    this.penRegBatchProcessor.processPenRegBatchFileFromPenWebBlob(tsw);
+    final var result = this.repository.findAll();
+    assertThat(result.size()).isEqualTo(1);
+  }
+
+  /**
+   * Test process pen reg batch file from tsw given 30 row valid file should create records in db.
+   *
+   * @throws IOException the io exception
+   */
+  @Test
+  @Transactional
+  public void testProcessPenRegBatchFileFromTSW_Given30RowValidFile_ShouldCreateRecordsInDBWithUTF8() throws IOException {
+    when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(this.createMockSchool()));
+    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_Diacritical_UTF8.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
     final var randomNum = (new Random().nextLong() * (MAX - MIN + 1) + MIN);
     var tsw = PENWebBlobEntity.builder().penWebBlobId(1L).mincode("66510518").sourceApplication("MYED").tswAccount((randomNum + "").substring(0, 8)).fileName("sample_30_records_OK").fileType("PEN").fileContents(bFile).insertDateTime(LocalDateTime.now()).submissionNumber(("T" + randomNum).substring(0, 8)).build();

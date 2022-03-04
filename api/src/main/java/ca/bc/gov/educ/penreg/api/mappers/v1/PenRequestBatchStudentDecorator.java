@@ -21,22 +21,22 @@ public abstract class PenRequestBatchStudentDecorator implements PenRequestBatch
   public PenRequestBatchStudentEntity toModel(PenRequestBatchStudent penRequestBatchStudent) {
     var penRequestBatchStudentEntity = delegate.toModel(penRequestBatchStudent);
 
-    penRequestBatchStudentEntity.setCreateUser(StringMapper.uppercaseAndTrim(penRequestBatchStudent.getCreateUser()));
-    penRequestBatchStudentEntity.setUpdateUser(StringMapper.uppercaseAndTrim(penRequestBatchStudent.getUpdateUser()));
+    penRequestBatchStudentEntity.setCreateUser(StringMapper.trimUppercaseAndScrubDiacriticalMarks(penRequestBatchStudent.getCreateUser()));
+    penRequestBatchStudentEntity.setUpdateUser(StringMapper.trimUppercaseAndScrubDiacriticalMarks(penRequestBatchStudent.getUpdateUser()));
 
-    penRequestBatchStudentEntity.setLegalFirstName(StringMapper.uppercaseAndTrim(penRequestBatchStudent.getLegalFirstName()));
-    penRequestBatchStudentEntity.setLegalLastName(StringMapper.uppercaseAndTrim(penRequestBatchStudent.getLegalLastName()));
-    penRequestBatchStudentEntity.setLegalMiddleNames(StringMapper.uppercaseAndTrim(penRequestBatchStudent.getLegalMiddleNames()));
+    penRequestBatchStudentEntity.setLegalFirstName(StringMapper.trimUppercaseAndScrubDiacriticalMarks(penRequestBatchStudent.getLegalFirstName()));
+    penRequestBatchStudentEntity.setLegalLastName(StringMapper.trimUppercaseAndScrubDiacriticalMarks(penRequestBatchStudent.getLegalLastName()));
+    penRequestBatchStudentEntity.setLegalMiddleNames(StringMapper.trimUppercaseAndScrubDiacriticalMarks(penRequestBatchStudent.getLegalMiddleNames()));
 
-    penRequestBatchStudentEntity.setUsualFirstName(StringMapper.uppercaseAndTrim(penRequestBatchStudent.getUsualFirstName()));
-    penRequestBatchStudentEntity.setUsualLastName(StringMapper.uppercaseAndTrim(penRequestBatchStudent.getUsualLastName()));
-    penRequestBatchStudentEntity.setUsualMiddleNames(StringMapper.uppercaseAndTrim(penRequestBatchStudent.getUsualMiddleNames()));
+    penRequestBatchStudentEntity.setUsualFirstName(StringMapper.trimUppercaseAndScrubDiacriticalMarks(penRequestBatchStudent.getUsualFirstName()));
+    penRequestBatchStudentEntity.setUsualLastName(StringMapper.trimUppercaseAndScrubDiacriticalMarks(penRequestBatchStudent.getUsualLastName()));
+    penRequestBatchStudentEntity.setUsualMiddleNames(StringMapper.trimUppercaseAndScrubDiacriticalMarks(penRequestBatchStudent.getUsualMiddleNames()));
 
-    penRequestBatchStudentEntity.setLocalID(StringMapper.uppercaseAndTrim(penRequestBatchStudent.getLocalID()));
-    penRequestBatchStudentEntity.setPostalCode(StringMapper.uppercaseAndTrim(penRequestBatchStudent.getPostalCode()));
+    penRequestBatchStudentEntity.setLocalID(StringMapper.trimUppercaseAndScrubDiacriticalMarks(penRequestBatchStudent.getLocalID()));
+    penRequestBatchStudentEntity.setPostalCode(StringMapper.trimUppercaseAndScrubDiacriticalMarks(penRequestBatchStudent.getPostalCode()));
 
-    penRequestBatchStudentEntity.setGenderCode(StringMapper.uppercaseAndTrim(penRequestBatchStudent.getGenderCode()));
-    penRequestBatchStudentEntity.setGradeCode(StringMapper.uppercaseAndTrim(penRequestBatchStudent.getGradeCode()));
+    penRequestBatchStudentEntity.setGenderCode(StringMapper.trimUppercaseAndScrubDiacriticalMarks(penRequestBatchStudent.getGenderCode()));
+    penRequestBatchStudentEntity.setGradeCode(StringMapper.trimUppercaseAndScrubDiacriticalMarks(penRequestBatchStudent.getGradeCode()));
 
     return penRequestBatchStudentEntity;
   }
