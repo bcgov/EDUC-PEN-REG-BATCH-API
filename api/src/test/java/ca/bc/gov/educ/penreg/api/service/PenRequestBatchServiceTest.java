@@ -5,6 +5,7 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;

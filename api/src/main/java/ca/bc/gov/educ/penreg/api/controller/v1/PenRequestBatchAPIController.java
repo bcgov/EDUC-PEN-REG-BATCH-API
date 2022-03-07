@@ -161,6 +161,17 @@ public class PenRequestBatchAPIController extends PaginatedController implements
   }
 
   /**
+   * Find all of the same PEN numbers issued to more than one student within one or more pen request batches.
+   *
+   * @param penRequestBatchID the pen request batch ids within a comma separated string of batches
+   * @return a list of the same PEN numbers that were issued to more than one student.
+   */
+  @Override
+  public List<String> findAllSamePensWithinPenRequestBatchByID(final String penRequestBatchID) {
+    return this.getStudentService().getAllSamePensWithinPenRequestBatchByID(penRequestBatchID);
+  }
+
+  /**
    * Create pen request batch pen request batch.
    *
    * @param penRequestBatch the pen request batch

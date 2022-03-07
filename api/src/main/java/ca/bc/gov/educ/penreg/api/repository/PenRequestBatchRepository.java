@@ -1,8 +1,11 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
