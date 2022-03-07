@@ -188,7 +188,7 @@ public class PenRequestBatchStudentServiceTest extends BasePenRegAPITest {
 
     var studentIds = this.prbStudentService.getAllSamePensWithinPenRequestBatchByID(batchIds);
 
-    assertThat(studentIds.size()).isEqualTo(10);
+    assertThat(studentIds.size()).isEqualTo(8);
   }
 
 }
