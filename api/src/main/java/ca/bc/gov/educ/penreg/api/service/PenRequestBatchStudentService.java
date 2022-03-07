@@ -412,9 +412,9 @@ public class PenRequestBatchStudentService {
 
     return this.getRepository().findSameAssignedPensByPenRequestBatchID(listOfPenRequestBatchIDAsUUID)
         .stream()
-        .map((prbsEntity -> prbsEntity
+        .map(prbsEntity -> prbsEntity
             .getPenRequestBatchStudentID()
-            .toString()))
+            .toString())
         .collect(toList());
   }
 
