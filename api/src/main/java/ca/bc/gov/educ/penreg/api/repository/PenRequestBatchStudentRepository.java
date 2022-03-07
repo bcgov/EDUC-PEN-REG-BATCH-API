@@ -97,19 +97,15 @@ public interface PenRequestBatchStudentRepository extends JpaRepository<PenReque
    * @param  penRequestBatchID the pen request batch ID
    * @return a list of PEN numbers that were assigned to more than one student
    */
-  @Query(value = "select *\n"
-      + "from PEN_REQUEST_BATCH_STUDENT\n"
-      + "where STUDENT_ID in (\n"
-      + "SELECT\n"
-      + "    student_id\n"
-      + "FROM\n"
-      + "    PEN_REQUEST_BATCH_STUDENT\n"
-      + "WHERE PEN_REQUEST_BATCH_ID in :penRequestBatchIDs\n"
-      + "GROUP BY\n"
-      + "    student_id\n"
-      + "HAVING\n"
-      + "    COUNT( student_id ) > 1)\n"
-      + "AND PEN_REQUEST_BATCH_ID in :penRequestBatchIDs",
+  @Query(value = "SELECT a.*\n"
+      + "    FROM PEN_REQUEST_BATCH_STUDENT a INNER JOIN (SELECT PEN_REQUEST_BATCH_ID, student_id\n"
+      + "     FROM PEN_REQUEST_BATCH_STUDENT\n"
+      + "     WHERE PEN_REQUEST_BATCH_ID in :penRequestBatchIDs\n"
+      + "     GROUP BY\n"
+      + "      PEN_REQUEST_BATCH_ID, student_id\n"
+      + "     HAVING\n"
+      + "      COUNT( student_id ) > 1\n"
+      + "    ) b ON a.PEN_REQUEST_BATCH_ID=b.PEN_REQUEST_BATCH_ID and a.student_id=b.student_id",
       nativeQuery = true)
   List<PenRequestBatchStudentEntity> findSameAssignedPensByPenRequestBatchID(@Param("penRequestBatchIDs") List<UUID> penRequestBatchID);
 
