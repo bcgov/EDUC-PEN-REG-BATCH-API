@@ -42,6 +42,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.*;
+import static java.util.stream.Collectors.toList;
 import static lombok.AccessLevel.PRIVATE;
 
 /**
@@ -403,8 +404,18 @@ public class PenRequestBatchStudentService {
    * @return a list of pen batch request student ids that have the same assigned pen number.
    */
   @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-  public List<PenRequestBatchStudentEntity> getAllSamePensWithinPenRequestBatchByID(final List<UUID> penRequestBatchID) {
-    return this.getRepository().findSameAssignedPensByPenRequestBatchID(penRequestBatchID);
+  public List<String> getAllSamePensWithinPenRequestBatchByID(final String penRequestBatchID) {
+
+    List<UUID> listOfPenRequestBatchIDAsUUID = Arrays.stream(penRequestBatchID.split(","))
+        .map(UUID::fromString)
+        .collect(toList());
+
+    return this.getRepository().findSameAssignedPensByPenRequestBatchID(listOfPenRequestBatchIDAsUUID)
+        .stream()
+        .map((prbsEntity -> prbsEntity
+            .getPenRequestBatchStudentID()
+            .toString()))
+        .collect(toList());
   }
 
 }

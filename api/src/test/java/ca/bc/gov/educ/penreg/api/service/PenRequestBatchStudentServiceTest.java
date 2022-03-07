@@ -16,9 +16,9 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import static java.util.stream.Collectors.joining;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.*;
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -183,11 +183,12 @@ public class PenRequestBatchStudentServiceTest extends BasePenRegAPITest {
 
     assertThat(this.batchList).isNotEmpty();
     var batchIds = this.batchList.stream()
-        .map(PenRequestBatchEntity::getPenRequestBatchID)
-        .collect(toList());
+        .map((prbEntity) -> prbEntity.getPenRequestBatchID().toString())
+        .collect(joining(","));
 
-    List<PenRequestBatchStudentEntity> ids = this.prbStudentService.getAllSamePensWithinPenRequestBatchByID(batchIds);
+    var studentIds = this.prbStudentService.getAllSamePensWithinPenRequestBatchByID(batchIds);
 
-    assertThat(ids.size()).isEqualTo(10);
+    assertThat(studentIds.size()).isEqualTo(10);
   }
+
 }
