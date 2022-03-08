@@ -61,7 +61,7 @@ public abstract class PenRequestBatchResultDataDecorator implements PenRequestBa
           this.populateForSystemMatchedStatus(exactMatchList, differencesList, studentMap, penRequestBatchStudent);
           break;
         case USR_MATCHED:
-          populateForUserMatchedStatus(studentMap, differencesList, confirmedList, penRequestBatchStudent);
+          populateForUserMatchedStatus(studentMap, differencesList, penRequestBatchStudent);
           break;
         default:
           log.error("Unexpected pen request batch student error code encountered while attempting generate PenRequestBatchSubmissionResult data :: " + penRequestBatchStudent.getPenRequestBatchStudentStatusCode());
@@ -76,23 +76,16 @@ public abstract class PenRequestBatchResultDataDecorator implements PenRequestBa
     return requestBatchSubmissionResult;
   }
 
-  private void populateForUserMatchedStatus(Map<String, Student> studentMap, List<SchoolMinListItem> differencesList, List<SchoolMinListItem> confirmedList, PenRequestBatchStudentEntity penRequestBatchStudent) {
+  private void populateForUserMatchedStatus(Map<String, Student> studentMap, List<SchoolMinListItem> differencesList, PenRequestBatchStudentEntity penRequestBatchStudent) {
     if (studentMap.get(penRequestBatchStudent.getStudentID().toString()) == null) {
       log.error("Error attempting to create report data. Students list should not be null for USR_MATCHED status.");
       return;
     }
     val matchedStudent = studentMap.get(penRequestBatchStudent.getStudentID().toString());
-    if (matchedStudent != null && matchedStudent.getDemogCode() != null && matchedStudent.getDemogCode().equals(StudentDemogCode.CONFIRMED.getCode())) {
-      val item = new SchoolMinListItem();
-      item.setMin(listItemMapper.toListItem(matchedStudent));
-      item.setSchool(listItemMapper.toListItem(penRequestBatchStudent));
-      confirmedList.add(item);
-    } else {
-      val item = new SchoolMinListItem();
-      item.setMin(listItemMapper.toListItem(matchedStudent));
-      item.setSchool(listItemMapper.toDiffListItem(penRequestBatchStudent));
-      differencesList.add(item);
-    }
+    val item = new SchoolMinListItem();
+    item.setMin(listItemMapper.toListItem(matchedStudent));
+    item.setSchool(listItemMapper.toDiffListItem(penRequestBatchStudent));
+    differencesList.add(item);
   }
 
   private void populateForSystemMatchedStatus(List<ListItem> exactMatchList, List<SchoolMinListItem> differencesList, Map<String, Student> studentMap, PenRequestBatchStudentEntity penRequestBatchStudent) {
