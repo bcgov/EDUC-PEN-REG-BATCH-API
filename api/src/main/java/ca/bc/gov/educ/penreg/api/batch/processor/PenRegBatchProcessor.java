@@ -151,10 +151,15 @@ public class PenRegBatchProcessor {
       var byteArrayOutputStream = new ByteArrayInputStream(penWebBlobEntity.getFileContents());
       var encoding = UniversalDetector.detectCharset(byteArrayOutputStream);
       byteArrayOutputStream.reset();
-      if(!encoding.equals("UTF-8")){
+      if(!StringUtils.isEmpty(encoding) && !encoding.equals("UTF-8")){
         encoding = "windows-1252";
       }
-      batchFileReaderOptional = Optional.of(new InputStreamReader(byteArrayOutputStream, Charset.forName(encoding).newDecoder()));
+
+      if(StringUtils.isEmpty(encoding)){
+        batchFileReaderOptional = Optional.of(new InputStreamReader(byteArrayOutputStream));
+      }else{
+        batchFileReaderOptional = Optional.of(new InputStreamReader(byteArrayOutputStream, Charset.forName(encoding).newDecoder()));
+      }
       final DataSet ds = DefaultParserFactory.getInstance().newFixedLengthParser(mapperReader, batchFileReaderOptional.get()).setStoreRawDataToDataError(true).setStoreRawDataToDataSet(true).setNullEmptyStrings(true).parse();
       this.penRequestBatchFileValidator.validateFileForFormatAndLength(guid, ds);
       this.penRequestBatchFileValidator.validateMincode(guid, penWebBlobEntity.getMincode());
