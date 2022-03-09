@@ -411,6 +411,8 @@ public class PenRequestBatchService {
       val validationResults = new ObjectMapper().readValue(validationResponseEvent.get().getEventPayload(), responseType);
       penRequestResult.setValidationIssues(validationResults.stream().filter(validationResult -> "ERROR".equals(validationResult.getPenRequestBatchValidationIssueSeverityCode())).collect(Collectors.toList()));
       return org.apache.commons.lang3.tuple.Pair.of(HttpStatus.OK.value(), Optional.of(penRequestResult));
+    }else{
+      penRequestResult.setValidationIssues(new ArrayList<>());
     }
     val penMatchPayload = JsonUtil.getJsonStringFromObject(PenRequestBatchMapper.mapper.toPenMatch(penRequest));
     val penMatchEvent = Event.builder().sagaId(transactionID).eventType(EventType.PROCESS_PEN_MATCH).eventPayload(penMatchPayload).build();
