@@ -59,7 +59,7 @@ public interface PenRequestBatchAPIEndpoint {
    * @param penRequestBatchID the pen request batch id
    * @return list of Pen Request Batch Student Ids
    */
-  @GetMapping(value = "/same-pen")
+  @GetMapping(value = "same-pen")
   @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
   @Transactional(readOnly = true)
