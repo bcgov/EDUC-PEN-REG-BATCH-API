@@ -1122,6 +1122,19 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
       .andDo(print()).andExpect(status().isOk());
   }
 
+  @Test
+  public void testReadSamePens_GivenValidBatchIDs_ShouldReturnStatusOkAndReturnEmptyArrayForNoSamePens() throws Exception {
+    final String batchIDs = this.createBatchStudentRecords(1);
+    this.mockMvc
+        .perform(get("/api/v1/pen-request-batch/same-pen")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+            .param("penRequestBatchID", batchIDs)
+            .contentType(APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$").value(new ArrayList<>()));
+  }
+
   /**
    * Create batch students list.
    *

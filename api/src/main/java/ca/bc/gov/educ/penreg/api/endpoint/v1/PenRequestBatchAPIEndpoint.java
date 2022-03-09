@@ -63,7 +63,7 @@ public interface PenRequestBatchAPIEndpoint {
   @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
   @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK")})
   @Transactional(readOnly = true)
-  @Tag(name = "Endpoint to get list of Pen Request Batch Student Ids that have the same assigned PEN number in selected batches", description = "Endpoint to get list of Pen Request Batch Student Ids that have the same assigned PEN number in selected batches")
+  @Tag(name = "Endpoint to get Pen Request Batch Student Ids with same assigned PEN", description = "Endpoint to get list of Pen Request Batch Student Ids that have the same assigned PEN number in one or more batches. Accepts comma separated list of Batch IDs")
   @Schema(name = "String", implementation = String.class)
   List<String> findAllSamePensWithinPenRequestBatchByID(@RequestParam(name = "penRequestBatchID") String penRequestBatchID);
 
