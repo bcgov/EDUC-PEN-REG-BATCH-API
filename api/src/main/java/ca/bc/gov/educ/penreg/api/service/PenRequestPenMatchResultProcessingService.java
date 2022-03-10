@@ -77,6 +77,9 @@ public class PenRequestPenMatchResultProcessingService extends BasePenMatchResul
     val penRequestResult = payload.getPenRequestResult();
     val pen = super.generateNewPen(UUID.randomUUID().toString());
     val student = PenRequestBatchMapper.mapper.toStudent(payload.getPenRequest(), pen);
+    if (this.isGradeCodeWarningPresent(penRequestResult.getValidationIssues())) {
+      student.setGradeCode(null);
+    }
     val createStudentEvent = Event.builder().sagaId(payload.getTransactionID()).eventType(EventType.CREATE_STUDENT).eventPayload(JsonUtil.getJsonStringFromObject(student)).build();
     val createdStudent = this.getRestUtils().requestEventResponseFromStudentAPI(createStudentEvent);
     if (createdStudent.isPresent() && createdStudent.get().getEventOutcome() == EventOutcome.STUDENT_CREATED) {

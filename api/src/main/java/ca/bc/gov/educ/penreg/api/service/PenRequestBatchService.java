@@ -58,6 +58,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.VALIDATION_SUCCESS_WITH_ERROR;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.VALIDATION_SUCCESS_WITH_ONLY_WARNING;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REARCHIVED;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -411,6 +412,11 @@ public class PenRequestBatchService {
       val validationResults = new ObjectMapper().readValue(validationResponseEvent.get().getEventPayload(), responseType);
       penRequestResult.setValidationIssues(validationResults.stream().filter(validationResult -> "ERROR".equals(validationResult.getPenRequestBatchValidationIssueSeverityCode())).collect(Collectors.toList()));
       return org.apache.commons.lang3.tuple.Pair.of(HttpStatus.OK.value(), Optional.of(penRequestResult));
+    }else if (validationResponseEvent.get().getEventOutcome() == VALIDATION_SUCCESS_WITH_ONLY_WARNING) {
+      final TypeReference<List<PenRequestBatchStudentValidationIssue>> responseType = new TypeReference<>() {
+      };
+      val validationResults = new ObjectMapper().readValue(validationResponseEvent.get().getEventPayload(), responseType);
+      penRequestResult.setValidationIssues(validationResults);
     }else{
       penRequestResult.setValidationIssues(new ArrayList<>());
     }
