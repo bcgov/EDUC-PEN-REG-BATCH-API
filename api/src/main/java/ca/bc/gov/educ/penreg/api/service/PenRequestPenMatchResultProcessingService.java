@@ -83,8 +83,14 @@ public class PenRequestPenMatchResultProcessingService extends BasePenMatchResul
     val createStudentEvent = Event.builder().sagaId(payload.getTransactionID()).eventType(EventType.CREATE_STUDENT).eventPayload(JsonUtil.getJsonStringFromObject(student)).build();
     val createdStudent = this.getRestUtils().requestEventResponseFromStudentAPI(createStudentEvent);
     if (createdStudent.isPresent() && createdStudent.get().getEventOutcome() == EventOutcome.STUDENT_CREATED) {
-      penRequestResult.setPen(pen);
-      return Pair.of(HttpStatus.CREATED.value(), Optional.of(penRequestResult));
+      val optionalStudent = this.getRestUtils().getStudentByPEN(pen);
+      if (optionalStudent.isEmpty()) {
+        log.error("could not retrieve student data for new PEN status ");
+        return Pair.of(HttpStatus.INTERNAL_SERVER_ERROR.value(), Optional.empty());
+      }
+      val prr = PenRequestBatchMapper.mapper.toPenRequestResult(optionalStudent.get());
+      prr.setValidationIssues(payload.getPenRequestResult().getValidationIssues());
+      return Pair.of(HttpStatus.CREATED.value(), Optional.of(prr));
     }
     return Pair.of(HttpStatus.INTERNAL_SERVER_ERROR.value(), Optional.empty());
   }
@@ -108,6 +114,7 @@ public class PenRequestPenMatchResultProcessingService extends BasePenMatchResul
     }
     this.updateStudent(optionalStudent.get(), payload);
     val penRequestResult = PenRequestBatchMapper.mapper.toPenRequestResult(optionalStudent.get());
+    penRequestResult.setValidationIssues(payload.getPenRequestResult().getValidationIssues());
     return Pair.of(HttpStatus.OK.value(), Optional.of(penRequestResult));
   }
 

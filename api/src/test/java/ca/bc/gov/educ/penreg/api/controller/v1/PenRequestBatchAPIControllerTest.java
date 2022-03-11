@@ -983,6 +983,7 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
     final PenMatchResult penMatchResult = PenMatchResult.builder().penStatus("D0").matchingRecords(matchList).build();
     Mockito.when(this.restUtils.requestEventResponseFromMatchAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.PEN_MATCH_PROCESSED).eventPayload(JsonUtil.getJsonStringFromObject(penMatchResult)).build()));
     Mockito.when(this.restUtils.getNextPenNumberFromPenServiceAPI(ArgumentMatchers.any())).thenReturn("123456788");
+    Mockito.when(this.restUtils.getStudentByPEN(ArgumentMatchers.any())).thenReturn(Optional.of(Student.builder().studentID("studentID").pen("123456788").build()));
     Mockito.when(this.restUtils.requestEventResponseFromStudentAPI(ArgumentMatchers.any())).thenReturn(Optional.of(Event.builder().eventOutcome(EventOutcome.STUDENT_CREATED).build()));
     this.mockMvc
       .perform(post("/api/v1/pen-request-batch/pen-request")

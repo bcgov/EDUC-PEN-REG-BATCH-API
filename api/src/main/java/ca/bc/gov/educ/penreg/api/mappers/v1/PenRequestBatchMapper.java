@@ -93,8 +93,8 @@ public interface PenRequestBatchMapper {
    * @return the student
    */
   @Mapping(target = "usualMiddleNames", source = "request.usualMiddleName")
-  @Mapping(target = "usualLastName", source = "request.usualMiddleName")
-  @Mapping(target = "usualFirstName", source = "request.usualMiddleName")
+  @Mapping(target = "usualLastName", source = "request.usualSurname")
+  @Mapping(target = "usualFirstName", source = "request.usualGivenName")
   @Mapping(target = "trueStudentID", ignore = true)
   @Mapping(target = "studentID", ignore = true)
   @Mapping(target = "statusCode", constant = "A")
