@@ -114,7 +114,6 @@ public class PenRequestPenMatchResultProcessingService extends BasePenMatchResul
     }
     this.updateStudent(optionalStudent.get(), payload);
     val penRequestResult = PenRequestBatchMapper.mapper.toPenRequestResult(optionalStudent.get());
-    penRequestResult.setValidationIssues(payload.getPenRequestResult().getValidationIssues());
     return Pair.of(HttpStatus.OK.value(), Optional.of(penRequestResult));
   }
 
