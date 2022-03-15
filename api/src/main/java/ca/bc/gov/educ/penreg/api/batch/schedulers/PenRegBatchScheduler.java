@@ -2,6 +2,7 @@ package ca.bc.gov.educ.penreg.api.batch.schedulers;
 
 import ca.bc.gov.educ.penreg.api.batch.processor.PenRegBatchProcessor;
 import ca.bc.gov.educ.penreg.api.batch.service.PenRequestBatchFileService;
+import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -14,6 +15,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static lombok.AccessLevel.PRIVATE;
@@ -65,12 +67,32 @@ public class PenRegBatchScheduler {
       lockAtMostFor = "${scheduled.jobs.extract.unprocessed.pen.web.blobs.cron.lockAtMostFor}")
   public void extractUnProcessedFilesFromPenWebBlobs() {
     LockAssert.assertLocked();
+    log.debug("Launching nighttime batch extract job");
     final var unExtractedRecords = this.getPenRequestBatchFileService().getAllNotExtractedRecords(FILE_TYPE_PEN); // PEN is the file type based on which records will be filtered.
+    runBatchLoad(unExtractedRecords);
+  }
+
+  /**
+   * Extract un processed files.
+   * this method will only extract the file or blob, processing will be done in processor.
+   */
+  @Scheduled(cron = "${scheduled.jobs.extract.unprocessed.penwebfiles.pen.web.blobs.cron}")
+  @SchedulerLock(name = "EXTRACT_UNPROCESSED_PENWEB_PEN_WEB_BLOB",
+    lockAtLeastFor = "${scheduled.jobs.extract.unprocessed.pen.web.blobs.cron.lockAtLeastFor}",
+    lockAtMostFor = "${scheduled.jobs.extract.unprocessed.pen.web.blobs.cron.lockAtMostFor}")
+  public void extractUnProcessedPenWebFilesFromPenWebBlobs() {
+    LockAssert.assertLocked();
+    log.debug("Launching daytime PENWEB batch extract job");
+    final var unExtractedRecords = this.getPenRequestBatchFileService().getAllPenWebNotExtractedRecords(FILE_TYPE_PEN); // PEN is the file type based on which records will be filtered.
+    runBatchLoad(unExtractedRecords);
+  }
+
+  private void runBatchLoad(List<PENWebBlobEntity> unExtractedRecords){
     if (!unExtractedRecords.isEmpty()) {
       log.info("{} :: records found where extract date is null", unExtractedRecords.size());
       for (final var penWebBlob : unExtractedRecords) {
         final String redisKey = penWebBlob.getSubmissionNumber().concat(
-            "::extractUnProcessedFilesFromPenWebBlobs");
+          "::extractUnProcessedFilesFromPenWebBlobs");
         val valueFromRedis = this.stringRedisTemplate.opsForValue().get(redisKey);
         if (StringUtils.isBlank(valueFromRedis)) { // skip if it is already in redis
           // put it in redis for 5 minutes, it is expected the file processing wont take more than that and if the

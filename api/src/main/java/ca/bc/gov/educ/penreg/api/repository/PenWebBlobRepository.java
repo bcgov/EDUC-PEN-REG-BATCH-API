@@ -6,7 +6,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * The interface Pen web blob repository.
@@ -20,6 +19,14 @@ public interface PenWebBlobRepository extends JpaRepository<PENWebBlobEntity, Lo
    * @return the list
    */
   List<PENWebBlobEntity> findAllByExtractDateTimeIsNullAndFileType(String fileType);
+
+  /**
+   * Find all Pen Web files by extract date time is null list.
+   *
+   * @param fileType the file type
+   * @return the list
+   */
+  List<PENWebBlobEntity> findAllByExtractDateTimeIsNullAndFileTypeAndSourceApplication(String fileType, String sourceApplication);
 
   /**
    * Find all by submission number and file type.

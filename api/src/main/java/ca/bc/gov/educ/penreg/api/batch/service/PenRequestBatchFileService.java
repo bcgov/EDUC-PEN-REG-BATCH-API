@@ -108,6 +108,17 @@ public class PenRequestBatchFileService {
   }
 
   /**
+   * Gets all not extracted records.
+   *
+   * @param fileType the file type
+   * @return the all not extracted records
+   */
+  @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
+  public List<PENWebBlobEntity> getAllPenWebNotExtractedRecords(@NonNull final String fileType) {
+    return this.getPenWebBlobRepository().findAllByExtractDateTimeIsNullAndFileTypeAndSourceApplication(fileType, "PENWEB");
+  }
+
+  /**
    * Check a set of pen request batch student entities for duplicates
    *
    * @param studentEntities - the set of entities to check
