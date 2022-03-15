@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * The type Pen request batch student validation issue.
@@ -11,8 +12,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-public class PenRequestBatchStudentValidationIssue {
+@SuperBuilder
+public class PenRequestValidationIssue {
   /**
    * The Pen request batch student validation issue id.
    */

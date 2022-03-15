@@ -58,4 +58,9 @@ public class PenRequestBatchStudentValidationIssueService {
     penRequestBatchStudentEntity.setPenRequestBatchStudentID(penRequestBatchStudentID);
     return this.repository.findAllByPenRequestBatchStudentEntity(penRequestBatchStudentEntity);
   }
+
+  @Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+  public List<PenRequestBatchStudentValidationIssueEntity> findAllValidationIssuesByPRBStudentIDs(final List<UUID> penRequestBatchStudentIDs) {
+    return this.repository.findAllByPenRequestBatchStudentEntity_penRequestBatchStudentIDIn(penRequestBatchStudentIDs);
+  }
 }

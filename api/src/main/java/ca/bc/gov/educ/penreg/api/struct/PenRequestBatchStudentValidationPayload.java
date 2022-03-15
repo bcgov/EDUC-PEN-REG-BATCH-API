@@ -22,7 +22,7 @@ public class PenRequestBatchStudentValidationPayload {
    *
    * @return the issue list
    */
-  public List<PenRequestBatchStudentValidationIssue> getIssueList() {
+  public List<PenRequestValidationIssue> getIssueList() {
     if(this.issueList == null){
       this.issueList = new LinkedList<>();
     }
@@ -32,7 +32,7 @@ public class PenRequestBatchStudentValidationPayload {
   /**
    * The Issue list.
    */
-  private List<PenRequestBatchStudentValidationIssue> issueList;
+  private List<PenRequestValidationIssue> issueList;
   /**
    * The Is interactive.
    */

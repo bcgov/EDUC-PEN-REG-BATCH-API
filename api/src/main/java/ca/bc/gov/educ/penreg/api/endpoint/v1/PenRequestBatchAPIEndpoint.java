@@ -1,8 +1,6 @@
 package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequest;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmission;
@@ -373,6 +371,20 @@ public interface PenRequestBatchAPIEndpoint {
   @Transactional(readOnly = true)
   @Tag(name = "Endpoint to retrieve the validation issues of a request student.", description = "Endpoint to retrieve the validation issues of a request student.")
   ResponseEntity<List<PenRequestBatchStudentValidationIssue>> findAllPenRequestBatchValidationIssuesByStudentID(@PathVariable UUID penRequestBatchStudentID);
+
+  /**
+   * Find all pen request batch validation issues by student ids response entity.
+   *
+   * @param penRequestBatchStudentIDs the pen request batch student ids
+   * @return the response entity
+   */
+  @GetMapping("/students/validation-issues")
+  @PreAuthorize("hasAuthority('SCOPE_READ_PEN_REQUEST_BATCH')")
+  @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "OK"), @ApiResponse(responseCode = "500", description = "INTERNAL SERVER ERROR.")})
+  @Transactional(readOnly = true)
+  @Tag(name = "Endpoint to retrieve the validation issues of request students.", description = "Endpoint to retrieve the validation issues of request students.")
+  ResponseEntity<List<PenRequestBatchStudentValidationIssue>> findAllPenRequestBatchValidationIssuesByStudentIDs(@RequestParam(name = "penRequestBatchStudentIDs") List<UUID> penRequestBatchStudentIDs);
+
 
   @PostMapping("/archive")
   @PreAuthorize("hasAuthority('SCOPE_WRITE_PEN_REQUEST_BATCH')")
