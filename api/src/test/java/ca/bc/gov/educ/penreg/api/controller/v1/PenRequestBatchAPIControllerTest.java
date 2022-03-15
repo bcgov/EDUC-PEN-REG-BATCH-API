@@ -10,10 +10,8 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentValidationIssueEntity;
+import ca.bc.gov.educ.penreg.api.repository.*;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
@@ -94,6 +92,8 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
   PenRequestBatchHistoryRepository penRequestBatchHistoryRepository;
   @Autowired
   PenWebBlobRepository penWebBlobRepository;
+  @Autowired
+  PenRequestBatchStudentValidationIssueRepository penRequestBatchStudentValidationIssueRepository;
   /**
    * The Mock mvc.
    */
@@ -1123,17 +1123,43 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
       .andDo(print()).andExpect(status().isOk());
   }
 
-  @Test
   public void testReadSamePens_GivenValidBatchIDs_ShouldReturnStatusOkAndReturnEmptyArrayForNoSamePens() throws Exception {
     final String batchIDs = this.createBatchStudentRecords(1);
     this.mockMvc
-        .perform(get("/api/v1/pen-request-batch/same-pen")
+      .perform(get("/api/v1/pen-request-batch/same-pen")
         .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
-            .param("penRequestBatchID", batchIDs)
-            .contentType(APPLICATION_JSON))
-        .andDo(print())
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$").value(new ArrayList<>()));
+        .param("penRequestBatchID", batchIDs)
+        .contentType(APPLICATION_JSON))
+      .andDo(print())
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$").value(new ArrayList<>()));
+  }
+
+  public void testFindAllPenRequestBatchValidationIssuesByStudentIDs_GivenNoData_ShouldReturnStatus200WithEmptyList() throws Exception {
+    final String batchID = this.createBatchStudentRecords(2).split(",")[0];
+    val prbEntity = new PenRequestBatchEntity();
+    prbEntity.setPenRequestBatchID(UUID.fromString(batchID));
+    val studentEntities = this.penRequestBatchStudentRepository.findAllByPenRequestBatchEntity(prbEntity);
+    val studentIDs = studentEntities.stream().map(studentEnitty -> studentEnitty.getPenRequestBatchStudentID().toString()).collect(Collectors.joining(","));
+    val validationIssues = studentEntities.stream().map(student ->
+      PenRequestBatchStudentValidationIssueEntity.builder()
+        .penRequestBatchValidationIssueSeverityCode("ERROR")
+        .penRequestBatchValidationIssueTypeCode("REPEATCHARS")
+        .penRequestBatchValidationFieldCode("LEGALLAST")
+        .penRequestBatchStudentEntity(student)
+        .build())
+      .collect(Collectors.toList());
+
+    penRequestBatchStudentValidationIssueRepository.saveAll(validationIssues);
+
+    this.mockMvc
+      .perform(get("/api/v1/pen-request-batch/students/validation-issues")
+        .with(jwt().jwt((jwt) -> jwt.claim("scope", "READ_PEN_REQUEST_BATCH")))
+        .param("penRequestBatchStudentIDs", studentIDs)
+        .contentType(APPLICATION_JSON))
+      .andDo(print()).andExpect(status().isOk())
+      .andExpect(
+        jsonPath("$", hasSize(studentEntities.size())));
   }
 
   /**

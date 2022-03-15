@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.struct.v1.external;
 
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestValidationIssue;
 import lombok.Data;
 
 import java.util.List;
@@ -21,5 +21,5 @@ public class ListItem {
   String gender;
   String enrolledGradeCode;
   String postalCode;
-  List<PenRequestBatchStudentValidationIssue> validationIssues;
+  List<PenRequestValidationIssue> validationIssues;
 }

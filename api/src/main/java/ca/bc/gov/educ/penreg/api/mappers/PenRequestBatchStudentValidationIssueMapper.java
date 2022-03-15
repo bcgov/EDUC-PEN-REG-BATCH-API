@@ -1,7 +1,8 @@
 package ca.bc.gov.educ.penreg.api.mappers;
 
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentValidationIssueEntity;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestValidationIssue;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssue;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -19,12 +20,16 @@ public interface PenRequestBatchStudentValidationIssueMapper {
   /**
    * To model pen request batch student validation issue entity.
    *
-   * @param penRequestBatchStudentValidationIssue the pen request batch student validation issue
+   * @param penRequestValidationIssue the pen request batch student validation issue
    * @return the pen request batch student validation issue entity
    */
   @Mapping(target = "penRequestBatchStudentEntity", ignore = true)
-  PenRequestBatchStudentValidationIssueEntity toModel(PenRequestBatchStudentValidationIssue penRequestBatchStudentValidationIssue);
+  PenRequestBatchStudentValidationIssueEntity toModel(PenRequestValidationIssue penRequestValidationIssue);
 
   @Mapping(target = "penRequestBatchStudentValidationIssueId", ignore = true)
-  PenRequestBatchStudentValidationIssue toStruct(PenRequestBatchStudentValidationIssueEntity entity);
+  PenRequestValidationIssue toStruct(PenRequestBatchStudentValidationIssueEntity entity);
+
+  @Mapping(target = "penRequestBatchStudentValidationIssueId", ignore = true)
+  @Mapping(target = "penRequestBatchStudentID", source = "entity.penRequestBatchStudentEntity.penRequestBatchStudentID")
+  PenRequestBatchStudentValidationIssue toPenRequestBatchStruct(PenRequestBatchStudentValidationIssueEntity entity);
 }

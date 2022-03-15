@@ -28,7 +28,6 @@ import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentValidationIssueService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequest;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmission;
@@ -51,10 +50,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -510,7 +506,14 @@ public class PenRequestBatchAPIController extends PaginatedController implements
    */
   @Override
   public ResponseEntity<List<PenRequestBatchStudentValidationIssue>> findAllPenRequestBatchValidationIssuesByStudentID(final UUID penRequestBatchStudentID) {
-    return ResponseEntity.ok(this.penRequestBatchStudentValidationIssueService.findAllValidationIssuesByPRBStudentID(penRequestBatchStudentID).stream().map(PenRequestBatchStudentValidationIssueMapper.mapper::toStruct).collect(Collectors.toList()));
+    return ResponseEntity.ok(this.penRequestBatchStudentValidationIssueService.findAllValidationIssuesByPRBStudentID(penRequestBatchStudentID).stream().map(PenRequestBatchStudentValidationIssueMapper.mapper::toPenRequestBatchStruct).collect(Collectors.toList()));
+  }
+
+
+  @Override
+  public ResponseEntity<List<PenRequestBatchStudentValidationIssue>> findAllPenRequestBatchValidationIssuesByStudentIDs(final List<UUID> penRequestBatchStudentIDs) {
+    return ResponseEntity.ok(this.penRequestBatchStudentValidationIssueService.findAllValidationIssuesByPRBStudentIDs(penRequestBatchStudentIDs)
+      .stream().map(PenRequestBatchStudentValidationIssueMapper.mapper::toPenRequestBatchStruct).collect(Collectors.toList()));
   }
 
   @Override

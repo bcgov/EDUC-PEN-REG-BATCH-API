@@ -1,11 +1,10 @@
 package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.MatchAlgorithmStatusCode;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentValidationIssueEntity;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.interfaces.PenMatchResultProcessingService;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestValidationIssue;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -76,7 +75,7 @@ public abstract class BasePenMatchResultProcessingService<T, R> implements PenMa
    * @param validationIssueEntities the validation issues
    * @return the boolean true if validation of grade code resulted in warning else false.
    */
-  protected boolean isGradeCodeWarningPresent(final List<PenRequestBatchStudentValidationIssue> validationIssueEntities) {
+  protected boolean isGradeCodeWarningPresent(final List<PenRequestValidationIssue> validationIssueEntities) {
     return validationIssueEntities.stream().anyMatch(entity -> "GRADECODE".equals(entity.getPenRequestBatchValidationFieldCode()));
   }
 
