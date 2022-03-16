@@ -407,13 +407,13 @@ public class PenRequestBatchService {
     }
     // if the validation rule failed return
     if (validationResponseEvent.get().getEventOutcome() == VALIDATION_SUCCESS_WITH_ERROR) {
-      final TypeReference<List<PenRequestBatchStudentValidationIssue>> responseType = new TypeReference<>() {
+      final TypeReference<List<PenRequestValidationIssue>> responseType = new TypeReference<>() {
       };
       val validationResults = new ObjectMapper().readValue(validationResponseEvent.get().getEventPayload(), responseType);
       penRequestResult.setValidationIssues(validationResults.stream().filter(validationResult -> "ERROR".equals(validationResult.getPenRequestBatchValidationIssueSeverityCode())).collect(Collectors.toList()));
       return org.apache.commons.lang3.tuple.Pair.of(HttpStatus.OK.value(), Optional.of(penRequestResult));
     }else if (validationResponseEvent.get().getEventOutcome() == VALIDATION_SUCCESS_WITH_ONLY_WARNING) {
-      final TypeReference<List<PenRequestBatchStudentValidationIssue>> responseType = new TypeReference<>() {
+      final TypeReference<List<PenRequestValidationIssue>> responseType = new TypeReference<>() {
       };
       val validationResults = new ObjectMapper().readValue(validationResponseEvent.get().getEventPayload(), responseType);
       penRequestResult.setValidationIssues(validationResults);

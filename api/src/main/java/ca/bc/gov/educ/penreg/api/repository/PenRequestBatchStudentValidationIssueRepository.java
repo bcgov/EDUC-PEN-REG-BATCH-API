@@ -17,4 +17,6 @@ public interface PenRequestBatchStudentValidationIssueRepository extends CrudRep
   List<PenRequestBatchStudentValidationIssueEntity> findByPenRequestBatchStudentEntity_penRequestBatchEntity(PenRequestBatchEntity penRequestBatch);
 
   List<PenRequestBatchStudentValidationIssueEntity> findAllByPenRequestBatchStudentEntity(PenRequestBatchStudentEntity penRequestBatchStudentEntity);
+
+  List<PenRequestBatchStudentValidationIssueEntity> findAllByPenRequestBatchStudentEntity_penRequestBatchStudentIDIn(List<UUID> penRequestBatchStudentIDs);
 }

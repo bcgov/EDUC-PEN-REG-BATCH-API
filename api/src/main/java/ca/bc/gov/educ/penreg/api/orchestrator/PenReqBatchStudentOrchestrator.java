@@ -13,7 +13,7 @@ import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestValidationIssue;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -22,7 +22,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -230,7 +229,7 @@ public class PenReqBatchStudentOrchestrator extends BaseOrchestrator<PenRequestB
         statusCode = PenRequestBatchStudentStatusCodes.FIXABLE;
       }
       try {
-        final TypeReference<List<PenRequestBatchStudentValidationIssue>> responseType = new TypeReference<>() {
+        final TypeReference<List<PenRequestValidationIssue>> responseType = new TypeReference<>() {
         };
         final var validationResults = new ObjectMapper().readValue(event.getEventPayload(), responseType);
         if (!validationResults.isEmpty()) {

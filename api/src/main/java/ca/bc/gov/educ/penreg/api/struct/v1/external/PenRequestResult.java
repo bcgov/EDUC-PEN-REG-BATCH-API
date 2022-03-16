@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.struct.v1.external;
 
-import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentValidationIssue;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestValidationIssue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +19,7 @@ public class PenRequestResult {
   /**
    * The Validation issues.
    */
-  List<PenRequestBatchStudentValidationIssue> validationIssues;
+  List<PenRequestValidationIssue> validationIssues;
   /**
    * The Mincode.
    */
