@@ -10,10 +10,12 @@ import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.PossibleMatch;
+import ca.bc.gov.educ.penreg.api.struct.v1.StudentHistory;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -32,6 +34,7 @@ import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCo
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_UNMATCH_PROCESSING_SAGA;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_MATCH_API_TOPIC;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -84,6 +87,7 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
   ArgumentCaptor<byte[]> eventCaptor;
 
   String studentID = UUID.randomUUID().toString();
+  String studentHistoryID = UUID.randomUUID().toString();
 
   /**
    * The student twin id.
@@ -193,6 +197,58 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     assertThat(sagaStates.size()).isEqualTo(1);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(DELETE_POSSIBLE_MATCH.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.POSSIBLE_MATCH_DELETED.toString());
+  }
+
+  @Test
+  public void testReadAuditHistory_givenEventAndSagaData_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
+    final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
+    final var event = Event.builder()
+        .eventType(UPDATE_PEN_REQUEST_BATCH_STUDENT)
+        .eventOutcome(EventOutcome.PEN_REQUEST_BATCH_STUDENT_UPDATED)
+        .sagaId(this.saga.getSagaId())
+        .eventPayload(JsonUtil.getJsonStringFromObject(this.sagaData))
+        .build();
+    this.orchestrator.handleEvent(event);
+    verify(this.messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
+    assertThat(newEvent.getEventType()).isEqualTo(GET_STUDENT_HISTORY);
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    final var currentSaga = sagaFromDB.get();
+    assertThat(currentSaga.getSagaState()).isEqualTo(GET_STUDENT_HISTORY.toString());
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
+    assertThat(sagaStates.size()).isEqualTo(1);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_REQUEST_BATCH_STUDENT_UPDATED.toString());
+  }
+
+  @Test
+  public void testRevertStudentInformation_givenEventAndSagaData_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
+    final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
+
+    var studentHistoryPayload = StudentHistory.builder().studentHistoryID(studentHistoryID).legalFirstName("Jackson").build();
+    List<StudentHistory> readHistoryList = new ArrayList<>();
+    readHistoryList.add(studentHistoryPayload);
+
+    final var event = Event.builder()
+        .eventType(GET_STUDENT_HISTORY)
+        .eventOutcome(EventOutcome.STUDENT_HISTORY_FOUND)
+        .sagaId(this.saga.getSagaId())
+        .eventPayload(JsonUtil.getJsonStringFromObject(readHistoryList))
+        .build();
+    this.orchestrator.handleEvent(event);
+    verify(this.messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
+    System.out.println(newEvent.getEventPayload());
+//    assertThat(newEvent.getEventType()).isEqualTo(UPDATE_STUDENT);
+//    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
+//    assertThat(sagaFromDB).isPresent();
+//    final var currentSaga = sagaFromDB.get();
+//    assertThat(currentSaga.getSagaState()).isEqualTo(GET_STUDENT_HISTORY.toString());
+//    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
+//    assertThat(sagaStates.size()).isEqualTo(1);
+//    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
+//    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_HISTORY_FOUND.toString());
   }
 
   /**

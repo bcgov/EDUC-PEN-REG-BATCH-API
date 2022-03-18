@@ -95,5 +95,9 @@ public enum EventType {
   /**
    * Archive pen request batch file event type
    */
-  ARCHIVE_PEN_REQUEST_BATCH
+  ARCHIVE_PEN_REQUEST_BATCH,
+  /**
+   * Get student history
+   */
+  GET_STUDENT_HISTORY
 }
