@@ -1,12 +1,11 @@
 package ca.bc.gov.educ.penreg.api.schedulers;
 
-import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import net.javacrumbs.shedlock.core.LockAssert;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,8 +14,6 @@ import org.springframework.stereotype.Component;
 
 import javax.transaction.Transactional;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import static lombok.AccessLevel.PRIVATE;
 
@@ -29,14 +26,18 @@ public class PurgeOldSagaRecordsScheduler {
   @Getter(PRIVATE)
   private final SagaEventRepository sagaEventRepository;
 
+  @Getter(PRIVATE)
+  private final PenRequestBatchEventRepository penRequestBatchEventRepository;
+
   @Value("${purge.records.saga.after.days}")
   @Setter
   @Getter
   Integer sagaRecordStaleInDays;
 
-  public PurgeOldSagaRecordsScheduler(final SagaRepository sagaRepository, final SagaEventRepository sagaEventRepository) {
+  public PurgeOldSagaRecordsScheduler(final SagaRepository sagaRepository, final SagaEventRepository sagaEventRepository, final PenRequestBatchEventRepository penRequestBatchEventRepository) {
     this.sagaRepository = sagaRepository;
     this.sagaEventRepository = sagaEventRepository;
+    this.penRequestBatchEventRepository = penRequestBatchEventRepository;
   }
 
 
@@ -47,18 +48,12 @@ public class PurgeOldSagaRecordsScheduler {
   @SchedulerLock(name = "PurgeOldSagaRecordsLock",
       lockAtLeastFor = "PT1H", lockAtMostFor = "PT1H") //midnight job so lock for an hour
   @Transactional
-  public void pollSagaTableAndPurgeOldRecords() {
+  public void purgeOldRecords() {
     LockAssert.assertLocked();
     final LocalDateTime createDateToCompare = this.calculateCreateDateBasedOnStaleSagaRecordInDays();
-    final List<SagaEvent> sagaEventList = new CopyOnWriteArrayList<>();
-    final var sagas = this.getSagaRepository().findAllByCreateDateBefore(createDateToCompare);
-    if (!sagas.isEmpty()) {
-      for (val saga : sagas) {
-        sagaEventList.addAll(this.getSagaEventRepository().findBySaga(saga));
-      }
-    }
-    this.sagaEventRepository.deleteAll(sagaEventList);
-    this.sagaRepository.deleteAll(sagas);
+    this.sagaEventRepository.deleteBySagaCreateDateBefore(createDateToCompare);
+    this.penRequestBatchEventRepository.deleteByCreateDateBefore(createDateToCompare);
+    this.sagaRepository.deleteByCreateDateBefore(createDateToCompare);
   }
 
   private LocalDateTime calculateCreateDateBasedOnStaleSagaRecordInDays() {
