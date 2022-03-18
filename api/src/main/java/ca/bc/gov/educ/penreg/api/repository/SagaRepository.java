@@ -3,7 +3,10 @@ package ca.bc.gov.educ.penreg.api.repository;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -71,4 +74,9 @@ public interface SagaRepository extends JpaRepository<Saga, UUID>, JpaSpecificat
   long countAllByPenRequestBatchIDAndSagaNameAndStatus(UUID penRequestBatchID, String sagaName, String status);
   List<Saga> findTop100ByStatusInOrderByCreateDate(List<String> statuses);
   long countAllByPenRequestBatchIDAndSagaName(UUID penRequestBatchID, String sagaName);
+
+  @Transactional
+  @Modifying
+  @Query("delete from Saga where createDate <= :createDate")
+  void deleteByCreateDateBefore(LocalDateTime createDate);
 }
