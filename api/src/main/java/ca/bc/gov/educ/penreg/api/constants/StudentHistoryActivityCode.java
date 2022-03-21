@@ -5,7 +5,8 @@ import lombok.Getter;
 public enum StudentHistoryActivityCode {
   REQ_MATCH("REQMATCH"),
   USER_NEW("USERNEW"),
-  REQ_NEW("REQNEW");
+  REQ_NEW("REQNEW"),
+  REQ_UNMATCH("REQUNMATCH");
 
   @Getter
   private final String code;
