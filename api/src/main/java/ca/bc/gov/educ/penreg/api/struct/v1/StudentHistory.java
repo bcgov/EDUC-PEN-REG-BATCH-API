@@ -7,12 +7,14 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
  * The type Student history.
  */
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @Data
 @SuperBuilder
 @NoArgsConstructor
