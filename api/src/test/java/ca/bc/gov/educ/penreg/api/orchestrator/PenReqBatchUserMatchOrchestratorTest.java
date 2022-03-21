@@ -7,10 +7,12 @@ import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.v1.GradeCode;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.PossibleMatch;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -25,6 +27,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
@@ -62,6 +66,8 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
   @Autowired
   private MessagePublisher messagePublisher;
 
+  @Autowired
+  RestUtils restUtils;
 
   /**
    * The issue new pen orchestrator.
@@ -127,6 +133,7 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
 
   @Test
   public void testUpdateStudent_givenEventAndSagaData_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
+    when(this.restUtils.getGradeCodes()).thenReturn(getGradeCodesList());
     final var studentPayload = Student.builder().studentID(this.studentID).pen(TEST_PEN).legalFirstName("Jack").build();
     final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
     final var event = Event.builder()
@@ -143,13 +150,55 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
     assertThat(student.getPen()).isEqualTo(TEST_PEN);
     assertThat(student.getMincode()).isEqualTo(this.mincode);
     assertThat(student.getLocalID()).isEqualTo("20345678");
-    assertThat(student.getGradeCode()).isNull();
+    assertThat(student.getGradeCode()).isEqualTo("01");
     final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     final var currentSaga = sagaFromDB.get();
     assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_STUDENT.toString());
     assertThat(this.getPenRequestBatchUserActionsSagaDataFromJsonString(currentSaga.getPayload()).getAssignedPEN()).isEqualTo(TEST_PEN);
     final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
+    assertThat(sagaStates.size()).isEqualTo(1);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.GET_STUDENT.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_FOUND.toString());
+  }
+
+  @Test
+  public void testUpdateStudent_givenEventAndSagaDataAndGradeCode_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
+    when(this.restUtils.getGradeCodes()).thenReturn(getGradeCodesList());
+    var studentUUID = UUID.randomUUID().toString();
+    var batchStudentUUID = UUID.randomUUID().toString();
+    final var payload = this.placeholderPenRequestBatchActionsSagaData();
+    this.sagaData = this.getPenRequestBatchUserActionsSagaDataFromJsonString(payload);
+    this.sagaData.setAssignedPEN(TEST_PEN);
+    this.sagaData.setLocalID("20345999");
+    this.sagaData.setGradeCode(null);
+    this.sagaData.setStudentID(studentUUID);
+    var curSaga = this.sagaService.createSagaRecordInDB(PEN_REQUEST_BATCH_USER_MATCH_PROCESSING_SAGA.toString(), "Test", JsonUtil.getJsonStringFromObject(this.sagaData),
+      UUID.fromString(batchStudentUUID), UUID.fromString(this.penRequestBatchID));
+
+    final var studentPayload = Student.builder().studentID(studentUUID).pen(TEST_PEN).legalFirstName("Jack").build();
+    final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
+    final var event = Event.builder()
+      .eventType(GET_STUDENT)
+      .eventOutcome(EventOutcome.STUDENT_FOUND)
+      .sagaId(curSaga.getSagaId())
+      .eventPayload(JsonUtil.getJsonStringFromObject(studentPayload))
+      .build();
+    this.orchestrator.handleEvent(event);
+    verify(this.messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
+    assertThat(newEvent.getEventType()).isEqualTo(UPDATE_STUDENT);
+    final var student = JsonUtil.getJsonObjectFromString(Student.class, newEvent.getEventPayload());
+    assertThat(student.getPen()).isEqualTo(TEST_PEN);
+    assertThat(student.getMincode()).isEqualTo(this.mincode);
+    assertThat(student.getLocalID()).isEqualTo("20345999");
+    assertThat(student.getGradeCode()).isNull();
+    final var sagaFromDB = this.sagaService.findSagaById(curSaga.getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    final var currentSaga = sagaFromDB.get();
+    assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_STUDENT.toString());
+    assertThat(this.getPenRequestBatchUserActionsSagaDataFromJsonString(currentSaga.getPayload()).getAssignedPEN()).isEqualTo(TEST_PEN);
+    final var sagaStates = this.sagaService.findAllSagaStates(curSaga);
     assertThat(sagaStates.size()).isEqualTo(1);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(EventType.GET_STUDENT.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_FOUND.toString());
@@ -253,5 +302,14 @@ public class PenReqBatchUserMatchOrchestratorTest extends BaseOrchestratorTest {
     assertThat(sagaStates.size()).isEqualTo(1);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(ADD_POSSIBLE_MATCH.toString());
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.POSSIBLE_MATCH_ADDED.toString());
+  }
+
+  private List<GradeCode> getGradeCodesList(){
+    final var gradeCodes = new ArrayList<GradeCode>();
+    gradeCodes.add(GradeCode.builder().gradeCode("01").description("A").effectiveDate(LocalDateTime.now().minusDays(1)).expiryDate(LocalDateTime.now().plusDays(1)).build());
+    gradeCodes.add(GradeCode.builder().gradeCode("02").description("B").effectiveDate(LocalDateTime.now().minusDays(1)).expiryDate(LocalDateTime.now().plusDays(1)).build());
+    gradeCodes.add(GradeCode.builder().gradeCode("03").description("C").effectiveDate(LocalDateTime.now().minusDays(1)).expiryDate(LocalDateTime.now().plusDays(1)).build());
+    gradeCodes.add(GradeCode.builder().gradeCode("04").description("D").effectiveDate(LocalDateTime.now().minusDays(1)).expiryDate(LocalDateTime.now().plusDays(1)).build());
+    return gradeCodes;
   }
 }
