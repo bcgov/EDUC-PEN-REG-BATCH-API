@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
+import ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
@@ -15,11 +16,9 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -78,9 +77,10 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
   }
 
   /**
-   * This function will revert the student information to the previous state in history before REQ_MATCH in the following steps:
-   * 1) It will loop through the audit history of the student and find the record to revert to.
-   * 2) It will take the record and update the student information.
+   * This function will revert the student information to the previous state in history before the latest REQ_MATCH in the following steps:
+   * 1) It will sort the student's Audit History in DESC order.
+   * 2) It will find the record right before REQ_MATCH
+   * 3) It will then revert the student record by updating it to the record right before REQ_MATCH
    *
    * the following attributes on the unmatched student record will be updated
    * First usual name
@@ -89,9 +89,8 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
    * Mincode
    * Local ID
    * Student Grade Code
+   * Grade Year
    * Postal Code
-   * Grade Year????
-   *
    *
    * @param event                              the event
    * @param saga                               the saga
@@ -99,36 +98,41 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
    * @throws JsonProcessingException the json processing exception
    */
   protected void revertStudentInformation(final Event event, final Saga saga, final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) throws JsonProcessingException {
-    final StudentHistory studentHistory;
-    final var gradeCodes = this.restUtils.getGradeCodes();
-    val isGradeCodeValid = gradeCodes.stream().anyMatch(gradeCode1 -> LocalDateTime.now().isAfter(gradeCode1.getEffectiveDate())
-        && LocalDateTime.now().isBefore(gradeCode1.getExpiryDate())
-        && StringUtils.equalsIgnoreCase(penRequestBatchUnmatchSagaData.getGradeCode(), gradeCode1.getGradeCode()));
+    StudentHistory studentHistoryForRevert = new StudentHistory();
 
     final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(UPDATE_STUDENT.toString()); // set current event as saga state.
 
-    // Retrieve history
+    //convert payload to StudentHistory List
     final ObjectMapper objectMapper = new ObjectMapper();
     final JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, StudentHistory.class);
     final List<StudentHistory> historyList = objectMapper.readValue(event.getEventPayload(), type);
 
-    // Find the audit history entry right before REQ_MATCH to revert to and then update it need test case.
-    //final List<StudentHistory> merges = historyList.stream().sorted(Comparator.comparing(StudentHistory::getUpdateDate)).collect(Collectors.toList());
-    studentHistory = historyList.get(historyList.size() - 1);
+    //sort list in DESC order by CreateDate
+    Collections.sort(historyList, Collections.reverseOrder(Comparator.comparing(StudentHistory::getCreateDate)));
 
-    final Student studentInformation = new Student();
+    //find the most recent student history record before the REQ MATCH.
+    for (int i=0;i<historyList.size(); i++) {
+      if (StringUtils.equals(historyList.get(i).getHistoryActivityCode(), StudentHistoryActivityCode.REQ_MATCH.getCode())) {
+        studentHistoryForRevert = historyList.get(i+1);
+        log.debug("reverting student with this student audit history record ::{}", studentHistoryForRevert);
+        break;
+      }
+    }
+
+    //grab the student's most recent record to update.
+    final Student studentInformation = this.restUtils.getStudentByStudentID(penRequestBatchUnmatchSagaData.getStudentID());
 
     studentInformation.setUpdateUser(penRequestBatchUnmatchSagaData.getUpdateUser());
-    studentInformation.setUsualFirstName(studentHistory.getUsualFirstName());
-    studentInformation.setUsualMiddleNames(studentHistory.getUsualMiddleNames());
-    studentInformation.setUsualLastName(studentHistory.getUsualLastName());
-    studentInformation.setMincode(studentHistory.getMincode());
-    studentInformation.setLocalID(studentHistory.getLocalID());
-    studentInformation.setGradeCode(isGradeCodeValid ? studentHistory.getGradeCode() : null);
-    studentInformation.setPostalCode(studentHistory.getPostalCode());
-    studentInformation.setGradeYear(studentHistory.getGradeYear());
-    penRequestBatchUnmatchSagaData.setStudentID(studentHistory.getStudentID());
+    studentInformation.setUsualFirstName(studentHistoryForRevert.getUsualFirstName());
+    studentInformation.setUsualMiddleNames(studentHistoryForRevert.getUsualMiddleNames());
+    studentInformation.setUsualLastName(studentHistoryForRevert.getUsualLastName());
+    studentInformation.setMincode(studentHistoryForRevert.getMincode());
+    studentInformation.setLocalID(studentHistoryForRevert.getLocalID());
+    studentInformation.setGradeCode(studentHistoryForRevert.getGradeCode());
+    studentInformation.setGradeYear(studentHistoryForRevert.getGradeYear());
+    studentInformation.setPostalCode(studentHistoryForRevert.getPostalCode());
+
     this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
     final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
@@ -155,7 +159,7 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
     final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
         .eventType(GET_STUDENT_HISTORY)
         .replyTo(this.getTopicToSubscribe())
-        .eventPayload(penRequestBatchUnmatchSagaData.getStudentID()) //is this the correct studentID to use?
+        .eventPayload(penRequestBatchUnmatchSagaData.getStudentID())
         .build();
     this.postMessageToTopic(STUDENT_API_TOPIC.toString(), nextEvent);
     log.info("message sent to STUDENT_API_TOPIC for GET_STUDENT_HISTORY Event.");

@@ -5,9 +5,11 @@ import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
+import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUnmatchSagaData;
+import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.PossibleMatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.StudentHistory;
@@ -35,6 +37,9 @@ import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USE
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_MATCH_API_TOPIC;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_MATCH;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.USER_NEW;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_NEW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -72,6 +77,12 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
   private PenReqBatchUserUnmatchOrchestrator orchestrator;
 
   /**
+   * the restUtils
+   */
+  @Autowired
+  RestUtils restUtils;
+
+  /**
    * The Saga.
    */
   private Saga saga;
@@ -87,7 +98,6 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
   ArgumentCaptor<byte[]> eventCaptor;
 
   String studentID = UUID.randomUUID().toString();
-  String studentHistoryID = UUID.randomUUID().toString();
 
   /**
    * The student twin id.
@@ -225,30 +235,37 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
   @Test
   public void testRevertStudentInformation_givenEventAndSagaData_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
     final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
+    when(this.restUtils.getStudentByStudentID(studentID)).thenReturn(new Student());
 
-    var studentHistoryPayload = StudentHistory.builder().studentHistoryID(studentHistoryID).legalFirstName("Jackson").build();
-    List<StudentHistory> readHistoryList = new ArrayList<>();
-    readHistoryList.add(studentHistoryPayload);
-
+    List<StudentHistory> studentAuditHistory = getStudentAuditHistoryForRevertStudentInformationTest();
     final var event = Event.builder()
         .eventType(GET_STUDENT_HISTORY)
         .eventOutcome(EventOutcome.STUDENT_HISTORY_FOUND)
         .sagaId(this.saga.getSagaId())
-        .eventPayload(JsonUtil.getJsonStringFromObject(readHistoryList))
+        .eventPayload(JsonUtil.getJsonStringFromObject(studentAuditHistory))
         .build();
     this.orchestrator.handleEvent(event);
     verify(this.messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), this.eventCaptor.capture());
     final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
-    System.out.println(newEvent.getEventPayload());
-//    assertThat(newEvent.getEventType()).isEqualTo(UPDATE_STUDENT);
-//    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
-//    assertThat(sagaFromDB).isPresent();
-//    final var currentSaga = sagaFromDB.get();
-//    assertThat(currentSaga.getSagaState()).isEqualTo(GET_STUDENT_HISTORY.toString());
-//    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
-//    assertThat(sagaStates.size()).isEqualTo(1);
-//    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
-//    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_HISTORY_FOUND.toString());
+    assertThat(newEvent.getEventType()).isEqualTo(UPDATE_STUDENT);
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    final var currentSaga = sagaFromDB.get();
+    assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_STUDENT.toString());
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
+    assertThat(sagaStates.size()).isEqualTo(1);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(GET_STUDENT_HISTORY.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_HISTORY_FOUND.toString());
+    
+    //checking that the necessary fields have been updated
+    var studentUpdate = new ObjectMapper().readValue(newEvent.getEventPayload(), Student.class);
+    assertThat(studentUpdate.getUsualFirstName()).isEqualTo("revert to this");
+    assertThat(studentUpdate.getUsualMiddleNames()).isEqualTo("correct");
+    assertThat(studentUpdate.getMincode()).isEqualTo(this.mincode);
+    assertThat(studentUpdate.getLocalID()).isEqualTo("correct");
+    assertThat(studentUpdate.getGradeCode()).isEqualTo("correct");
+    assertThat(studentUpdate.getGradeYear()).isEqualTo("correct");
+    assertThat(studentUpdate.getPostalCode()).isEqualTo("correct");
   }
 
   /**
@@ -261,7 +278,8 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
         "    \"createUser\": \"test\",\n" +
         "    \"updateUser\": \"test\",\n" +
         "    \"penRequestBatchID\": \"" + this.penRequestBatchID + "\",\n" +
-        "    \"studentID\": \"" + UUID.randomUUID().toString() + "\",\n" +
+//        "    \"studentID\": \"" + UUID.randomUUID().toString() + "\",\n" +
+        "    \"studentID\": \"" + this.studentID.toString() + "\",\n" +
         "    \"penRequestBatchStudentID\": \"" + this.penRequestBatchStudentID + "\",\n" +
         "    \"legalFirstName\": \"Jack\",\n" +
         "    \"mincode\": \"" + this.mincode + "\",\n" +
@@ -282,5 +300,51 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     } catch (final Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * returns a list of the student's audit history
+   *
+   * @return the student's audit history
+   */
+  private List<StudentHistory> getStudentAuditHistoryForRevertStudentInformationTest() {
+    List<StudentHistory> studentAuditHistoryList = new ArrayList<>();
+
+    studentAuditHistoryList.add(
+        studentAuditHistoryCreatorForRevertStudentInformationTest("creation", "wrong", "wrong", "wrong","wrong","wrong","wrong", REQ_NEW.getCode(), "15-01-01"));
+    studentAuditHistoryList.add(
+        studentAuditHistoryCreatorForRevertStudentInformationTest("wrong", "wrong", "wrong", "wrong","wrong","wrong","wrong", REQ_MATCH.getCode(), "16-02-02"));
+    studentAuditHistoryList.add(
+        studentAuditHistoryCreatorForRevertStudentInformationTest("revert to this", "correct", "correct","correct","correct","correct","correct", USER_NEW.getCode(), "17-03-03"));
+    studentAuditHistoryList.add(
+        studentAuditHistoryCreatorForRevertStudentInformationTest("wrong", "wrong", "wrong","wrong","wrong","wrong","wrong", REQ_MATCH.getCode(), "18-04-04"));
+
+    return studentAuditHistoryList;
+  }
+
+  /**
+   * returns a list of the student's audit history
+   *
+   *@param usualFirstName usual first name
+   *@param usualMiddleName usual middle name
+   *@param usualLastName usual last name
+   *@param historyActivityCode history activity code (i.e. REQ_MATCH)
+   *@param createDate the create date
+   *
+   * @return the student's audit history
+   */
+  private StudentHistory studentAuditHistoryCreatorForRevertStudentInformationTest(final String usualFirstName, final String usualMiddleName, final String usualLastName, final String localID, final String gradeCode, final String gradeYear,  final String postalCode, final String historyActivityCode, final String createDate) {
+    return StudentHistory.builder()
+        .usualFirstName(usualFirstName)
+        .usualMiddleNames(usualMiddleName)
+        .usualLastName(usualLastName)
+        .mincode(this.mincode)
+        .localID(localID)
+        .gradeCode(gradeCode)
+        .gradeYear(gradeYear)
+        .postalCode(postalCode)
+        .historyActivityCode(historyActivityCode)
+        .createDate(createDate)
+        .build();
   }
 }
