@@ -123,6 +123,7 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
 
     final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(UPDATE_STUDENT.toString()); // set current event as saga state.
+    this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
     //convert payload to StudentHistory List
     final ObjectMapper objectMapper = new ObjectMapper();
@@ -153,8 +154,6 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
     studentInformation.setGradeCode(studentHistoryForRevert.getGradeCode());
     studentInformation.setGradeYear(studentHistoryForRevert.getGradeYear());
     studentInformation.setPostalCode(studentHistoryForRevert.getPostalCode());
-
-    this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
 
     final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
         .eventType(UPDATE_STUDENT)
