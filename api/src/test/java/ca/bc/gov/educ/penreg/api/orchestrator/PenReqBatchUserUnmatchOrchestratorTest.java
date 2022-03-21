@@ -37,9 +37,7 @@ import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USE
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_MATCH_API_TOPIC;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_MATCH;
-import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.USER_NEW;
-import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_NEW;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -267,6 +265,7 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     assertThat(studentUpdate.getGradeCode()).isEqualTo("correct");
     assertThat(studentUpdate.getGradeYear()).isEqualTo("correct");
     assertThat(studentUpdate.getPostalCode()).isEqualTo("correct");
+    assertThat(studentUpdate.getHistoryActivityCode()).isEqualTo(REQ_UNMATCH.getCode());
   }
 
   /**

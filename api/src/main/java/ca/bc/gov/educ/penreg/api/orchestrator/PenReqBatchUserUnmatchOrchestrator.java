@@ -154,6 +154,8 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
     studentInformation.setGradeCode(studentHistoryForRevert.getGradeCode());
     studentInformation.setGradeYear(studentHistoryForRevert.getGradeYear());
     studentInformation.setPostalCode(studentHistoryForRevert.getPostalCode());
+    studentInformation.setHistoryActivityCode(StudentHistoryActivityCode.REQ_UNMATCH.getCode());
+
 
     final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
         .eventType(UPDATE_STUDENT)
