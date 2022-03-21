@@ -235,6 +235,7 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
   @Test
   public void testRevertStudentInformation_givenEventAndSagaData_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
     final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
+
     when(this.restUtils.getStudentByStudentID(studentID)).thenReturn(new Student());
 
     List<StudentHistory> studentAuditHistory = getStudentAuditHistoryForRevertStudentInformationTest();

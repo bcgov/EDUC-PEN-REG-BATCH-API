@@ -77,6 +77,27 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
   }
 
   /**
+   * Obtaining student history records.
+   *
+   * @param event                        the event
+   * @param saga                         the saga
+   * @param penRequestBatchUnmatchSagaData the pen request batch user actions unmatch saga data
+   */
+  protected void readAuditHistory(final Event event, final Saga saga, final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
+    final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
+    saga.setSagaState(GET_STUDENT_HISTORY.toString()); // set current event as saga state.
+    this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
+
+    final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
+        .eventType(GET_STUDENT_HISTORY)
+        .replyTo(this.getTopicToSubscribe())
+        .eventPayload(penRequestBatchUnmatchSagaData.getStudentID())
+        .build();
+    this.postMessageToTopic(STUDENT_API_TOPIC.toString(), nextEvent);
+    log.info("message sent to STUDENT_API_TOPIC for GET_STUDENT_HISTORY Event.");
+  }
+
+  /**
    * This function will revert the student information to the previous state in history before the latest REQ_MATCH in the following steps:
    * 1) It will sort the student's Audit History in DESC order.
    * 2) It will find the record right before REQ_MATCH
@@ -142,27 +163,6 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
         .build();
     this.postMessageToTopic(STUDENT_API_TOPIC.toString(), nextEvent);
     log.info("message sent to STUDENT_API_TOPIC for UPDATE_STUDENT Event.");
-  }
-
-  /**
-   * Obtaining student history records.
-   *
-   * @param event                        the event
-   * @param saga                         the saga
-   * @param penRequestBatchUnmatchSagaData the pen request batch user actions unmatch saga data
-   */
-  protected void readAuditHistory(final Event event, final Saga saga, final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
-    final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
-    saga.setSagaState(GET_STUDENT_HISTORY.toString()); // set current event as saga state.
-    this.getSagaService().updateAttachedSagaWithEvents(saga, eventStates);
-
-    final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-        .eventType(GET_STUDENT_HISTORY)
-        .replyTo(this.getTopicToSubscribe())
-        .eventPayload(penRequestBatchUnmatchSagaData.getStudentID())
-        .build();
-    this.postMessageToTopic(STUDENT_API_TOPIC.toString(), nextEvent);
-    log.info("message sent to STUDENT_API_TOPIC for GET_STUDENT_HISTORY Event.");
   }
 
   private boolean isPossibleMatchDeleteRequired(final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
