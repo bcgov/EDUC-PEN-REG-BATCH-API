@@ -54,6 +54,7 @@ public class PurgeOldSagaRecordsScheduler {
     this.sagaEventRepository.deleteBySagaCreateDateBefore(createDateToCompare);
     this.penRequestBatchEventRepository.deleteByCreateDateBefore(createDateToCompare);
     this.sagaRepository.deleteByCreateDateBefore(createDateToCompare);
+    log.info("Purged old saga and event records");
   }
 
   private LocalDateTime calculateCreateDateBasedOnStaleSagaRecordInDays() {
