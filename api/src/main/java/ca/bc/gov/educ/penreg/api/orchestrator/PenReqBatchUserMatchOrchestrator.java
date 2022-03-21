@@ -8,6 +8,7 @@ import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestValidationIssue;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.PossibleMatch;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
@@ -141,17 +143,14 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
    * @throws JsonProcessingException the json processing exception
    */
   protected void updateStudent(final Event event, final Saga saga, final PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) throws JsonProcessingException {
-    final var gradeCodes = this.restUtils.getGradeCodes();
-    val isGradeCodeValid = gradeCodes.stream().anyMatch(gradeCode1 -> LocalDateTime.now().isAfter(gradeCode1.getEffectiveDate())
-      && LocalDateTime.now().isBefore(gradeCode1.getExpiryDate())
-      && StringUtils.equalsIgnoreCase(penRequestBatchUserActionsSagaData.getGradeCode(), gradeCode1.getGradeCode()));
     final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(UPDATE_STUDENT.toString()); // set current event as saga state.
     final Student studentDataFromEventResponse = JsonUtil.getJsonObjectFromString(Student.class, event.getEventPayload());
     studentDataFromEventResponse.setUpdateUser(penRequestBatchUserActionsSagaData.getUpdateUser());
     studentDataFromEventResponse.setMincode(penRequestBatchUserActionsSagaData.getMincode());
     studentDataFromEventResponse.setLocalID(penRequestBatchUserActionsSagaData.getLocalID());
-    studentDataFromEventResponse.setGradeCode(isGradeCodeValid ? penRequestBatchUserActionsSagaData.getGradeCode() : null);
+    updateGradeCodeAndGradeYear(studentDataFromEventResponse, penRequestBatchUserActionsSagaData);
+    updateUsualNameFields(studentDataFromEventResponse, penRequestBatchUserActionsSagaData);
     studentDataFromEventResponse.setPostalCode(penRequestBatchUserActionsSagaData.getPostalCode());
     studentDataFromEventResponse.setHistoryActivityCode(REQ_MATCH.getCode());
     penRequestBatchUserActionsSagaData.setStudentID(studentDataFromEventResponse.getStudentID());
@@ -164,6 +163,49 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
       .build();
     this.postMessageToTopic(STUDENT_API_TOPIC.toString(), nextEvent);
     log.info("message sent to STUDENT_API_TOPIC for UPDATE_STUDENT Event.");
+  }
+
+  protected void updateUsualNameFields(final Student studentFromStudentAPI, final PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
+    studentFromStudentAPI.setUsualFirstName(penRequestBatchUserActionsSagaData.getUsualFirstName());
+    studentFromStudentAPI.setUsualLastName(penRequestBatchUserActionsSagaData.getUsualLastName());
+    studentFromStudentAPI.setUsualMiddleNames(penRequestBatchUserActionsSagaData.getUsualMiddleNames());
+  }
+
+  /**
+   * updated for https://gww.jira.educ.gov.bc.ca/browse/PEN-1348
+   * When district number is <b> NOT </b> 102, apply the following logic for grade code & grade year.
+   * If the student record grade is null, and the incoming batch grade is valid, take it and update the grade year
+   * Set the STUD_GRADE_YEAR to the current year (if after June 30) or the previous year (if before June 30)
+   *
+   * @param studentDataFromEventResponse          the student from student api
+   * @param penRequestBatchUserActionsSagaData the pen request batch student data
+   */
+  protected void updateGradeCodeAndGradeYear(final Student studentDataFromEventResponse, final PenRequestBatchUserActionsSagaData penRequestBatchUserActionsSagaData) {
+    final var gradeCodes = this.restUtils.getGradeCodes();
+    var batchGradeCode = penRequestBatchUserActionsSagaData.getGradeCode();
+    val isGradeCodeValid = StringUtils.isNotBlank(batchGradeCode) ? gradeCodes.stream().anyMatch(gradeCode1 -> LocalDateTime.now().isAfter(gradeCode1.getEffectiveDate())
+      && LocalDateTime.now().isBefore(gradeCode1.getExpiryDate())
+      && StringUtils.equalsIgnoreCase(batchGradeCode, gradeCode1.getGradeCode())) : false;
+
+    if (!StringUtils.startsWith(penRequestBatchUserActionsSagaData.getMincode(), "102") && isGradeCodeValid && StringUtils.isBlank(studentDataFromEventResponse.getGradeCode())) {
+      studentDataFromEventResponse.setGradeCode(batchGradeCode);
+      val localDateTime = LocalDateTime.now();
+      if (localDateTime.getMonthValue() > 6) {
+        studentDataFromEventResponse.setGradeYear(String.valueOf(localDateTime.getYear()));
+      } else {
+        studentDataFromEventResponse.setGradeYear(String.valueOf(localDateTime.getYear() - 1));
+      }
+    }
+  }
+
+  /**
+   * check if there is a warning present in the validation.
+   *
+   * @param validationIssueEntities the validation issues
+   * @return the boolean true if validation of grade code resulted in warning else false.
+   */
+  protected boolean isGradeCodeWarningPresent(final List<PenRequestValidationIssue> validationIssueEntities) {
+    return validationIssueEntities.stream().anyMatch(entity -> "GRADECODE".equals(entity.getPenRequestBatchValidationFieldCode()));
   }
 
   /**

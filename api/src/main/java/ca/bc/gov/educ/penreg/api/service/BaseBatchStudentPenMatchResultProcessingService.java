@@ -292,8 +292,7 @@ public abstract class BaseBatchStudentPenMatchResultProcessingService extends Ba
   /**
    * updated for https://gww.jira.educ.gov.bc.ca/browse/PEN-1348
    * When district number is <b> NOT </b> 102, apply the following logic for grade code & grade year.
-   * If PEN Request grade code is null, and STUDENT record grade code is null do nothing
-   * If PEN Request grade code has value, set it in the STUDENT record
+   * If the student record grade is null, and the incoming batch grade is valid, take it and update the grade year
    * Set the STUD_GRADE_YEAR to the current year (if after June 30) or the previous year (if before June 30)
    *
    * @param studentFromStudentAPI          the student from student api
@@ -304,8 +303,7 @@ public abstract class BaseBatchStudentPenMatchResultProcessingService extends Ba
   protected void updateGradeCodeAndGradeYear(final Student studentFromStudentAPI, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, final PenRequestBatchEntity penRequestBatchEntity, final PenRequestBatchStudentEntity penRequestBatchStudent) {
     if (!StringUtils.startsWith(penRequestBatchEntity.getMincode(), "102")
       && !this.isGradeCodeWarningPresentForEntity(penRequestBatchStudent.getPenRequestBatchStudentValidationIssueEntities())
-      && ((StringUtils.isNotBlank(penRequestBatchStudentSagaData.getGradeCode()) && StringUtils.isNotBlank(studentFromStudentAPI.getGradeCode()))
-      || (StringUtils.isNotBlank(penRequestBatchStudentSagaData.getGradeCode())))) {
+      && StringUtils.isNotBlank(penRequestBatchStudentSagaData.getGradeCode()) && StringUtils.isBlank(studentFromStudentAPI.getGradeCode())) {
       studentFromStudentAPI.setGradeCode(penRequestBatchStudentSagaData.getGradeCode());
       val localDateTime = LocalDateTime.now();
       if (localDateTime.getMonthValue() > 6) {
