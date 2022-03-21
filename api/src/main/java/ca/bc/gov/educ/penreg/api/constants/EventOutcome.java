@@ -115,5 +115,9 @@ public enum EventOutcome {
   /**
    * Pdf report saved event outcome
    */
-  REPORTS_SAVED
+  REPORTS_SAVED,
+  /**
+   * Student History found outcome
+   */
+  STUDENT_HISTORY_FOUND
 }
