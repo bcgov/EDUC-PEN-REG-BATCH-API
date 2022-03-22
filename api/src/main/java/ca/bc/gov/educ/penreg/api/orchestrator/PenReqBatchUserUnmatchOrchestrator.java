@@ -168,7 +168,6 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
     studentInformation.setPostalCode(studentHistoryForRevert.getPostalCode());
     studentInformation.setHistoryActivityCode(StudentHistoryActivityCode.REQ_UNMATCH.getCode());
 
-    //push out response event jump to the end
     final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
         .eventType(UPDATE_STUDENT)
         .replyTo(this.getTopicToSubscribe())
