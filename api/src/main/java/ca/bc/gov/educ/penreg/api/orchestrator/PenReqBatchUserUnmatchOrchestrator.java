@@ -121,8 +121,7 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
    * @throws JsonProcessingException the json processing exception
    */
   protected void revertStudentInformation(final Event event, final Saga saga, final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) throws JsonProcessingException, IOException, InterruptedException, TimeoutException {
-    StudentHistory studentHistoryForRevert = new StudentHistory();
-    boolean reqMatchFound = false;
+    StudentHistory studentHistoryForRevert = null;
 
     final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(UPDATE_STUDENT.toString()); // set current event as saga state.
@@ -140,13 +139,12 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
     for (int i=0;i<historyList.size(); i++) {
       if (StringUtils.equals(historyList.get(i).getHistoryActivityCode(), StudentHistoryActivityCode.REQ_MATCH.getCode())) {
         studentHistoryForRevert = historyList.get(i+1);
-        reqMatchFound = true;
         log.debug("reverting student with this student audit history record ::{}", studentHistoryForRevert);
         break;
       }
     }
 
-    if (!reqMatchFound) {
+    if (studentHistoryForRevert == null) {
       log.debug("student audit history did not contain a REQ_MATCH. Student record will not be updated, but we need to complete SAGA");
       this.handleEvent(Event.builder().sagaId(saga.getSagaId())
           .eventType(UPDATE_STUDENT).eventOutcome(STUDENT_UPDATED)
