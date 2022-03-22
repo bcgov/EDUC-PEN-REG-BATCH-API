@@ -16,8 +16,10 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -118,8 +120,8 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
    * @param penRequestBatchUnmatchSagaData the pen request batch user actions unmatch saga data
    * @throws JsonProcessingException the json processing exception
    */
-  protected void revertStudentInformation(final Event event, final Saga saga, final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) throws JsonProcessingException {
-    StudentHistory studentHistoryForRevert = new StudentHistory();
+  protected void revertStudentInformation(final Event event, final Saga saga, final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) throws JsonProcessingException, IOException, InterruptedException, TimeoutException {
+    StudentHistory studentHistoryForRevert = null;
 
     final SagaEvent eventStates = this.createEventState(saga, event.getEventType(), event.getEventOutcome(), event.getEventPayload());
     saga.setSagaState(UPDATE_STUDENT.toString()); // set current event as saga state.
@@ -142,27 +144,34 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
       }
     }
 
-    //grab the student's most recent record to update.
-    final Student studentInformation = this.restUtils.getStudentByStudentID(penRequestBatchUnmatchSagaData.getStudentID());
+    if (studentHistoryForRevert == null) {
+      log.debug("student audit history did not contain a REQ_MATCH. Student record will not be updated, but we need to complete SAGA");
+      this.handleEvent(Event.builder().sagaId(saga.getSagaId())
+          .eventType(UPDATE_STUDENT).eventOutcome(STUDENT_UPDATED)
+          .build());
+    } else {
+      //grab the student's most recent record to update.
+      final Student studentInformation = this.restUtils.getStudentByStudentID(penRequestBatchUnmatchSagaData.getStudentID());
 
-    studentInformation.setUpdateUser(penRequestBatchUnmatchSagaData.getUpdateUser());
-    studentInformation.setUsualFirstName(studentHistoryForRevert.getUsualFirstName());
-    studentInformation.setUsualMiddleNames(studentHistoryForRevert.getUsualMiddleNames());
-    studentInformation.setUsualLastName(studentHistoryForRevert.getUsualLastName());
-    studentInformation.setMincode(studentHistoryForRevert.getMincode());
-    studentInformation.setLocalID(studentHistoryForRevert.getLocalID());
-    studentInformation.setGradeCode(studentHistoryForRevert.getGradeCode());
-    studentInformation.setGradeYear(studentHistoryForRevert.getGradeYear());
-    studentInformation.setPostalCode(studentHistoryForRevert.getPostalCode());
-    studentInformation.setHistoryActivityCode(StudentHistoryActivityCode.REQ_UNMATCH.getCode());
+      studentInformation.setUpdateUser(penRequestBatchUnmatchSagaData.getUpdateUser());
+      studentInformation.setUsualFirstName(studentHistoryForRevert.getUsualFirstName());
+      studentInformation.setUsualMiddleNames(studentHistoryForRevert.getUsualMiddleNames());
+      studentInformation.setUsualLastName(studentHistoryForRevert.getUsualLastName());
+      studentInformation.setMincode(studentHistoryForRevert.getMincode());
+      studentInformation.setLocalID(studentHistoryForRevert.getLocalID());
+      studentInformation.setGradeCode(studentHistoryForRevert.getGradeCode());
+      studentInformation.setGradeYear(studentHistoryForRevert.getGradeYear());
+      studentInformation.setPostalCode(studentHistoryForRevert.getPostalCode());
+      studentInformation.setHistoryActivityCode(StudentHistoryActivityCode.REQ_UNMATCH.getCode());
 
-    final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
-        .eventType(UPDATE_STUDENT)
-        .replyTo(this.getTopicToSubscribe())
-        .eventPayload(JsonUtil.getJsonStringFromObject(studentInformation))
-        .build();
-    this.postMessageToTopic(STUDENT_API_TOPIC.toString(), nextEvent);
-    log.info("message sent to STUDENT_API_TOPIC for UPDATE_STUDENT Event.");
+      final Event nextEvent = Event.builder().sagaId(saga.getSagaId())
+          .eventType(UPDATE_STUDENT)
+          .replyTo(this.getTopicToSubscribe())
+          .eventPayload(JsonUtil.getJsonStringFromObject(studentInformation))
+          .build();
+      this.postMessageToTopic(STUDENT_API_TOPIC.toString(), nextEvent);
+      log.info("message sent to STUDENT_API_TOPIC for UPDATE_STUDENT Event.");
+    }
   }
 
   private boolean isPossibleMatchDeleteRequired(final PenRequestBatchUnmatchSagaData penRequestBatchUnmatchSagaData) {
