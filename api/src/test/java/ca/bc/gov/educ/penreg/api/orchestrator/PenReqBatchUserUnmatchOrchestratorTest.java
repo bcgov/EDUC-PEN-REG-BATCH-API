@@ -31,6 +31,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_HISTORY_FOUND;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_UPDATED;
+import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_UNMATCH_PROCESSING_SAGA;
@@ -231,9 +234,8 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
   }
 
   @Test
-  public void testRevertStudentInformation_givenEventAndSagaData_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
+  public void testRevertStudentInformation_givenEventAndSagaData_shouldPostEventToStudentApiAndUpdateFields() throws IOException, InterruptedException, TimeoutException {
     final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
-
     when(this.restUtils.getStudentByStudentID(studentID)).thenReturn(new Student());
 
     List<StudentHistory> studentAuditHistory = getStudentAuditHistoryForRevertStudentInformationTest();
@@ -266,6 +268,34 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     assertThat(studentUpdate.getGradeYear()).isEqualTo("correct");
     assertThat(studentUpdate.getPostalCode()).isEqualTo("correct");
     assertThat(studentUpdate.getHistoryActivityCode()).isEqualTo(REQ_UNMATCH.getCode());
+  }
+
+  @Test
+  public void testRevertStudentInformation_givenEventAndSagaDataWithoutReqMatch_shouldBeCompleted() throws IOException, InterruptedException, TimeoutException {
+    final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
+    when(this.restUtils.getStudentByStudentID(studentID)).thenReturn(new Student());
+
+    List<StudentHistory> studentAuditHistoryWithoutReqMatch = new ArrayList<>();
+
+    final var event = Event.builder()
+        .eventType(GET_STUDENT_HISTORY)
+        .eventOutcome(EventOutcome.STUDENT_HISTORY_FOUND)
+        .sagaId(this.saga.getSagaId())
+        .eventPayload(JsonUtil.getJsonStringFromObject(studentAuditHistoryWithoutReqMatch))
+        .build();
+    this.orchestrator.handleEvent(event);
+
+    assertThat(mockingDetails(this.messagePublisher).getInvocations().size()).isEqualTo(invocations + 1);
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    final var currentSaga = sagaFromDB.get();
+    assertThat(currentSaga.getSagaState()).isEqualTo(COMPLETED.toString());
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
+    assertThat(sagaStates.size()).isEqualTo(2);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(GET_STUDENT_HISTORY.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(STUDENT_HISTORY_FOUND.toString());
+    assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(UPDATE_STUDENT.toString());
+    assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(STUDENT_UPDATED.toString());
   }
 
   /**
