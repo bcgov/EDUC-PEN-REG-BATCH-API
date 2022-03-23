@@ -33,7 +33,6 @@ import java.util.concurrent.TimeoutException;
 
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_HISTORY_FOUND;
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_UPDATED;
-import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
 import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_UNMATCH_PROCESSING_SAGA;
@@ -122,8 +121,8 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
   public void testHandleEvent_givenEventAndSagaDataWithTwins_shouldPostEventToPenMatchApi() throws IOException, InterruptedException, TimeoutException {
     final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
     final var event = Event.builder()
-        .eventType(INITIATED)
-        .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+        .eventType(UPDATE_STUDENT)
+        .eventOutcome(EventOutcome.STUDENT_UPDATED)
         .sagaId(this.saga.getSagaId())
         .eventPayload(JsonUtil.getJsonStringFromObject(this.sagaData))
         .build();
@@ -141,8 +140,8 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     assertThat(currentSaga.getSagaState()).isEqualTo(DELETE_POSSIBLE_MATCH.toString());
     final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(1);
-    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
-    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(UPDATE_STUDENT.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.STUDENT_UPDATED.toString());
   }
 
   @Test
@@ -159,8 +158,8 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     final var payload = this.placeholderPenRequestBatchUnmatchSagaData(Optional.empty());
     final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
     final var event = Event.builder()
-        .eventType(INITIATED)
-        .eventOutcome(EventOutcome.INITIATE_SUCCESS)
+        .eventType(UPDATE_STUDENT)
+        .eventOutcome(EventOutcome.STUDENT_UPDATED)
         .sagaId(this.saga.getSagaId())
         .eventPayload(JsonUtil.getJsonStringFromObject(payload))
         .build();
@@ -178,8 +177,8 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
     final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(1);
-    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
-    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(UPDATE_STUDENT.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(STUDENT_UPDATED.toString());
   }
 
   @Test
@@ -214,8 +213,8 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
   public void testReadAuditHistory_givenEventAndSagaData_shouldPostEventToStudentApi() throws IOException, InterruptedException, TimeoutException {
     final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
     final var event = Event.builder()
-        .eventType(UPDATE_PEN_REQUEST_BATCH_STUDENT)
-        .eventOutcome(EventOutcome.PEN_REQUEST_BATCH_STUDENT_UPDATED)
+        .eventType(INITIATED )
+        .eventOutcome(EventOutcome.INITIATE_SUCCESS)
         .sagaId(this.saga.getSagaId())
         .eventPayload(JsonUtil.getJsonStringFromObject(this.sagaData))
         .build();
@@ -229,8 +228,8 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     assertThat(currentSaga.getSagaState()).isEqualTo(GET_STUDENT_HISTORY.toString());
     final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(1);
-    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(UPDATE_PEN_REQUEST_BATCH_STUDENT.toString());
-    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.PEN_REQUEST_BATCH_STUDENT_UPDATED.toString());
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(INITIATED.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(EventOutcome.INITIATE_SUCCESS.toString());
   }
 
   @Test
@@ -289,7 +288,7 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
     assertThat(sagaFromDB).isPresent();
     final var currentSaga = sagaFromDB.get();
-    assertThat(currentSaga.getSagaState()).isEqualTo(COMPLETED.toString());
+    assertThat(currentSaga.getSagaState()).isEqualTo(DELETE_POSSIBLE_MATCH.toString());
     final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
     assertThat(sagaStates.size()).isEqualTo(2);
     assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(GET_STUDENT_HISTORY.toString());
@@ -308,8 +307,7 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
         "    \"createUser\": \"test\",\n" +
         "    \"updateUser\": \"test\",\n" +
         "    \"penRequestBatchID\": \"" + this.penRequestBatchID + "\",\n" +
-//        "    \"studentID\": \"" + UUID.randomUUID().toString() + "\",\n" +
-        "    \"studentID\": \"" + this.studentID.toString() + "\",\n" +
+        "    \"studentID\": \"" + this.studentID + "\",\n" +
         "    \"penRequestBatchStudentID\": \"" + this.penRequestBatchStudentID + "\",\n" +
         "    \"legalFirstName\": \"Jack\",\n" +
         "    \"mincode\": \"" + this.mincode + "\",\n" +

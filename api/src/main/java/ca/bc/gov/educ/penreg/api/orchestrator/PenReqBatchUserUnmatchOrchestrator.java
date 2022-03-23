@@ -67,13 +67,13 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
   @Override
   public void populateStepsToExecuteMap() {
     this.stepBuilder()
-        .begin(this::isPossibleMatchDeleteNotRequired, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
-        .or()
-        .begin(this::isPossibleMatchDeleteRequired, DELETE_POSSIBLE_MATCH, this::deletePossibleMatchesFromStudent)
-        .step(DELETE_POSSIBLE_MATCH, POSSIBLE_MATCH_DELETED, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
-        .step(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_UPDATED, GET_STUDENT_HISTORY, this::readAuditHistory)
+        .begin(GET_STUDENT_HISTORY, this::readAuditHistory)
         .step(GET_STUDENT_HISTORY, STUDENT_HISTORY_FOUND, UPDATE_STUDENT, this::revertStudentInformation)
-        .end(UPDATE_STUDENT, STUDENT_UPDATED)
+        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isPossibleMatchDeleteNotRequired, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
+        .or()
+        .step(UPDATE_STUDENT, STUDENT_UPDATED, this::isPossibleMatchDeleteRequired, DELETE_POSSIBLE_MATCH, this::deletePossibleMatchesFromStudent)
+        .step(DELETE_POSSIBLE_MATCH, POSSIBLE_MATCH_DELETED, UPDATE_PEN_REQUEST_BATCH_STUDENT, this::updatePenRequestBatchStudent)
+        .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_UPDATED)
         .or()
         .end(UPDATE_PEN_REQUEST_BATCH_STUDENT, PEN_REQUEST_BATCH_STUDENT_NOT_FOUND, this::logPenRequestBatchStudentNotFound);
   }
@@ -152,7 +152,6 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
     } else {
       //grab the student's most recent record to update.
       final Student studentInformation = this.restUtils.getStudentByStudentID(penRequestBatchUnmatchSagaData.getStudentID());
-
       studentInformation.setUpdateUser(penRequestBatchUnmatchSagaData.getUpdateUser());
       studentInformation.setUsualFirstName(studentHistoryForRevert.getUsualFirstName());
       studentInformation.setUsualMiddleNames(studentHistoryForRevert.getUsualMiddleNames());
