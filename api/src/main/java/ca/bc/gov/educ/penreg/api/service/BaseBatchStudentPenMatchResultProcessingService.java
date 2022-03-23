@@ -301,8 +301,7 @@ public abstract class BaseBatchStudentPenMatchResultProcessingService extends Ba
    * @param penRequestBatchStudent         the pen request batch student
    */
   protected void updateGradeCodeAndGradeYear(final Student studentFromStudentAPI, final PenRequestBatchStudentSagaData penRequestBatchStudentSagaData, final PenRequestBatchEntity penRequestBatchEntity, final PenRequestBatchStudentEntity penRequestBatchStudent) {
-    if (!StringUtils.startsWith(penRequestBatchEntity.getMincode(), "102")
-      && !this.isGradeCodeWarningPresentForEntity(penRequestBatchStudent.getPenRequestBatchStudentValidationIssueEntities())
+    if (!this.isGradeCodeWarningPresentForEntity(penRequestBatchStudent.getPenRequestBatchStudentValidationIssueEntities())
       && StringUtils.isNotBlank(penRequestBatchStudentSagaData.getGradeCode()) && StringUtils.isBlank(studentFromStudentAPI.getGradeCode())) {
       studentFromStudentAPI.setGradeCode(penRequestBatchStudentSagaData.getGradeCode());
       val localDateTime = LocalDateTime.now();

@@ -187,7 +187,7 @@ public class PenReqBatchUserMatchOrchestrator extends BaseUserActionsOrchestrato
       && LocalDateTime.now().isBefore(gradeCode1.getExpiryDate())
       && StringUtils.equalsIgnoreCase(batchGradeCode, gradeCode1.getGradeCode())) : false;
 
-    if (!StringUtils.startsWith(penRequestBatchUserActionsSagaData.getMincode(), "102") && isGradeCodeValid && StringUtils.isBlank(studentDataFromEventResponse.getGradeCode())) {
+    if (isGradeCodeValid && StringUtils.isBlank(studentDataFromEventResponse.getGradeCode())) {
       studentDataFromEventResponse.setGradeCode(batchGradeCode);
       val localDateTime = LocalDateTime.now();
       if (localDateTime.getMonthValue() > 6) {

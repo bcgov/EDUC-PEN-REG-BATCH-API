@@ -175,8 +175,7 @@ public class PenRequestPenMatchResultProcessingService extends BasePenMatchResul
    * @param payload the pen request batch student data
    */
   protected void updateGradeCodeAndGradeYear(final Student studentFromStudentAPI, final PenRequestPenMatchProcessingPayload payload) {
-    if (!StringUtils.startsWith(payload.getPenRequest().getMincode(), "102")
-      && !this.isGradeCodeWarningPresent(payload.getPenRequestResult().getValidationIssues())
+    if (!this.isGradeCodeWarningPresent(payload.getPenRequestResult().getValidationIssues())
       && StringUtils.isNotBlank(payload.getPenRequest().getEnrolledGradeCode()) && StringUtils.isBlank(studentFromStudentAPI.getGradeCode())) {
       studentFromStudentAPI.setGradeCode(payload.getPenRequest().getEnrolledGradeCode());
       val localDateTime = LocalDateTime.now();
