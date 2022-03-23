@@ -307,7 +307,7 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
         "    \"createUser\": \"test\",\n" +
         "    \"updateUser\": \"test\",\n" +
         "    \"penRequestBatchID\": \"" + this.penRequestBatchID + "\",\n" +
-        "    \"studentID\": \"" + this.studentID.toString() + "\",\n" +
+        "    \"studentID\": \"" + this.studentID + "\",\n" +
         "    \"penRequestBatchStudentID\": \"" + this.penRequestBatchStudentID + "\",\n" +
         "    \"legalFirstName\": \"Jack\",\n" +
         "    \"mincode\": \"" + this.mincode + "\",\n" +
