@@ -208,6 +208,31 @@ public class PenRequestBatchTestUtils {
     return students;
   }
 
+  public static List<Student> createStudentsForNotNullPRBStudents(final PenRequestBatchEntity penRequestBatchEntity) {
+
+    final List<Student> students = new ArrayList<>();
+    for (final PenRequestBatchStudentEntity penRequestBatchStudentEntity : penRequestBatchEntity.getPenRequestBatchStudentEntities()) {
+      if (penRequestBatchStudentEntity.getStudentID() != null) {
+        students.add(Student.builder()
+          .mincode(penRequestBatchEntity.getMincode())
+          .genderCode(penRequestBatchStudentEntity.getGenderCode())
+          .gradeCode(penRequestBatchStudentEntity.getGradeCode())
+          .legalFirstName(penRequestBatchStudentEntity.getLegalFirstName())
+          .legalLastName(penRequestBatchStudentEntity.getLegalLastName())
+          .legalMiddleNames(penRequestBatchStudentEntity.getLegalMiddleNames())
+          .dob(penRequestBatchStudentEntity.getDob() == null || penRequestBatchStudentEntity.getDob().isBlank() ? "" : LocalDate.parse(penRequestBatchStudentEntity.getDob(), DateTimeFormatter.ofPattern("yyyyMMdd")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+          .localID(penRequestBatchStudentEntity.getLocalID())
+          .pen(penRequestBatchStudentEntity.getAssignedPEN())
+          .studentID(UUID.randomUUID().toString())
+          .build());
+        if (penRequestBatchStudentEntity.getStudentID() != null) {
+          students.get(students.size() - 1).setStudentID(penRequestBatchStudentEntity.getStudentID().toString());
+        }
+      }
+    }
+    return students;
+  }
+
   public static List<PenRequestBatchEntity> createBatchStudents(final PenRequestBatchRepository penRequestBatchRepository, final String batchFileName,
                                                                 final String batchStudentFileName, final Integer total) throws java.io.IOException {
     return createBatchStudents(penRequestBatchRepository, batchFileName, batchStudentFileName, total, null);

@@ -9,6 +9,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
+import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatch;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestIDs;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
@@ -24,9 +25,14 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 public class PenRequestBatchServiceTest extends BasePenRegAPITest {
 
@@ -153,6 +159,22 @@ public class PenRequestBatchServiceTest extends BasePenRegAPITest {
 
     final PenRequestBatchEntity returnedPrbFile = this.prbRepository.getOne(prbFileDBOptional.get().getPenRequestBatchID());
     assertThat(returnedPrbFile.getPenRequestBatchStatusCode()).isEqualTo(PenRequestBatchStatusCodes.REARCHIVED.getCode());
+  }
+
+  @Test
+  @Transactional
+  public void testPopulateStudentDataFromBatch_shouldReturnResults() throws IOException, ExecutionException, InterruptedException, TimeoutException {
+    this.batchList = PenRequestBatchTestUtils.createBatchStudents(this.prbRepository, "mock_pen_req_batch_ids.json",
+      "mock_pen_req_batch_student_ids.json", 3);
+
+    when(this.restUtils.getStudentsByStudentIDs(any())).thenReturn(PenRequestBatchTestUtils.createStudentsForNotNullPRBStudents(this.batchList.get(0)));
+
+    assertThat(this.batchList).isNotEmpty();
+    var batchIds = this.batchList.stream()
+      .map(PenRequestBatchEntity::getPenRequestBatchID)
+      .collect(toList());
+    val results = this.prbService.populateStudentDataFromBatch(batchList.get(0));
+    assertThat(results.size()).isEqualTo(4);
   }
 
   @Test
