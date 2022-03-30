@@ -378,8 +378,9 @@ public class PenRequestBatchService {
   public Map<String, Student> populateStudentDataFromBatch(final PenRequestBatchEntity penRequestBatch) throws IOException, ExecutionException, InterruptedException, TimeoutException {
     final List<UUID> studentIDs = penRequestBatch.getPenRequestBatchStudentEntities().stream()
       .map(PenRequestBatchStudentEntity::getStudentID).filter(Objects::nonNull).collect(Collectors.toList());
-    val batchStudentEntities = penRequestBatch.getPenRequestBatchStudentEntities().stream().filter(batchEntity -> batchEntity.getStudentID() != null);
-    val batchEntitiesMap = batchStudentEntities.collect(Collectors.toMap(batchEntity -> batchEntity.getStudentID().toString(), batchEntity -> batchEntity));
+    val batchEntitiesMap = penRequestBatch.getPenRequestBatchStudentEntities().stream()
+      .filter(batchEntity -> batchEntity.getStudentID() != null)
+      .collect(Collectors.toMap(batchEntity -> batchEntity.getStudentID().toString(), batchEntity -> batchEntity));
     if (!studentIDs.isEmpty()) {
       val result = this.restUtils.getStudentsByStudentIDs(studentIDs);
       if (result.isEmpty()) {
