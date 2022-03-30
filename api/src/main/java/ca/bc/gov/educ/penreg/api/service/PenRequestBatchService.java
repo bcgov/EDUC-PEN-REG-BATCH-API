@@ -378,14 +378,29 @@ public class PenRequestBatchService {
   public Map<String, Student> populateStudentDataFromBatch(final PenRequestBatchEntity penRequestBatch) throws IOException, ExecutionException, InterruptedException, TimeoutException {
     final List<UUID> studentIDs = penRequestBatch.getPenRequestBatchStudentEntities().stream()
       .map(PenRequestBatchStudentEntity::getStudentID).filter(Objects::nonNull).collect(Collectors.toList());
+    val batchEntities = penRequestBatch.getPenRequestBatchStudentEntities().stream()
+      .filter(batchEntity -> batchEntity.getStudentID() != null)
+      .collect(Collectors.toMap(batchEntity -> batchEntity.getStudentID(), batchEntity -> batchEntity));
     if (!studentIDs.isEmpty()) {
       val result = this.restUtils.getStudentsByStudentIDs(studentIDs);
       if (result.isEmpty()) {
         throw new PenRegAPIRuntimeException("got blank response from student api which is not expected :: " + penRequestBatch.getPenRequestBatchID());
       }
+      updateStudentsForLocalIDAndMincode(result, batchEntities, penRequestBatch.getMincode());
       return result.stream().collect(Collectors.toConcurrentMap(Student::getStudentID, Function.identity()));
     }
     return Collections.emptyMap();
+  }
+
+  private void updateStudentsForLocalIDAndMincode(List<Student> students, Map<UUID,PenRequestBatchStudentEntity> batchEntities, String batchMincode){
+     for(val student: students){
+       val entity = batchEntities.get(student.getStudentID());
+       if(entity == null){
+         throw new PenRegAPIRuntimeException("Unexpected student record missing when updating local ID and mincode :: " + student.getStudentID());
+       }
+       student.setLocalID(entity.getLocalID());
+       student.setMincode(batchMincode);
+     }
   }
 
   /**
