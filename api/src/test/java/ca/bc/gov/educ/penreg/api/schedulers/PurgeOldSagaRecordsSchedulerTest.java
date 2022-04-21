@@ -8,6 +8,8 @@ import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -30,6 +32,12 @@ public class PurgeOldSagaRecordsSchedulerTest extends BasePenRegAPITest {
   @Autowired
   PurgeOldSagaRecordsScheduler purgeOldSagaRecordsScheduler;
 
+  @Before
+  public void setup() {
+    this.sagaEventRepository.deleteAll();
+    this.penRequestBatchEventRepository.deleteAll();
+    this.repository.deleteAll();
+  }
 
   @Test
   public void pollSagaTableAndPurgeOldRecords_givenOldRecordsPresent_shouldBeDeleted() {

@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
+import ca.bc.gov.educ.penreg.api.compare.auditHistoryComparator;
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -295,6 +297,41 @@ public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest
     assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(STUDENT_HISTORY_FOUND.toString());
     assertThat(sagaStates.get(1).getSagaEventState()).isEqualTo(UPDATE_STUDENT.toString());
     assertThat(sagaStates.get(1).getSagaEventOutcome()).isEqualTo(STUDENT_UPDATED.toString());
+  }
+
+  @Test
+  public void testRevertStudentInformation_givenEventAndSagaDataWithSameCreateDate_shouldPostEventToStudentApiAndShowReqMatchFirst() throws IOException, InterruptedException, TimeoutException {
+    final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
+    when(this.restUtils.getStudentByStudentID(studentID)).thenReturn(new Student());
+
+    List<StudentHistory> studentAuditHistoryWithSameCreateDate = new ArrayList<>();
+    studentAuditHistoryWithSameCreateDate.add(studentAuditHistoryCreatorForRevertStudentInformationTest("second", "revert to this", "", "","","","", REQ_NEW.getCode(), "22-02-02"));
+    studentAuditHistoryWithSameCreateDate.add(studentAuditHistoryCreatorForRevertStudentInformationTest("third", "", "", "","","","", USER_NEW.getCode(), "22-02-02"));
+    studentAuditHistoryWithSameCreateDate.add(studentAuditHistoryCreatorForRevertStudentInformationTest("first", "", "", "","","","", REQ_MATCH.getCode(), "22-02-02"));
+
+    final var event = Event.builder()
+        .eventType(GET_STUDENT_HISTORY)
+        .eventOutcome(EventOutcome.STUDENT_HISTORY_FOUND)
+        .sagaId(this.saga.getSagaId())
+        .eventPayload(JsonUtil.getJsonStringFromObject(studentAuditHistoryWithSameCreateDate))
+        .build();
+    this.orchestrator.handleEvent(event);
+
+    verify(this.messagePublisher, atMost(invocations + 1)).dispatchMessage(eq(STUDENT_API_TOPIC.toString()), this.eventCaptor.capture());
+    final var newEvent = JsonUtil.getJsonObjectFromString(Event.class, new String(this.eventCaptor.getValue()));
+    final var sagaFromDB = this.sagaService.findSagaById(this.saga.getSagaId());
+    assertThat(sagaFromDB).isPresent();
+    final var currentSaga = sagaFromDB.get();
+    assertThat(currentSaga.getSagaState()).isEqualTo(UPDATE_STUDENT.toString());
+    final var sagaStates = this.sagaService.findAllSagaStates(this.saga);
+    assertThat(sagaStates.size()).isEqualTo(1);
+    assertThat(sagaStates.get(0).getSagaEventState()).isEqualTo(GET_STUDENT_HISTORY.toString());
+    assertThat(sagaStates.get(0).getSagaEventOutcome()).isEqualTo(STUDENT_HISTORY_FOUND.toString());
+
+    //checking that the necessary fields have been updated
+    var studentUpdate = new ObjectMapper().readValue(newEvent.getEventPayload(), Student.class);
+    assertThat(studentUpdate.getUsualMiddleNames()).isEqualTo("revert to this");
+    assertThat(studentUpdate.getHistoryActivityCode()).isEqualTo(REQ_UNMATCH.getCode());
   }
 
   /**
