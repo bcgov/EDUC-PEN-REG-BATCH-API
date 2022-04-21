@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
+import ca.bc.gov.educ.penreg.api.compare.auditHistoryComparator;
 import ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
@@ -18,7 +19,6 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -133,7 +133,7 @@ public class PenReqBatchUserUnmatchOrchestrator extends BaseUserActionsOrchestra
     final List<StudentHistory> historyList = objectMapper.readValue(event.getEventPayload(), type);
 
     //sort list in DESC order by CreateDate
-    Collections.sort(historyList, Collections.reverseOrder(Comparator.comparing(StudentHistory::getCreateDate)));
+    Collections.sort(historyList, new auditHistoryComparator());
 
     //find the most recent student history record before the REQ MATCH.
     for (int i=0;i<historyList.size(); i++) {
