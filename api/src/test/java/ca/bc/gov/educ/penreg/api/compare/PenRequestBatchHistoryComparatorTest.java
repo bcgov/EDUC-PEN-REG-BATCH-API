@@ -31,7 +31,6 @@ public class PenRequestBatchHistoryComparatorTest {
   }
 
   /**
-   * returns a list of the student's audit history
    *
    *@param usualFirstName usual first name
    *@param usualMiddleName usual middle name
