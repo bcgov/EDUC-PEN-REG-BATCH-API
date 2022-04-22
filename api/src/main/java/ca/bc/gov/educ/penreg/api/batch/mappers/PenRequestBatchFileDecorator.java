@@ -9,6 +9,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
 
@@ -116,9 +117,11 @@ public abstract class PenRequestBatchFileDecorator implements PenRequestBatchFil
     entity.setUsualLastName(StringMapper.trimUppercaseAndScrubDiacriticalMarks(studentDetails.getUsualSurname()));
     entity.setUsualFirstName(StringMapper.trimUppercaseAndScrubDiacriticalMarks(studentDetails.getUsualGivenName()));
     entity.setUsualMiddleNames(StringMapper.trimUppercaseAndScrubDiacriticalMarks(studentDetails.getUsualMiddleName()));
-
-    entity.setSubmittedPen(StringMapper.trimUppercaseAndScrubDiacriticalMarks(studentDetails.getPen()));
     entity.setLocalID(StringMapper.trimUppercaseAndScrubDiacriticalMarks(studentDetails.getLocalStudentID()));
+
+    if(StringUtils.isNotBlank(studentDetails.getPen()) && studentDetails.getPen().length() == 9) {
+      entity.setSubmittedPen(StringMapper.trimUppercaseAndScrubDiacriticalMarks(studentDetails.getPen()));
+    }
 
     return entity;
   }
