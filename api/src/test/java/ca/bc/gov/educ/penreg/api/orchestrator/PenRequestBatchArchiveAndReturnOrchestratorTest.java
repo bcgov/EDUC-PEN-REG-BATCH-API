@@ -321,7 +321,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     "  \"fromEmail\": \"aditya.sharma@gov.bc.ca\",\n" +
     "  \"telephone\": \"(250)356-8020\",\n" +
     "  \"facsimile\": \"(250)953-0450\",\n" +
-    "  \"mailingAddress\": \"Ministry of Education, Data Collection Unit PO Box 9170, Stn. Prov. Govt, Victoria BC, V8W 9H7\"\n" +
+    "  \"mailingAddress\": \"Ministry of Education and Child Care, Data Collection Unit PO Box 9170, Stn. Prov. Govt, Victoria BC, V8W 9H7\"\n" +
     "}\n";
   /**
    * The Message publisher.
