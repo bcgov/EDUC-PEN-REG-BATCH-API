@@ -192,6 +192,14 @@ public class RestUtilsTest {
     assertThat(createdStudent.getStudentID()).isEqualTo(studentID);
   }
 
+  @Test
+  public void testGetSchoolByMincodeWhenEmpty_givenAPICallSuccess_shouldReturnData() {
+    this.restUtils.clearSchoolMapForRestUtilsTest();
+    val result = this.restUtils.getSchoolByMincode("10200001");
+    assertThat(result).isNotNull().isPresent();
+    assertThat(result.get().getMincode()).isEqualTo("10200001");
+  }
+
   private WebClient.RequestBodySpec returnMockBodySpec() {
     return this.requestBodyMock;
   }
