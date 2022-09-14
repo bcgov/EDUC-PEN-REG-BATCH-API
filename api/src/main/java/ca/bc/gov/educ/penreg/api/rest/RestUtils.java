@@ -334,6 +334,7 @@ public class RestUtils {
    */
   public Optional<School> getSchoolByMincode(final String mincode) {
     if (this.schoolMap.isEmpty()) {
+      log.info("School map is empty reloading schools");
       this.populateSchoolMap();
     }
     return Optional.ofNullable(this.schoolMap.get(mincode));
