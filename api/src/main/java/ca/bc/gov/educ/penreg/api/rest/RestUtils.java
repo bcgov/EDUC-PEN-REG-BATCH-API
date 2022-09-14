@@ -136,8 +136,17 @@ public class RestUtils {
    * Populate school map.
    */
   public void populateSchoolMap() {
-    for (val school : this.getSchools()) {
-      this.schoolMap.put(school.getDistNo() + school.getSchlNo(), school);
+    val writeLock = this.schoolLock.writeLock();
+    try {
+      writeLock.lock();
+      for (val school : this.getSchools()) {
+        this.schoolMap.put(school.getDistNo() + school.getSchlNo(), school);
+      }
+      if (this.schoolMap.isEmpty()) {
+        log.info("School map is empty");
+      }
+    } finally {
+      writeLock.unlock();
     }
     log.info("loaded  {} schools to memory", this.schoolMap.values().size());
   }
@@ -319,6 +328,10 @@ public class RestUtils {
    * @return the school by min code
    */
   public Optional<School> getSchoolByMincode(final String mincode) {
+    if (this.schoolMap.isEmpty()) {
+      log.info("School map is empty reloading schools");
+      this.populateSchoolMap();
+    }
     return Optional.ofNullable(this.schoolMap.get(mincode));
   }
 
@@ -408,5 +421,12 @@ public class RestUtils {
     return Optional.empty();
   }
 
+  /**
+   * This is used by RestUtilsTest to clear out schoolMap
+   */
+  public void clearSchoolMapForRestUtilsTest() {
+    log.info("clearing schoolMap");
+    this.schoolMap.clear();
+  }
 
 }
