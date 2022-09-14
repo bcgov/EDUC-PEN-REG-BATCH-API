@@ -122,7 +122,11 @@ public class RestUtils {
       this.gradeCodesMap.clear();
       final List<GradeCode> gradeCodes = this.webClient.get().uri(this.props.getStudentApiURL(), uri -> uri.path("/grade-codes").build()).header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).retrieve().bodyToFlux(GradeCode.class).collectList().block();
       this.gradeCodesMap.put(GRADE_CODES, gradeCodes);
-    } finally {
+    }
+    catch (WebClientResponseException ex) {
+      log.error("Unable to load map cache gradeCodes {}", ex.getStatusCode());
+    }
+    finally {
       writeLock.unlock();
     }
   }
@@ -142,10 +146,11 @@ public class RestUtils {
       for (val school : this.getSchools()) {
         this.schoolMap.put(school.getDistNo() + school.getSchlNo(), school);
       }
-      if (this.schoolMap.isEmpty()) {
-        log.info("School map is empty");
-      }
-    } finally {
+    }
+    catch (WebClientResponseException ex) {
+      log.error("Unable to load map cache school {}", ex.getStatusCode());
+    }
+    finally {
       writeLock.unlock();
     }
     log.info("loaded  {} schools to memory", this.schoolMap.values().size());
@@ -182,7 +187,7 @@ public class RestUtils {
    *
    * @return the schools
    */
-  public List<School> getSchools() {
+  public List<School> getSchools() throws WebClientResponseException {
     log.info("calling school api to load schools to memory");
     return this.webClient.get()
       .uri(this.props.getSchoolApiURL())
@@ -329,7 +334,6 @@ public class RestUtils {
    */
   public Optional<School> getSchoolByMincode(final String mincode) {
     if (this.schoolMap.isEmpty()) {
-      log.info("School map is empty reloading schools");
       this.populateSchoolMap();
     }
     return Optional.ofNullable(this.schoolMap.get(mincode));
