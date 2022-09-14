@@ -142,6 +142,9 @@ public class RestUtils {
       for (val school : this.getSchools()) {
         this.schoolMap.put(school.getDistNo() + school.getSchlNo(), school);
       }
+      if (this.schoolMap.isEmpty()) {
+        log.info("School map is empty");
+      }
     } finally {
       writeLock.unlock();
     }
