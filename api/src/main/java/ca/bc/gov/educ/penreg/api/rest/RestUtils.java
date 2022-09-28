@@ -123,8 +123,8 @@ public class RestUtils {
       final List<GradeCode> gradeCodes = this.webClient.get().uri(this.props.getStudentApiURL(), uri -> uri.path("/grade-codes").build()).header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).retrieve().bodyToFlux(GradeCode.class).collectList().block();
       this.gradeCodesMap.put(GRADE_CODES, gradeCodes);
     }
-    catch (WebClientResponseException ex) {
-      log.error("Unable to load map cache gradeCodes {}", ex.getStatusCode());
+    catch (Exception ex) {
+      log.error("Unable to load map cache gradeCodes {}", ex);
     }
     finally {
       writeLock.unlock();
@@ -147,8 +147,8 @@ public class RestUtils {
         this.schoolMap.put(school.getDistNo() + school.getSchlNo(), school);
       }
     }
-    catch (WebClientResponseException ex) {
-      log.error("Unable to load map cache school {}", ex.getStatusCode());
+    catch (Exception ex) {
+      log.error("Unable to load map cache school {}", ex);
     }
     finally {
       writeLock.unlock();
@@ -187,7 +187,7 @@ public class RestUtils {
    *
    * @return the schools
    */
-  public List<School> getSchools() throws WebClientResponseException {
+  public List<School> getSchools() {
     log.info("calling school api to load schools to memory");
     return this.webClient.get()
       .uri(this.props.getSchoolApiURL())
