@@ -1,30 +1,44 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.ARCHIVE_EMAIL_SENT;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.ARCHIVE_PEN_REQUEST_BATCH_REPORTS_GENERATED;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_REQUEST_BATCH_NOT_FOUND;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.REPORTS_SAVED;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.REPORT_DATA_GATHERED;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENTS_FOUND;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENTS_NOT_FOUND;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.GATHER_REPORT_DATA;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.GENERATE_PEN_REQUEST_BATCH_REPORTS;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.GET_STUDENTS;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.SAVE_REPORTS;
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_REPOST_REPORTS_TOPIC;
+
 import ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
-import ca.bc.gov.educ.penreg.api.service.*;
+import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
+import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
+import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentValidationIssueService;
+import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
+import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchRepostReportsFilesSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportGenerationEventPayload;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
-
-import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
-import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_REPOST_REPORTS_TOPIC;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component

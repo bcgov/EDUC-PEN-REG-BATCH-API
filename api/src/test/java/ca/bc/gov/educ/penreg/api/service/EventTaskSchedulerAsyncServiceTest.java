@@ -1,22 +1,21 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
-import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
-import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.IOException;
-
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REPEATS_CHECKED;
 import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA;
 import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils.createBatchStudents;
 import static ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils.createSagaRecords;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
+import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchHistoryRepository;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
+import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
+import java.io.IOException;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 public class EventTaskSchedulerAsyncServiceTest extends BasePenRegAPITest {

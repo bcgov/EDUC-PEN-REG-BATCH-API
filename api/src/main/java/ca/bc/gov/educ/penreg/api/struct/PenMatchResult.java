@@ -1,11 +1,10 @@
 package ca.bc.gov.educ.penreg.api.struct;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 /**
  * The type Pen match result.

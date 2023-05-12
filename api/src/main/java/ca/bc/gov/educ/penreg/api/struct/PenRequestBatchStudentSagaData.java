@@ -1,13 +1,12 @@
 package ca.bc.gov.educ.penreg.api.struct;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.validation.constraints.NotNull;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import javax.validation.constraints.NotNull;
-import java.util.UUID;
 
 /**
  * The type Pen request batch student saga data.

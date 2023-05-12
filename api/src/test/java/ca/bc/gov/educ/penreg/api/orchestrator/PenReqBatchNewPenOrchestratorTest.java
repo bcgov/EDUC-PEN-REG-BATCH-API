@@ -1,5 +1,22 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_ALREADY_EXIST;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_CREATED;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.ADD_POSSIBLE_MATCH;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.CREATE_STUDENT;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.GET_NEXT_PEN_NUMBER;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.UPDATE_PEN_REQUEST_BATCH_STUDENT;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_SERVICES_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.atMostOnce;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.verify;
+
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
@@ -17,6 +34,8 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -24,19 +43,6 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_ALREADY_EXIST;
-import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_CREATED;
-import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_SAGA;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.*;
 
 /**
  * The type Message publisher test.

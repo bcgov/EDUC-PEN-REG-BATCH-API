@@ -1,5 +1,36 @@
 package ca.bc.gov.educ.penreg.api.batch.processor;
 
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.DUPLICATE_BATCH_FILE_PSI;
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.HELD_BACK_FOR_SFAS;
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.HELD_BACK_FOR_SIZE;
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.INVALID_MINCODE_HEADER;
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.INVALID_MINCODE_SCHOOL_CLOSED;
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.INVALID_TRAILER;
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.INVALID_TRAILER_STUDENT_COUNT;
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.INVALID_TRANSACTION_CODE_STUDENT_DETAILS;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.BIRTH_DATE;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.ENROLLED_GRADE_CODE;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.GENDER;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.HEADER;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.LEGAL_GIVEN_NAME;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.LEGAL_MIDDLE_NAME;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.LEGAL_SURNAME;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.LOCAL_STUDENT_ID;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.PEN;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.POSTAL_CODE;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.PRODUCT_ID;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.PRODUCT_NAME;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.STUDENT_COUNT;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.TRAILER;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.TRANSACTION_CODE;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.UNUSED;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.UNUSED_SECOND;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.USUAL_GIVEN_NAME;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.USUAL_MIDDLE_NAME;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.USUAL_SURNAME;
+import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.VENDOR_NAME;
+import static lombok.AccessLevel.PRIVATE;
+
 import ca.bc.gov.educ.penreg.api.batch.exception.FileError;
 import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper;
@@ -21,6 +52,23 @@ import ca.bc.gov.educ.penreg.api.service.NotificationService;
 import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import com.google.common.base.Stopwatch;
+import java.io.ByteArrayInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.Charset;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -33,21 +81,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.*;
-import static ca.bc.gov.educ.penreg.api.constants.BatchFileConstants.*;
-import static lombok.AccessLevel.PRIVATE;
 
 /**
  * The Pen reg batch processor.

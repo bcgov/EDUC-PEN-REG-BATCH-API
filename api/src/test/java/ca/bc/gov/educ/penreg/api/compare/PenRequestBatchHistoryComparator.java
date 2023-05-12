@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.compare;
 
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
-
 import java.util.Comparator;
 
 /**

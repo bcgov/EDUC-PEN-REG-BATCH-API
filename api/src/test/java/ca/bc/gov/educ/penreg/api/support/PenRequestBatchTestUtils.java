@@ -1,5 +1,12 @@
 package ca.bc.gov.educ.penreg.api.support;
 
+import static ca.bc.gov.educ.penreg.api.constants.EventType.MARK_SAGA_COMPLETE;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA;
+import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper;
 import ca.bc.gov.educ.penreg.api.batch.processor.PenRegBatchProcessor;
@@ -18,6 +25,18 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import lombok.val;
 import net.sf.flatpack.DataSet;
 import net.sf.flatpack.DefaultParserFactory;
@@ -27,22 +46,6 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.io.*;
-import java.nio.file.Files;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
-import static ca.bc.gov.educ.penreg.api.constants.EventType.MARK_SAGA_COMPLETE;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA;
-import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
-import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @Component
 @Profile("test")

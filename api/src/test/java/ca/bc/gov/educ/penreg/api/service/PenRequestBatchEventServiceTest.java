@@ -1,20 +1,5 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEvent;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
-import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
-import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
-import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.IOException;
-import java.util.UUID;
-
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_REQUEST_BATCH_STUDENT_NOT_FOUND;
 import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_REQUEST_BATCH_STUDENT_UPDATED;
 import static ca.bc.gov.educ.penreg.api.constants.EventStatus.MESSAGE_PUBLISHED;
@@ -23,6 +8,20 @@ import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCo
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_NEW_PEN_PROCESSING_TOPIC;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
+import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEvent;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
+import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
+import ca.bc.gov.educ.penreg.api.struct.Event;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
+import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import java.io.IOException;
+import java.util.UUID;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * The type Message publisher test.

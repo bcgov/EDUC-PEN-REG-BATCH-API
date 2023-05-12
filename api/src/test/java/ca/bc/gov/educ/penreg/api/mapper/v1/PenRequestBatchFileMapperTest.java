@@ -1,14 +1,13 @@
 package ca.bc.gov.educ.penreg.api.mapper.v1;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.batch.mappers.PenRequestBatchFileMapper;
 import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
-import org.junit.Test;
-
 import java.io.IOException;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 public class PenRequestBatchFileMapperTest extends BasePenRegAPITest {
 

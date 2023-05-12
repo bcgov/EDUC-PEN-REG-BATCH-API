@@ -5,15 +5,14 @@ import ca.bc.gov.educ.penreg.api.mappers.UUIDMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.struct.v1.PENWebBlob;
 import ca.bc.gov.educ.penreg.api.struct.v1.PENWebBlobMetadata;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
+import org.mapstruct.factory.Mappers;
 
 /**
  * The interface Pen web blob mapper.

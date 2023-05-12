@@ -1,18 +1,17 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentInfoRequestMacroEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentInfoRequestMacroRepository;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static lombok.AccessLevel.PRIVATE;
 
 @Service
 public class PenRequestBatchStudentInfoRequestMacroService {

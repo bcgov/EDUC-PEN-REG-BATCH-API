@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.orchestrator.base;
 
 import ca.bc.gov.educ.penreg.api.struct.Event;
-
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 

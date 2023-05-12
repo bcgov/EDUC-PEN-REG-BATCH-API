@@ -1,12 +1,11 @@
 package ca.bc.gov.educ.penreg.api.filter;
 
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import java.time.chrono.ChronoLocalDate;
 import java.time.chrono.ChronoLocalDateTime;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 /**
  * The type Pen reg batch filter specs.

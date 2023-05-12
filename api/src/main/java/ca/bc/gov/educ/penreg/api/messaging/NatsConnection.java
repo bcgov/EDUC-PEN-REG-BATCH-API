@@ -5,16 +5,15 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import io.nats.client.Connection;
 import io.nats.client.ConnectionListener;
 import io.nats.client.Nats;
+import java.io.Closeable;
+import java.io.IOException;
+import java.time.Duration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.threads.EnhancedQueueExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
-
-import java.io.Closeable;
-import java.io.IOException;
-import java.time.Duration;
 
 /**
  * The type Nats connection.

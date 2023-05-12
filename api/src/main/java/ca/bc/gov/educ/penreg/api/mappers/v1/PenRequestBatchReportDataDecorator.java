@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.mappers.v1;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
-import ca.bc.gov.educ.penreg.api.constants.StudentDemogCode;
 import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.BasePenRequestBatchReturnFilesSagaData;
@@ -10,16 +9,19 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportListItem;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportUserMatchedListItem;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class PenRequestBatchReportDataDecorator implements PenRequestBatchReportDataMapper {

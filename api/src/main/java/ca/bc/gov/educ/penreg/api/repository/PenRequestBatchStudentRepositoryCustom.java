@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.repository;
 
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestIDs;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;

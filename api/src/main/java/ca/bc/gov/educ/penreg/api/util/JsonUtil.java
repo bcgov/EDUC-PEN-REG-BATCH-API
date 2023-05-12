@@ -2,10 +2,9 @@ package ca.bc.gov.educ.penreg.api.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.IOException;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The type Json util.

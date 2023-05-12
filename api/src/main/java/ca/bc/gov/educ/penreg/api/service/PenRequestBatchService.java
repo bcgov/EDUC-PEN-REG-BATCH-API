@@ -1,5 +1,10 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.VALIDATION_SUCCESS_WITH_ERROR;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.VALIDATION_SUCCESS_WITH_ONLY_WARNING;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REARCHIVED;
+import static lombok.AccessLevel.PRIVATE;
+
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
@@ -17,7 +22,11 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepositoryCust
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.interfaces.PenMatchResultProcessingService;
-import ca.bc.gov.educ.penreg.api.struct.*;
+import ca.bc.gov.educ.penreg.api.struct.Event;
+import ca.bc.gov.educ.penreg.api.struct.PenMatchResult;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
+import ca.bc.gov.educ.penreg.api.struct.PenRequestValidationIssue;
+import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStat;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestIDs;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestPenMatchProcessingPayload;
@@ -27,6 +36,15 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityNotFoundException;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -46,21 +64,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.EntityNotFoundException;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.VALIDATION_SUCCESS_WITH_ERROR;
-import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.VALIDATION_SUCCESS_WITH_ONLY_WARNING;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REARCHIVED;
-import static lombok.AccessLevel.PRIVATE;
 
 /**
  * The type Pen reg batch service.

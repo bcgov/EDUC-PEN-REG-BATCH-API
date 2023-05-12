@@ -3,7 +3,6 @@ package ca.bc.gov.educ.penreg.api.orchestrator;
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchUserActionsSagaData;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-
 import java.util.UUID;
 
 public abstract class BaseOrchestratorTest extends BasePenRegAPITest {

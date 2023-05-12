@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.mappers.v1.external;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
-import ca.bc.gov.educ.penreg.api.constants.StudentDemogCode;
 import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
 import ca.bc.gov.educ.penreg.api.mappers.PenRequestBatchStudentValidationIssueMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
@@ -11,14 +10,13 @@ import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.ListItem;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestBatchSubmissionResult;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.SchoolMinListItem;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 @Slf4j
 public abstract class PenRequestBatchResultDataDecorator implements PenRequestBatchResultDataMapper {

@@ -1,10 +1,9 @@
 package ca.bc.gov.educ.penreg.api.support;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.springframework.boot.test.context.TestConfiguration;
 import redis.embedded.RedisServer;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
 @TestConfiguration
 public class TestRedisConfiguration {

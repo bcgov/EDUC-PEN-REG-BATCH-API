@@ -1,5 +1,8 @@
 package ca.bc.gov.educ.penreg.api.batch.service;
 
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes.FLAT_FILE;
+import static lombok.AccessLevel.PRIVATE;
+
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
@@ -9,6 +12,9 @@ import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentService;
 import com.google.common.base.Stopwatch;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -19,13 +25,6 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes.FLAT_FILE;
-import static lombok.AccessLevel.PRIVATE;
 
 /**
  * The type Pen request batch file service.

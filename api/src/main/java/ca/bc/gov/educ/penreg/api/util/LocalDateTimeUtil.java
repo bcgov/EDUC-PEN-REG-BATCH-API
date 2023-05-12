@@ -1,12 +1,14 @@
 package ca.bc.gov.educ.penreg.api.util;
 
+import static java.time.temporal.ChronoField.DAY_OF_MONTH;
+import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
+import static java.time.temporal.ChronoField.YEAR;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.SignStyle;
 import java.util.Optional;
-
-import static java.time.temporal.ChronoField.*;
 
 /**
  * The type Local date time util.

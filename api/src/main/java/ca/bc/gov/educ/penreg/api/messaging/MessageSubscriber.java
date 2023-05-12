@@ -1,5 +1,7 @@
 package ca.bc.gov.educ.penreg.api.messaging;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import ca.bc.gov.educ.penreg.api.helpers.LogHelper;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.EventHandler;
 import ca.bc.gov.educ.penreg.api.struct.Event;
@@ -7,16 +9,13 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import io.nats.client.Connection;
 import io.nats.client.Message;
 import io.nats.client.MessageHandler;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static lombok.AccessLevel.PRIVATE;
 
 @Component
 @Slf4j

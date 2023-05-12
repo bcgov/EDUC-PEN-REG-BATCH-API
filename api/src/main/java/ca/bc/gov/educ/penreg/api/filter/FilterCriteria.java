@@ -1,13 +1,12 @@
 package ca.bc.gov.educ.penreg.api.filter;
 
-import org.apache.commons.lang3.StringUtils;
-
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Filter Criteria Holder
