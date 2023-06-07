@@ -44,12 +44,12 @@ jobs:
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
-      #- name: Run Sonar Analysis
-       # run: mvn -f pom.xml sonar:sonar
-        #  -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-         # -Dsonar.host.url=https://sonarcloud.io
-          #-Dsonar.organization=bcgov-sonarcloud
-          #-Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+      - name: Run Sonar Analysis
+        run: mvn -f pom.xml sonar:sonar
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.organization=bcgov-sonarcloud
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: Run Trivy vulnerability scanner in repo mode
