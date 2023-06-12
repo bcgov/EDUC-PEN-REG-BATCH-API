@@ -1,5 +1,8 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
+import static lombok.AccessLevel.PRIVATE;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchProcessTypeCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
@@ -36,6 +39,13 @@ import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestResult;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -48,14 +58,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
-import static lombok.AccessLevel.PRIVATE;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 
 /**

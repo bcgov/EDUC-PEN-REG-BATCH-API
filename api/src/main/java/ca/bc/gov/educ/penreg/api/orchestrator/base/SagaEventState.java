@@ -2,12 +2,11 @@ package ca.bc.gov.educ.penreg.api.orchestrator.base;
 
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
+import java.util.function.Predicate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.function.Predicate;
 
 /**
  * The type Saga event state.

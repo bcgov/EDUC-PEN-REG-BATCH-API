@@ -1,5 +1,7 @@
 package ca.bc.gov.educ.penreg.api.schedulers;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import ca.bc.gov.educ.penreg.api.service.EventTaskSchedulerAsyncService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -9,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import static lombok.AccessLevel.PRIVATE;
 
 /**
  * The type Event task scheduler.

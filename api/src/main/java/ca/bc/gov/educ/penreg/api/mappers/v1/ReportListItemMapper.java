@@ -4,13 +4,12 @@ import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportListItem;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportUserMatchedListItem;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.DecoratedWith;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
-
-import java.util.stream.Stream;
 
 @Mapper
 @DecoratedWith(ReportListItemDecorator.class)

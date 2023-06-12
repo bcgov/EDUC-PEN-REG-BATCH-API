@@ -1,5 +1,17 @@
 package ca.bc.gov.educ.penreg.api.rest;
 
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.NEXT_PEN_NUMBER_RETRIEVED;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_SERVICES_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.mockingDetails;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.openMocks;
+
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
@@ -11,6 +23,9 @@ import ca.bc.gov.educ.penreg.api.support.NatsMessageImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Message;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,19 +38,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-
-import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.NEXT_PEN_NUMBER_RETRIEVED;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_SERVICES_API_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

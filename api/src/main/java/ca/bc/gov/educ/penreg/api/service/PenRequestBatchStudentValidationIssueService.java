@@ -1,9 +1,13 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentValidationIssueEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentValidationIssueRepository;
+import java.util.List;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -11,11 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
-
-import static lombok.AccessLevel.PRIVATE;
 
 /**
  * The type Pen request batch student validation issue service.

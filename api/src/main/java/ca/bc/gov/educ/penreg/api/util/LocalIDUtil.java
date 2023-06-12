@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.util;
 
 import ca.bc.gov.educ.penreg.api.constants.BadLocalID;
-
 import java.util.EnumSet;
 
 

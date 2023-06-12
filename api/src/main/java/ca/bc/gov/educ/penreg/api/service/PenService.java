@@ -1,12 +1,12 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import static lombok.AccessLevel.PRIVATE;
 
 /**
  * The type Pen service.

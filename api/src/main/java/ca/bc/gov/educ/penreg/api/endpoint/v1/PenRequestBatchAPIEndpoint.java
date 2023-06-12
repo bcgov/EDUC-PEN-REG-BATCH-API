@@ -1,5 +1,7 @@
 package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
+import static org.springframework.http.HttpStatus.CREATED;
+
 import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStats;
 import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequest;
@@ -15,6 +17,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,12 +27,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-
-import static org.springframework.http.HttpStatus.CREATED;
 
 /**
  * The interface Pen reg api endpoint.

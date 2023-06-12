@@ -1,6 +1,7 @@
 package ca.bc.gov.educ.penreg.api.health;
 
 import io.nats.client.Connection;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.redisson.api.RedissonClient;
@@ -9,8 +10,6 @@ import org.redisson.api.redisnode.RedisNodes;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j

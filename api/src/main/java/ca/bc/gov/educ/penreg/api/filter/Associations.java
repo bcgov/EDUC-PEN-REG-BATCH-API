@@ -1,9 +1,8 @@
 package ca.bc.gov.educ.penreg.api.filter;
 
-import lombok.Getter;
-
-import javax.persistence.criteria.Join;
+import jakarta.persistence.criteria.Join;
 import java.util.*;
+import lombok.Getter;
 
 /**
  * The type Associations.

@@ -1,9 +1,8 @@
 package ca.bc.gov.educ.penreg.api.constants;
 
-import lombok.Getter;
-
 import java.util.HashMap;
 import java.util.Map;
+import lombok.Getter;
 
 /**
  * The enum Pen request batch student status codes.

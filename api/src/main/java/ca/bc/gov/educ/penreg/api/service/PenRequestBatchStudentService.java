@@ -1,5 +1,16 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.ERROR;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.INFOREQ;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.LOADED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.SYS_MATCHED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.SYS_NEW_PEN;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_MATCHED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
+import static java.util.stream.Collectors.toList;
+import static lombok.AccessLevel.PRIVATE;
+
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
@@ -13,6 +24,12 @@ import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentStatusCodeRepository;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -33,17 +50,6 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
-import java.util.concurrent.TimeUnit;
-
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.*;
-import static java.util.stream.Collectors.toList;
-import static lombok.AccessLevel.PRIVATE;
 
 /**
  * The type Pen request batch student service.

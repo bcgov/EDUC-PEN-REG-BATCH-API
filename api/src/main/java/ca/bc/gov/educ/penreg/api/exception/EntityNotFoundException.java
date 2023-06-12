@@ -1,11 +1,10 @@
 package ca.bc.gov.educ.penreg.api.exception;
 
-import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.IntStream;
+import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * EntityNotFoundException to provide more details in error description

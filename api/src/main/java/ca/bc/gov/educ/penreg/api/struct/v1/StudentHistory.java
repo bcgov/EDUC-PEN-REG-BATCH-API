@@ -2,11 +2,10 @@ package ca.bc.gov.educ.penreg.api.struct.v1;
 
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.io.Serializable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 

@@ -1,9 +1,8 @@
 package ca.bc.gov.educ.penreg.api.batch.struct;
 
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Data;
 
 /**
  * The type Batch file.

@@ -1,8 +1,7 @@
 package ca.bc.gov.educ.penreg.api.mappers;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.UUID;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * The type Uuid mapper.

@@ -1,8 +1,12 @@
 package ca.bc.gov.educ.penreg.api.batch.schedulers;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import ca.bc.gov.educ.penreg.api.batch.processor.PenRegBatchProcessor;
 import ca.bc.gov.educ.penreg.api.batch.service.PenRequestBatchFileService;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -14,11 +18,6 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static lombok.AccessLevel.PRIVATE;
 
 
 /**

@@ -1,12 +1,11 @@
 package ca.bc.gov.educ.penreg.api.struct;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import java.util.List;
 
 /**
  * The type Pen request batch student unmatch saga data.

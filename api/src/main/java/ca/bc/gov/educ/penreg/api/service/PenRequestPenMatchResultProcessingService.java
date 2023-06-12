@@ -1,6 +1,10 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.constants.*;
+import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
+import ca.bc.gov.educ.penreg.api.constants.EventType;
+import ca.bc.gov.educ.penreg.api.constants.MatchAlgorithmStatusCode;
+import ca.bc.gov.educ.penreg.api.constants.SchoolTypeCode;
+import ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.Event;
@@ -10,6 +14,9 @@ import ca.bc.gov.educ.penreg.api.struct.v1.external.PenRequestResult;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import ca.bc.gov.educ.penreg.api.util.LocalIDUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -18,10 +25,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.UUID;
 
 /**
  * this is MyEd specific implementation.

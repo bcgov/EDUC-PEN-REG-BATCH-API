@@ -1,12 +1,11 @@
 package ca.bc.gov.educ.penreg.api.struct;
 
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStat;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 @Data
 @AllArgsConstructor

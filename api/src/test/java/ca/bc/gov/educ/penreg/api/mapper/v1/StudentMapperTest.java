@@ -1,14 +1,13 @@
 package ca.bc.gov.educ.penreg.api.mapper.v1;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.mappers.StudentMapper;
 import ca.bc.gov.educ.penreg.api.struct.BasePenRequestBatchStudentSagaData;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 public class StudentMapperTest extends BasePenRegAPITest {
 

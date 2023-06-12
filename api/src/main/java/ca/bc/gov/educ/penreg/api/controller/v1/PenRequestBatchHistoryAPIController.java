@@ -1,5 +1,7 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchHistoryAPIEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.InvalidParameterException;
 import ca.bc.gov.educ.penreg.api.filter.Associations;
@@ -7,10 +9,14 @@ import ca.bc.gov.educ.penreg.api.filter.PenRegBatchHistoryFilterSpecs;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchHistoryMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchHistoryService;
-import ca.bc.gov.educ.penreg.api.struct.v1.*;
+import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchHistorySearch;
+import ca.bc.gov.educ.penreg.api.struct.v1.Search;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,12 +25,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
-import static lombok.AccessLevel.PRIVATE;
 
 
 /**

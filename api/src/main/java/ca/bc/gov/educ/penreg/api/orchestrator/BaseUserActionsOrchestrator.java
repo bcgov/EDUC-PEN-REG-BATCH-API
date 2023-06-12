@@ -1,5 +1,8 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
+import static ca.bc.gov.educ.penreg.api.constants.EventType.UPDATE_PEN_REQUEST_BATCH_STUDENT;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
+
 import ca.bc.gov.educ.penreg.api.mappers.StudentMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
@@ -13,9 +16,6 @@ import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
-
-import static ca.bc.gov.educ.penreg.api.constants.EventType.UPDATE_PEN_REQUEST_BATCH_STUDENT;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
 
 /**
  * The type Base user actions orchestrator.

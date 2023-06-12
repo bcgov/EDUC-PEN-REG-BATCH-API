@@ -1,5 +1,8 @@
 package ca.bc.gov.educ.penreg.api.controller.v1;
 
+import static lombok.AccessLevel.PRIVATE;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+
 import ca.bc.gov.educ.penreg.api.endpoint.v1.PenRequestBatchStudentInfoRequestMacroEndpoint;
 import ca.bc.gov.educ.penreg.api.exception.EntityNotFoundException;
 import ca.bc.gov.educ.penreg.api.exception.InvalidPayloadException;
@@ -9,19 +12,15 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentInfoRequestMacro
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentInfoRequestMacroService;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentInfoRequestMacro;
 import ca.bc.gov.educ.penreg.api.validator.PenRequestBatchStudentInfoRequestMacroPayloadValidator;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static lombok.AccessLevel.PRIVATE;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @RestController
 @Slf4j

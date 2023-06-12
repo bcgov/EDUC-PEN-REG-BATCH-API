@@ -1,5 +1,14 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.INFOREQ;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.REPEAT;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.SYS_MATCHED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_MATCHED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.USR_NEW_PEN;
+import static java.util.stream.Collectors.joining;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
@@ -7,19 +16,14 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import static java.util.stream.Collectors.joining;
-
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.*;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * The type Message publisher test.

@@ -1,17 +1,16 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import static lombok.AccessLevel.PROTECTED;
+
 import ca.bc.gov.educ.penreg.api.constants.MatchAlgorithmStatusCode;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentValidationIssueEntity;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.interfaces.PenMatchResultProcessingService;
 import ca.bc.gov.educ.penreg.api.struct.PenRequestValidationIssue;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.List;
 import java.util.Set;
-
-import static lombok.AccessLevel.PROTECTED;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class BasePenMatchResultProcessingService<T, R> implements PenMatchResultProcessingService<T, R> {

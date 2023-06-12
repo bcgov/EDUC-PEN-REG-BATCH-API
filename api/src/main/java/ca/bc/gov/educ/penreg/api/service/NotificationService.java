@@ -1,23 +1,22 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PROFILE_REQUEST_EMAIL_API_TOPIC;
+
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.v1.notification.PenRequestBatchSchoolErrorNotificationEntity;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.stereotype.Service;
-
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.TextStyle;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PROFILE_REQUEST_EMAIL_API_TOPIC;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.stereotype.Service;
 
 /**
  * This class is responsible for different type of notification to be sent out from batch api.

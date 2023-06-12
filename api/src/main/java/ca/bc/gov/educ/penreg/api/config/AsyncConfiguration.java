@@ -2,15 +2,14 @@ package ca.bc.gov.educ.penreg.api.config;
 
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.util.ThreadFactoryBuilder;
+import java.time.Duration;
+import java.util.concurrent.Executor;
 import org.jboss.threads.EnhancedQueueExecutor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableAsync;
-
-import java.time.Duration;
-import java.util.concurrent.Executor;
 
 @Configuration
 @EnableAsync

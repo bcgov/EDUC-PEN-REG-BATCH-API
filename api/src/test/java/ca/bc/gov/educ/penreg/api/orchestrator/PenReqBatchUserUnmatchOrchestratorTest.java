@@ -1,6 +1,28 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
-import ca.bc.gov.educ.penreg.api.compare.auditHistoryComparator;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_HISTORY_FOUND;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_UPDATED;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.DELETE_POSSIBLE_MATCH;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.GET_STUDENT_HISTORY;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.INITIATED;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.UPDATE_PEN_REQUEST_BATCH_STUDENT;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.UPDATE_STUDENT;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_UNMATCH_PROCESSING_SAGA;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_MATCH_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_MATCH;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_NEW;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_UNMATCH;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.USER_NEW;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.mockingDetails;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
@@ -18,33 +40,18 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.TimeoutException;
-
-import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_HISTORY_FOUND;
-import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.STUDENT_UPDATED;
-import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_USER_UNMATCH_PROCESSING_SAGA;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_MATCH_API_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_API_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 public class PenReqBatchUserUnmatchOrchestratorTest extends BaseOrchestratorTest {
 

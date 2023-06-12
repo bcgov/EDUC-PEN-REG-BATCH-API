@@ -1,9 +1,8 @@
 package ca.bc.gov.educ.penreg.api.struct.v1.external;
 
 import ca.bc.gov.educ.penreg.api.struct.PenRequestValidationIssue;
-import lombok.Data;
-
 import java.util.List;
+import lombok.Data;
 
 @Data
 public class ListItem {

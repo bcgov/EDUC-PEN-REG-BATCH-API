@@ -1,16 +1,15 @@
 package ca.bc.gov.educ.penreg.api.endpoint.v1;
 
+import static org.springframework.http.HttpStatus.CREATED;
+
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentInfoRequestMacro;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import java.util.List;
+import java.util.UUID;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
-
-import static org.springframework.http.HttpStatus.CREATED;
 
 @RequestMapping("/api/v1/pen-request-batch-macro")
 public interface PenRequestBatchStudentInfoRequestMacroEndpoint {

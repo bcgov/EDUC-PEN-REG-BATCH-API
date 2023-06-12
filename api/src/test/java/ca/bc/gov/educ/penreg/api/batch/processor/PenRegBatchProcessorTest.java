@@ -1,9 +1,20 @@
 package ca.bc.gov.educ.penreg.api.batch.processor;
 
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.HOLD_FOR_REVIEW;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOAD_FAIL;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.REPEATS_CHECKED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.DUPLICATE;
+import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.K12;
+import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.PSI;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.compare.PenRequestBatchHistoryComparator;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
-import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
@@ -14,7 +25,6 @@ import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
-import ca.bc.gov.educ.penreg.api.struct.v1.SchoolGroupCode;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.github.javafaker.Faker;
@@ -24,12 +34,6 @@ import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsJetStreamMetaData;
 import io.nats.client.support.Status;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,16 +44,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.*;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.DUPLICATE;
-import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.K12;
-import static ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes.PSI;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * The type Pen reg batch processor test.

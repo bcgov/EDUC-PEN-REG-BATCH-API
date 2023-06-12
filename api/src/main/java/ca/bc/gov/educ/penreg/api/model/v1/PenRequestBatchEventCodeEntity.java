@@ -1,11 +1,14 @@
 package ca.bc.gov.educ.penreg.api.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.Data;
 import org.hibernate.annotations.DynamicUpdate;
-
-import javax.persistence.*;
-import java.time.LocalDateTime;
 
 /**
  * The type Pen request batch event code entity.

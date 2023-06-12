@@ -1,12 +1,15 @@
 package ca.bc.gov.educ.penreg.api.model.v1;
 
-import lombok.Data;
-import org.hibernate.annotations.GenericGenerator;
-
-import javax.persistence.*;
-import javax.validation.constraints.PastOrPresent;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.PastOrPresent;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.Data;
+import org.hibernate.annotations.GenericGenerator;
 
 @Data
 @Entity

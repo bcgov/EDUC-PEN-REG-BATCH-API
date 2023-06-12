@@ -1,5 +1,8 @@
 package ca.bc.gov.educ.penreg.api.schedulers;
 
+import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.constants.EventStatus;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEvent;
@@ -8,15 +11,10 @@ import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
-import org.junit.After;
+import java.time.LocalDateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.time.LocalDateTime;
-
-import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.COMPLETED;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class PurgeOldSagaRecordsSchedulerTest extends BasePenRegAPITest {
 

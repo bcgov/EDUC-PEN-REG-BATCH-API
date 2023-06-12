@@ -1,5 +1,12 @@
 package ca.bc.gov.educ.penreg.api.batch.validator;
 
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.HELD_BACK_FOR_SFAS;
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.HELD_BACK_FOR_SIZE;
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.INVALID_MINCODE_HEADER;
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.INVALID_MINCODE_SCHOOL_CLOSED;
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.INVALID_ROW_LENGTH;
+import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.STUDENT_COUNT_MISMATCH;
+
 import ca.bc.gov.educ.penreg.api.batch.exception.FileError;
 import ca.bc.gov.educ.penreg.api.batch.exception.FileUnProcessableException;
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
@@ -7,6 +14,10 @@ import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.flatpack.DataError;
 import net.sf.flatpack.DataSet;
@@ -14,13 +25,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.util.Optional;
-
-import static ca.bc.gov.educ.penreg.api.batch.exception.FileError.*;
 
 /**
  * this class is responsible to validate the batch file that was uploaded.

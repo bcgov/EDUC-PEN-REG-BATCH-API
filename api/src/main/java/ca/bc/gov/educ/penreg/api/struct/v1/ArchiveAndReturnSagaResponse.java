@@ -1,12 +1,11 @@
 package ca.bc.gov.educ.penreg.api.struct.v1;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
 
 @Data
 @Builder

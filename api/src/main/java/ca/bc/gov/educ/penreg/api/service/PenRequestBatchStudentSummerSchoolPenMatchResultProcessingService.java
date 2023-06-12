@@ -10,11 +10,10 @@ import ca.bc.gov.educ.penreg.api.struct.PenRequestBatchStudentSagaData;
 import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.BatchStudentPenMatchProcessingPayload;
 import ca.bc.gov.educ.penreg.api.util.LocalIDUtil;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 /**
  * The type Pen request batch student pen match result processing service.

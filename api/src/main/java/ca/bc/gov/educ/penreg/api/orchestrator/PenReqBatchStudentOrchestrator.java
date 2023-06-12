@@ -1,5 +1,19 @@
 package ca.bc.gov.educ.penreg.api.orchestrator;
 
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_MATCH_PROCESSED;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_MATCH_RESULTS_PROCESSED;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.VALIDATION_SUCCESS_NO_ERROR_WARNING;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.VALIDATION_SUCCESS_WITH_ERROR;
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.VALIDATION_SUCCESS_WITH_ONLY_WARNING;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.PROCESS_PEN_MATCH;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.PROCESS_PEN_MATCH_RESULTS;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.VALIDATE_STUDENT_DEMOGRAPHICS;
+import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_MATCH_API_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_TOPIC;
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_SERVICES_API_TOPIC;
+import static lombok.AccessLevel.PRIVATE;
+
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
 import ca.bc.gov.educ.penreg.api.mappers.PenMatchSagaMapper;
 import ca.bc.gov.educ.penreg.api.mappers.PenStudentDemogValidationMapper;
@@ -18,23 +32,16 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-
-import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.*;
-import static ca.bc.gov.educ.penreg.api.constants.EventType.*;
-import static ca.bc.gov.educ.penreg.api.constants.SagaEnum.PEN_REQUEST_BATCH_STUDENT_PROCESSING_SAGA;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
-import static lombok.AccessLevel.PRIVATE;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * The type Pen req batch student orchestrator.

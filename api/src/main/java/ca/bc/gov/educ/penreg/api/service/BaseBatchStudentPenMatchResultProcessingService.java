@@ -1,5 +1,13 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_MATCH_RESULTS_PROCESSED;
+import static ca.bc.gov.educ.penreg.api.constants.EventType.PROCESS_PEN_MATCH_RESULTS;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.FIXABLE;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.SYS_MATCHED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.SYS_NEW_PEN;
+import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_NEW;
+import static lombok.AccessLevel.PRIVATE;
+
 import ca.bc.gov.educ.penreg.api.constants.MatchAlgorithmStatusCode;
 import ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode;
 import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
@@ -16,21 +24,14 @@ import ca.bc.gov.educ.penreg.api.struct.v1.BatchStudentPenMatchProcessingPayload
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import ca.bc.gov.educ.penreg.api.util.LocalIDUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.UUID;
-
-import static ca.bc.gov.educ.penreg.api.constants.EventOutcome.PEN_MATCH_RESULTS_PROCESSED;
-import static ca.bc.gov.educ.penreg.api.constants.EventType.PROCESS_PEN_MATCH_RESULTS;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes.*;
-import static ca.bc.gov.educ.penreg.api.constants.StudentHistoryActivityCode.REQ_NEW;
-import static lombok.AccessLevel.PRIVATE;
 
 @Slf4j
 public abstract class BaseBatchStudentPenMatchResultProcessingService extends BasePenMatchResultProcessingService<BatchStudentPenMatchProcessingPayload, Optional<Event>> {

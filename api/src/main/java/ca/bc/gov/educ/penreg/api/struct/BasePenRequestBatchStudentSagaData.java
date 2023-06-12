@@ -1,12 +1,11 @@
 package ca.bc.gov.educ.penreg.api.struct;
 
+import jakarta.validation.constraints.NotNull;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import javax.validation.constraints.NotNull;
-import java.util.UUID;
 
 /**
  * The base pen request batch saga data.

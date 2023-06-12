@@ -1,10 +1,9 @@
 package ca.bc.gov.educ.penreg.api.model.v1;
 
+import jakarta.persistence.*;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
-
-import javax.persistence.*;
-import java.util.UUID;
 
 /**
  * The type Pen request batch student validation issue entity.

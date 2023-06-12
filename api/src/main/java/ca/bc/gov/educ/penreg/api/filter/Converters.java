@@ -1,8 +1,6 @@
 package ca.bc.gov.educ.penreg.api.filter;
 
-import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.chrono.ChronoLocalDate;
@@ -11,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import org.springframework.stereotype.Service;
 
 /**
  * The type Converters.

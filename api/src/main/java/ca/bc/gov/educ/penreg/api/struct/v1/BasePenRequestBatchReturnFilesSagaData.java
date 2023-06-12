@@ -2,14 +2,13 @@ package ca.bc.gov.educ.penreg.api.struct.v1;
 
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
-import lombok.extern.slf4j.Slf4j;
-
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 
 @Data
 @SuperBuilder

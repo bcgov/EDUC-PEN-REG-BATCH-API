@@ -1,7 +1,6 @@
 package ca.bc.gov.educ.penreg.api.filter;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-
 import java.util.Optional;
 
 /**

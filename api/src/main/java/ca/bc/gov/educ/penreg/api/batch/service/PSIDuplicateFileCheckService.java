@@ -4,13 +4,12 @@ import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import com.google.common.base.Stopwatch;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.stereotype.Service;
 
 /**
  * this class is responsible to mark the file duplicate based on below.

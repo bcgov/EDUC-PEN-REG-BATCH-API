@@ -1,14 +1,13 @@
 package ca.bc.gov.educ.penreg.api.properties;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.time.Duration;
+import java.util.concurrent.Executor;
 import lombok.Getter;
 import lombok.Setter;
 import org.jboss.threads.EnhancedQueueExecutor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import java.time.Duration;
-import java.util.concurrent.Executor;
 
 /**
  * Class holds all application properties

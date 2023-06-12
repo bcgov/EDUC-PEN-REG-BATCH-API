@@ -1,5 +1,8 @@
 package ca.bc.gov.educ.penreg.api.batch.mappers;
 
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
+import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchTypeCode.SCHOOL;
+
 import ca.bc.gov.educ.penreg.api.batch.struct.BatchFile;
 import ca.bc.gov.educ.penreg.api.batch.struct.StudentDetails;
 import ca.bc.gov.educ.penreg.api.constants.MinistryPRBSourceCodes;
@@ -8,13 +11,9 @@ import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
+import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-
-import java.time.LocalDateTime;
-
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStatusCodes.LOADED;
-import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchTypeCode.SCHOOL;
 
 /**
  * The type Pen request batch file decorator.

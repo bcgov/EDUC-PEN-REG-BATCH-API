@@ -11,12 +11,11 @@ import ca.bc.gov.educ.penreg.api.struct.v1.ValueType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-
-import java.util.List;
-import java.util.Map;
 
 public class PaginatedController {
   /**

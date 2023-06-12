@@ -1,12 +1,10 @@
 package ca.bc.gov.educ.penreg.api.filter;
 
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
-import org.springframework.data.jpa.domain.Specification;
-
 import java.time.chrono.ChronoLocalDate;
 import java.time.chrono.ChronoLocalDateTime;
 import java.util.UUID;
 import java.util.function.Function;
+import org.springframework.data.jpa.domain.Specification;
 
 /**
  * this is the generic class to support all kind of filter specifications for different entities
