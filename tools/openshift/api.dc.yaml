@@ -35,11 +35,11 @@ objects:
         - image: image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/${REPO_NAME}-${BRANCH}:${TAG}
           imagePullPolicy: Always
           volumeMounts:
-            - name: tls-certs
-              mountPath: "/etc/tls-certs"
-              readOnly: true
-            - name: log-storage
-              mountPath: /logs
+          - name: tls-certs
+            mountPath: "/etc/tls-certs"
+            readOnly: true
+          - name: log-storage
+            mountPath: /logs
           readinessProbe:
             tcpSocket:
               port: 8080
