@@ -2,9 +2,9 @@
 apiVersion: template.openshift.io/v1
 kind: Template
 labels:
-    template: "${REPO_NAME}-template"
+  template: "${REPO_NAME}-template"
 metadata:
-    name: "${REPO_NAME}-${BRANCH}-dc"
+  name: "${REPO_NAME}-${BRANCH}-dc"
 objects:
 - apiVersion: v1
   kind: DeploymentConfig
@@ -35,11 +35,11 @@ objects:
         - image: image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/${REPO_NAME}-${BRANCH}:${TAG}
           imagePullPolicy: Always
           volumeMounts:
-          - name: tls-certs
-            mountPath: "/etc/tls-certs"
-            readOnly: true
-          - name: log-storage
-            mountPath: /logs
+            - name: tls-certs
+              mountPath: "/etc/tls-certs"
+              readOnly: true
+            - name: log-storage
+              mountPath: /logs
           readinessProbe:
             tcpSocket:
               port: 8080
@@ -68,9 +68,11 @@ objects:
             limits:
               cpu: "${MAX_CPU}"
               memory: "${MAX_MEM}"
-        - image: fluent/fluent-bit
+        - image: artifacts.developer.gov.bc.ca/docker-remote/fluent/fluent-bit:1.5.7
           name: "${APP_NAME}-${BRANCH}-fluent-bit-sidecar"
           imagePullPolicy: Always
+          imagePullSecrets:
+            - name: artifactory-creds
           volumeMounts:
             - name: log-storage
               mountPath: /mnt/log
@@ -164,9 +166,6 @@ parameters:
 - name: APP_NAME
   description: Application name
   required: true
-- name: HOST_ROUTE
-  description: The host the route will use to expose service outside cluster
-  required: true
 - name: CONTAINER_PORT
   description: The port on which the application will be accessible
   value: "8080"
@@ -174,10 +173,6 @@ parameters:
 - name: TAG
   description: The identifying tag for this specific deployment
   required: true
-- name: HOST_PATH
-  description: The path appended to the HOST_ROUTE where the root of this project will be served
-  value: "/"
-  required: false
 - name: MIN_REPLICAS
   description: The minimum amount of replicas
   required: true
