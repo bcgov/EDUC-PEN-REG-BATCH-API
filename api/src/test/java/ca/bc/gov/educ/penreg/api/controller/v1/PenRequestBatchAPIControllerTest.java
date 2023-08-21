@@ -140,6 +140,16 @@ public class PenRequestBatchAPIControllerTest extends BasePenRegAPITest {
     this.mockMvc.perform(asyncDispatch(result)).andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(0)));
   }
 
+  @Test
+  public void testReadPenRequestBatchPaginated_WithoutScope_ShouldReturnStatusForbidden() throws Exception {
+    this.mockMvc
+        .perform(get("/api/v1/pen-request-batch/paginated")
+            .with(jwt().jwt((jwt) -> jwt.claim("scope", "WRONG_SCOPE")))
+            .contentType(APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isForbidden());
+  }
+
   /**
    * Test read pen request batch paginated given fixable count filter without data should return status ok.
    *
