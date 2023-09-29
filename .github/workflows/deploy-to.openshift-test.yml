@@ -31,7 +31,7 @@ env:
   BRANCH: "master"
   NAMESPACE: ${{ secrets.PEN_NAMESPACE_NO_ENV }}
   COMMON_NAMESPACE: ${{ secrets.COMMON_NAMESPACE_NO_ENV }}
-  TAG: "latest"
+  TAG: ${{ github.event.inputs.tag }}
   MIN_REPLICAS_TEST: "2"
   MAX_REPLICAS_TEST: "2"
   MIN_CPU: "250m"
@@ -41,6 +41,12 @@ env:
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Please input the tag, latest or release ex. 1.2.3'
+        type: string
+        required: true
+        default: "latest"
 
 jobs:
   deploy-test:
