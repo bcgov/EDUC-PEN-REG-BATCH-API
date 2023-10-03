@@ -25,14 +25,14 @@
     <shedlock.version>4.20.0</shedlock.version>
     <springdoc.version>1.6.15</springdoc.version>
     <nats.version>2.11.0</nats.version>
-    <ojdbc.version>21.11.0.0</ojdbc.version>
+    <ojdbc.version>21.3.0.0</ojdbc.version>
     <guava.version>30.1.1-jre</guava.version>
     <embedded-redis.version>0.7.3</embedded-redis.version>
     <flatpack.version>4.0.4</flatpack.version>
     <faker.varion>0.15</faker.varion>
     <awaitility.version>4.0.3</awaitility.version>
     <awaitility-proxy.version>3.1.6</awaitility-proxy.version>
-    <redisson.version>3.21.1</redisson.version>
+    <redisson.version>3.23.5</redisson.version>
     <log4j.version>2.17.1</log4j.version>
   </properties>
 
