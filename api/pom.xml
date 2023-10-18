@@ -24,7 +24,7 @@
     <org.mapstruct.version>1.5.3.Final</org.mapstruct.version>
     <shedlock.version>4.20.0</shedlock.version>
     <springdoc.version>1.6.15</springdoc.version>
-    <nats.version>2.11.0</nats.version>
+    <nats.version>2.12.0</nats.version>
     <ojdbc.version>21.4.0.0</ojdbc.version>
     <guava.version>30.1.1-jre</guava.version>
     <embedded-redis.version>0.7.3</embedded-redis.version>
