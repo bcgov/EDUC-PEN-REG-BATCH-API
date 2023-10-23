@@ -1,8 +1,12 @@
 envValue=$1
 APP_NAME=$2
-PEN_NAMESPACE=$3
+OPENSHIFT_NAMESPACE=$3
 COMMON_NAMESPACE=$4
-APP_NAME_UPPER=${APP_NAME^^}
+DB_JDBC_CONNECT_STRING=$5
+DB_PWD=$6
+DB_USER=$7
+SPLUNK_TOKEN=$8
+
 TZVALUE="America/Vancouver"
 SOAM_KC_REALM_ID="master"
 SOAM_KC=soam-$envValue.apps.silver.devops.gov.bc.ca
@@ -10,10 +14,6 @@ SOAM_KC=soam-$envValue.apps.silver.devops.gov.bc.ca
 SOAM_KC_LOAD_USER_ADMIN=$(oc -n $COMMON_NAMESPACE-$envValue -o json get secret sso-admin-${envValue} | sed -n 's/.*"username": "\(.*\)"/\1/p' | base64 --decode)
 SOAM_KC_LOAD_USER_PASS=$(oc -n $COMMON_NAMESPACE-$envValue -o json get secret sso-admin-${envValue} | sed -n 's/.*"password": "\(.*\)",/\1/p' | base64 --decode)
 
-DB_JDBC_CONNECT_STRING=$(oc -n $PEN_NAMESPACE-$envValue -o json get configmaps ${APP_NAME}-${envValue}-setup-config | sed -n 's/.*"DB_JDBC_CONNECT_STRING": "\(.*\)",/\1/p')
-DB_PWD=$(oc -n $PEN_NAMESPACE-$envValue -o json get configmaps ${APP_NAME}-${envValue}-setup-config | sed -n "s/.*\"DB_PWD_${APP_NAME_UPPER}\": \"\(.*\)\",/\1/p")
-DB_USER=$(oc -n $PEN_NAMESPACE-$envValue -o json get configmaps "${APP_NAME}"-"${envValue}"-setup-config | sed -n "s/.*\"DB_USER_${APP_NAME_UPPER}\": \"\(.*\)\",/\1/p")
-SPLUNK_TOKEN=$(oc -n $PEN_NAMESPACE-$envValue -o json get configmaps "${APP_NAME}"-"${envValue}"-setup-config | sed -n "s/.*\"SPLUNK_TOKEN_${APP_NAME_UPPER}\": \"\(.*\)\"/\1/p")
 NATS_CLUSTER=educ_nats_cluster
 NATS_URL="nats://nats.${COMMON_NAMESPACE}-${envValue}.svc.cluster.local:4222"
 
@@ -212,18 +212,14 @@ SCHEDULED_JOBS_PURGE_SOFT_DELETED_RECORDS_CRON="@midnight"
 SCHEDULED_JOBS_PURGE_OLD_SAGA_RECORDS_CRON="@midnight"
 SCHEDULED_JOBS_MARK_PROCESSED_BATCHES_ACTIVE_CRON="0 0/1 * * * *"
 SCHEDULED_JOBS_PROCESS_LOADED_BATCHES_FOR_REPEATS_CRON="0 0/2 * * * *"
-if [ "$envValue" = "tools" ]; then
-  PEN_COORDINATOR_EMAIL=omprakashmishra7234@gmail.com
-  SOFT_DELETED_RETENTION_DAYS=20
-fi
 
 if [ "$envValue" = "dev" ]; then
-  PEN_COORDINATOR_EMAIL=aditya.sharma@gov.bc.ca
+  PEN_COORDINATOR_EMAIL=derek.so@gov.bc.ca
   SOFT_DELETED_RETENTION_DAYS=2
 fi
 
 if [ "$envValue" = "test" ]; then
-  PEN_COORDINATOR_EMAIL=Gurvinder.J.Bhatia@gov.bc.ca
+  PEN_COORDINATOR_EMAIL=derek.so@gov.bc.ca
   SOFT_DELETED_RETENTION_DAYS=2
 fi
 # when it will be time for go live the value of SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON will be set to "0 0/10 18-23,00-05 * * *" so that it runs from 6PM to 6AM
@@ -241,14 +237,14 @@ fi
 
 echo
 echo Creating config map "$APP_NAME"-config-map
-oc create -n "$PEN_NAMESPACE"-"$envValue" configmap "$APP_NAME"-config-map --from-literal=TZ=$TZVALUE --from-literal=JDBC_URL=$DB_JDBC_CONNECT_STRING --from-literal=ORACLE_USERNAME="$DB_USER" --from-literal=ORACLE_PASSWORD="$DB_PWD" --from-literal=SPRING_SECURITY_LOG_LEVEL=INFO --from-literal=SPRING_WEB_LOG_LEVEL=INFO --from-literal=APP_LOG_LEVEL=INFO --from-literal=SPRING_BOOT_AUTOCONFIG_LOG_LEVEL=INFO --from-literal=SPRING_SHOW_REQUEST_DETAILS=false --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON="$SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PENWEB_PEN_WEB_BLOBS_CRON="$SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PENWEB_PEN_WEB_BLOBS_CRON" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON_LOCK_AT_LEAST_FOR="540s" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON_LOCK_AT_MOST_FOR="580s" --from-literal=NATS_URL="$NATS_URL" --from-literal=NATS_CLUSTER="$NATS_CLUSTER" --from-literal=SPRING_JPA_SHOW_SQL="false" --from-literal=SCHEDULED_JOBS_EXTRACT_UNCOMPLETED_SAGAS_CRON="$SCHEDULED_JOBS_EXTRACT_UNCOMPLETED_SAGAS_CRON" --from-literal=SCHEDULED_JOBS_EXTRACT_UNCOMPLETED_SAGAS_CRON_LOCK_AT_LEAST_FOR="55s" --from-literal=SCHEDULED_JOBS_EXTRACT_UNCOMPLETED_SAGAS_CRON_LOCK_AT_MOST_FOR="57s" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_STUDENTS_CRON="$SCHEDULED_JOBS_EXTRACT_UNPROCESSED_STUDENTS_CRON" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_STUDENTS_CRON_LOCK_AT_LEAST_FOR="8s" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_STUDENTS_CRON_LOCK_AT_MOST_FOR="8s" --from-literal=CLIENT_ID="pen-reg-batch-api-service" --from-literal=CLIENT_SECRET="$PRB_APIServiceClientSecret" --from-literal=STUDENT_API_URL="http://student-api-master.$COMMON_NAMESPACE-$envValue.svc.cluster.local:8080/api/v1/student" --from-literal=SCHOOL_API_URL="http://school-api-master.$COMMON_NAMESPACE-$envValue.svc.cluster.local:8080/api/v1/schools" --from-literal=TOKEN_URL="https://$SOAM_KC/auth/realms/$SOAM_KC_REALM_ID/protocol/openid-connect/token" --from-literal=URL_REDIS="redis.$PEN_NAMESPACE-$envValue.svc.cluster.local:6379" --from-literal=REPEAT_TIME_WINDOW_K12=0 --from-literal=REPEAT_TIME_WINDOW_PSI=0 --from-literal=SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=16 --from-literal=SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=16 --from-literal=PEN_SERVICES_API_URL="http://pen-services-api-master.$PEN_NAMESPACE-$envValue.svc.cluster.local:8080" --from-literal=HIBERNATE_SQL_PARAM_LOG_LEVEL=INFO --from-literal=PURGE_RECORDS_SAGA_AFTER_DAYS=365 --from-literal=SCHEDULED_JOBS_PURGE_OLD_SAGA_RECORDS_CRON="$SCHEDULED_JOBS_PURGE_OLD_SAGA_RECORDS_CRON" --from-literal=SOFT_DELETED_RETENTION_DAYS="$SOFT_DELETED_RETENTION_DAYS" --from-literal=SCHEDULED_JOBS_PURGE_SOFT_DELETED_RECORDS_CRON="$SCHEDULED_JOBS_PURGE_SOFT_DELETED_RECORDS_CRON" --from-literal=NATS_MAX_RECONNECT=60 --from-literal=HOLD_BATCHES_EQUAL_OR_LARGER_THAN=2500 --from-literal=PEN_COORDINATOR_EMAIL="$PEN_COORDINATOR_EMAIL" --from-literal=TOKEN_ISSUER_URL="https://$SOAM_KC/auth/realms/$SOAM_KC_REALM_ID" --from-literal=PEN_COORDINATOR_MAILING_ADDRESS="Ministry of Education and Child Care, Data Collection Unit PO Box 9170, Stn. Prov. Govt, Victoria BC, V8W 9H7" --from-literal=PEN_COORDINATOR_TELEPHONE="(250)356-8020" --from-literal=PEN_COORDINATOR_FACSIMILE="(250)953-0450" --from-literal=SCHEDULED_JOBS_MARK_PROCESSED_BATCHES_ACTIVE_CRON="$SCHEDULED_JOBS_MARK_PROCESSED_BATCHES_ACTIVE_CRON" --from-literal=SCHEDULED_JOBS_MARK_PROCESSED_BATCHES_ACTIVE_CRON_LOCK_AT_LEAST_FOR="50s" --from-literal=SCHEDULED_JOBS_MARK_PROCESSED_BATCHES_ACTIVE_LOCK_AT_MOST_FOR="55s" --from-literal=SCHEDULED_JOBS_PROCESS_LOADED_BATCHES_FOR_REPEATS_CRON="$SCHEDULED_JOBS_PROCESS_LOADED_BATCHES_FOR_REPEATS_CRON" --from-literal=SCHEDULED_JOBS_PROCESS_LOADED_BATCHES_FOR_REPEATS_CRON_LOCK_AT_LEAST_FOR="100s" --from-literal=SCHEDULED_JOBS_PROCESS_LOADED_BATCHES_FOR_REPEATS_CRON_LOCK_AT_MOST_FOR="110s" --from-literal=SKIP_VALIDATION_FOR_DISTRICT_CODES="102,104" --from-literal=STUDENT_THRESHOLD_GENERATE_PDF="500" --from-literal=THREADS_MIN_SUBSCRIBER="$THREADS_MIN_SUBSCRIBER" --from-literal=THREADS_MAX_SUBSCRIBER="$THREADS_MAX_SUBSCRIBER" --from-literal=SAGAS_MAX_PENDING="$SAGAS_MAX_PENDING" --from-literal=SAGAS_MAX_PARALLEL="$SAGAS_MAX_PARALLEL" --dry-run -o yaml | oc apply -f -
+oc create -n "$OPENSHIFT_NAMESPACE"-"$envValue" configmap "$APP_NAME"-config-map --from-literal=TZ=$TZVALUE --from-literal=JDBC_URL="$DB_JDBC_CONNECT_STRING" --from-literal=ORACLE_USERNAME="$DB_USER" --from-literal=ORACLE_PASSWORD="$DB_PWD" --from-literal=SPRING_SECURITY_LOG_LEVEL=INFO --from-literal=SPRING_WEB_LOG_LEVEL=INFO --from-literal=APP_LOG_LEVEL=INFO --from-literal=SPRING_BOOT_AUTOCONFIG_LOG_LEVEL=INFO --from-literal=SPRING_SHOW_REQUEST_DETAILS=false --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON="$SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PENWEB_PEN_WEB_BLOBS_CRON="$SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PENWEB_PEN_WEB_BLOBS_CRON" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON_LOCK_AT_LEAST_FOR="540s" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON_LOCK_AT_MOST_FOR="580s" --from-literal=NATS_URL="$NATS_URL" --from-literal=NATS_CLUSTER="$NATS_CLUSTER" --from-literal=SPRING_JPA_SHOW_SQL="false" --from-literal=SCHEDULED_JOBS_EXTRACT_UNCOMPLETED_SAGAS_CRON="$SCHEDULED_JOBS_EXTRACT_UNCOMPLETED_SAGAS_CRON" --from-literal=SCHEDULED_JOBS_EXTRACT_UNCOMPLETED_SAGAS_CRON_LOCK_AT_LEAST_FOR="55s" --from-literal=SCHEDULED_JOBS_EXTRACT_UNCOMPLETED_SAGAS_CRON_LOCK_AT_MOST_FOR="57s" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_STUDENTS_CRON="$SCHEDULED_JOBS_EXTRACT_UNPROCESSED_STUDENTS_CRON" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_STUDENTS_CRON_LOCK_AT_LEAST_FOR="8s" --from-literal=SCHEDULED_JOBS_EXTRACT_UNPROCESSED_STUDENTS_CRON_LOCK_AT_MOST_FOR="8s" --from-literal=CLIENT_ID="pen-reg-batch-api-service" --from-literal=CLIENT_SECRET="$PRB_APIServiceClientSecret" --from-literal=STUDENT_API_URL="http://student-api-master.$COMMON_NAMESPACE-$envValue.svc.cluster.local:8080/api/v1/student" --from-literal=SCHOOL_API_URL="http://school-api-master.$COMMON_NAMESPACE-$envValue.svc.cluster.local:8080/api/v1/schools" --from-literal=TOKEN_URL="https://$SOAM_KC/auth/realms/$SOAM_KC_REALM_ID/protocol/openid-connect/token" --from-literal=URL_REDIS="redis.$OPENSHIFT_NAMESPACE-$envValue.svc.cluster.local:6379" --from-literal=REPEAT_TIME_WINDOW_K12=0 --from-literal=REPEAT_TIME_WINDOW_PSI=0 --from-literal=SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=16 --from-literal=SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=16 --from-literal=PEN_SERVICES_API_URL="http://pen-services-api-master.$OPENSHIFT_NAMESPACE-$envValue.svc.cluster.local:8080" --from-literal=HIBERNATE_SQL_PARAM_LOG_LEVEL=INFO --from-literal=PURGE_RECORDS_SAGA_AFTER_DAYS=365 --from-literal=SCHEDULED_JOBS_PURGE_OLD_SAGA_RECORDS_CRON="$SCHEDULED_JOBS_PURGE_OLD_SAGA_RECORDS_CRON" --from-literal=SOFT_DELETED_RETENTION_DAYS="$SOFT_DELETED_RETENTION_DAYS" --from-literal=SCHEDULED_JOBS_PURGE_SOFT_DELETED_RECORDS_CRON="$SCHEDULED_JOBS_PURGE_SOFT_DELETED_RECORDS_CRON" --from-literal=NATS_MAX_RECONNECT=60 --from-literal=HOLD_BATCHES_EQUAL_OR_LARGER_THAN=2500 --from-literal=PEN_COORDINATOR_EMAIL="$PEN_COORDINATOR_EMAIL" --from-literal=TOKEN_ISSUER_URL="https://$SOAM_KC/auth/realms/$SOAM_KC_REALM_ID" --from-literal=PEN_COORDINATOR_MAILING_ADDRESS="Ministry of Education and Child Care, Data Collection Unit PO Box 9886, Stn. Prov. Govt, Victoria BC, V8W 9T6" --from-literal=PEN_COORDINATOR_TELEPHONE="(250)356-8020" --from-literal=PEN_COORDINATOR_FACSIMILE="(250)953-0450" --from-literal=SCHEDULED_JOBS_MARK_PROCESSED_BATCHES_ACTIVE_CRON="$SCHEDULED_JOBS_MARK_PROCESSED_BATCHES_ACTIVE_CRON" --from-literal=SCHEDULED_JOBS_MARK_PROCESSED_BATCHES_ACTIVE_CRON_LOCK_AT_LEAST_FOR="50s" --from-literal=SCHEDULED_JOBS_MARK_PROCESSED_BATCHES_ACTIVE_LOCK_AT_MOST_FOR="55s" --from-literal=SCHEDULED_JOBS_PROCESS_LOADED_BATCHES_FOR_REPEATS_CRON="$SCHEDULED_JOBS_PROCESS_LOADED_BATCHES_FOR_REPEATS_CRON" --from-literal=SCHEDULED_JOBS_PROCESS_LOADED_BATCHES_FOR_REPEATS_CRON_LOCK_AT_LEAST_FOR="100s" --from-literal=SCHEDULED_JOBS_PROCESS_LOADED_BATCHES_FOR_REPEATS_CRON_LOCK_AT_MOST_FOR="110s" --from-literal=SKIP_VALIDATION_FOR_DISTRICT_CODES="102,104" --from-literal=STUDENT_THRESHOLD_GENERATE_PDF="500" --from-literal=THREADS_MIN_SUBSCRIBER="$THREADS_MIN_SUBSCRIBER" --from-literal=THREADS_MAX_SUBSCRIBER="$THREADS_MAX_SUBSCRIBER" --from-literal=SAGAS_MAX_PENDING="$SAGAS_MAX_PENDING" --from-literal=SAGAS_MAX_PARALLEL="$SAGAS_MAX_PARALLEL" --dry-run -o yaml | oc apply -f -
 
 echo
 echo Setting environment variables for $APP_NAME-$SOAM_KC_REALM_ID application
-oc -n $PEN_NAMESPACE-$envValue set env --from=configmap/$APP_NAME-config-map dc/$APP_NAME-$SOAM_KC_REALM_ID
+oc -n $OPENSHIFT_NAMESPACE-$envValue set env --from=configmap/$APP_NAME-config-map dc/$APP_NAME-$SOAM_KC_REALM_ID
 
 echo Creating config map "$APP_NAME"-flb-sc-config-map
-oc create -n "$PEN_NAMESPACE"-"$envValue" configmap "$APP_NAME"-flb-sc-config-map --from-literal=fluent-bit.conf="$FLB_CONFIG" --from-literal=parsers.conf="$PARSER_CONFIG" --dry-run -o yaml | oc apply -f -
+oc create -n "$OPENSHIFT_NAMESPACE"-"$envValue" configmap "$APP_NAME"-flb-sc-config-map --from-literal=fluent-bit.conf="$FLB_CONFIG" --from-literal=parsers.conf="$PARSER_CONFIG" --dry-run -o yaml | oc apply -f -
 
 echo Removing un-needed config entries
-oc -n "$PEN_NAMESPACE"-"$envValue" set env dc/"$APP_NAME"-$SOAM_KC_REALM_ID KEYCLOAK_PUBLIC_KEY-
+oc -n "$OPENSHIFT_NAMESPACE"-"$envValue" set env dc/"$APP_NAME"-$SOAM_KC_REALM_ID KEYCLOAK_PUBLIC_KEY-
