@@ -31,8 +31,6 @@ public class PenRequestBatchEventServiceTest extends BasePenRegAPITest {
   @Autowired
   private PenRequestBatchEventRepository penRequestBatchEventRepository;
   @Autowired
-  private PenRequestBatchStudentService prbStudentService;
-  @Autowired
   private PenRequestBatchRepository penRequestBatchRepository;
   @Autowired
   private PenRequestBatchEventService penRequestBatchEventService;
