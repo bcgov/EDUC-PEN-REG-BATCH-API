@@ -214,12 +214,12 @@ SCHEDULED_JOBS_MARK_PROCESSED_BATCHES_ACTIVE_CRON="0 0/1 * * * *"
 SCHEDULED_JOBS_PROCESS_LOADED_BATCHES_FOR_REPEATS_CRON="0 0/2 * * * *"
 
 if [ "$envValue" = "dev" ]; then
-  PEN_COORDINATOR_EMAIL=aditya.sharma@gov.bc.ca
+  PEN_COORDINATOR_EMAIL=derek.so@gov.bc.ca
   SOFT_DELETED_RETENTION_DAYS=2
 fi
 
 if [ "$envValue" = "test" ]; then
-  PEN_COORDINATOR_EMAIL=Gurvinder.J.Bhatia@gov.bc.ca
+  PEN_COORDINATOR_EMAIL=derek.so@gov.bc.ca
   SOFT_DELETED_RETENTION_DAYS=2
 fi
 # when it will be time for go live the value of SCHEDULED_JOBS_EXTRACT_UNPROCESSED_PEN_WEB_BLOBS_CRON will be set to "0 0/10 18-23,00-05 * * *" so that it runs from 6PM to 6AM
