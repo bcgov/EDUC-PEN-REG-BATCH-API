@@ -1,5 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
+import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultiplePen;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
@@ -102,7 +103,7 @@ public class SagaService {
       }
     } catch (Exception e) {
       log.error("updateAttachedSagaWithEvents failed for PenRequestBatchId :: {}, SagaId :: {}, SagaEventState :: {}, Error :: {}", saga.getPenRequestBatchID(), saga.getSagaId(), sagaEvent.getSagaEventState(), e.toString());
-      throw new RuntimeException(e);
+      throw new PenRegAPIRuntimeException(e);
     }
   }
 
