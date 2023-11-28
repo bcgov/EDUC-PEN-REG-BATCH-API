@@ -102,7 +102,7 @@ public class SagaService {
         this.getSagaEventRepository().save(sagaEvent);
       }
     } catch (Exception e) {
-      log.error("updateAttachedSagaWithEvents failed for PenRequestBatchId :: {}, SagaId :: {}, SagaEventState :: {}, Error :: {}", saga.getPenRequestBatchID(), saga.getSagaId(), sagaEvent.getSagaEventState(), e.toString());
+      log.error("updateAttachedSagaWithEvents failed for PenRequestBatchId :: {}, SagaId :: {}, SagaEventState :: {}, Error :: {}", saga.getPenRequestBatchID(), saga.getSagaId(), sagaEvent.getSagaEventState(), e);
       throw new PenRegAPIRuntimeException(e);
     }
   }
