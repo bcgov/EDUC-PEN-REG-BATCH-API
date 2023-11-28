@@ -1,6 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultipleLocalID;
+import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultiplePen;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
@@ -93,12 +93,17 @@ public class SagaService {
   @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void updateAttachedSagaWithEvents(final Saga saga, final SagaEvent sagaEvent) {
-    saga.setUpdateDate(LocalDateTime.now());
-    this.getSagaRepository().save(saga);
-    val result = this.getSagaEventRepository()
-      .findBySagaAndSagaEventOutcomeAndSagaEventStateAndSagaStepNumber(saga, sagaEvent.getSagaEventOutcome(), sagaEvent.getSagaEventState(), sagaEvent.getSagaStepNumber() - 1); //check if the previous step was same and had same outcome, and it is due to replay.
-    if (result.isEmpty()) {
-      this.getSagaEventRepository().save(sagaEvent);
+    try {
+      saga.setUpdateDate(LocalDateTime.now());
+      this.getSagaRepository().save(saga);
+      val result = this.getSagaEventRepository()
+          .findBySagaAndSagaEventOutcomeAndSagaEventStateAndSagaStepNumber(saga, sagaEvent.getSagaEventOutcome(), sagaEvent.getSagaEventState(), sagaEvent.getSagaStepNumber() - 1); //check if the previous step was same and had same outcome, and it is due to replay.
+      if (result.isEmpty()) {
+        this.getSagaEventRepository().save(sagaEvent);
+      }
+    } catch (Exception e) {
+      log.error("updateAttachedSagaWithEvents failed for PenRequestBatchId :: {}, SagaId :: {}, SagaEventState :: {}, Error :: {}", saga.getPenRequestBatchID(), saga.getSagaId(), sagaEvent.getSagaEventState(), e);
+      throw new PenRegAPIRuntimeException(e);
     }
   }
 
