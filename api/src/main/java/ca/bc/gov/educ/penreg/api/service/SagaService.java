@@ -1,9 +1,6 @@
 package ca.bc.gov.educ.penreg.api.service;
 
-import static ca.bc.gov.educ.penreg.api.constants.EventType.INITIATED;
-import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.STARTED;
-import static lombok.AccessLevel.PRIVATE;
-
+import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchMultiplePen;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
@@ -12,6 +9,20 @@ import ca.bc.gov.educ.penreg.api.repository.SagaEventRepository;
 import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnAllSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.util.Pair;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,22 +31,10 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.util.Pair;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+
+import static ca.bc.gov.educ.penreg.api.constants.EventType.INITIATED;
+import static ca.bc.gov.educ.penreg.api.constants.SagaStatusEnum.STARTED;
+import static lombok.AccessLevel.PRIVATE;
 
 /**
  * The type Saga service.
@@ -94,12 +93,17 @@ public class SagaService {
   @Retryable(value = {Exception.class}, maxAttempts = 5, backoff = @Backoff(multiplier = 2, delay = 2000))
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void updateAttachedSagaWithEvents(final Saga saga, final SagaEvent sagaEvent) {
-    saga.setUpdateDate(LocalDateTime.now());
-    this.getSagaRepository().save(saga);
-    val result = this.getSagaEventRepository()
-      .findBySagaAndSagaEventOutcomeAndSagaEventStateAndSagaStepNumber(saga, sagaEvent.getSagaEventOutcome(), sagaEvent.getSagaEventState(), sagaEvent.getSagaStepNumber() - 1); //check if the previous step was same and had same outcome, and it is due to replay.
-    if (result.isEmpty()) {
-      this.getSagaEventRepository().save(sagaEvent);
+    try {
+      saga.setUpdateDate(LocalDateTime.now());
+      this.getSagaRepository().save(saga);
+      val result = this.getSagaEventRepository()
+          .findBySagaAndSagaEventOutcomeAndSagaEventStateAndSagaStepNumber(saga, sagaEvent.getSagaEventOutcome(), sagaEvent.getSagaEventState(), sagaEvent.getSagaStepNumber() - 1); //check if the previous step was same and had same outcome, and it is due to replay.
+      if (result.isEmpty()) {
+        this.getSagaEventRepository().save(sagaEvent);
+      }
+    } catch (Exception e) {
+      log.error("updateAttachedSagaWithEvents failed for PenRequestBatchId :: {}, SagaId :: {}, SagaEventState :: {}, Error :: {}", saga.getPenRequestBatchID(), saga.getSagaId(), sagaEvent.getSagaEventState(), e);
+      throw new PenRegAPIRuntimeException(e);
     }
   }
 

@@ -50,7 +50,7 @@ public class PenRequestBatchEvent {
   @Column(name = "UPDATE_DATE")
   @PastOrPresent
   LocalDateTime updateDate;
-  @Column(name = "SAGA_ID", updatable = false)
+  @Column(name = "SAGA_ID", updatable = false, columnDefinition = "BINARY(16)")
   private UUID sagaId;
   @NotNull(message = "eventOutcome cannot be null.")
   @Column(name = "EVENT_OUTCOME")
