@@ -11,8 +11,8 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.SchoolContact;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -47,7 +47,7 @@ public class ResponseFileGeneratorService {
    * the pen coordinator service
    */
   @Getter(PRIVATE)
-  private final PenCoordinatorService penCoordinatorService;
+  private final StudentRegistrationContactService studentRegistrationContactService;
 
   /**
    * the pen request batch student repository
@@ -74,8 +74,8 @@ public class ResponseFileGeneratorService {
   private SpringTemplateEngine templateEngine;
 
   @Autowired
-  public ResponseFileGeneratorService(final PenCoordinatorService penCoordinatorService, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils, final SpringTemplateEngine templateEngine) {
-    this.penCoordinatorService = penCoordinatorService;
+  public ResponseFileGeneratorService(final StudentRegistrationContactService studentRegistrationContactService, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils, final SpringTemplateEngine templateEngine) {
+    this.studentRegistrationContactService = studentRegistrationContactService;
     this.penWebBlobRepository = penWebBlobRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
     this.restUtils = restUtils;
@@ -257,13 +257,18 @@ public class ResponseFileGeneratorService {
   private String createHeader(final PenRequestBatchEntity penRequestBatchEntity, String applicationCode) {
     final StringBuilder header = new StringBuilder();
     // retrieved from PEN_COORDINATOR table
-    Optional<PenCoordinator> penCoordinator = this.getPenCoordinatorService().getPenCoordinatorByMinCode(penRequestBatchEntity.getMincode());
+    List<SchoolContact> schoolContacts = this.getStudentRegistrationContactService().getStudentRegistrationContactsByMincode(penRequestBatchEntity.getMincode());
+
+    var primaryContact = Optional.empty();
+    if(schoolContacts != null && !schoolContacts.isEmpty()){
+      primaryContact = Optional.of(schoolContacts.get(0));
+    }
 
     header.append("FFI")
             .append(String.format("%-8.8s", print(penRequestBatchEntity.getMincode())))
             .append(String.format("%-40.40s", print(penRequestBatchEntity.getSchoolName())))
             .append(String.format("%-8.8s", penRequestBatchEntity.getProcessDate().format(DateTimeFormatter.ofPattern("yyyyMMdd"))))
-            .append(String.format("%-100.100s", print(penCoordinator.isPresent()? penCoordinator.get().getPenCoordinatorEmail() : "")))
+            .append(String.format("%-100.100s", print(primaryContact.isPresent()? primaryContact.get().getPenCoordinatorEmail() : "")))
             .append(String.format("%-10.10s", print(penCoordinator.map(coordinator -> coordinator.getPenCoordinatorFax().replaceAll("[^0-9]+", "")).orElse(""))))
             .append(String.format("%-40.40s", print(penCoordinator.isPresent()? penCoordinator.get().getPenCoordinatorName() : "")))
             .append("  ")

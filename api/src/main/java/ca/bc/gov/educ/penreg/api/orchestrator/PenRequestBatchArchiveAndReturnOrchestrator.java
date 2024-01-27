@@ -27,7 +27,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
-import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
+import ca.bc.gov.educ.penreg.api.service.StudentRegistrationContactService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentValidationIssueService;
 import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
@@ -63,7 +63,7 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
      */
     public PenRequestBatchArchiveAndReturnOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
                                                        PenRequestBatchService penRequestBatchService,
-                                                       PenCoordinatorService penCoordinatorService,
+                                                       StudentRegistrationContactService penCoordinatorService,
                                                        PenCoordinatorProperties penCoordinatorProperties,
                                                        ResponseFileGeneratorService responseFileGeneratorService,
                                                        PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService,

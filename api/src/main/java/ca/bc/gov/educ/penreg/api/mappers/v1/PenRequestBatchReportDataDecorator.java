@@ -6,6 +6,7 @@ import ca.bc.gov.educ.penreg.api.struct.Student;
 import ca.bc.gov.educ.penreg.api.struct.v1.BasePenRequestBatchReturnFilesSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
+import ca.bc.gov.educ.penreg.api.struct.v1.SchoolContact;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportListItem;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportUserMatchedListItem;
@@ -54,11 +55,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       final Map<String, Student> students = this.setStudents(data.getStudents());
       for (final PenRequestBatchStudent penRequestBatchStudent : data.getPenRequestBatchStudents()) {
         switch (Objects.requireNonNull(PenRequestBatchStudentStatusCodes.valueOfCode(penRequestBatchStudent.getPenRequestBatchStudentStatusCode()))) {
-          case DUPLICATE:
-          case ERROR:
-          case REPEAT:
-          case INFOREQ:
-          case FIXABLE:
+          case DUPLICATE,ERROR,REPEAT,INFOREQ,FIXABLE:
             val issues = data.getPenRequestBatchStudentValidationIssues().get(penRequestBatchStudent.getPenRequestBatchStudentID());
             val pendingItem = listItemMapper.toReportListItem(penRequestBatchStudent, issues);
             if (!"Duplicate".equals(pendingItem.getPen())) {
@@ -66,8 +63,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
             }
             pendingList.add(pendingItem);
             break;
-          case SYS_NEW_PEN:
-          case USR_NEW_PEN:
+          case SYS_NEW_PEN, USR_NEW_PEN:
             this.populateForNewPenStatus(newPenList, students, penRequestBatchStudent);
             break;
           case SYS_MATCHED:
@@ -85,7 +81,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       reportData.setProcessDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
       reportData.setProcessTime(processDateTime.format(DateTimeFormatter.ofPattern("HH:mm")));
       reportData.setReportDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
-      reportData.setReviewer(this.setReviewer(data.getPenCoordinator()));
+      reportData.setReviewer(this.setReviewer(data.getStudentRegistrationContacts()));
     }
 
 
@@ -149,8 +145,8 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
   }
 
 
-  private String setReviewer(final PenCoordinator penCoordinator) {
-    return (penCoordinator != null && StringUtils.isNotBlank(penCoordinator.getPenCoordinatorName())) ? penCoordinator.getPenCoordinatorName() : "School PEN Coordinator";
+  private String setReviewer(final List<SchoolContact> schoolContacts) {
+    return (schoolContacts != null && !schoolContacts.isEmpty()) ? schoolContacts.get(0).getFirstName() + " " + schoolContacts.get(0).getLastName() : "School PEN Coordinator";
   }
 
   private Map<String, Student> setStudents(final List<Student> students) {

@@ -34,20 +34,20 @@ public class BasePenRequestBatchReturnFilesSagaData extends BaseRequest {
     PenRequestBatch penRequestBatch;
     List<PenRequestBatchStudent> penRequestBatchStudents;
 
-  @Setter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     List<Student> students;
-
-  public void setStudents(Event event, List<Student> students) {
-    if (students == null) {
-      log.info("changing students to null in BasePenRequestBatchReturnFilesSagaData for saga id :: {} and event type:: {} and event outcome :: {}",event.getSagaId(), event.getEventType(), event.getEventOutcome());
-    }
-    this.students = students;
-  }
     Map<String, String> penRequestBatchStudentValidationIssues;
-    PenCoordinator penCoordinator;
+    List<SchoolContact> studentRegistrationContacts;
 
     String fromEmail;
     String telephone;
     String facsimile;
     String mailingAddress;
+
+    public void setStudents(Event event, List<Student> students) {
+        if (students == null) {
+            log.info("changing students to null in BasePenRequestBatchReturnFilesSagaData for saga id :: {} and event type:: {} and event outcome :: {}",event.getSagaId(), event.getEventType(), event.getEventOutcome());
+        }
+        this.students = students;
+    }
 }

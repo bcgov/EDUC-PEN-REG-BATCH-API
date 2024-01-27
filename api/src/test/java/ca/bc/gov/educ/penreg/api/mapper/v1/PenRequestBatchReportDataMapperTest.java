@@ -45,7 +45,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
       .telephone("5555555555")
       .fromEmail("test@abc.com")
       .mailingAddress("mailing address")
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
       .schoolName("Cataline")
       .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
       .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList()))
@@ -106,7 +106,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
       .telephone("5555555555")
       .fromEmail("test@abc.com")
       .mailingAddress("mailing address")
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
       .schoolName("Cataline")
       .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
       .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList()))
@@ -132,7 +132,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
       .fromEmail("test@abc.com")
       .mailingAddress("mailing address")
       .students(students)
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
       .schoolName("Cataline")
       .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
       .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList()))
@@ -180,37 +180,37 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
     assertThat(reportData.getPenCordinatorEmail()).isEqualTo("test@abc.com");
 
     assertThat(reportData.getDiffList().size()).isEqualTo(1);
-    assertThat(reportData.getDiffList().get(0).getMin().getBirthDate()).isEqualTo("");
-    assertThat(reportData.getDiffList().get(0).getMin().getGender()).isEqualTo("");
-    assertThat(reportData.getDiffList().get(0).getMin().getGivenName()).isEqualTo("");
-    assertThat(reportData.getDiffList().get(0).getMin().getLegalMiddleNames()).isEqualTo("");
+    assertThat(reportData.getDiffList().get(0).getMin().getBirthDate())isEmpty();
+    assertThat(reportData.getDiffList().get(0).getMin().getGender())isEmpty();
+    assertThat(reportData.getDiffList().get(0).getMin().getGivenName())isEmpty();
+    assertThat(reportData.getDiffList().get(0).getMin().getLegalMiddleNames())isEmpty();
     assertThat(reportData.getDiffList().get(0).getMin().getPen()).isEqualTo("123456780");
     assertThat(reportData.getDiffList().get(0).getMin().getReason()).isEqualTo(null);
-    assertThat(reportData.getDiffList().get(0).getMin().getSchoolID()).isEqualTo("");
+    assertThat(reportData.getDiffList().get(0).getMin().getSchoolID())isEmpty();
     assertThat(reportData.getDiffList().get(0).getMin().getSurname()).isEqualTo("BILL");
-    assertThat(reportData.getDiffList().get(0).getMin().getUsualName()).isEqualTo("");
+    assertThat(reportData.getDiffList().get(0).getMin().getUsualName())isEmpty();
 
     assertThat(reportData.getDiffList().size()).isEqualTo(1);
-    assertThat(reportData.getDiffList().get(0).getSchool().getBirthDate()).isEqualTo("");
-    assertThat(reportData.getDiffList().get(0).getSchool().getGender()).isEqualTo("");
-    assertThat(reportData.getDiffList().get(0).getSchool().getGivenName()).isEqualTo("");
-    assertThat(reportData.getDiffList().get(0).getSchool().getLegalMiddleNames()).isEqualTo("");
-    assertThat(reportData.getDiffList().get(0).getSchool().getPen()).isEqualTo("");
+    assertThat(reportData.getDiffList().get(0).getSchool().getBirthDate())isEmpty();
+    assertThat(reportData.getDiffList().get(0).getSchool().getGender())isEmpty();
+    assertThat(reportData.getDiffList().get(0).getSchool().getGivenName())isEmpty();
+    assertThat(reportData.getDiffList().get(0).getSchool().getLegalMiddleNames())isEmpty();
+    assertThat(reportData.getDiffList().get(0).getSchool().getPen())isEmpty();
     assertThat(reportData.getDiffList().get(0).getSchool().getReason()).isEqualTo(null);
-    assertThat(reportData.getDiffList().get(0).getSchool().getSchoolID()).isEqualTo("");
-    assertThat(reportData.getDiffList().get(0).getSchool().getSurname()).isEqualTo("");
-    assertThat(reportData.getDiffList().get(0).getSchool().getUsualName()).isEqualTo("");
+    assertThat(reportData.getDiffList().get(0).getSchool().getSchoolID())isEmpty();
+    assertThat(reportData.getDiffList().get(0).getSchool().getSurname())isEmpty();
+    assertThat(reportData.getDiffList().get(0).getSchool().getUsualName())isEmpty();
 
     assertThat(reportData.getSysMatchedList().size()).isEqualTo(2);
-    assertThat(reportData.getSysMatchedList().get(1).getBirthDate()).isEqualTo("");
-    assertThat(reportData.getSysMatchedList().get(1).getGender()).isEqualTo("");
-    assertThat(reportData.getSysMatchedList().get(1).getGivenName()).isEqualTo("");
-    assertThat(reportData.getSysMatchedList().get(1).getLegalMiddleNames()).isEqualTo("");
-    assertThat(reportData.getSysMatchedList().get(1).getPen()).isEqualTo("");
+    assertThat(reportData.getSysMatchedList().get(1).getBirthDate())isEmpty();
+    assertThat(reportData.getSysMatchedList().get(1).getGender())isEmpty();
+    assertThat(reportData.getSysMatchedList().get(1).getGivenName())isEmpty();
+    assertThat(reportData.getSysMatchedList().get(1).getLegalMiddleNames())isEmpty();
+    assertThat(reportData.getSysMatchedList().get(1).getPen())isEmpty();
     assertThat(reportData.getSysMatchedList().get(1).getReason()).isEqualTo(null);
-    assertThat(reportData.getSysMatchedList().get(1).getSchoolID()).isEqualTo("");
-    assertThat(reportData.getSysMatchedList().get(1).getSurname()).isEqualTo("");
-    assertThat(reportData.getSysMatchedList().get(1).getUsualName()).isEqualTo("");
+    assertThat(reportData.getSysMatchedList().get(1).getSchoolID())isEmpty();
+    assertThat(reportData.getSysMatchedList().get(1).getSurname())isEmpty();
+    assertThat(reportData.getSysMatchedList().get(1).getUsualName())isEmpty();
 
     assertThat(reportData.getNewPenList().size()).isEqualTo(2);
     assertThat(reportData.getPendingList().size()).isEqualTo(4);

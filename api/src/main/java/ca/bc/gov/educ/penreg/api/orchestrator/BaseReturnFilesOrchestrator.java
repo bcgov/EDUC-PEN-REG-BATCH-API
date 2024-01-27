@@ -14,7 +14,6 @@ import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCo
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static lombok.AccessLevel.PROTECTED;
-
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentValidationIssueSeverityCode;
@@ -32,7 +31,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
 import ca.bc.gov.educ.penreg.api.orchestrator.base.BaseOrchestrator;
 import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
-import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
+import ca.bc.gov.educ.penreg.api.service.StudentRegistrationContactService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchStudentValidationIssueService;
 import ca.bc.gov.educ.penreg.api.service.ResponseFileGeneratorService;
@@ -72,7 +71,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
   @Getter(PROTECTED)
   private final PenRequestBatchService penRequestBatchService;
   @Getter(PROTECTED)
-  private final PenCoordinatorService penCoordinatorService;
+  private final StudentRegistrationContactService studentRegistrationContactService;
   @Getter(PROTECTED)
   private final ResponseFileGeneratorService responseFileGeneratorService;
   @Getter(PROTECTED)
@@ -91,20 +90,20 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
    * @param sagaName                 the saga name
    * @param topicToSubscribe         the topic to subscribe
    * @param penRequestBatchService   the pen request batch service
-   * @param penCoordinatorService    the pen coordinator service
+   * @param studentRegistrationContactService    the pen coordinator service
    * @param penCoordinatorProperties the pen coordinator properties
    */
   protected BaseReturnFilesOrchestrator(final SagaService sagaService, final MessagePublisher messagePublisher,
                                         final Class<T> clazz, final String sagaName, final String topicToSubscribe,
                                         final PenRequestBatchService penRequestBatchService,
-                                        final PenCoordinatorService penCoordinatorService,
+                                        final StudentRegistrationContactService studentRegistrationContactService,
                                         final PenCoordinatorProperties penCoordinatorProperties,
                                         final ResponseFileGeneratorService responseFileGeneratorService,
                                         final PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService,
                                         final RestUtils restUtils) {
     super(sagaService, messagePublisher, clazz, sagaName, topicToSubscribe);
     this.penRequestBatchService = penRequestBatchService;
-    this.penCoordinatorService = penCoordinatorService;
+    this.studentRegistrationContactService = studentRegistrationContactService;
     this.penCoordinatorProperties = penCoordinatorProperties;
     this.responseFileGeneratorService = responseFileGeneratorService;
     this.penRequestBatchStudentValidationIssueService = penRequestBatchStudentValidationIssueService;
@@ -124,7 +123,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
       final List<PenRequestBatchStudent> studentRequests = penRequestBatch.get().getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList());
       penRequestBatchReturnFilesSagaData.setPenRequestBatchStudents(studentRequests);
       penRequestBatchReturnFilesSagaData.setPenRequestBatch(mapper.toStructure(penRequestBatch.get()));
-      penRequestBatchReturnFilesSagaData.setPenCoordinator(this.getPenCoordinator(penRequestBatch.get()));
+      penRequestBatchReturnFilesSagaData.setStudentRegistrationContacts(this.getStudentRegistrationContacts(penRequestBatch.get()));
       penRequestBatchReturnFilesSagaData.setFromEmail(this.penCoordinatorProperties.getFromEmail());
       penRequestBatchReturnFilesSagaData.setTelephone(this.penCoordinatorProperties.getTelephone());
       penRequestBatchReturnFilesSagaData.setFacsimile(this.penCoordinatorProperties.getFacsimile());
@@ -249,7 +248,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
       penRequestBatchArchivedEmailEvent.setToEmail(this.getPenCoordinatorProperties().getFromEmail());
     } else {
       nextEvent.setEventType(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT);
-      penRequestBatchArchivedEmailEvent.setToEmail(penRequestBatchReturnFilesSagaData.getPenCoordinator().getPenCoordinatorEmail());
+      penRequestBatchArchivedEmailEvent.setToEmail(penRequestBatchReturnFilesSagaData.getStudentRegistrationContacts().getPenCoordinatorEmail());
     }
     nextEvent.setEventPayload(JsonUtil.getJsonStringFromObject(penRequestBatchArchivedEmailEvent));
 
@@ -275,9 +274,9 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
   }
 
   protected boolean hasNoPenCoordinatorEmail(final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) {
-    return penRequestBatchReturnFilesSagaData.getPenCoordinator() == null ||
-      penRequestBatchReturnFilesSagaData.getPenCoordinator().getPenCoordinatorEmail() == null ||
-      penRequestBatchReturnFilesSagaData.getPenCoordinator().getPenCoordinatorEmail().isEmpty();
+    return penRequestBatchReturnFilesSagaData.getStudentRegistrationContacts() == null ||
+      penRequestBatchReturnFilesSagaData.getStudentRegistrationContacts().getPenCoordinatorEmail() == null ||
+      penRequestBatchReturnFilesSagaData.getStudentRegistrationContacts().getPenCoordinatorEmail().isEmpty();
   }
 
   protected boolean isSupportingPDFGeneration(final BasePenRequestBatchReturnFilesSagaData penRequestBatchReturnFilesSagaData) {
@@ -302,9 +301,9 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
     this.sendArchivedEmail(event, saga, penRequestBatchReturnFilesSagaData, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT);
   }
 
-  protected PenCoordinator getPenCoordinator(final PenRequestBatchEntity penRequestBatchEntity) {
+  protected List<SchoolContact> getStudentRegistrationContacts(final PenRequestBatchEntity penRequestBatchEntity) {
     try {
-      final var penCoordinatorOptional = this.getPenCoordinatorService().getPenCoordinatorByMinCode(penRequestBatchEntity.getMincode());
+      final var penCoordinatorOptional = this.getStudentRegistrationContactService().getStudentRegistrationContactsByMincode(penRequestBatchEntity.getMincode());
       return penCoordinatorOptional.orElse(null);
     } catch (final NullPointerException e) {
       log.error("Error while trying to get get pen coordinator. The pen coordinator map is null", e);

@@ -99,7 +99,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
     assertThat(penWebBlob.getPenWebBlobId()).isEqualTo(penWebBlob.getPenWebBlobId());
     assertThat(penWebBlob.getFileName()).isEqualTo(penWebBlob.getMincode() + ".TXT");
     assertThat(penWebBlob.getSourceApplication()).isEqualTo("MYED");
-    assertThat(penWebBlob.getFileContents().length > 0).isTrue();
+    assertThat(penWebBlob.getFileContents().length).isGreaterThan(0);
     assertThat(new String(penWebBlob.getFileContents())).contains("2046291");
     assertThat(new String(penWebBlob.getFileContents())).contains("221024");
     assertThat(new String(penWebBlob.getFileContents())).doesNotContain("204629298765");
@@ -119,7 +119,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
     assertThat(penWebBlob.getPenWebBlobId()).isEqualTo(penWebBlob.getPenWebBlobId());
     assertThat(penWebBlob.getFileName()).isEqualTo(penWebBlob.getMincode() + ".TXT");
-    assertThat(penWebBlob.getFileContents().length > 0).isTrue();
+    assertThat(penWebBlob.getFileContents().length).isGreaterThan(0);
     assertThat(new String(penWebBlob.getFileContents())).contains("2046291");
     assertThat(new String(penWebBlob.getFileContents())).doesNotContain("204629298765");
     assertThat(new String(penWebBlob.getFileContents())).contains("SFAS");
@@ -137,7 +137,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
     assertThat(penWebBlob.getPenWebBlobId()).isEqualTo(penWebBlob.getPenWebBlobId());
     assertThat(penWebBlob.getFileName()).isEqualTo(penWebBlob.getMincode() + ".TXT");
-    assertThat(penWebBlob.getFileContents().length > 0).isTrue();
+    assertThat(penWebBlob.getFileContents().length).isGreaterThan(0);
     assertThat(new String(penWebBlob.getFileContents())).contains("2046291");
     assertThat(new String(penWebBlob.getFileContents())).doesNotContain("204629298765");
     assertThat(new String(penWebBlob.getFileContents())).contains("MISC");
@@ -155,7 +155,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
     assertThat(penWebBlob.getPenWebBlobId()).isEqualTo(penWebBlob.getPenWebBlobId());
     assertThat(penWebBlob.getFileName()).isEqualTo(penWebBlob.getMincode() + ".TXT");
-    assertThat(penWebBlob.getFileContents().length > 0).isTrue();
+    assertThat(penWebBlob.getFileContents().length).isGreaterThan(0);
     assertThat(new String(penWebBlob.getFileContents())).contains("2046291");
     assertThat(new String(penWebBlob.getFileContents())).doesNotContain("204629298765");
     assertThat(new String(penWebBlob.getFileContents())).contains("SS");
@@ -258,7 +258,7 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
       .penRequestBatchStudents(batch.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
       .penRequestBatchStudentValidationIssues(issues)
       .students(PenRequestBatchTestUtils.createStudents(batch))
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")

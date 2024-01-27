@@ -1,44 +1,24 @@
 package ca.bc.gov.educ.penreg.api.rest;
 
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_MATCH_API_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PEN_SERVICES_API_TOPIC;
-import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.STUDENT_API_TOPIC;
-
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum;
+import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.GradeCode;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueFieldCode;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
+import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import jakarta.annotation.PostConstruct;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -47,7 +27,23 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
+
+import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.*;
 
 /**
  * This class is used for REST calls
@@ -149,7 +145,7 @@ public class RestUtils {
     try {
       writeLock.lock();
       for (val school : this.getSchools()) {
-        this.schoolMap.put(school.getDistNo() + school.getSchlNo(), school);
+        this.schoolMap.put(school.getMincode(), school);
       }
     }
     catch (Exception ex) {
@@ -193,14 +189,14 @@ public class RestUtils {
    * @return the schools
    */
   public List<School> getSchools() {
-    log.info("calling school api to load schools to memory");
+    log.info("Calling Institute api to get list of schools");
     return this.webClient.get()
-      .uri(this.props.getSchoolApiURL())
-      .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-      .retrieve()
-      .bodyToFlux(School.class)
-      .collectList()
-      .block();
+            .uri(this.props.getInstituteApiUrl() + "/school")
+            .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .retrieve()
+            .bodyToFlux(School.class)
+            .collectList()
+            .block();
   }
 
   /**
@@ -400,6 +396,37 @@ public class RestUtils {
         throw ex;
       }
     }
+  }
+
+  public List<SchoolContact> getStudentRegistrationContactList(final String mincode) {
+    try {
+      var school = schoolMap.get(mincode);
+      if(school == null){
+        return new ArrayList<>();
+      }
+      log.info("Calling Institute api to get list of school student registration contacts");
+      String criterion = "[{\"searchCriteriaList\":[{\"key\":\"schoolContactTypeCode\",\"operation\":\"eq\",\"value\":\"STUDREGIS\",\"valueType\":\"STRING\",\"condition\":\"AND\"}]}," +
+              " {\"key\":\"schoolId\",\"operation\":\"eq\",\"value\":\"" + school.getSchoolId() + "\",\"valueType\":\"UUID\",\"condition\":\"AND\"}]}," +
+              " {\"key\":\"email\",\"operation\":\"neq\",\"value\":\"null\",\"valueType\":\"UUID\",\"condition\":\"AND\"}]}";
+      SchoolContactSearchWrapper schoolContactSearchWrapper = this.webClient.get()
+              .uri(getSchoolContactURI(criterion))
+              .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+              .retrieve()
+              .bodyToFlux(SchoolContactSearchWrapper.class)
+              .blockFirst();
+
+      return schoolContactSearchWrapper.getContent();
+    }catch(Exception e){
+      log.error("API call to Institute API failure getting student registration contacts :: {}", e.getMessage());
+      throw new PenRegAPIRuntimeException("API call to Institute API failure getting student registration contacts, contact the Ministry for more info.");
+    }
+  }
+
+  private URI getSchoolContactURI(String criterion){
+    return UriComponentsBuilder.fromHttpUrl(this.props.getInstituteApiUrl() + "/school/contact/paginated")
+            .queryParam("pageNumber", "0")
+            .queryParam("pageSize", "10000")
+            .queryParam("searchCriteriaList", criterion).build().toUri();
   }
 
   public Optional<Event> requestEventResponseFromServicesAPI(final Event event) {

@@ -29,7 +29,7 @@ public class PenCoordinatorServiceTest extends BasePenRegAPITest {
   private final Map<String, PenCoordinator> penCoordinatorMap = new ConcurrentHashMap<>();
 
   @Autowired
-  PenCoordinatorService service;
+  StudentRegistrationContactService service;
 
   @Autowired
   RestUtils restUtils;
@@ -47,17 +47,17 @@ public class PenCoordinatorServiceTest extends BasePenRegAPITest {
   public void testGetPenCoordinator_givenDifferentInputs_shouldProduceOutput() {
     String mincode = "123546789";
     when(this.restUtils.getPenCoordinator(mincode)).thenReturn(Optional.ofNullable(penCoordinatorMap.get(mincode)));
-    val data = this.service.getPenCoordinatorByMinCode("123546789");
+    val data = this.service.getStudentRegistrationContactsByMincode("123546789");
     assertThat(data).isEmpty();
     when(this.restUtils.getPenCoordinator("19337120")).thenReturn(Optional.ofNullable(penCoordinatorMap.get("19337120")));
-    val dataOptional = this.service.getPenCoordinatorByMinCode("19337120");
+    val dataOptional = this.service.getStudentRegistrationContactsByMincode("19337120");
     assertThat(dataOptional).isPresent();
   }
 
   @Test
   public void testGetPenCoordinatorEmail_givenDifferentInputs_shouldProduceOutput() {
     when(this.restUtils.getPenCoordinator("19337120")).thenReturn(Optional.ofNullable(penCoordinatorMap.get("19337120")));
-    val dataOptional = this.service.getPenCoordinatorEmailByMinCode("19337120");
+    val dataOptional = this.service.getStudentRegistrationContactEmailsByMincode("19337120");
     assertThat(dataOptional).isPresent();
     assertThat(dataOptional.get()).isEqualTo("jhamberston0@va.gov");
   }

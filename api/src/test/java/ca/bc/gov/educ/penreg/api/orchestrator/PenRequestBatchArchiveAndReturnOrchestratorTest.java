@@ -398,8 +398,8 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     assertThat(payload.getFromEmail()).isNotEmpty();
     assertThat(payload.getTelephone()).isNotEmpty();
     assertThat(payload.getMailingAddress()).isNotEmpty();
-    assertThat(payload.getPenCoordinator().getPenCoordinatorEmail()).isNotEmpty();
-    assertThat(payload.getPenCoordinator().getPenCoordinatorName()).isNotEmpty();
+    assertThat(payload.getStudentRegistrationContacts().getPenCoordinatorEmail()).isNotEmpty();
+    assertThat(payload.getStudentRegistrationContacts().getPenCoordinatorName()).isNotEmpty();
     assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
     assertThat(payload.getPenRequestBatch()).isNotNull();
     assertThat(payload.getPenRequestBatchStudentValidationIssues()).containsValue(errorFieldDescription + " - " + errorDescription);
@@ -431,8 +431,8 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     assertThat(payload.getFromEmail()).isNotEmpty();
     assertThat(payload.getTelephone()).isNotEmpty();
     assertThat(payload.getMailingAddress()).isNotEmpty();
-    assertThat(payload.getPenCoordinator().getPenCoordinatorEmail()).isNotEmpty();
-    assertThat(payload.getPenCoordinator().getPenCoordinatorName()).isNotEmpty();
+    assertThat(payload.getStudentRegistrationContacts().getPenCoordinatorEmail()).isNotEmpty();
+    assertThat(payload.getStudentRegistrationContacts().getPenCoordinatorName()).isNotEmpty();
     assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
     assertThat(payload.getPenRequestBatch()).isNotNull();
   }
@@ -461,8 +461,8 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     assertThat(payload.getFromEmail()).isNotEmpty();
     assertThat(payload.getTelephone()).isNotEmpty();
     assertThat(payload.getMailingAddress()).isNotEmpty();
-    assertThat(payload.getPenCoordinator().getPenCoordinatorEmail()).isNotEmpty();
-    assertThat(payload.getPenCoordinator().getPenCoordinatorName()).isNotEmpty();
+    assertThat(payload.getStudentRegistrationContacts().getPenCoordinatorEmail()).isNotEmpty();
+    assertThat(payload.getStudentRegistrationContacts().getPenCoordinatorName()).isNotEmpty();
     assertThat(payload.getPenRequestBatchStudents()).isNotEmpty();
     assertThat(payload.getPenRequestBatch()).isNotNull();
   }
@@ -474,7 +474,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     final PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatch(this.batchMapper.toStructure(penRequestBatchEntity))
       .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(this.batchStudentMapper::toStructure).collect(Collectors.toList()))
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")
@@ -510,7 +510,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
       .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")
@@ -554,7 +554,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
       .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")
@@ -592,7 +592,7 @@ public class PenRequestBatchArchiveAndReturnOrchestratorTest extends BaseOrchest
     PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
       .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")
