@@ -3,11 +3,10 @@ package ca.bc.gov.educ.penreg.api.rest;
 import ca.bc.gov.educ.penreg.api.constants.EventOutcome;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum;
+import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
-import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.struct.School;
-import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.GradeCode;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueFieldCode;
@@ -27,10 +26,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -144,7 +145,7 @@ public class RestUtils {
     try {
       writeLock.lock();
       for (val school : this.getSchools()) {
-        this.schoolMap.put(school.getDistNo() + school.getSchlNo(), school);
+        this.schoolMap.put(school.getMincode(), school);
       }
     }
     catch (Exception ex) {
@@ -188,14 +189,14 @@ public class RestUtils {
    * @return the schools
    */
   public List<School> getSchools() {
-    log.info("calling school api to load schools to memory");
+    log.info("Calling Institute api to get list of schools");
     return this.webClient.get()
-      .uri(this.props.getSchoolApiURL())
-      .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-      .retrieve()
-      .bodyToFlux(School.class)
-      .collectList()
-      .block();
+            .uri(this.props.getInstituteApiUrl() + "/school")
+            .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .retrieve()
+            .bodyToFlux(School.class)
+            .collectList()
+            .block();
   }
 
   /**
@@ -206,12 +207,12 @@ public class RestUtils {
   public List<PenRequestBatchStudentValidationIssueTypeCode> getPenRequestBatchStudentValidationIssueTypeCodes() {
     log.info("calling pen service api to load penRequestBatchStudentValidationIssueTypeCodes to memory");
     return this.webClient.get()
-      .uri(this.props.getPenServicesApiURL() + "/api/v1/pen-services/validation/issue-type-code")
-      .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-      .retrieve()
-      .bodyToFlux(PenRequestBatchStudentValidationIssueTypeCode.class)
-      .collectList()
-      .block();
+            .uri(this.props.getPenServicesApiURL() + "/api/v1/pen-services/validation/issue-type-code")
+            .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .retrieve()
+            .bodyToFlux(PenRequestBatchStudentValidationIssueTypeCode.class)
+            .collectList()
+            .block();
   }
 
   /**
@@ -252,11 +253,11 @@ public class RestUtils {
    */
   public Student getStudentByStudentID(final String studentID) {
     return this.webClient.get()
-      .uri(this.props.getStudentApiURL(), uri -> uri.path("/{studentID}").build(studentID))
-      .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-      .retrieve()
-      .bodyToMono(Student.class)
-      .block();
+            .uri(this.props.getStudentApiURL(), uri -> uri.path("/{studentID}").build(studentID))
+            .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .retrieve()
+            .bodyToMono(Student.class)
+            .block();
   }
 
   /**
@@ -266,12 +267,12 @@ public class RestUtils {
    */
   public void updateStudent(final Student studentFromStudentAPI) {
     this.webClient.put()
-      .uri(this.props.getStudentApiURL(), uri -> uri.path("/{studentID}").build(studentFromStudentAPI.getStudentID()))
-      .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-      .body(Mono.just(studentFromStudentAPI), Student.class)
-      .retrieve()
-      .bodyToMono(Student.class)
-      .block();
+            .uri(this.props.getStudentApiURL(), uri -> uri.path("/{studentID}").build(studentFromStudentAPI.getStudentID()))
+            .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .body(Mono.just(studentFromStudentAPI), Student.class)
+            .retrieve()
+            .bodyToMono(Student.class)
+            .block();
   }
 
 
@@ -283,12 +284,12 @@ public class RestUtils {
    */
   public Student createStudent(final Student student) {
     return this.webClient.post()
-      .uri(this.props.getStudentApiURL())
-      .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-      .body(Mono.just(student), Student.class)
-      .retrieve()
-      .bodyToMono(Student.class)
-      .block();
+            .uri(this.props.getStudentApiURL())
+            .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .body(Mono.just(student), Student.class)
+            .retrieve()
+            .bodyToMono(Student.class)
+            .block();
   }
 
   /**
@@ -369,7 +370,7 @@ public class RestUtils {
   public List<Student> getStudentsByStudentIDs(final List<UUID> studentIDs) throws IOException, ExecutionException, InterruptedException, TimeoutException {
     final var event = Event.builder().sagaId(UUID.randomUUID()).eventType(EventType.GET_STUDENTS).eventPayload(JsonUtil.getJsonStringFromObject(studentIDs)).build();
     val responseEvent = JsonUtil.getJsonObjectFromByteArray(Event.class,
-      this.messagePublisher.requestMessage(STUDENT_API_TOPIC.toString(), JsonUtil.getJsonString(event).orElseThrow().getBytes(StandardCharsets.UTF_8)).get(30, TimeUnit.SECONDS).getData());
+            this.messagePublisher.requestMessage(STUDENT_API_TOPIC.toString(), JsonUtil.getJsonString(event).orElseThrow().getBytes(StandardCharsets.UTF_8)).get(30, TimeUnit.SECONDS).getData());
     if (responseEvent.getEventOutcome() == EventOutcome.STUDENT_NOT_FOUND) {
       return Collections.emptyList();
     }
@@ -380,11 +381,11 @@ public class RestUtils {
   public Optional<PenCoordinator> getPenCoordinator(final String mincode) {
     try {
       final var response = this.webClient.get()
-        .uri(this.props.getSchoolApiURL(), uri -> uri.path("/{mincode}/pen-coordinator").build(mincode))
-        .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-        .retrieve()
-        .bodyToMono(PenCoordinator.class)
-        .block();
+              .uri(this.props.getSchoolApiURL(), uri -> uri.path("/{mincode}/pen-coordinator").build(mincode))
+              .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+              .retrieve()
+              .bodyToMono(PenCoordinator.class)
+              .block();
       log.info("record found for :: {}", mincode);
       return Optional.ofNullable(response);
     } catch (final WebClientResponseException ex) {
@@ -395,6 +396,37 @@ public class RestUtils {
         throw ex;
       }
     }
+  }
+
+  public List<SchoolContact> getStudentRegistrationContactList(final String mincode) {
+    try {
+      var school = schoolMap.get(mincode);
+      if(school == null){
+        return new ArrayList<>();
+      }
+      log.info("Calling Institute api to get list of school student registration contacts");
+      String criterion = "[{\"searchCriteriaList\":[{\"key\":\"schoolContactTypeCode\",\"operation\":\"eq\",\"value\":\"STUDREGIS\",\"valueType\":\"STRING\",\"condition\":\"AND\"}]}," +
+              " {\"key\":\"schoolId\",\"operation\":\"eq\",\"value\":\"" + school.getSchoolId() + "\",\"valueType\":\"UUID\",\"condition\":\"AND\"}]}," +
+              " {\"key\":\"email\",\"operation\":\"neq\",\"value\":\"null\",\"valueType\":\"UUID\",\"condition\":\"AND\"}]}";
+      SchoolContactSearchWrapper schoolContactSearchWrapper = this.webClient.get()
+              .uri(getSchoolContactURI(criterion))
+              .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+              .retrieve()
+              .bodyToFlux(SchoolContactSearchWrapper.class)
+              .blockFirst();
+
+      return schoolContactSearchWrapper.getContent();
+    }catch(Exception e){
+      log.error("API call to Institute API failure getting student registration contacts :: {}", e.getMessage());
+      throw new PenRegAPIRuntimeException("API call to Institute API failure getting student registration contacts, contact the Ministry for more info.");
+    }
+  }
+
+  private URI getSchoolContactURI(String criterion){
+    return UriComponentsBuilder.fromHttpUrl(this.props.getInstituteApiUrl() + "/school/contact/paginated")
+            .queryParam("pageNumber", "0")
+            .queryParam("pageSize", "10000")
+            .queryParam("searchCriteriaList", criterion).build().toUri();
   }
 
   public Optional<Event> requestEventResponseFromServicesAPI(final Event event) {
@@ -416,7 +448,7 @@ public class RestUtils {
     try {
       log.info("calling :: {} via NATS", topic);
       val response = JsonUtil.getJsonObjectFromByteArray(Event.class,
-        this.messagePublisher.requestMessage(topic.toString(), JsonUtil.getJsonString(event).orElseThrow().getBytes(StandardCharsets.UTF_8)).get(30, TimeUnit.SECONDS).getData());
+              this.messagePublisher.requestMessage(topic.toString(), JsonUtil.getJsonString(event).orElseThrow().getBytes(StandardCharsets.UTF_8)).get(30, TimeUnit.SECONDS).getData());
       log.info("got response from NATS :: {}", response.getEventOutcome());
       return Optional.of(response);
     } catch (final Exception e) {

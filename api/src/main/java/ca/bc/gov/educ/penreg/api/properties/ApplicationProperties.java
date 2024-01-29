@@ -45,6 +45,9 @@ public class ApplicationProperties {
   @Value("${url.api.student}")
   private String studentApiURL;
 
+  @Value("${url.api.institute}")
+  private String instituteApiUrl;
+
   /**
    * Amount of time that can elapse before a duplicate request is not considered a repeat
    */

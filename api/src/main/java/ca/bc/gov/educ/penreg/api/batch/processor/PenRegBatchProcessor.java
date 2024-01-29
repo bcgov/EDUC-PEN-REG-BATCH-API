@@ -18,7 +18,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.NotificationService;
-import ca.bc.gov.educ.penreg.api.service.PenCoordinatorService;
+import ca.bc.gov.educ.penreg.api.service.StudentRegistrationContactService;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import com.google.common.base.Stopwatch;
 import lombok.Getter;
@@ -36,7 +36,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -97,7 +96,7 @@ public class PenRegBatchProcessor {
   /**
    * The Pen coordinator service.
    */
-  private final PenCoordinatorService penCoordinatorService;
+  private final StudentRegistrationContactService penCoordinatorService;
 
   /**
    * The Duplicate file check service map.
@@ -120,7 +119,7 @@ public class PenRegBatchProcessor {
    * @param penRequestBatchFileValidator       the pen request batch file validator
    */
   @Autowired
-  public PenRegBatchProcessor(final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService, final ApplicationProperties applicationProperties, final NotificationService notificationService, final PenCoordinatorService penCoordinatorService, final List<DuplicateFileCheckService> duplicateFileCheckServiceList, final PenRequestBatchFileValidator penRequestBatchFileValidator, final RestUtils restUtils) {
+  public PenRegBatchProcessor(final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService, final ApplicationProperties applicationProperties, final NotificationService notificationService, final StudentRegistrationContactService penCoordinatorService, final List<DuplicateFileCheckService> duplicateFileCheckServiceList, final PenRequestBatchFileValidator penRequestBatchFileValidator, final RestUtils restUtils) {
     this.penRegBatchStudentRecordsProcessor = penRegBatchStudentRecordsProcessor;
     this.penRequestBatchFileService = penRequestBatchFileService;
     this.applicationProperties = applicationProperties;

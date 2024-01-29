@@ -34,7 +34,7 @@ public class NotificationServiceTest extends BasePenRegAPITest {
   NotificationService notificationService;
 
   @Autowired
-  PenCoordinatorService service;
+  StudentRegistrationContactService service;
 
   @Autowired
   MessagePublisher messagePublisher;

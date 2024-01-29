@@ -41,7 +41,7 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
      */
     public PenRequestBatchRepostReportsOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
                                                     PenRequestBatchService penRequestBatchService,
-                                                    PenCoordinatorService penCoordinatorService,
+                                                    StudentRegistrationContactService penCoordinatorService,
                                                     PenCoordinatorProperties penCoordinatorProperties,
                                                     ResponseFileGeneratorService responseFileGeneratorService,
                                                     PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService,

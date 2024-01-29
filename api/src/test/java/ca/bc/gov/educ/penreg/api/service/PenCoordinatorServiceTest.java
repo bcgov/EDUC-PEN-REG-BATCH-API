@@ -30,7 +30,7 @@ public class PenCoordinatorServiceTest extends BasePenRegAPITest {
   private final Map<String, PenCoordinator> penCoordinatorMap = new ConcurrentHashMap<>();
 
   @Autowired
-  PenCoordinatorService service;
+  StudentRegistrationContactService service;
 
   @Autowired
   RestUtils restUtils;

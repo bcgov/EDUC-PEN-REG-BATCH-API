@@ -47,7 +47,7 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
      */
     public PenRequestBatchArchiveAndReturnOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
                                                        PenRequestBatchService penRequestBatchService,
-                                                       PenCoordinatorService penCoordinatorService,
+                                                       StudentRegistrationContactService penCoordinatorService,
                                                        PenCoordinatorProperties penCoordinatorProperties,
                                                        ResponseFileGeneratorService responseFileGeneratorService,
                                                        PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService,

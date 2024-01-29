@@ -48,7 +48,7 @@ public class ResponseFileGeneratorService {
    * the pen coordinator service
    */
   @Getter(PRIVATE)
-  private final PenCoordinatorService penCoordinatorService;
+  private final StudentRegistrationContactService penCoordinatorService;
 
   /**
    * the pen request batch student repository
@@ -75,7 +75,7 @@ public class ResponseFileGeneratorService {
   private SpringTemplateEngine templateEngine;
 
   @Autowired
-  public ResponseFileGeneratorService(final PenCoordinatorService penCoordinatorService, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils, final SpringTemplateEngine templateEngine) {
+  public ResponseFileGeneratorService(final StudentRegistrationContactService penCoordinatorService, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils, final SpringTemplateEngine templateEngine) {
     this.penCoordinatorService = penCoordinatorService;
     this.penWebBlobRepository = penWebBlobRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;

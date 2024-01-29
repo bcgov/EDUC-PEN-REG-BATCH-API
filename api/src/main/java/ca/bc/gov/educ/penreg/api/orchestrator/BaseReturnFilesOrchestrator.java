@@ -58,7 +58,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
   @Getter(PROTECTED)
   private final PenRequestBatchService penRequestBatchService;
   @Getter(PROTECTED)
-  private final PenCoordinatorService penCoordinatorService;
+  private final StudentRegistrationContactService penCoordinatorService;
   @Getter(PROTECTED)
   private final ResponseFileGeneratorService responseFileGeneratorService;
   @Getter(PROTECTED)
@@ -83,7 +83,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
   protected BaseReturnFilesOrchestrator(final SagaService sagaService, final MessagePublisher messagePublisher,
                                         final Class<T> clazz, final String sagaName, final String topicToSubscribe,
                                         final PenRequestBatchService penRequestBatchService,
-                                        final PenCoordinatorService penCoordinatorService,
+                                        final StudentRegistrationContactService penCoordinatorService,
                                         final PenCoordinatorProperties penCoordinatorProperties,
                                         final ResponseFileGeneratorService responseFileGeneratorService,
                                         final PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService,
