@@ -259,7 +259,7 @@ public class ResponseFileGeneratorService {
     // retrieved from PEN_COORDINATOR table
     List<SchoolContact> schoolContacts = this.getStudentRegistrationContactService().getStudentRegistrationContactsByMincode(penRequestBatchEntity.getMincode());
 
-    var primaryContact = Optional.empty();
+    var primaryContact = Optional.ofNullable(SchoolContact.class);
     if(schoolContacts != null && !schoolContacts.isEmpty()){
       primaryContact = Optional.of(schoolContacts.get(0));
     }
@@ -268,7 +268,7 @@ public class ResponseFileGeneratorService {
             .append(String.format("%-8.8s", print(penRequestBatchEntity.getMincode())))
             .append(String.format("%-40.40s", print(penRequestBatchEntity.getSchoolName())))
             .append(String.format("%-8.8s", penRequestBatchEntity.getProcessDate().format(DateTimeFormatter.ofPattern("yyyyMMdd"))))
-            .append(String.format("%-100.100s", print(primaryContact.isPresent()? primaryContact.get().getPenCoordinatorEmail() : "")))
+            .append(String.format("%-100.100s", print(primaryContact.isPresent()? ((SchoolContact) primaryContact.get()).getEmail() : "")))
             .append(String.format("%-10.10s", print(penCoordinator.map(coordinator -> coordinator.getPenCoordinatorFax().replaceAll("[^0-9]+", "")).orElse(""))))
             .append(String.format("%-40.40s", print(penCoordinator.isPresent()? penCoordinator.get().getPenCoordinatorName() : "")))
             .append("  ")
