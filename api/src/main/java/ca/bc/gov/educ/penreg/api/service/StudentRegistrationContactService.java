@@ -31,14 +31,14 @@ public class StudentRegistrationContactService {
     return this.restUtils.getStudentRegistrationContactList(mincode);
   }
 
-  public String getStudentRegistrationContactEmailsByMincode(final String mincode) {
+  public List<String> getStudentRegistrationContactEmailsByMincode(final String mincode) {
     log.debug("getting pen coordinator email for mincode :: {}", mincode);
     if (StringUtils.length(mincode) != 8 || !StringUtils.isNumeric(mincode)) {
-      return "";
+      return new ArrayList<>();
     }
     var contacts = this.restUtils.getStudentRegistrationContactList(mincode);
     return contacts.stream()
             .map(contact -> String.valueOf(contact.getEmail()))
-            .collect(Collectors.joining(","));
+            .toList();
   }
 }
