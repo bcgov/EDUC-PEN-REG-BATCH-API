@@ -5,19 +5,16 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchReportDataMapper;
 import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
-import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
+import ca.bc.gov.educ.penreg.api.struct.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
+import java.util.*;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,7 +43,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
       .telephone("5555555555")
       .fromEmail("test@abc.com")
       .mailingAddress("mailing address")
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(Collections.singletonList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build()))
       .schoolName("Cataline")
       .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
       .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList()))
@@ -107,7 +104,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
       .telephone("5555555555")
       .fromEmail("test@abc.com")
       .mailingAddress("mailing address")
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(Collections.singletonList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build()))
       .schoolName("Cataline")
       .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
       .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList()))
@@ -133,7 +130,7 @@ public class PenRequestBatchReportDataMapperTest extends BasePenRegAPITest {
       .fromEmail("test@abc.com")
       .mailingAddress("mailing address")
       .students(students)
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("test@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(Collections.singletonList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build()))
       .schoolName("Cataline")
       .penRequestBatch(mapper.toStructure(batchEntities.get(0)))
       .penRequestBatchStudents(batchEntities.get(0).getPenRequestBatchStudentEntities().stream().map(studentMapper::toStructure).collect(Collectors.toList()))

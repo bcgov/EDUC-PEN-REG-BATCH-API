@@ -2,10 +2,10 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
+import ca.bc.gov.educ.penreg.api.struct.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -16,9 +16,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,6 +26,7 @@ import static org.mockito.Mockito.when;
 public class PenCoordinatorServiceTest extends BasePenRegAPITest {
 
   private final Map<String, PenCoordinator> penCoordinatorMap = new ConcurrentHashMap<>();
+  private final Map<String, List<SchoolContact>> studentRegistrationContactMap = new ConcurrentHashMap<>();
 
   @Autowired
   StudentRegistrationContactService service;
@@ -38,29 +37,35 @@ public class PenCoordinatorServiceTest extends BasePenRegAPITest {
   @Before
   public void setup() throws IOException {
     Mockito.reset(restUtils);
-    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-pen-coordinator.json")).getFile());
-    final List<PenCoordinator> structs = new ObjectMapper().readValue(file, new TypeReference<>() {
-    });
-    penCoordinatorMap.putAll(structs.stream().collect(Collectors.toConcurrentMap(key -> String.valueOf(key.getDistrictNumber()).concat(String.valueOf(key.getSchoolNumber())), Function.identity())));
+    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-student-registration-contact.json")).getFile());
+    final List<SchoolContact> structs = new ObjectMapper().readValue(file, new TypeReference<>() {});
+    studentRegistrationContactMap.putAll(structs.stream().collect(Collectors.groupingBy(contact -> contact.getSchoolId())));
   }
 
   @Test
-  public void testGetPenCoordinator_givenDifferentInputs_shouldProduceOutput() {
-    String mincode = "123546789";
-    when(this.restUtils.getPenCoordinator(mincode)).thenReturn(Optional.ofNullable(penCoordinatorMap.get(mincode)));
-    val data = this.service.getPenCoordinatorByMinCode("123546789");
+  public void testGetStudentRegistrationContactList_givenDifferentInputs_shouldProduceOutput() {
+    String mincodeNotExist = "123546789";
+    when(this.restUtils.getStudentRegistrationContactList(mincodeNotExist)).thenReturn(studentRegistrationContactMap.get(mincodeNotExist));
+    var data = this.service.getStudentRegistrationContactsByMincode(mincodeNotExist);
     assertThat(data).isEmpty();
-    when(this.restUtils.getPenCoordinator("19337120")).thenReturn(Optional.ofNullable(penCoordinatorMap.get("19337120")));
-    val dataOptional = this.service.getPenCoordinatorByMinCode("19337120");
-    assertThat(dataOptional).isPresent();
+
+    String mindcodeExists = "12345678";
+    when(this.restUtils.getStudentRegistrationContactList(mindcodeExists)).thenReturn(studentRegistrationContactMap.get(mindcodeExists));
+    var dataList = this.service.getStudentRegistrationContactEmailsByMincode(mindcodeExists);
+    assertThat(dataList).hasSize(2);
   }
 
   @Test
-  public void testGetPenCoordinatorEmail_givenDifferentInputs_shouldProduceOutput() {
-    when(this.restUtils.getPenCoordinator("19337120")).thenReturn(Optional.ofNullable(penCoordinatorMap.get("19337120")));
-    val dataOptional = this.service.getPenCoordinatorEmailByMinCode("19337120");
-    assertThat(dataOptional).isPresent();
-    assertThat(dataOptional.get()).isEqualTo("jhamberston0@va.gov");
-  }
+  public void testGetStudentRegistrationContactEmailsByMincode_givenDifferentInputs_shouldProduceOutput() {
+    String mincodeExists = "11111111";
+    when(this.restUtils.getStudentRegistrationContactList(mincodeExists)).thenReturn(studentRegistrationContactMap.get(mincodeExists));
+    var dataList = this.service.getStudentRegistrationContactEmailsByMincode(mincodeExists);
+    assertThat(dataList).hasSize(1);
+    assertThat(dataList.get(0)).isEqualTo("fake@gmail.com");
 
+    String mincodeNotExist = "123546789";
+    when(this.restUtils.getStudentRegistrationContactList(mincodeNotExist)).thenReturn(studentRegistrationContactMap.get(mincodeNotExist));
+    var dataList2 = this.service.getStudentRegistrationContactEmailsByMincode(mincodeNotExist);
+    assertThat(dataList2).hasSize(0);
+  }
 }

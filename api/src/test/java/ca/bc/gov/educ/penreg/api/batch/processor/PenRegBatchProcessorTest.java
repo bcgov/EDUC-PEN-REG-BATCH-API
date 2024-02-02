@@ -3,7 +3,6 @@ package ca.bc.gov.educ.penreg.api.batch.processor;
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.compare.PenRequestBatchHistoryComparator;
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
-import ca.bc.gov.educ.penreg.api.constants.SchoolGroupCodes;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
@@ -14,7 +13,6 @@ import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.School;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
-import ca.bc.gov.educ.penreg.api.struct.v1.SchoolGroupCode;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.github.javafaker.Faker;
@@ -696,7 +694,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenmincodeInvalidSchoolCloseDate_ShouldCreateRecordLOADFAILInDB() throws IOException {
     final School school = this.createMockSchool();
-    school.setDateClosed("1996-09-01T00:00:00");
+    school.setClosedDate("1996-09-01T00:00:00");
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(school));
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
@@ -724,7 +722,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenmincodeInvalidSchoolOpenDate_ShouldCreateRecordLOADFAILInDB() throws IOException {
     final School school = this.createMockSchool();
-    school.setDateOpened("2024-09-01T00:00:00");
+    school.setOpenedDate("2024-09-01T00:00:00");
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(school));
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
@@ -752,7 +750,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenmincodeInvalidSchoolOpenDateFormat_ShouldCreateRecordLOADFAILInDB() throws IOException {
     final School school = this.createMockSchool();
-    school.setDateOpened("88888888");
+    school.setOpenedDate("88888888");
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(school));
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
@@ -778,9 +776,9 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
 
   private School createMockSchool() {
     final School school = new School();
-    school.setSchoolName("Marco's school");
+    school.setDisplayNameNoSpecialChars("Marco's school");
     school.setMincode("66510518");
-    school.setDateOpened("1964-09-01T00:00:00");
+    school.setOpenedDate("1964-09-01T00:00:00");
     return school;
   }
 

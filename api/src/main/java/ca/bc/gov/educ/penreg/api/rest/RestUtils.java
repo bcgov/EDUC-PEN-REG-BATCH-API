@@ -400,7 +400,7 @@ public class RestUtils {
 
   public List<SchoolContact> getStudentRegistrationContactList(final String mincode) {
     try {
-      var school = schoolMap.get(mincode);
+      var school = schoolMap.get(mincode); //TODO investigate if this is correct should we throw an exception?
       if(school == null){
         return new ArrayList<>();
       }

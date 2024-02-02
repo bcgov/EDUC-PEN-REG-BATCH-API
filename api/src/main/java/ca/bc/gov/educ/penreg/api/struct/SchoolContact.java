@@ -1,12 +1,15 @@
 package ca.bc.gov.educ.penreg.api.struct;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
+import lombok.*;
 
 import javax.validation.constraints.*;
 import java.io.Serializable;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SchoolContact implements Serializable {
   /**

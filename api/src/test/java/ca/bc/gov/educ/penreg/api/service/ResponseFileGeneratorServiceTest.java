@@ -8,11 +8,12 @@ import ca.bc.gov.educ.penreg.api.mappers.v1.PenRequestBatchStudentMapper;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
-import ca.bc.gov.educ.penreg.api.struct.School;
+import ca.bc.gov.educ.penreg.api.struct.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchRepostReportsFilesSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
+import java.util.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -21,9 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.transaction.Transactional;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -252,6 +250,10 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
   private PenRequestBatchReportData getPenRequestBatchReportData(PenRequestBatchEntity batch) {
     var issues = batch.getPenRequestBatchStudentEntities().stream().filter(student -> student.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode()))
       .collect(Collectors.toMap(student -> student.getPenRequestBatchStudentID().toString(), student -> "error issue message"));
+
+    List<SchoolContact> studentRegistrationContacts = new ArrayList<>();
+    studentRegistrationContacts.add(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build());
+
     var sagaData = PenRequestBatchRepostReportsFilesSagaData.builder()
       .penRequestBatchID(batch.getPenRequestBatchID())
       .schoolName(batch.getSchoolName())
@@ -259,7 +261,8 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
       .penRequestBatchStudents(batch.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
       .penRequestBatchStudentValidationIssues(issues)
       .students(PenRequestBatchTestUtils.createStudents(batch))
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+//      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(studentRegistrationContacts)
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")
@@ -270,12 +273,11 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
 
   private School createMockSchool(String mincode, String facilityTypeCode) {
     final School school = new School();
-    school.setSchoolName("Marco's school");
+    school.setDisplayNameNoSpecialChars("Marco's school");
     school.setMincode(mincode);
-    school.setDateOpened("1964-09-01T00:00:00");
-    school.setDistNo(mincode.substring(0, 3));
-    school.setSchlNo(mincode.substring(3));
+    school.setOpenedDate("1964-09-01T00:00:00");
     school.setFacilityTypeCode(facilityTypeCode);
+    school.setSchoolNumber(mincode.substring(3));
     return school;
   }
 

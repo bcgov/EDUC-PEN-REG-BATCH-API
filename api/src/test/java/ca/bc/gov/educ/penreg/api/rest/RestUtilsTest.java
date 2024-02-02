@@ -68,7 +68,8 @@ public class RestUtilsTest {
   @Before
   public void setUp() throws Exception {
     when(this.webClient.get()).thenReturn(this.requestHeadersUriMock);
-    when(this.requestHeadersUriMock.uri(this.applicationProperties.getSchoolApiURL())).thenReturn(this.requestHeadersMock);
+    when(this.requestHeadersUriMock.uri(this.applicationProperties.getSchoolApiURL())).thenReturn(this.requestHeadersMock); //TODO we don't need this anymore
+    when(this.requestHeadersUriMock.uri(this.applicationProperties.getInstituteApiUrl() + "/school")).thenReturn(this.requestHeadersMock);
     when(this.requestHeadersMock.header(any(), any())).thenReturn(this.requestHeadersMock);
     when(this.requestHeadersMock.retrieve()).thenReturn(this.responseMock);
     when(this.responseMock.bodyToFlux(School.class)).thenReturn(Flux.just(createSchoolArray()));
@@ -85,7 +86,7 @@ public class RestUtilsTest {
 
   private School[] createSchoolArray() {
     School[] schools = new School[1];
-    schools[0] = School.builder().mincode("10200001").distNo("102").schlNo("00001").build();
+    schools[0] = School.builder().mincode("10200001").schoolNumber("00001").build();
     return schools;
   }
 

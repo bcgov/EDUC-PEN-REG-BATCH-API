@@ -15,14 +15,13 @@ import ca.bc.gov.educ.penreg.api.repository.SagaRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
-import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
+import ca.bc.gov.educ.penreg.api.struct.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -33,10 +32,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Base64;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -116,10 +111,15 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
   @Test
   public void testHandleEvent_givenSTUDENTS_FOUNDEventAndCorrectSagaAndEventData_shouldBeMarkedGENERATE_PEN_REQUEST_BATCH_REPORTS() throws IOException, InterruptedException, TimeoutException {
     final PenRequestBatchEntity penRequestBatchEntity = penRequestBatchTestUtils.createBatchEntity("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), TEST_PEN);
+
+    List<SchoolContact> studentRegistrationContacts = new ArrayList<>();
+    studentRegistrationContacts.add(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build());
+
     final PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatch(this.batchMapper.toStructure(penRequestBatchEntity))
       .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(this.batchStudentMapper::toStructure).collect(Collectors.toList()))
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+//      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(studentRegistrationContacts)
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")
@@ -152,10 +152,14 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
   public void testHandleEvent_givenSTUDENTS_FOUNDEventAndCorrectSagaAndEventData_and_SfasBatchFile_shouldBeMarkedNOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT() throws IOException, InterruptedException, TimeoutException {
     final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
     final PenRequestBatchEntity penRequestBatchEntity = penRequestBatchTestUtils.createBatchEntity("10200030", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), TEST_PEN);
+
+    List<SchoolContact> studentRegistrationContacts = new ArrayList<>();
+    studentRegistrationContacts.add(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build());
+
     final PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatch(this.batchMapper.toStructure(penRequestBatchEntity))
       .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(this.batchStudentMapper::toStructure).collect(Collectors.toList()))
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(studentRegistrationContacts)
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")
@@ -199,7 +203,8 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
     PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
       .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+//      .studentRegistrationContacts(Collections.singletonList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build())) //TODO figure out what to do with the header file we are just taking the first email.
+        .studentRegistrationContacts(Arrays.asList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build(), SchoolContact.builder().email("pen@email2.com").firstName("Joe2").lastName("Blow2").build()))
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")
@@ -241,7 +246,7 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
     PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
       .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
-      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(Collections.singletonList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build()))
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")

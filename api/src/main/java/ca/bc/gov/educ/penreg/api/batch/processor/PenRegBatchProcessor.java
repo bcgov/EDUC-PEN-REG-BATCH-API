@@ -219,7 +219,7 @@ public class PenRegBatchProcessor {
     val notifySchoolForFileFormatErrorsOptional = this.notifySchoolForFileFormatErrors(guid, penWebBlobEntity, fileUnProcessableException);
     final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityForBusinessException(penWebBlobEntity, fileUnProcessableException.getReason(), fileUnProcessableException.getPenRequestBatchStatusCode(), batchFile, persistStudentRecords(fileUnProcessableException.getFileError())); // batch file can be processed further and persisted.
     final Optional<School> school = this.restUtils.getSchoolByMincode(penWebBlobEntity.getMincode());
-    school.ifPresent(value -> entity.setSchoolName(value.getSchoolName()));
+    school.ifPresent(value -> entity.setSchoolName(value.getDisplayNameNoSpecialChars())); //TODO should this be no special characters?
     //wait here if notification was sent, if there was any error this file will be picked up again as it wont be persisted.
     if (notifySchoolForFileFormatErrorsOptional.isPresent()) {
       final boolean isNotified = this.waitForNotificationToCompleteIfPresent(guid, notifySchoolForFileFormatErrorsOptional.get());
@@ -271,10 +271,10 @@ public class PenRegBatchProcessor {
     Optional<CompletableFuture<Boolean>> isSchoolNotifiedFutureOptional = Optional.empty();
     if (this.isNotificationToSchoolRequired(fileUnProcessableException)) {
       log.info("notification to school is required :: {}", guid);
-      val coordinatorEmailOptional = this.penCoordinatorService.getPenCoordinatorEmailByMinCode(penWebBlobEntity.getMincode());
-      if (coordinatorEmailOptional.isPresent()) {
-        log.info("pen coordinator email found :: {}, for guid :: {}", coordinatorEmailOptional.get(), guid);
-        isSchoolNotifiedFutureOptional = Optional.ofNullable(this.notificationService.notifySchoolForLoadFailed(guid, penWebBlobEntity.getFileName(), penWebBlobEntity.getSubmissionNumber(), fileUnProcessableException.getReason(), coordinatorEmailOptional.get()));
+      val coordinatorEmailOptional = this.penCoordinatorService.getStudentRegistrationContactEmailsByMincode(penWebBlobEntity.getMincode());
+      if (!coordinatorEmailOptional.isEmpty()) {
+        log.info("pen coordinator email found :: {}, for guid :: {}", coordinatorEmailOptional.stream().toList(), guid);
+        isSchoolNotifiedFutureOptional = Optional.ofNullable(this.notificationService.notifySchoolForLoadFailed(guid, penWebBlobEntity.getFileName(), penWebBlobEntity.getSubmissionNumber(), fileUnProcessableException.getReason(), coordinatorEmailOptional.stream().toString()));
       }
     }
     return isSchoolNotifiedFutureOptional;
@@ -310,7 +310,7 @@ public class PenRegBatchProcessor {
     log.info("going to persist data for batch :: {}", guid);
     final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityLoaded(penWebBlobEntity, batchFile); // batch file can be processed further and persisted.
     final Optional<School> school = this.restUtils.getSchoolByMincode(penWebBlobEntity.getMincode());
-    school.ifPresent(value -> entity.setSchoolName(value.getSchoolName()));
+    school.ifPresent(value -> entity.setSchoolName(value.getDisplayNameNoSpecialChars())); //TODO check if we need to make sure to have a safe display name
     for (final var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.
       final var penRequestBatchStudentEntity = mapper.toPenRequestBatchStudentEntity(student, entity);
       penRequestBatchStudentEntity.setRecordNumber(counter++);

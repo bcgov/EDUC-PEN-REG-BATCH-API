@@ -1,11 +1,9 @@
 package ca.bc.gov.educ.penreg.api.mappers.v1;
 
 import ca.bc.gov.educ.penreg.api.constants.PenRequestBatchStudentStatusCodes;
-import ca.bc.gov.educ.penreg.api.constants.StudentDemogCode;
 import ca.bc.gov.educ.penreg.api.helpers.PenRegBatchHelper;
-import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.BasePenRequestBatchReturnFilesSagaData;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.ReportListItem;
@@ -83,7 +81,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       reportData.setProcessDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
       reportData.setProcessTime(processDateTime.format(DateTimeFormatter.ofPattern("HH:mm")));
       reportData.setReportDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
-      reportData.setReviewer(this.setReviewer(data.getPenCoordinator()));
+      reportData.setReviewer(this.setReviewer(data.getStudentRegistrationContacts())); //TODO figure out what to do here if we have more than 1 reviewer
     }
 
 
@@ -147,8 +145,8 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
   }
 
 
-  private String setReviewer(final PenCoordinator penCoordinator) {
-    return (penCoordinator != null && StringUtils.isNotBlank(penCoordinator.getPenCoordinatorName())) ? penCoordinator.getPenCoordinatorName() : "School PEN Coordinator";
+  private String setReviewer(final List<SchoolContact> studentRegistrationContacts) { //TODO check for potential bug last name could be blank?
+    return (!studentRegistrationContacts.isEmpty() && StringUtils.isNotBlank(studentRegistrationContacts.get(0).getFirstName() + " " + studentRegistrationContacts.get(0).getLastName())) ? studentRegistrationContacts.get(0).getFirstName() + " " + studentRegistrationContacts.get(0).getLastName() : "School PEN Coordinator";
   }
 
   private Map<String, Student> setStudents(final List<Student> students) {
