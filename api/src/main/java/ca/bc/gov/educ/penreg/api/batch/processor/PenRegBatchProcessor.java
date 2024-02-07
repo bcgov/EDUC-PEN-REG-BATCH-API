@@ -94,9 +94,9 @@ public class PenRegBatchProcessor {
    */
   private final NotificationService notificationService;
   /**
-   * The Pen coordinator service.
+   * The Student Registration Contact service.
    */
-  private final StudentRegistrationContactService penCoordinatorService;
+  private final StudentRegistrationContactService studentRegistrationContactService;
 
   /**
    * The Duplicate file check service map.
@@ -114,17 +114,17 @@ public class PenRegBatchProcessor {
    * @param penRequestBatchFileService         the pen request batch file service
    * @param applicationProperties              the application properties
    * @param notificationService                the notification service
-   * @param penCoordinatorService              the pen coordinator service
+   * @param studentRegistrationContactService  the student registration contact service
    * @param duplicateFileCheckServiceList      the duplicate file check service list
    * @param penRequestBatchFileValidator       the pen request batch file validator
    */
   @Autowired
-  public PenRegBatchProcessor(final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService, final ApplicationProperties applicationProperties, final NotificationService notificationService, final StudentRegistrationContactService penCoordinatorService, final List<DuplicateFileCheckService> duplicateFileCheckServiceList, final PenRequestBatchFileValidator penRequestBatchFileValidator, final RestUtils restUtils) {
+  public PenRegBatchProcessor(final PenRegBatchStudentRecordsProcessor penRegBatchStudentRecordsProcessor, final PenRequestBatchFileService penRequestBatchFileService, final ApplicationProperties applicationProperties, final NotificationService notificationService, final StudentRegistrationContactService studentRegistrationContactService, final List<DuplicateFileCheckService> duplicateFileCheckServiceList, final PenRequestBatchFileValidator penRequestBatchFileValidator, final RestUtils restUtils) {
     this.penRegBatchStudentRecordsProcessor = penRegBatchStudentRecordsProcessor;
     this.penRequestBatchFileService = penRequestBatchFileService;
     this.applicationProperties = applicationProperties;
     this.notificationService = notificationService;
-    this.penCoordinatorService = penCoordinatorService;
+    this.studentRegistrationContactService = studentRegistrationContactService;
     this.duplicateFileCheckServiceMap = duplicateFileCheckServiceList.stream().collect(Collectors.toMap(DuplicateFileCheckService::getSchoolGroupCode, Function.identity()));
     this.penRequestBatchFileValidator = penRequestBatchFileValidator;
     this.restUtils = restUtils;
@@ -219,7 +219,7 @@ public class PenRegBatchProcessor {
     val notifySchoolForFileFormatErrorsOptional = this.notifySchoolForFileFormatErrors(guid, penWebBlobEntity, fileUnProcessableException);
     final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityForBusinessException(penWebBlobEntity, fileUnProcessableException.getReason(), fileUnProcessableException.getPenRequestBatchStatusCode(), batchFile, persistStudentRecords(fileUnProcessableException.getFileError())); // batch file can be processed further and persisted.
     final Optional<School> school = this.restUtils.getSchoolByMincode(penWebBlobEntity.getMincode());
-    school.ifPresent(value -> entity.setSchoolName(value.getDisplayNameNoSpecialChars())); //TODO should this be no special characters?
+    school.ifPresent(value -> entity.setSchoolName(value.getDisplayName()));
     //wait here if notification was sent, if there was any error this file will be picked up again as it wont be persisted.
     if (notifySchoolForFileFormatErrorsOptional.isPresent()) {
       final boolean isNotified = this.waitForNotificationToCompleteIfPresent(guid, notifySchoolForFileFormatErrorsOptional.get());
@@ -271,10 +271,10 @@ public class PenRegBatchProcessor {
     Optional<CompletableFuture<Boolean>> isSchoolNotifiedFutureOptional = Optional.empty();
     if (this.isNotificationToSchoolRequired(fileUnProcessableException)) {
       log.info("notification to school is required :: {}", guid);
-      val coordinatorEmailOptional = this.penCoordinatorService.getStudentRegistrationContactEmailsByMincode(penWebBlobEntity.getMincode());
-      if (!coordinatorEmailOptional.isEmpty()) {
-        log.info("pen coordinator email found :: {}, for guid :: {}", coordinatorEmailOptional.stream().toList(), guid);
-        isSchoolNotifiedFutureOptional = Optional.ofNullable(this.notificationService.notifySchoolForLoadFailed(guid, penWebBlobEntity.getFileName(), penWebBlobEntity.getSubmissionNumber(), fileUnProcessableException.getReason(), coordinatorEmailOptional.stream().toString()));
+      val studentRegistrationContactList = this.studentRegistrationContactService.getStudentRegistrationContactEmailsByMincode(penWebBlobEntity.getMincode());
+      if (!studentRegistrationContactList.isEmpty()) {
+        log.info("student registration school contact email(s) found :: {}, for guid :: {}", studentRegistrationContactList, guid);
+        isSchoolNotifiedFutureOptional = Optional.ofNullable(this.notificationService.notifySchoolForLoadFailed(guid, penWebBlobEntity.getFileName(), penWebBlobEntity.getSubmissionNumber(), fileUnProcessableException.getReason(), studentRegistrationContactList));
       }
     }
     return isSchoolNotifiedFutureOptional;
@@ -310,7 +310,7 @@ public class PenRegBatchProcessor {
     log.info("going to persist data for batch :: {}", guid);
     final PenRequestBatchEntity entity = mapper.toPenReqBatchEntityLoaded(penWebBlobEntity, batchFile); // batch file can be processed further and persisted.
     final Optional<School> school = this.restUtils.getSchoolByMincode(penWebBlobEntity.getMincode());
-    school.ifPresent(value -> entity.setSchoolName(value.getDisplayNameNoSpecialChars())); //TODO check if we need to make sure to have a safe display name
+    school.ifPresent(value -> entity.setSchoolName(value.getDisplayName()));
     for (final var student : batchFile.getStudentDetails()) { // set the object so that PK/FK relationship will be auto established by hibernate.
       final var penRequestBatchStudentEntity = mapper.toPenRequestBatchStudentEntity(student, entity);
       penRequestBatchStudentEntity.setRecordNumber(counter++);

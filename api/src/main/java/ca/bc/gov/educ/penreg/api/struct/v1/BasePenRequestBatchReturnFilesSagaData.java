@@ -42,10 +42,8 @@ public class BasePenRequestBatchReturnFilesSagaData extends BaseRequest {
     this.students = students;
   }
     Map<String, String> penRequestBatchStudentValidationIssues;
-//    PenCoordinator penCoordinator; //TODO change this to a list of SchoolContact
-    List<SchoolContact> studentRegistrationContacts;
 
-    //What is happening here
+    List<SchoolContact> studentRegistrationContacts;
   public List<SchoolContact> getStudentRegistrationContacts() {
     if (this.studentRegistrationContacts == null) {
       return new ArrayList<>();

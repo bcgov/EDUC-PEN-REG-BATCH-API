@@ -2,10 +2,11 @@ package ca.bc.gov.educ.penreg.api.service;
 
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
-import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
+import ca.bc.gov.educ.penreg.api.properties.DataManagementUnitProperties;
 import ca.bc.gov.educ.penreg.api.struct.Event;
 import ca.bc.gov.educ.penreg.api.struct.v1.notification.PenRequestBatchSchoolErrorNotificationEntity;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
+import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Service;
@@ -13,8 +14,6 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.TextStyle;
-import java.util.Locale;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PROFILE_REQUEST_EMAIL_API_TOPIC;
@@ -27,14 +26,14 @@ import static ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum.PROFILE_REQUEST
 public class NotificationService {
 
   private final MessagePublisher messagePublisher;
-  private final PenCoordinatorProperties penCoordinatorProperties;
+  private final DataManagementUnitProperties dataManagementUnitProperties;
 
-  public NotificationService(final MessagePublisher messagePublisher, final PenCoordinatorProperties penCoordinatorProperties) {
+  public NotificationService(final MessagePublisher messagePublisher, final DataManagementUnitProperties dataManagementUnitProperties) {
     this.messagePublisher = messagePublisher;
-    this.penCoordinatorProperties = penCoordinatorProperties;
+    this.dataManagementUnitProperties = dataManagementUnitProperties;
   }
 
-  public CompletableFuture<Boolean> notifySchoolForLoadFailed(final String guid, final String fileName, final String submissionNumber, final String reason, final String toEmail) {
+  public CompletableFuture<Boolean> notifySchoolForLoadFailed(final String guid, final String fileName, final String submissionNumber, final String reason, final List<String> toEmail) {
     try {
       val localDateTime = LocalDateTime.now();
       val prbErrorNotification = new PenRequestBatchSchoolErrorNotificationEntity();
@@ -43,7 +42,7 @@ public class NotificationService {
       prbErrorNotification.setFileName(fileName);
       prbErrorNotification.setSubmissionNumber(submissionNumber);
       prbErrorNotification.setToEmail(toEmail);
-      prbErrorNotification.setFromEmail(this.penCoordinatorProperties.getFromEmail());
+      prbErrorNotification.setFromEmail(this.dataManagementUnitProperties.getFromEmail());
       final Event event = Event.builder()
           .eventType(EventType.PEN_REQUEST_BATCH_NOTIFY_SCHOOL_FILE_FORMAT_ERROR)
           .eventPayload(JsonUtil.getJsonStringFromObject(prbErrorNotification))

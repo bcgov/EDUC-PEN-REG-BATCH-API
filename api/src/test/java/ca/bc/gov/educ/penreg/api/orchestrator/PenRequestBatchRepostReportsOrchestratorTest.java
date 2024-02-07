@@ -16,11 +16,9 @@ import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.PenRequestBatchService;
 import ca.bc.gov.educ.penreg.api.service.SagaService;
 import ca.bc.gov.educ.penreg.api.struct.*;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchArchiveAndReturnSagaData;
+import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +28,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -102,9 +99,6 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
   public void setUp() throws Exception {
     MockitoAnnotations.openMocks(this);
     this.saga = penRequestBatchTestUtils.createSaga("19337120", "12345678", LOADED.getCode(), TEST_PEN);
-    final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-pen-coordinator.json")).getFile());
-    final List<ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator> structs = new ObjectMapper().readValue(file, new TypeReference<>() {
-    });
     when(this.restUtils.getProps()).thenReturn(this.props);
   }
 
@@ -118,7 +112,8 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
     final PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatch(this.batchMapper.toStructure(penRequestBatchEntity))
       .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(this.batchStudentMapper::toStructure).collect(Collectors.toList()))
-//      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(Arrays.asList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build(),
+          SchoolContact.builder().email("pen@email2.com").firstName("Joe2").lastName("Blow2").build()))
       .studentRegistrationContacts(studentRegistrationContacts)
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
@@ -197,14 +192,14 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
   }
 
   @Test
-  public void testSendHasCoordinatorEmail_givenEventAndSagaDataHasPenCoordinatorEmail_and_MyEdSchool_shouldBeMarkedNOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT() throws InterruptedException, TimeoutException, IOException {
+  public void testSendHasStudentRegistrationSchoolContactEmail_givenEventAndSagaDataHasStudentRegistrationSchoolContactEmail_and_MyEdSchool_shouldBeMarkedNOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT() throws InterruptedException, TimeoutException, IOException {
     final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
     PenRequestBatchEntity penRequestBatchEntity = penRequestBatchTestUtils.createBatchEntity("19337120", "M2345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), TEST_PEN);
     PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()
       .penRequestBatch(batchMapper.toStructure(penRequestBatchEntity))
       .penRequestBatchStudents(penRequestBatchEntity.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
-//      .studentRegistrationContacts(Collections.singletonList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build())) //TODO figure out what to do with the header file we are just taking the first email.
-        .studentRegistrationContacts(Arrays.asList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build(), SchoolContact.builder().email("pen@email2.com").firstName("Joe2").lastName("Blow2").build()))
+      .studentRegistrationContacts(Arrays.asList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build(),
+          SchoolContact.builder().email("pen@email2.com").firstName("Joe2").lastName("Blow2").build()))
       .mailingAddress("123 st")
       .fromEmail("test@email.com")
       .facsimile("5555555555")
@@ -240,7 +235,7 @@ public class PenRequestBatchRepostReportsOrchestratorTest extends BaseOrchestrat
   }
 
   @Test
-  public void testSendHasCoordinatorEmail_givenEventAndSagaDataHasPenCoordinatorEmail_and_NotMyEdSchool_shouldBeMarkedNOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT() throws InterruptedException, TimeoutException, IOException {
+  public void testSendHasStudentRegistrationSchoolContactEmail_givenEventAndSagaDataHasStudentRegistrationSchoolContactEmail_and_NotMyEdSchool_shouldBeMarkedNOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT() throws InterruptedException, TimeoutException, IOException {
     final var invocations = mockingDetails(this.messagePublisher).getInvocations().size();
     PenRequestBatchEntity penRequestBatchEntity = penRequestBatchTestUtils.createBatchEntity("19337120", "12345679", PenRequestBatchStudentStatusCodes.SYS_NEW_PEN.getCode(), TEST_PEN);
     PenRequestBatchArchiveAndReturnSagaData payload = PenRequestBatchArchiveAndReturnSagaData.builder()

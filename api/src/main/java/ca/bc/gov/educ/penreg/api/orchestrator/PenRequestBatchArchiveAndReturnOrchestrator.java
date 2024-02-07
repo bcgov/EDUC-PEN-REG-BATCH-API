@@ -6,7 +6,7 @@ import ca.bc.gov.educ.penreg.api.exception.PenRegAPIRuntimeException;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
-import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
+import ca.bc.gov.educ.penreg.api.properties.DataManagementUnitProperties;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.*;
 import ca.bc.gov.educ.penreg.api.struct.Event;
@@ -42,19 +42,19 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
      * @param sagaService      the saga service
      * @param messagePublisher the message publisher
      * @param penRequestBatchService the pen request batch service
-     * @param penCoordinatorService  the pen coordinator service
-     * @param penCoordinatorProperties the pen coordinator properties
+     * @param studentRegistrationContactService  the student registration contact service
+     * @param dataManagementUnitProperties the student registration contact properties
      */
     public PenRequestBatchArchiveAndReturnOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
                                                        PenRequestBatchService penRequestBatchService,
-                                                       StudentRegistrationContactService penCoordinatorService,
-                                                       PenCoordinatorProperties penCoordinatorProperties,
+                                                       StudentRegistrationContactService studentRegistrationContactService,
+                                                       DataManagementUnitProperties dataManagementUnitProperties,
                                                        ResponseFileGeneratorService responseFileGeneratorService,
                                                        PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService,
                                                        RestUtils restUtils) {
         super(sagaService, messagePublisher, PenRequestBatchArchiveAndReturnSagaData.class,
           PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_SAGA.toString(), PEN_REQUEST_BATCH_ARCHIVE_AND_RETURN_TOPIC.toString(),
-          penRequestBatchService, penCoordinatorService, penCoordinatorProperties, responseFileGeneratorService,
+          penRequestBatchService, studentRegistrationContactService, dataManagementUnitProperties, responseFileGeneratorService,
           penRequestBatchStudentValidationIssueService, restUtils);
     }
 
@@ -70,8 +70,8 @@ public class PenRequestBatchArchiveAndReturnOrchestrator extends BaseReturnFiles
                 .step(ARCHIVE_PEN_REQUEST_BATCH, PEN_REQUEST_BATCH_UPDATED, this::isNotSupportingPDFGeneration, SAVE_REPORTS, this::saveReportsWithoutPDF)
                 .step(ARCHIVE_PEN_REQUEST_BATCH, PEN_REQUEST_BATCH_UPDATED, this::isSupportingPDFGeneration, GENERATE_PEN_REQUEST_BATCH_REPORTS, this::generatePDFReport)
                 .step(GENERATE_PEN_REQUEST_BATCH_REPORTS, ARCHIVE_PEN_REQUEST_BATCH_REPORTS_GENERATED, SAVE_REPORTS, this::saveReports)
-                .step(SAVE_REPORTS, REPORTS_SAVED, this::hasPenCoordinatorEmail, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT, this::sendHasCoordinatorEmail)
-                .step(SAVE_REPORTS, REPORTS_SAVED, this::hasNoPenCoordinatorEmail, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT, this::sendHasNoCoordinatorEmail)
+                .step(SAVE_REPORTS, REPORTS_SAVED, this::hasStudentRegistrationContactEmail, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT, this::sendHasStudentRegistrationContactEmail)
+                .step(SAVE_REPORTS, REPORTS_SAVED, this::hasNoStudentRegistrationContactEmail, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT, this::sendHasNoStudentRegistrationContactEmail)
                 .end(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT, ARCHIVE_EMAIL_SENT)
                 .or()
                 .end(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT, ARCHIVE_EMAIL_SENT)

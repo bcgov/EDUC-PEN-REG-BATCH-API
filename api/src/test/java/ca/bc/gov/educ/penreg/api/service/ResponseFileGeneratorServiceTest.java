@@ -9,7 +9,6 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.*;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchRepostReportsFilesSagaData;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
@@ -261,7 +260,8 @@ public class ResponseFileGeneratorServiceTest extends BasePenRegAPITest {
       .penRequestBatchStudents(batch.getPenRequestBatchStudentEntities().stream().map(batchStudentMapper::toStructure).collect(Collectors.toList()))
       .penRequestBatchStudentValidationIssues(issues)
       .students(PenRequestBatchTestUtils.createStudents(batch))
-//      .penCoordinator(PenCoordinator.builder().penCoordinatorEmail("pen@email.com").penCoordinatorName("Joe Blow").build())
+      .studentRegistrationContacts(Arrays.asList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build(),
+          SchoolContact.builder().email("pen@email2.com").firstName("Joe2").lastName("Blow2").build()))
       .studentRegistrationContacts(studentRegistrationContacts)
       .mailingAddress("123 st")
       .fromEmail("test@email.com")

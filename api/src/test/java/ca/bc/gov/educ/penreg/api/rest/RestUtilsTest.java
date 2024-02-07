@@ -68,7 +68,6 @@ public class RestUtilsTest {
   @Before
   public void setUp() throws Exception {
     when(this.webClient.get()).thenReturn(this.requestHeadersUriMock);
-    when(this.requestHeadersUriMock.uri(this.applicationProperties.getSchoolApiURL())).thenReturn(this.requestHeadersMock); //TODO we don't need this anymore
     when(this.requestHeadersUriMock.uri(this.applicationProperties.getInstituteApiUrl() + "/school")).thenReturn(this.requestHeadersMock);
     when(this.requestHeadersMock.header(any(), any())).thenReturn(this.requestHeadersMock);
     when(this.requestHeadersMock.retrieve()).thenReturn(this.responseMock);

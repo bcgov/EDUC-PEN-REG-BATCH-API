@@ -8,7 +8,6 @@ import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
 import ca.bc.gov.educ.penreg.api.struct.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.GradeCode;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueFieldCode;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
@@ -20,12 +19,10 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
@@ -378,30 +375,11 @@ public class RestUtils {
     });
   }
 
-  public Optional<PenCoordinator> getPenCoordinator(final String mincode) {
-    try {
-      final var response = this.webClient.get()
-              .uri(this.props.getSchoolApiURL(), uri -> uri.path("/{mincode}/pen-coordinator").build(mincode))
-              .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-              .retrieve()
-              .bodyToMono(PenCoordinator.class)
-              .block();
-      log.info("record found for :: {}", mincode);
-      return Optional.ofNullable(response);
-    } catch (final WebClientResponseException ex) {
-      log.info("no record found for :: {}", mincode);
-      if (ex.getStatusCode().value() == HttpStatus.NOT_FOUND.value()) {
-        return Optional.empty();
-      } else {
-        throw ex;
-      }
-    }
-  }
-
   public List<SchoolContact> getStudentRegistrationContactList(final String mincode) {
     try {
-      var school = schoolMap.get(mincode); //TODO investigate if this is correct should we throw an exception?
+      var school = schoolMap.get(mincode);
       if(school == null){
+        log.info("getStudentRegistrationContactList :: unable to find school for mincode {} returning empty ArrayList", mincode);
         return new ArrayList<>();
       }
       log.info("Calling Institute api to get list of school student registration contacts");

@@ -21,7 +21,7 @@ public class StudentRegistrationContactService {
   }
 
   public List<SchoolContact> getStudentRegistrationContactsByMincode(final String mincode) {
-    if (StringUtils.length(mincode) != 8 || !StringUtils.isNumeric(mincode)) { //TODO why does this need to check? I guess mincode could be wrong?
+    if (StringUtils.length(mincode) != 8 || !StringUtils.isNumeric(mincode)) {
       log.info("getStudentREgistrationContacsByMincode :: mincode is invalid {} returning empty array list", mincode);
       return new ArrayList<>();
     }
@@ -30,7 +30,7 @@ public class StudentRegistrationContactService {
   }
 
   public List<String> getStudentRegistrationContactEmailsByMincode(final String mincode) {
-    log.debug("getting pen coordinator email for mincode :: {}", mincode); //TODO why does this need to check? I guess mincode could be wrong?
+    log.debug("getting student registration contact email for mincode :: {}", mincode);
     if (StringUtils.length(mincode) != 8 || !StringUtils.isNumeric(mincode)) {
       log.info("getStudentRegistrationContactEmailsByMincode :: mincode is invalid {} returning empty array list", mincode);
       return new ArrayList<>();

@@ -3,7 +3,6 @@ package ca.bc.gov.educ.penreg.api.service;
 import ca.bc.gov.educ.penreg.api.BasePenRegAPITest;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.*;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
@@ -23,9 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 
-public class PenCoordinatorServiceTest extends BasePenRegAPITest {
-
-  private final Map<String, PenCoordinator> penCoordinatorMap = new ConcurrentHashMap<>();
+public class StudentRegistrationContactServiceTest extends BasePenRegAPITest {
   private final Map<String, List<SchoolContact>> studentRegistrationContactMap = new ConcurrentHashMap<>();
 
   @Autowired
@@ -39,7 +36,7 @@ public class PenCoordinatorServiceTest extends BasePenRegAPITest {
     Mockito.reset(restUtils);
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("mock-student-registration-contact.json")).getFile());
     final List<SchoolContact> structs = new ObjectMapper().readValue(file, new TypeReference<>() {});
-    studentRegistrationContactMap.putAll(structs.stream().collect(Collectors.groupingBy(contact -> contact.getSchoolId())));
+    studentRegistrationContactMap.putAll(structs.stream().collect(Collectors.groupingBy(SchoolContact::getSchoolId)));
   }
 
   @Test

@@ -9,7 +9,6 @@ import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.struct.*;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import lombok.Getter;
@@ -48,7 +47,7 @@ public class ResponseFileGeneratorService {
    * the pen coordinator service
    */
   @Getter(PRIVATE)
-  private final StudentRegistrationContactService penCoordinatorService;
+  private final StudentRegistrationContactService studentRegistrationContactService;
 
   /**
    * the pen request batch student repository
@@ -75,8 +74,8 @@ public class ResponseFileGeneratorService {
   private SpringTemplateEngine templateEngine;
 
   @Autowired
-  public ResponseFileGeneratorService(final StudentRegistrationContactService penCoordinatorService, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils, final SpringTemplateEngine templateEngine) {
-    this.penCoordinatorService = penCoordinatorService; //TODO change this to StudentRegistrationContactService
+  public ResponseFileGeneratorService(final StudentRegistrationContactService studentRegistrationContactService, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils, final SpringTemplateEngine templateEngine) {
+    this.studentRegistrationContactService = studentRegistrationContactService;
     this.penWebBlobRepository = penWebBlobRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
     this.restUtils = restUtils;
@@ -96,7 +95,7 @@ public class ResponseFileGeneratorService {
             x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.USR_NEW_PEN.getCode()) ||
             x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode()) ||
             x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode())) &&
-            x.getLocalID() != null).collect(Collectors.toList());
+            x.getLocalID() != null).toList();
 
     byte[] bFile;
     if (!filteredStudents.isEmpty()) {
@@ -257,18 +256,17 @@ public class ResponseFileGeneratorService {
 
   private String createHeader(final PenRequestBatchEntity penRequestBatchEntity, String applicationCode) {
     final StringBuilder header = new StringBuilder();
-    // retrieved from PEN_COORDINATOR table
-    List<SchoolContact> penCoordinator = this.getPenCoordinatorService().getStudentRegistrationContactsByMincode(penRequestBatchEntity.getMincode());
+    // retrieved from INSTITUTE_API school contacts that have schoolContactTypeCode = STUDREGIS
+    List<SchoolContact> schoolContactList = this.getStudentRegistrationContactService().getStudentRegistrationContactsByMincode(penRequestBatchEntity.getMincode());
 
-    //TODO check how this header can accept multiple registration contacts?
     header.append("FFI")
             .append(String.format("%-8.8s", print(penRequestBatchEntity.getMincode())))
             .append(String.format("%-40.40s", print(penRequestBatchEntity.getSchoolName())))
             .append(String.format("%-8.8s", penRequestBatchEntity.getProcessDate().format(DateTimeFormatter.ofPattern("yyyyMMdd"))))
-            .append(String.format("%-100.100s", print(!penCoordinator.isEmpty() ? penCoordinator.get(0).getEmail() : "")))
-//            .append(String.format("%-10.10s", print(penCoordinator.map(coordinator -> coordinator.getPenCoordinatorFax().replaceAll("[^0-9]+", "")).orElse("")))) //TODO SchoolContact doesn't have a FAX number
-            .append(String.format("%-10.10s", print(!penCoordinator.isEmpty() ? penCoordinator.get(0).getPhoneNumber() : ""))) //TODO SchoolContact doesn't have a FAX number
-            .append(String.format("%-40.40s", print(!penCoordinator.isEmpty()? penCoordinator.get(0).getFirstName() : "")))
+            .append(String.format("%-100.100s", print(!schoolContactList.isEmpty() ? schoolContactList.get(0).getEmail() : "")))
+            .append(String.format("%-10.10s", print(""))) //Student registration school Contact does not have a fax number. We will leave this blank
+            .append(String.format("%-10.10s", print(!schoolContactList.isEmpty() ? schoolContactList.get(0).getPhoneNumber() : "")))
+            .append(String.format("%-40.40s", print(!schoolContactList.isEmpty()? schoolContactList.get(0).getFirstName() + " " + schoolContactList.get(0).getLastName() : ""))) //we may get more than one student registration school contact. We will only append the first one.
             .append("  ")
             .append(String.format("%-4.4s", print(applicationCode)))
             .append("\n");
@@ -312,7 +310,7 @@ public class ResponseFileGeneratorService {
     return body.toString();
   }
 
-  private String getApplicationCode(String mincode) { //TODO How are we going to handle schools that have been moved. We cache the schools.
+  private String getApplicationCode(String mincode) {
     var applicationCode = "PEN";
     var school = this.restUtils.getSchoolByMincode(mincode).
       orElseThrow(() -> new PenRegAPIRuntimeException("Cannot find the school data by mincode :: " + mincode));

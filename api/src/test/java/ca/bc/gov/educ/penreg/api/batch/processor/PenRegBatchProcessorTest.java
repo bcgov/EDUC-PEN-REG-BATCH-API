@@ -7,12 +7,9 @@ import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.PENWebBlobEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchHistoryEntity;
 import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchStudentEntity;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
-import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
+import ca.bc.gov.educ.penreg.api.repository.*;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
-import ca.bc.gov.educ.penreg.api.struct.School;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
+import ca.bc.gov.educ.penreg.api.struct.*;
 import ca.bc.gov.educ.penreg.api.support.PenRequestBatchTestUtils;
 import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.github.javafaker.Faker;
@@ -22,6 +19,7 @@ import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsJetStreamMetaData;
 import io.nats.client.support.Status;
+import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,10 +31,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
 import static ca.bc.gov.educ.penreg.api.constants.PenRequestBatchEventCodes.STATUS_CHANGED;
@@ -73,9 +67,6 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
   @Autowired
   private PenRequestBatchRepository repository;
 
-  @Autowired
-  private PenWebBlobRepository penWebBlobRepository;
-
   /**
    * The Student repository.
    */
@@ -101,10 +92,10 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
   public void before() {
     this.faker = new Faker(new Random(0));
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(new School()));
-    when(this.restUtils.getPenCoordinator(anyString())).thenReturn(Optional.of(PenCoordinator.builder().penCoordinatorEmail("test@test.com").build()));
+    when(this.restUtils.getStudentRegistrationContactList(anyString())).thenReturn(
+        Arrays.asList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build(), SchoolContact.builder().email("2@email.com").firstName("2").lastName("2").build()));
     when(this.messagePublisher.requestMessage(anyString(), any())).thenReturn(CompletableFuture.completedFuture(this.getMessage()));
   }
-
 
   /**
    * Test process pen reg batch file from tsw given 30 row valid file should create records in db.

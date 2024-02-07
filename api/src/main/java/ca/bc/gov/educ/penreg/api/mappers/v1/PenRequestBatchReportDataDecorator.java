@@ -81,7 +81,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
       reportData.setProcessDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")));
       reportData.setProcessTime(processDateTime.format(DateTimeFormatter.ofPattern("HH:mm")));
       reportData.setReportDate(processDateTime.format(DateTimeFormatter.ofPattern("yyyy-MMM-dd")).toUpperCase().replace(".", ""));
-      reportData.setReviewer(this.setReviewer(data.getStudentRegistrationContacts())); //TODO figure out what to do here if we have more than 1 reviewer
+      reportData.setReviewer(this.setReviewer(data.getStudentRegistrationContacts()));
     }
 
 
@@ -145,7 +145,7 @@ public abstract class PenRequestBatchReportDataDecorator implements PenRequestBa
   }
 
 
-  private String setReviewer(final List<SchoolContact> studentRegistrationContacts) { //TODO check for potential bug last name could be blank?
+  private String setReviewer(final List<SchoolContact> studentRegistrationContacts) { //If there is more than one school registration contact we just use the first one.
     return (!studentRegistrationContacts.isEmpty() && StringUtils.isNotBlank(studentRegistrationContacts.get(0).getFirstName() + " " + studentRegistrationContacts.get(0).getLastName())) ? studentRegistrationContacts.get(0).getFirstName() + " " + studentRegistrationContacts.get(0).getLastName() : "School PEN Coordinator";
   }
 
