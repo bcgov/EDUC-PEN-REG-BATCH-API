@@ -63,6 +63,6 @@ public class StudentRegistrationContactServiceTest extends BasePenRegAPITest {
     String mincodeNotExist = "123546789";
     when(this.restUtils.getStudentRegistrationContactList(mincodeNotExist)).thenReturn(studentRegistrationContactMap.get(mincodeNotExist));
     var dataList2 = this.service.getStudentRegistrationContactEmailsByMincode(mincodeNotExist);
-    assertThat(dataList2).hasSize(0);
+    assertThat(dataList2).isEmpty();
   }
 }
