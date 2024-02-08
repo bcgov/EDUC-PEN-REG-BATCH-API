@@ -118,7 +118,7 @@ public class RestUtils {
     try {
       writeLock.lock();
       this.gradeCodesMap.clear();
-      final List<GradeCode> gradeCodes = this.webClient.get().uri(this.props.getStudentApiURL(), uri -> uri.path("/grade-codes").build()).header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).retrieve().bodyToFlux(GradeCode.class).collectList().block();
+      final List<GradeCode> gradeCodes = this.webClient.get().uri(this.props.getStudentApiURL() + "/grade-codes").header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).retrieve().bodyToFlux(GradeCode.class).collectList().block();
       this.gradeCodesMap.put(GRADE_CODES, gradeCodes);
     }
     catch (Exception ex) {
