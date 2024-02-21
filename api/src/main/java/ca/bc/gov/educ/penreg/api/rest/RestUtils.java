@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -387,11 +387,15 @@ public class RestUtils {
               " {\"key\":\"schoolId\",\"operation\":\"eq\",\"value\":\"" + school.getSchoolId() + "\",\"valueType\":\"UUID\",\"condition\":\"AND\"}]}," +
               " {\"key\":\"email\",\"operation\":\"neq\",\"value\":\"null\",\"valueType\":\"UUID\",\"condition\":\"AND\"}]}";
       SchoolContactSearchWrapper schoolContactSearchWrapper = this.webClient.get()
-              .uri(getSchoolContactURI(criterion))
-              .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-              .retrieve()
-              .bodyToFlux(SchoolContactSearchWrapper.class)
-              .blockFirst();
+          .uri(getSchoolContactURI(criterion))
+          .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+          .retrieve()
+          .bodyToFlux(SchoolContactSearchWrapper.class)
+          .blockFirst();
+
+      if (schoolContactSearchWrapper == null) {
+        throw new PenRegAPIRuntimeException("API call to Institute API received null response when getting student registration contacts, contact the Ministry for more info.");
+      }
 
       return schoolContactSearchWrapper.getContent();
     }catch(Exception e){
