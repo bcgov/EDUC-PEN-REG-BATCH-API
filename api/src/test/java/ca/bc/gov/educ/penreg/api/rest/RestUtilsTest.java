@@ -245,7 +245,7 @@ public class RestUtilsTest {
     when(this.responseMock.bodyToFlux(SchoolContactSearchWrapper.class)).thenReturn(Flux.just(createSchoolContactSearchWrapper()));
 
     final var result = this.restUtils.getStudentRegistrationContactList("10200001");
-    assertThat(result.size()).isEqualTo(2);
+    assertThat(result).hasSize(2);
     assertThat(result.get(0).getEmail()).isEqualTo("pen@email.com");
     assertThat(result.get(0).getFirstName()).isEqualTo("Joe");
     assertThat(result.get(1).getEmail()).isEqualTo("2@email.com");

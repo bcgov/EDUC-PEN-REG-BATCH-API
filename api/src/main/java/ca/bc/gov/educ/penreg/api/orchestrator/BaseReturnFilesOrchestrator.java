@@ -287,7 +287,7 @@ public abstract class BaseReturnFilesOrchestrator<T> extends BaseOrchestrator<T>
       return this.getStudentRegistrationContactService().getStudentRegistrationContactsByMincode(penRequestBatchEntity.getMincode());
     } catch (final NullPointerException e) {
       log.error("Error while trying to get get student registration contact. The student registration contact map is null", e);
-      return null;
+      return Collections.emptyList();
     }
   }
 
