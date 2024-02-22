@@ -8,17 +8,17 @@ import org.springframework.stereotype.Component;
 @Component
 @Getter
 @Setter
-public class PenCoordinatorProperties {
+public class DataManagementUnitProperties {
 
-  @Value("${pen.coordinator.email}")
+  @Value("${data.management.unit.email}")
   private String fromEmail;
 
-  @Value("${pen.coordinator.mailing.address}")
+  @Value("${data.management.unit.mailing.address}")
   private String mailingAddress;
 
-  @Value("${pen.coordinator.telephone}")
+  @Value("${data.management.unit.telephone}")
   private String telephone;
 
-  @Value("${pen.coordinator.facsimile}")
+  @Value("${data.management.unit.facsimile}")
   private String facsimile;
 }

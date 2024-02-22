@@ -1,15 +1,12 @@
 package ca.bc.gov.educ.penreg.api.struct.v1;
 
-import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.struct.Student;
+import ca.bc.gov.educ.penreg.api.struct.*;
+import java.util.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.constraints.NotNull;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 @Data
 @SuperBuilder
@@ -45,7 +42,14 @@ public class BasePenRequestBatchReturnFilesSagaData extends BaseRequest {
     this.students = students;
   }
     Map<String, String> penRequestBatchStudentValidationIssues;
-    PenCoordinator penCoordinator;
+
+    List<SchoolContact> studentRegistrationContacts;
+  public List<SchoolContact> getStudentRegistrationContacts() {
+    if (this.studentRegistrationContacts == null) {
+      return new ArrayList<>();
+    }
+    return this.studentRegistrationContacts;
+  }
 
     String fromEmail;
     String telephone;

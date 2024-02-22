@@ -8,8 +8,7 @@ import ca.bc.gov.educ.penreg.api.model.v1.PenRequestBatchEntity;
 import ca.bc.gov.educ.penreg.api.repository.PenRequestBatchStudentRepository;
 import ca.bc.gov.educ.penreg.api.repository.PenWebBlobRepository;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
-import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenCoordinator;
+import ca.bc.gov.educ.penreg.api.struct.*;
 import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudent;
 import ca.bc.gov.educ.penreg.api.struct.v1.reportstructs.PenRequestBatchReportData;
 import lombok.Getter;
@@ -48,7 +47,7 @@ public class ResponseFileGeneratorService {
    * the pen coordinator service
    */
   @Getter(PRIVATE)
-  private final PenCoordinatorService penCoordinatorService;
+  private final StudentRegistrationContactService studentRegistrationContactService;
 
   /**
    * the pen request batch student repository
@@ -75,8 +74,8 @@ public class ResponseFileGeneratorService {
   private SpringTemplateEngine templateEngine;
 
   @Autowired
-  public ResponseFileGeneratorService(final PenCoordinatorService penCoordinatorService, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils, final SpringTemplateEngine templateEngine) {
-    this.penCoordinatorService = penCoordinatorService;
+  public ResponseFileGeneratorService(final StudentRegistrationContactService studentRegistrationContactService, final PenWebBlobRepository penWebBlobRepository, final PenRequestBatchStudentRepository penRequestBatchStudentRepository, final RestUtils restUtils, final SpringTemplateEngine templateEngine) {
+    this.studentRegistrationContactService = studentRegistrationContactService;
     this.penWebBlobRepository = penWebBlobRepository;
     this.penRequestBatchStudentRepository = penRequestBatchStudentRepository;
     this.restUtils = restUtils;
@@ -96,7 +95,7 @@ public class ResponseFileGeneratorService {
             x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.USR_NEW_PEN.getCode()) ||
             x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.SYS_MATCHED.getCode()) ||
             x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.USR_MATCHED.getCode())) &&
-            x.getLocalID() != null).collect(Collectors.toList());
+            x.getLocalID() != null).toList();
 
     byte[] bFile;
     if (!filteredStudents.isEmpty()) {
@@ -140,7 +139,7 @@ public class ResponseFileGeneratorService {
   public PENWebBlobEntity getTxtBlob(final PenRequestBatchEntity penRequestBatchEntity, final List<PenRequestBatchStudent> penRequestBatchStudentEntities) {
 
     final List<PenRequestBatchStudent> filteredStudents = penRequestBatchStudentEntities.stream().filter(x ->
-            (x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode()))).collect(Collectors.toList());
+            (x.getPenRequestBatchStudentStatusCode().equals(PenRequestBatchStudentStatusCodes.ERROR.getCode()))).toList();
 
     byte[] bFile;
 
@@ -257,16 +256,17 @@ public class ResponseFileGeneratorService {
 
   private String createHeader(final PenRequestBatchEntity penRequestBatchEntity, String applicationCode) {
     final StringBuilder header = new StringBuilder();
-    // retrieved from PEN_COORDINATOR table
-    Optional<PenCoordinator> penCoordinator = this.getPenCoordinatorService().getPenCoordinatorByMinCode(penRequestBatchEntity.getMincode());
+    // retrieved from INSTITUTE_API school contacts that have schoolContactTypeCode = STUDREGIS
+    List<SchoolContact> schoolContactList = this.getStudentRegistrationContactService().getStudentRegistrationContactsByMincode(penRequestBatchEntity.getMincode());
 
     header.append("FFI")
             .append(String.format("%-8.8s", print(penRequestBatchEntity.getMincode())))
             .append(String.format("%-40.40s", print(penRequestBatchEntity.getSchoolName())))
             .append(String.format("%-8.8s", penRequestBatchEntity.getProcessDate().format(DateTimeFormatter.ofPattern("yyyyMMdd"))))
-            .append(String.format("%-100.100s", print(penCoordinator.isPresent()? penCoordinator.get().getPenCoordinatorEmail() : "")))
-            .append(String.format("%-10.10s", print(penCoordinator.map(coordinator -> coordinator.getPenCoordinatorFax().replaceAll("[^0-9]+", "")).orElse(""))))
-            .append(String.format("%-40.40s", print(penCoordinator.isPresent()? penCoordinator.get().getPenCoordinatorName() : "")))
+            .append(String.format("%-100.100s", print(!schoolContactList.isEmpty() ? schoolContactList.get(0).getEmail() : "")))
+            .append(String.format("%-10.10s", print(""))) //Student registration school Contact does not have a fax number. We will leave this blank
+            .append(String.format("%-10.10s", print(!schoolContactList.isEmpty() ? schoolContactList.get(0).getPhoneNumber() : "")))
+            .append(String.format("%-40.40s", print(!schoolContactList.isEmpty()? schoolContactList.get(0).getFirstName() + " " + schoolContactList.get(0).getLastName() : ""))) //we may get more than one student registration school contact. We will only append the first one.
             .append("  ")
             .append(String.format("%-4.4s", print(applicationCode)))
             .append("\n");
@@ -314,9 +314,12 @@ public class ResponseFileGeneratorService {
     var applicationCode = "PEN";
     var school = this.restUtils.getSchoolByMincode(mincode).
       orElseThrow(() -> new PenRegAPIRuntimeException("Cannot find the school data by mincode :: " + mincode));
-    if(school.getDistNo().equals("104")) {
+
+    String districtNumber = school.getMincode().substring(0,3);
+
+    if(districtNumber.equals("104")) {
       applicationCode = "MISC";
-    } else if(school.getDistNo().equals("102") && school.getSchlNo().equals("00030")) {
+    } else if(districtNumber.equals("102") && school.getSchoolNumber().equals("00030")) {
       applicationCode = "SFAS";
     } else if(school.getFacilityTypeCode().equals("12")) {
       applicationCode = "SS";

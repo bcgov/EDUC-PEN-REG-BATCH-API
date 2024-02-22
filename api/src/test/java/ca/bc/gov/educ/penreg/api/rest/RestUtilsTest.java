@@ -3,14 +3,14 @@ package ca.bc.gov.educ.penreg.api.rest;
 import ca.bc.gov.educ.penreg.api.constants.EventType;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.properties.ApplicationProperties;
-import ca.bc.gov.educ.penreg.api.struct.Event;
-import ca.bc.gov.educ.penreg.api.struct.School;
-import ca.bc.gov.educ.penreg.api.struct.Student;
-import ca.bc.gov.educ.penreg.api.struct.v1.PenRequestBatchStudentValidationIssueTypeCode;
+import ca.bc.gov.educ.penreg.api.struct.*;
+import ca.bc.gov.educ.penreg.api.struct.v1.*;
 import ca.bc.gov.educ.penreg.api.support.NatsMessageImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Message;
+import java.net.*;
+import java.util.*;
 import lombok.val;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +24,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -68,7 +67,8 @@ public class RestUtilsTest {
   @Before
   public void setUp() throws Exception {
     when(this.webClient.get()).thenReturn(this.requestHeadersUriMock);
-    when(this.requestHeadersUriMock.uri(this.applicationProperties.getSchoolApiURL())).thenReturn(this.requestHeadersMock);
+
+    when(this.requestHeadersUriMock.uri(this.applicationProperties.getInstituteApiUrl() + "/school")).thenReturn(this.requestHeadersMock);
     when(this.requestHeadersMock.header(any(), any())).thenReturn(this.requestHeadersMock);
     when(this.requestHeadersMock.retrieve()).thenReturn(this.responseMock);
     when(this.responseMock.bodyToFlux(School.class)).thenReturn(Flux.just(createSchoolArray()));
@@ -80,12 +80,17 @@ public class RestUtilsTest {
       .thenReturn(Flux.just(createValidationIssueTypeCodeArray("GENDER_ERR", "Gender error")));
     this.restUtils.populatePenRequestBatchStudentValidationIssueTypeCodeMap();
 
+    when(this.requestHeadersUriMock.uri(this.applicationProperties.getPenServicesApiURL() + "/grade-codes")).thenReturn(this.requestHeadersMock);
+    when(this.responseMock.bodyToFlux(GradeCode.class))
+        .thenReturn(Flux.just(createGradeCodeArray()));
+    this.restUtils.setGradeCodesMap();
+
     openMocks(this);
   }
 
   private School[] createSchoolArray() {
     School[] schools = new School[1];
-    schools[0] = School.builder().mincode("10200001").distNo("102").schlNo("00001").build();
+    schools[0] = School.builder().mincode("10200001").schoolNumber("00001").schoolId("22b358d728-259b-4d55-98ac-c41dafe66ded").build();
     return schools;
   }
 
@@ -93,6 +98,20 @@ public class RestUtilsTest {
     PenRequestBatchStudentValidationIssueTypeCode[] codes = new PenRequestBatchStudentValidationIssueTypeCode[1];
     codes[0] = PenRequestBatchStudentValidationIssueTypeCode.builder().code(code).description(description).build();
     return codes;
+  }
+
+  private GradeCode[] createGradeCodeArray() {
+    GradeCode[] codes = new GradeCode[1];
+    codes[0] = GradeCode.builder().gradeCode("A").label("A").description("hello").build();
+    return codes;
+  }
+
+  private SchoolContactSearchWrapper createSchoolContactSearchWrapper() {
+    SchoolContactSearchWrapper schoolSearchWrapper = new SchoolContactSearchWrapper();
+    schoolSearchWrapper.setContent(Arrays.asList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build(),
+        SchoolContact.builder().email("2@email.com").firstName("2").lastName("2").build()));
+
+    return schoolSearchWrapper;
   }
 
   @Test
@@ -198,6 +217,39 @@ public class RestUtilsTest {
     val result = this.restUtils.getSchoolByMincode("10200001");
     assertThat(result).isNotNull().isPresent();
     assertThat(result.get().getMincode()).isEqualTo("10200001");
+  }
+
+  @Test
+  public void testGetStudentRegistrationContactList_givenAPICallSuccess_shouldReturnEmptyList() {
+    val result = this.restUtils.getStudentRegistrationContactList("Invalid Mincode");
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  public void testGetGradeCode_shouldReturnData() {
+
+    val result = this.restUtils.getGradeCodes();
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getGradeCode()).isEqualTo("A");
+  }
+
+  @Test
+  public void testGetStudentRegistrationContacts_shouldReturnData() {
+    when(this.webClient.get()).thenReturn(this.requestHeadersUriMock);
+    when(this.requestHeadersUriMock.uri(any(URI.class)))
+        .thenReturn(this.requestHeadersMock);
+    when(this.requestHeadersMock.header(any(), any())).thenReturn(this.requestHeadersMock);
+    when(this.requestHeadersUriMock.uri(eq(this.applicationProperties.getInstituteApiUrl()), any(Function.class)))
+        .thenReturn(this.requestHeadersMock);
+    when(this.requestHeadersMock.retrieve()).thenReturn(this.responseMock);
+    when(this.responseMock.bodyToFlux(SchoolContactSearchWrapper.class)).thenReturn(Flux.just(createSchoolContactSearchWrapper()));
+
+    final var result = this.restUtils.getStudentRegistrationContactList("10200001");
+    assertThat(result).hasSize(2);
+    assertThat(result.get(0).getEmail()).isEqualTo("pen@email.com");
+    assertThat(result.get(0).getFirstName()).isEqualTo("Joe");
+    assertThat(result.get(1).getEmail()).isEqualTo("2@email.com");
+    assertThat(result.get(1).getFirstName()).isEqualTo("2");
   }
 
   private WebClient.RequestBodySpec returnMockBodySpec() {

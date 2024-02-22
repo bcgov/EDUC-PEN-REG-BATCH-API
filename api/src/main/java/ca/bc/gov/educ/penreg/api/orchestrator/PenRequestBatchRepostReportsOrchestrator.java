@@ -4,7 +4,7 @@ import ca.bc.gov.educ.penreg.api.constants.SagaTopicsEnum;
 import ca.bc.gov.educ.penreg.api.messaging.MessagePublisher;
 import ca.bc.gov.educ.penreg.api.model.v1.Saga;
 import ca.bc.gov.educ.penreg.api.model.v1.SagaEvent;
-import ca.bc.gov.educ.penreg.api.properties.PenCoordinatorProperties;
+import ca.bc.gov.educ.penreg.api.properties.DataManagementUnitProperties;
 import ca.bc.gov.educ.penreg.api.rest.RestUtils;
 import ca.bc.gov.educ.penreg.api.service.*;
 import ca.bc.gov.educ.penreg.api.struct.Event;
@@ -36,19 +36,19 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
      * @param sagaService      the saga service
      * @param messagePublisher the message publisher
      * @param penRequestBatchService the pen request batch service
-     * @param penCoordinatorService  the pen coordinator service
-     * @param penCoordinatorProperties the pen coordinator properties
+     * @param studentRegistrationContactService  the student registration contact service
+     * @param dataManagementUnitProperties the data management unit properties
      */
     public PenRequestBatchRepostReportsOrchestrator(SagaService sagaService, MessagePublisher messagePublisher,
                                                     PenRequestBatchService penRequestBatchService,
-                                                    PenCoordinatorService penCoordinatorService,
-                                                    PenCoordinatorProperties penCoordinatorProperties,
+                                                    StudentRegistrationContactService studentRegistrationContactService,
+                                                    DataManagementUnitProperties dataManagementUnitProperties,
                                                     ResponseFileGeneratorService responseFileGeneratorService,
                                                     PenRequestBatchStudentValidationIssueService penRequestBatchStudentValidationIssueService,
                                                     RestUtils restUtils) {
         super(sagaService, messagePublisher, PenRequestBatchRepostReportsFilesSagaData.class,
           PEN_REQUEST_BATCH_REPOST_REPORTS_SAGA.toString(), PEN_REQUEST_BATCH_REPOST_REPORTS_TOPIC.toString(),
-          penRequestBatchService, penCoordinatorService, penCoordinatorProperties, responseFileGeneratorService,
+          penRequestBatchService, studentRegistrationContactService, dataManagementUnitProperties, responseFileGeneratorService,
           penRequestBatchStudentValidationIssueService, restUtils);
     }
 
@@ -63,8 +63,8 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
           .step(GET_STUDENTS, STUDENTS_FOUND, this::isNotSupportingPDFGeneration, SAVE_REPORTS, this::saveReportsWithoutPDF)
           .step(GET_STUDENTS, STUDENTS_FOUND, this::isSupportingPDFGeneration, GENERATE_PEN_REQUEST_BATCH_REPORTS, this::generatePDFReport)
           .step(GENERATE_PEN_REQUEST_BATCH_REPORTS, ARCHIVE_PEN_REQUEST_BATCH_REPORTS_GENERATED, SAVE_REPORTS, this::saveReports)
-          .step(SAVE_REPORTS, REPORTS_SAVED, this::hasPenCoordinatorEmail, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT, this::sendHasCoordinatorEmail)
-          .step(SAVE_REPORTS, REPORTS_SAVED, this::hasNoPenCoordinatorEmail, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT, this::sendHasNoCoordinatorEmail)
+          .step(SAVE_REPORTS, REPORTS_SAVED, this::hasStudentRegistrationContactEmail, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT, this::sendHasStudentRegistrationContactEmail)
+          .step(SAVE_REPORTS, REPORTS_SAVED, this::hasNoStudentRegistrationContactEmail, NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT, this::sendHasNoStudentRegistrationContactEmail)
           .end(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_CONTACT, ARCHIVE_EMAIL_SENT)
           .or()
           .end(NOTIFY_PEN_REQUEST_BATCH_ARCHIVE_HAS_NO_SCHOOL_CONTACT, ARCHIVE_EMAIL_SENT)
@@ -94,7 +94,7 @@ public class PenRequestBatchRepostReportsOrchestrator extends BaseReturnFilesOrc
           .build()))
       .build();
     this.postMessageToTopic(SagaTopicsEnum.PEN_REPORT_GENERATION_API_TOPIC.toString(), nextEvent);
-    log.info("message sent to PEN_REPORT_GENERATION_API_TOPIC for {} Event. :: {}", GENERATE_PEN_REQUEST_BATCH_REPORTS.toString(), saga.getSagaId());
+    log.info("message sent to PEN_REPORT_GENERATION_API_TOPIC for {} Event. :: {}", GENERATE_PEN_REQUEST_BATCH_REPORTS, saga.getSagaId());
   }
 
   private void saveReportsWithoutPDF(Event event, Saga saga, PenRequestBatchRepostReportsFilesSagaData penRequestBatchRepostReportsFilesSagaData) throws IOException, TimeoutException, InterruptedException {

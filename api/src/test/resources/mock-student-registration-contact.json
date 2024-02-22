@@ -1,0 +1,28 @@
+
+  [
+    {
+      "schoolId": "12345678",
+      "schoolContactTypeCode": "STUDREGIS",
+      "phoneNumber": "1112223333",
+      "email": "fake@gmail.com",
+      "firstName": "Joe",
+      "lastName": "Blow"
+    },
+    {
+      "schoolId": "12345678",
+      "schoolContactTypeCode": "STUDREGIS",
+      "phoneNumber": "1112223333",
+      "email": "fake@gmail.com",
+      "firstName": "Joe2",
+      "lastName": "Blow2"
+    },
+    {
+      "schoolId": "11111111",
+      "schoolContactTypeCode": "STUDREGIS",
+      "phoneNumber": "1112223333",
+      "email": "fake@gmail.com",
+      "firstName": "Joe3",
+      "lastName": "Blow3"
+    }
+  ]
+

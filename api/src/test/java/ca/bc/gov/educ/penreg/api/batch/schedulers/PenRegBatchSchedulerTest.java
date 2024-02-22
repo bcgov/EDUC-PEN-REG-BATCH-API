@@ -192,9 +192,9 @@ public class PenRegBatchSchedulerTest extends BasePenRegAPITest {
 
   private School createMockSchool() {
     final School school = new School();
-    school.setSchoolName("Marco's school");
+    school.setDisplayNameNoSpecialChars("Marco's school");
     school.setMincode("66510518");
-    school.setDateOpened("1953-09-01T00:00:00");
+    school.setOpenedDate("1953-09-01T00:00:00");
     return school;
   }
 

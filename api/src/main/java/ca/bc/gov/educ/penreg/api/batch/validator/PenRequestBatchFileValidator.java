@@ -162,8 +162,8 @@ public class PenRequestBatchFileValidator {
       if (school.isEmpty()) {
         throw new FileUnProcessableException(INVALID_MINCODE_HEADER, guid, PenRequestBatchStatusCodes.LOAD_FAIL);
       }
-      final String openedDate = school.get().getDateOpened();
-      final String closedDate = school.get().getDateClosed();
+      final String openedDate = school.get().getOpenedDate();
+      final String closedDate = school.get().getClosedDate();
       if (openedDate == null || LocalDate.parse(openedDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME).isAfter(LocalDate.now()) || (closedDate != null && LocalDate.parse(closedDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME).isBefore(LocalDate.now()))) {
         throw new FileUnProcessableException(INVALID_MINCODE_SCHOOL_CLOSED, guid, PenRequestBatchStatusCodes.LOAD_FAIL);
       }
