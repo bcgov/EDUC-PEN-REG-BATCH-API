@@ -107,7 +107,6 @@ public class RestUtils {
     this.populatePenRequestBatchStudentValidationIssueTypeCodeMap();
     this.populatePenRequestBatchStudentValidationIssueFieldCodeMap();
     this.setGradeCodesMap();
-    this.getStudentRegistrationContactList("04090036");
     log.info("Called student api and loaded {} grade codes", this.gradeCodesMap.values().size());
   }
 
