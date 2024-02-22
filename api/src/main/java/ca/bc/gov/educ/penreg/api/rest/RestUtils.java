@@ -107,6 +107,7 @@ public class RestUtils {
     this.populatePenRequestBatchStudentValidationIssueTypeCodeMap();
     this.populatePenRequestBatchStudentValidationIssueFieldCodeMap();
     this.setGradeCodesMap();
+    this.getStudentRegistrationContactList("04090036");
     log.info("Called student api and loaded {} grade codes", this.gradeCodesMap.values().size());
   }
 
@@ -383,9 +384,11 @@ public class RestUtils {
         return new ArrayList<>();
       }
       log.info("Calling Institute api to get list of school student registration contacts");
-      String criterion = "[{\"searchCriteriaList\":[{\"key\":\"schoolContactTypeCode\",\"operation\":\"eq\",\"value\":\"STUDREGIS\",\"valueType\":\"STRING\",\"condition\":\"AND\"}]}," +
-              " {\"key\":\"schoolId\",\"operation\":\"eq\",\"value\":\"" + school.getSchoolId() + "\",\"valueType\":\"UUID\",\"condition\":\"AND\"}]}," +
-              " {\"key\":\"email\",\"operation\":\"neq\",\"value\":\"null\",\"valueType\":\"UUID\",\"condition\":\"AND\"}]}";
+      String criterion = "[{\"condition\":null,\"searchCriteriaList\":[" +
+          "{\"key\":\"schoolContactTypeCode\",\"operation\":\"eq\",\"value\":\"STUDREGIS\",\"valueType\":\"STRING\",\"condition\":\"AND\"}," +
+          "{\"key\":\"schoolID\",\"operation\":\"eq\",\"value\":\"" + school.getSchoolId() + "\",\"valueType\":\"UUID\",\"condition\":\"AND\"}," +
+          "{\"key\":\"email\",\"operation\":\"neq\",\"value\":\"null\",\"valueType\":\"STRING\",\"condition\":\"AND\"}" +
+          "]}]";
       SchoolContactSearchWrapper schoolContactSearchWrapper = this.webClient.get()
           .uri(getSchoolContactURI(criterion))
           .header(CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
