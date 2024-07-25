@@ -142,12 +142,12 @@ public class Student implements Serializable {
   /**
    * The Create user.
    */
-  @Size(max = 32)
+  @Size(max = 100)
   String createUser;
   /**
    * The Update user.
    */
-  @Size(max = 32)
+  @Size(max = 100)
   String updateUser;
 
   String historyActivityCode;

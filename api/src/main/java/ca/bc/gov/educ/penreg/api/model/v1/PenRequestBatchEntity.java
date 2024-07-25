@@ -204,7 +204,7 @@ public class PenRequestBatchEntity {
    * The Create user.
    */
   @Basic
-  @Column(name = "CREATE_USER", updatable = false, nullable = false, length = 32)
+  @Column(name = "CREATE_USER", updatable = false, nullable = false, length = 100)
   String createUser;
 
 
@@ -219,7 +219,7 @@ public class PenRequestBatchEntity {
    * The Update user.
    */
   @Basic
-  @Column(name = "UPDATE_USER", nullable = false, length = 32)
+  @Column(name = "UPDATE_USER", nullable = false, length = 100)
   String updateUser;
 
   /**

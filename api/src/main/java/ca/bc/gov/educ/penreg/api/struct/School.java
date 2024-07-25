@@ -77,10 +77,10 @@ public class School implements Serializable {
 
   private String closedDate;
 
-  @Size(max = 32)
+  @Size(max = 100)
   public String createUser;
 
-  @Size(max = 32)
+  @Size(max = 100)
   public String updateUser;
 
   @Null(message = "createDate should be null.")
