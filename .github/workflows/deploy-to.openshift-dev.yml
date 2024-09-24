@@ -50,7 +50,7 @@ jobs:
   build-and-deploy-dev:
     name: Build and deploy to OpenShift DEV
     # ubuntu-20.04 can also be used.
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     environment: dev
 
     outputs:
@@ -165,6 +165,6 @@ jobs:
           # Get status, returns 0 if rollout is successful
           oc rollout status dc/${{ env.SPRING_BOOT_IMAGE_NAME }}
       - name: ZAP Scan
-        uses: zaproxy/action-api-scan@v0.5.0
+        uses: zaproxy/action-api-scan@v0.7.0
         with:
           target: 'https://${{ env.APP_NAME }}-${{ env.OPENSHIFT_NAMESPACE_DEV }}.apps.silver.devops.gov.bc.ca/v3/api-docs'
