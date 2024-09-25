@@ -110,9 +110,9 @@ public class RestUtilsTest {
   private SchoolContactSearchWrapper createSchoolContactSearchWrapper() {
     SchoolContactSearchWrapper schoolSearchWrapper = new SchoolContactSearchWrapper();
     schoolSearchWrapper.setContent(Arrays.asList(
-        SchoolContact.builder().email("expired@email.com").firstName("Joe").lastName("Blow").expiryDate(LocalDate.now().minusDays(1).toString()).build(),
+        SchoolContact.builder().email("expired@email.com").firstName("Joe").lastName("Blow").expiryDate(LocalDateTime.now().minusDays(1).toString()).build(),
         SchoolContact.builder().email("active@email.com").firstName("2").lastName("2").expiryDate(null).build(),
-        SchoolContact.builder().email("active@email.com").firstName("Joe").lastName("Blow").expiryDate(LocalDate.now().plusDays(1).toString()).build()));
+        SchoolContact.builder().email("active@email.com").firstName("Joe").lastName("Blow").expiryDate(LocalDateTime.now().plusDays(1).toString()).build()));
 
     return schoolSearchWrapper;
   }

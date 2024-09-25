@@ -713,7 +713,7 @@ public class PenRegBatchProcessorTest extends BasePenRegAPITest {
   @Transactional
   public void testProcessPenRegBatchFileFromTSW_GivenmincodeInvalidSchoolOpenDate_ShouldCreateRecordLOADFAILInDB() throws IOException {
     final School school = this.createMockSchool();
-    school.setOpenedDate("2024-09-01T00:00:00");
+    school.setOpenedDate(LocalDateTime.now().plusYears(1).toString());
     when(this.restUtils.getSchoolByMincode(anyString())).thenReturn(Optional.of(school));
     final File file = new File(Objects.requireNonNull(this.getClass().getClassLoader().getResource("sample_5_K12_OK.txt")).getFile());
     final byte[] bFile = Files.readAllBytes(file.toPath());
