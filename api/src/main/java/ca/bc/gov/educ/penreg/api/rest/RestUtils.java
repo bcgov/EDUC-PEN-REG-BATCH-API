@@ -403,7 +403,7 @@ public class RestUtils {
 
       List<SchoolContact> activeStudentRegistrationContacts = schoolContactSearchWrapper.getContent().stream().filter(contact -> {
         final String expiryDate = contact.getExpiryDate();
-        return contact.getExpiryDate() == null || (expiryDate != null && LocalDate.parse(expiryDate, DateTimeFormatter.ISO_LOCAL_DATE).isAfter(LocalDate.now()));
+        return contact.getExpiryDate() == null || (expiryDate != null && LocalDate.parse(expiryDate, DateTimeFormatter.ISO_DATE_TIME).isAfter(LocalDate.now()));
       }).toList();
 
       return activeStudentRegistrationContacts;
