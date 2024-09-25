@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nats.client.Message;
 import java.net.*;
+import java.time.*;
 import java.util.*;
 import lombok.val;
 import org.junit.Before;
@@ -108,8 +109,10 @@ public class RestUtilsTest {
 
   private SchoolContactSearchWrapper createSchoolContactSearchWrapper() {
     SchoolContactSearchWrapper schoolSearchWrapper = new SchoolContactSearchWrapper();
-    schoolSearchWrapper.setContent(Arrays.asList(SchoolContact.builder().email("pen@email.com").firstName("Joe").lastName("Blow").build(),
-        SchoolContact.builder().email("2@email.com").firstName("2").lastName("2").build()));
+    schoolSearchWrapper.setContent(Arrays.asList(
+        SchoolContact.builder().email("expired@email.com").firstName("Joe").lastName("Blow").expiryDate(LocalDate.now().minusDays(1).toString()).build(),
+        SchoolContact.builder().email("active@email.com").firstName("2").lastName("2").expiryDate(null).build(),
+        SchoolContact.builder().email("active@email.com").firstName("Joe").lastName("Blow").expiryDate(LocalDate.now().plusDays(1).toString()).build()));
 
     return schoolSearchWrapper;
   }
@@ -234,7 +237,7 @@ public class RestUtilsTest {
   }
 
   @Test
-  public void testGetStudentRegistrationContacts_shouldReturnData() {
+  public void testGetStudentRegistrationContacts_withExpiredContacts_shouldReturnData() {
     when(this.webClient.get()).thenReturn(this.requestHeadersUriMock);
     when(this.requestHeadersUriMock.uri(any(URI.class)))
         .thenReturn(this.requestHeadersMock);
@@ -246,10 +249,10 @@ public class RestUtilsTest {
 
     final var result = this.restUtils.getStudentRegistrationContactList("10200001");
     assertThat(result).hasSize(2);
-    assertThat(result.get(0).getEmail()).isEqualTo("pen@email.com");
-    assertThat(result.get(0).getFirstName()).isEqualTo("Joe");
-    assertThat(result.get(1).getEmail()).isEqualTo("2@email.com");
-    assertThat(result.get(1).getFirstName()).isEqualTo("2");
+    assertThat(result.get(0).getEmail()).isEqualTo("active@email.com");
+    assertThat(result.get(0).getFirstName()).isEqualTo("2");
+    assertThat(result.get(1).getEmail()).isEqualTo("active@email.com");
+    assertThat(result.get(1).getFirstName()).isEqualTo("Joe");
   }
 
   private WebClient.RequestBodySpec returnMockBodySpec() {

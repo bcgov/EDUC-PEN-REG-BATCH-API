@@ -14,6 +14,8 @@ import ca.bc.gov.educ.penreg.api.util.JsonUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
+import java.time.*;
+import java.time.format.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -399,7 +401,12 @@ public class RestUtils {
         throw new PenRegAPIRuntimeException("API call to Institute API received null response when getting student registration contacts, contact the Ministry for more info.");
       }
 
-      return schoolContactSearchWrapper.getContent();
+      List<SchoolContact> activeStudentRegistrationContacts = schoolContactSearchWrapper.getContent().stream().filter(contact -> {
+        final String expiryDate = contact.getExpiryDate();
+        return contact.getExpiryDate() == null || (expiryDate != null && LocalDate.parse(expiryDate, DateTimeFormatter.ISO_LOCAL_DATE).isAfter(LocalDate.now()));
+      }).toList();
+
+      return activeStudentRegistrationContacts;
     }catch(Exception e){
       log.error("API call to Institute API failure getting student registration contacts :: {}", e.getMessage());
       throw new PenRegAPIRuntimeException("API call to Institute API failure getting student registration contacts, contact the Ministry for more info.");
