@@ -401,12 +401,10 @@ public class RestUtils {
         throw new PenRegAPIRuntimeException("API call to Institute API received null response when getting student registration contacts, contact the Ministry for more info.");
       }
 
-      List<SchoolContact> activeStudentRegistrationContacts = schoolContactSearchWrapper.getContent().stream().filter(contact -> {
+      return schoolContactSearchWrapper.getContent().stream().filter(contact -> {
         final String expiryDate = contact.getExpiryDate();
         return contact.getExpiryDate() == null || (expiryDate != null && LocalDate.parse(expiryDate, DateTimeFormatter.ISO_DATE_TIME).isAfter(LocalDate.now()));
       }).toList();
-
-      return activeStudentRegistrationContacts;
     }catch(Exception e){
       log.error("API call to Institute API failure getting student registration contacts :: {}", e.getMessage());
       throw new PenRegAPIRuntimeException("API call to Institute API failure getting student registration contacts, contact the Ministry for more info.");
