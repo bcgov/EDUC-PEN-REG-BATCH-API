@@ -39,7 +39,7 @@ jobs:
           java-version: 17
           distribution: corretto
           check-latest: true
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -53,7 +53,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: Cache SonarCloud packages
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
