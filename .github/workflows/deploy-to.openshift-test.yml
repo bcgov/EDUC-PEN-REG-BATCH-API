@@ -50,6 +50,9 @@ on:
 
 jobs:
   deploy-test:
+    permissions:
+      contents: read
+      issues: write
     name: Deploy to OpenShift TEST
     runs-on: ubuntu-22.04
     environment: test
